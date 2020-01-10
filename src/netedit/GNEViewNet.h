@@ -393,6 +393,9 @@ private:
 
     /// @brief variable used to save checkable buttons for Supermode Demand
     GNEViewNetHelper::DemandCheckableButtons myDemandCheckableButtons;
+
+    /// @brief variable used to save checkable buttons for Supermode Data
+    GNEViewNetHelper::DataCheckableButtons myDataCheckableButtons;
     /// @}
 
     /// @name structs related with view options
@@ -401,11 +404,14 @@ private:
     /// @brief variable used to save variables related with common view options
     GNEViewNetHelper::CommonViewOptions myCommonViewOptions;
 
-    /// @brief variable used to save variables related with view options in Network Supermode
+    /// @brief variable used to save variables related with view options in supermode Network
     GNEViewNetHelper::NetworkViewOptions myNetworkViewOptions;
 
-    /// @brief variable used to save variables related with view options in Demand Supermode
+    /// @brief variable used to save variables related with view options in supermode Demand
     GNEViewNetHelper::DemandViewOptions myDemandViewOptions;
+
+    /// @brief variable used to save variables related with view options in supermode Data
+    GNEViewNetHelper::DataViewOptions myDataViewOptions;
     /// @}
 
     /// @name structs related with move elements
@@ -458,6 +464,9 @@ private:
 
     /// @brief updates Demand mode specific controls
     void updateDemandModeSpecificControls();
+
+    /// @brief updates Data mode specific controls
+    void updateDataModeSpecificControls();
 
     /// @brief delete all currently selected junctions
     void deleteSelectedJunctions();
