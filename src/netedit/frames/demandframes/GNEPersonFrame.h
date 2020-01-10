@@ -7,33 +7,32 @@
 // http://www.eclipse.org/legal/epl-v20.html
 // SPDX-License-Identifier: EPL-2.0
 /****************************************************************************/
-/// @file    GNEStopFrame.h
+/// @file    GNEPersonFrame.h
 /// @author  Pablo Alvarez Lopez
-/// @date    March 2019
+/// @date    May 2019
 ///
-// The Widget for add Stops elements
+// The Widget for add person elements
 /****************************************************************************/
-#ifndef GNEStopFrame_h
-#define GNEStopFrame_h
+#ifndef GNEPersonFrame_h
+#define GNEPersonFrame_h
 
 
 // ===========================================================================
 // included modules
 // ===========================================================================
-#include "GNEFrame.h"
 
-#include <utils/vehicle/SUMOVehicleParameter.h>
+#include <netedit/frames/GNEFrame.h>
+
 
 // ===========================================================================
 // class definitions
 // ===========================================================================
 /**
- * @class GNEStopFrame
+ * @class GNEPersonFrame
  */
-class GNEStopFrame : public GNEFrame {
+class GNEPersonFrame : public GNEFrame {
 
 public:
-
     // ===========================================================================
     // class HelpCreation
     // ===========================================================================
@@ -42,7 +41,7 @@ public:
 
     public:
         /// @brief constructor
-        HelpCreation(GNEStopFrame* StopFrameParent);
+        HelpCreation(GNEPersonFrame* vehicleFrameParent);
 
         /// @brief destructor
         ~HelpCreation();
@@ -57,8 +56,8 @@ public:
         void updateHelpCreation();
 
     private:
-        /// @brief pointer to Stop Frame Parent
-        GNEStopFrame* myStopFrameParent;
+        /// @brief pointer to Person Frame Parent
+        GNEPersonFrame* myPersonFrameParent;
 
         /// @brief Label with creation information
         FXLabel* myInformationLabel;
@@ -68,26 +67,22 @@ public:
      * @brief parent FXHorizontalFrame in which this GNEFrame is placed
      * @brief viewNet viewNet that uses this GNEFrame
      */
-    GNEStopFrame(FXHorizontalFrame* horizontalFrameParent, GNEViewNet* viewNet);
+    GNEPersonFrame(FXHorizontalFrame* horizontalFrameParent, GNEViewNet* viewNet);
 
     /// @brief Destructor
-    ~GNEStopFrame();
+    ~GNEPersonFrame();
 
     /// @brief show Frame
     void show();
 
-    /**@brief add Stop element
+    /**@brief add vehicle element
      * @param objectsUnderCursor collection of objects under cursor after click over view
-     * @param shiftPressed flag to check if during clicking shift key was pressed
-     * @return true if Stop was sucesfully added
+     * @return true if vehicle was sucesfully added
      */
-    bool addStop(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, bool shiftPressed);
+    bool addPerson(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor);
 
-    /// @brief get stop parameters
-    static bool getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTag stopTag, GNEViewNet* viewNet,
-                                 GNEFrameAttributesModuls::AttributesCreator* stopAttributes,
-                                 const GNEFrameAttributesModuls::NeteditAttributes* myNeteditAttributes,
-                                 const GNELane* lane, const GNEAdditional* stoppingPlace);
+    /// @brief get EdgePathCreator modul
+    GNEFrameModuls::EdgePathCreator* getEdgePathCreator() const;
 
 protected:
     /// @brief Tag selected in TagSelector
@@ -96,21 +91,42 @@ protected:
     /// @brief selected demand element in DemandElementSelector
     void demandElementSelected();
 
+    /// @brief finish edge path creation
+    void edgePathCreated();
+
 private:
-    /// @brief Stop parent selectors
-    GNEFrameModuls::DemandElementSelector* myStopParentSelector;
+    /// @brief person tag selector (used to select diffent kind of persons)
+    GNEFrameModuls::TagSelector* myPersonTagSelector;
 
-    /// @brief stop tag selector selector (used to select diffent kind of Stops)
-    GNEFrameModuls::TagSelector* myStopTagSelector;
+    /// @brief Person Type selectors
+    GNEFrameModuls::DemandElementSelector* myPTypeSelector;
 
-    /// @brief internal Stop attributes
-    GNEFrameAttributesModuls::AttributesCreator* myStopAttributes;
+    /// @brief person plan selector (used to select diffent kind of person plan)
+    GNEFrameModuls::TagSelector* myPersonPlanTagSelector;
+
+    /// @brief internal vehicle attributes
+    GNEFrameAttributesModuls::AttributesCreator* myPersonAttributes;
+
+    /// @brief internal person plan attributes
+    GNEFrameAttributesModuls::AttributesCreator* myPersonPlanAttributes;
 
     /// @brief Netedit parameter
     GNEFrameAttributesModuls::NeteditAttributes* myNeteditAttributes;
 
+    /// @brief edge path creator (used for Walks, rides and trips)
+    GNEFrameModuls::EdgePathCreator* myEdgePathCreator;
+
     /// @brief Help creation
     HelpCreation* myHelpCreation;
+
+    /// @brief build person over route
+    bool buildPersonOverRoute(GNEDemandElement* route);
+
+    /// @brief build person over stop
+    bool buildPersonOverStop(GNELane* lane, GNEAdditional* busStop);
+
+    /// @brief build person and return it (note: function includes a call to p_begin(...), but NOT a call to p_end(...))
+    GNEDemandElement* buildPerson();
 };
 
 
