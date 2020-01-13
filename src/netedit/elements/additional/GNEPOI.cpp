@@ -31,7 +31,7 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewNetHelper.h>
-#include <netedit/elements/net/GNELane.h>
+#include <netedit/elements/network/GNELane.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
