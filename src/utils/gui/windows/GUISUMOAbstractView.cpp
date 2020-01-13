@@ -232,12 +232,6 @@ GUISUMOAbstractView::addDecals(const std::vector<Decal>& decals) {
 }
 
 
-GUIVisualizationSettings*
-GUISUMOAbstractView::getVisualisationSettings() {
-    return myVisualizationSettings;
-}
-
-
 void
 GUISUMOAbstractView::updatePositionInformation() const {
     Position pos = getPositionInformation();
@@ -1391,9 +1385,9 @@ GUISUMOAbstractView::setColorScheme(const std::string&) {
 }
 
 
-GUIVisualizationSettings*
+GUIVisualizationSettings&
 GUISUMOAbstractView::getVisualisationSettings() const {
-    return myVisualizationSettings;
+    return *myVisualizationSettings;
 }
 
 

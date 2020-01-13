@@ -216,8 +216,8 @@ public:
     /// @brief set color scheme
     virtual bool setColorScheme(const std::string&);
 
-    /// @brief get visualitation settings
-    GUIVisualizationSettings* getVisualisationSettings() const;
+    /// @brief get visualization settings
+    GUIVisualizationSettings& getVisualisationSettings() const;
 
     /// @brief recalibrate color scheme according to the current value range
     virtual void buildColorRainbow(const GUIVisualizationSettings& /*s*/, GUIColorScheme& /*scheme*/, int /*active*/, GUIGlObjectType /*objectType*/,
@@ -355,9 +355,6 @@ public:
 
     /// @brief add decals
     void addDecals(const std::vector<Decal>& decals);
-
-    /// @brief get visualisation settings
-    GUIVisualizationSettings* getVisualisationSettings();
 
     /// @brief Returns the delay of the parent application
     double getDelay() const;
