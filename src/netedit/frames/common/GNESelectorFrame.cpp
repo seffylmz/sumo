@@ -177,7 +177,7 @@ GNESelectorFrame::clearCurrentSelection() const {
                 }
             }
             // check if additionals selection is locked
-            if (!myLockGLObjectTypes->IsObjectTypeLocked(GLO_ADDITIONAL)) {
+            if (!myLockGLObjectTypes->IsObjectTypeLocked(GLO_ADDITIONALELEMENT)) {
                 for (const auto& i : myViewNet->getNet()->getAttributeCarriers().additionals) {
                     // first check if additional is selectable
                     if (GNEAttributeCarrier::getTagProperties(i.first).isSelectable()) {
@@ -534,7 +534,7 @@ GNESelectorFrame::LockGLObjectTypes::LockGLObjectTypes(GNESelectorFrame* selecto
     myTypeEntries[GLO_EDGE] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Edges"));
     myTypeEntries[GLO_LANE] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Lanes"));
     myTypeEntries[GLO_CONNECTION] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Connections"));
-    myTypeEntries[GLO_ADDITIONAL] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Additionals"));
+    myTypeEntries[GLO_ADDITIONALELEMENT] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Additionals"));
     myTypeEntries[GLO_CROSSING] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Crossings"));
     myTypeEntries[GLO_POLYGON] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "Polygons"));
     myTypeEntries[GLO_POI] = std::make_pair(Supermode::GNE_SUPERMODE_NETWORK, new ObjectTypeEntry(matrixLockGLObjectTypes, "POIs"));
@@ -578,7 +578,7 @@ GNESelectorFrame::LockGLObjectTypes::removeLockedObject(const GUIGlObjectType ty
 bool
 GNESelectorFrame::LockGLObjectTypes::IsObjectTypeLocked(const GUIGlObjectType type) const {
     if ((type >= 100) && (type < 199)) {
-        return myTypeEntries.at(GLO_ADDITIONAL).second->isGLTypeLocked();
+        return myTypeEntries.at(GLO_ADDITIONALELEMENT).second->isGLTypeLocked();
     } else {
         return myTypeEntries.at(type).second->isGLTypeLocked();
     }
@@ -770,7 +770,7 @@ GNESelectorFrame::ElementSet::onCmdSelectElementSet(FXObject*, FXSelector, void*
             // enable match attribute
             mySelectorFrameParent->myMatchAttribute->enableMatchAttribute();
         } else if (mySetComboBox->getText() == "Additional") {
-            myCurrentElementSet = ELEMENTSET_ADDITIONAL;
+            myCurrentElementSet = ELEMENTSET_ADDITIONALELEMENT;
             mySetComboBox->setTextColor(FXRGB(0, 0, 0));
             // enable match attribute
             mySelectorFrameParent->myMatchAttribute->enableMatchAttribute();
@@ -843,8 +843,8 @@ GNESelectorFrame::MatchAttribute::enableMatchAttribute() {
     std::vector<SumoXMLTag> listOfTags;
     if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_NETWORKELEMENT) {
         listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_NETWORKELEMENT, true);
-    } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_ADDITIONAL) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONAL | GNEAttributeCarrier::TagType::TAGTYPE_TAZ, true);
+    } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_ADDITIONALELEMENT) {
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONALELEMENT | GNEAttributeCarrier::TagType::TAGTYPE_TAZ, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_SHAPE) {
         listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_SHAPE, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_DEMANDELEMENT) {
@@ -885,8 +885,8 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBTag(FXObject*, FXSelector, void*) {
     std::vector<SumoXMLTag> listOfTags;
     if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_NETWORKELEMENT) {
         listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_NETWORKELEMENT, true);
-    } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_ADDITIONAL) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONAL | GNEAttributeCarrier::TagType::TAGTYPE_TAZ, true);
+    } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_ADDITIONALELEMENT) {
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONALELEMENT | GNEAttributeCarrier::TagType::TAGTYPE_TAZ, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_SHAPE) {
         listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_SHAPE, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_DEMANDELEMENT) {
@@ -1328,7 +1328,7 @@ GNESelectorFrame::SelectionOperation::onCmdInvert(FXObject*, FXSelector, void*) 
                 }
             }
             // check if additionals selection is locked
-            if (!locks->IsObjectTypeLocked(GLO_ADDITIONAL)) {
+            if (!locks->IsObjectTypeLocked(GLO_ADDITIONALELEMENT)) {
                 for (const auto& i : mySelectorFrameParent->myViewNet->getNet()->getAttributeCarriers().additionals) {
                     // first check if additional is selectable
                     if (GNEAttributeCarrier::getTagProperties(i.first).isSelectable()) {
@@ -1580,7 +1580,7 @@ GNESelectorFrame::ACsToSelected() const {
             return true;
         }
         // check if additionals selection is locked
-        if (!myLockGLObjectTypes->IsObjectTypeLocked(GLO_ADDITIONAL)) {
+        if (!myLockGLObjectTypes->IsObjectTypeLocked(GLO_ADDITIONALELEMENT)) {
             for (const auto& i : myViewNet->getNet()->getAttributeCarriers().additionals) {
                 // first check if additional is selectable
                 if (GNEAttributeCarrier::getTagProperties(i.first).isSelectable() && (myViewNet->getNet()->getAttributeCarriers().additionals.at(i.first).size() > 0)) {

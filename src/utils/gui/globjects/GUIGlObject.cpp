@@ -55,7 +55,7 @@ StringBijection<GUIGlObjectType>::Entry GUIGlObject::GUIGlObjectTypeNamesInitial
     {"connection",          GLO_CONNECTION},
     {"tlLogic",             GLO_TLLOGIC},
     //
-    {"additional",          GLO_ADDITIONAL},
+    {"additional",          GLO_ADDITIONALELEMENT},
     {"busStop",             GLO_BUS_STOP},
     {"access",              GLO_ACCESS},
     {"taz",                 GLO_TAZ},
@@ -118,8 +118,8 @@ const GUIGlID GUIGlObject::INVALID_ID = 0;
 GUIGlObject::GUIGlObject(GUIGlObjectType type, const std::string& microsimID) :
     myGLObjectType(type),
     myMicrosimID(microsimID) {
-    // make sure that reserved GLO_ADDITIONAL isn't used
-    assert(myGLObjectType != GLO_ADDITIONAL);
+    // make sure that reserved GLO_ADDITIONALELEMENT isn't used
+    assert(myGLObjectType != GLO_ADDITIONALELEMENT);
     myFullName = createFullName();
     myGlID = GUIGlObjectStorage::gIDStorage.registerObject(this, myFullName);
 }
