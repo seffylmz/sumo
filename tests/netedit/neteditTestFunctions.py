@@ -343,14 +343,23 @@ def setupAndStart(testRoot, extraParameters=[], debugInformation=True, waitTime=
 
 def supermodeNetwork():
     """
-    @brief select Network Supermode
+    @brief select supermode Network
     """
-    typeKey('F3')
+    typeKey('F2')
 
 
 def supermodeDemand():
     """
-    @brief select Demand Supermode
+    @brief select supermode Demand
+    """
+    typeKey('F3')
+    # wait for output
+    time.sleep(DELAY_RECOMPUTE)
+
+
+def supermodeDemand():
+    """
+    @brief select supermode Data
     """
     typeKey('F4')
     # wait for output
@@ -677,8 +686,8 @@ def openAboutDialog(waitingTime=DELAY_QUESTION):
     """
     @brief open and close about dialog
     """
-    # type F2 to open about dialog
-    typeKey('F2')
+    # type F12 to open about dialog
+    typeKey('F12')
     # wait before closing
     time.sleep(waitingTime)
     # press enter to close dialog (Ok must be focused)
