@@ -28,7 +28,7 @@
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <utils/geom/GeomHelper.h>
 
-#include "GNENetElement.h"
+#include "GNENetworkElement.h"
 
 
 // ===========================================================================

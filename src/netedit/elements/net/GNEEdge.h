@@ -24,7 +24,7 @@
 
 #include <netbuild/NBEdge.h>
 
-#include "GNENetElement.h"
+#include "GNENetworkElement.h"
 
 
 // ===========================================================================

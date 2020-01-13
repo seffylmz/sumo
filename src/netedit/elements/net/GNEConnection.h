@@ -21,7 +21,7 @@
 // included modules
 // ===========================================================================
 
-#include "GNENetElement.h"
+#include "GNENetworkElement.h"
 
 #include <netbuild/NBEdge.h>
 
