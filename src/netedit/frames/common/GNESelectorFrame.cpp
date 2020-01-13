@@ -748,7 +748,7 @@ GNESelectorFrame::ElementSet::refreshElementSet() {
     mySetComboBox->clearItems();
     // now fill elements depending of supermode
     if (mySelectorFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_NETWORK) {
-        mySetComboBox->appendItem("Net Element");
+        mySetComboBox->appendItem("network element");
         mySetComboBox->appendItem("Additional");
         mySetComboBox->appendItem("Shape");
     } else {
@@ -764,7 +764,7 @@ long
 GNESelectorFrame::ElementSet::onCmdSelectElementSet(FXObject*, FXSelector, void*) {
     // check depending of current supermode
     if (mySelectorFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_NETWORK) {
-        if (mySetComboBox->getText() == "Net Element") {
+        if (mySetComboBox->getText() == "network element") {
             myCurrentElementSet = ELEMENTSET_NETELEMENT;
             mySetComboBox->setTextColor(FXRGB(0, 0, 0));
             // enable match attribute

@@ -7,11 +7,11 @@
 // http://www.eclipse.org/legal/epl-v20.html
 // SPDX-License-Identifier: EPL-2.0
 /****************************************************************************/
-/// @file    GNENetElement.cpp
+/// @file    GNENetworkElement.cpp
 /// @author  Pablo Alvarez Lopez
 /// @date    Jun 2016
 ///
-// A abstract class for netElements
+// A abstract class for networkElements
 /****************************************************************************/
 
 
@@ -35,7 +35,7 @@
 // method definitions
 // ===========================================================================
 
-GNENetElement::GNENetElement(GNENet* net, const std::string& id, GUIGlObjectType type, SumoXMLTag tag) :
+GNENetworkElement::GNENetworkElement(GNENet* net, const std::string& id, GUIGlObjectType type, SumoXMLTag tag) :
     GUIGlObject(type, id),
     GNEAttributeCarrier(tag),
     GNEHierarchicalParentElements(this, {}, {}, {}, {}, {}),
@@ -45,29 +45,29 @@ GNENetElement::GNENetElement(GNENet* net, const std::string& id, GUIGlObjectType
 }
 
 
-GNENetElement::~GNENetElement() {}
+GNENetworkElement::~GNENetworkElement() {}
 
 
 void
-GNENetElement::updateDottedGeometry(const PositionVector &shape) {
+GNENetworkElement::updateDottedGeometry(const PositionVector &shape) {
     myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), shape);
 }
 
 
 std::string
-GNENetElement::generateChildID(SumoXMLTag /*childTag*/) {
+GNENetworkElement::generateChildID(SumoXMLTag /*childTag*/) {
     return "";
 }
 
 
 GNENet*
-GNENetElement::getNet() const {
+GNENetworkElement::getNet() const {
     return myNet;
 }
 
 
 GUIParameterTableWindow*
-GNENetElement::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
+GNENetworkElement::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
     // Create table
     GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, myTagProperty.getNumberOfAttributes());
     // Iterate over attributes
@@ -86,7 +86,7 @@ GNENetElement::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
 
 
 void
-GNENetElement::selectAttributeCarrier(bool changeFlag) {
+GNENetworkElement::selectAttributeCarrier(bool changeFlag) {
     if (!myNet) {
         throw ProcessError("Net cannot be nullptr");
     } else {
@@ -102,7 +102,7 @@ GNENetElement::selectAttributeCarrier(bool changeFlag) {
 
 
 void
-GNENetElement::unselectAttributeCarrier(bool changeFlag) {
+GNENetworkElement::unselectAttributeCarrier(bool changeFlag) {
     if (!myNet) {
         throw ProcessError("Net cannot be nullptr");
     } else {
@@ -117,13 +117,13 @@ GNENetElement::unselectAttributeCarrier(bool changeFlag) {
 
 
 bool
-GNENetElement::isAttributeCarrierSelected() const {
+GNENetworkElement::isAttributeCarrierSelected() const {
     return mySelected;
 }
 
 
 bool
-GNENetElement::drawUsingSelectColor() const {
+GNENetworkElement::drawUsingSelectColor() const {
     if (mySelected && (myNet->getViewNet()->getEditModes().currentSupermode == GNE_SUPERMODE_NETWORK)) {
         return true;
     } else {
@@ -133,19 +133,19 @@ GNENetElement::drawUsingSelectColor() const {
 
 
 void
-GNENetElement::enableAttribute(SumoXMLAttr /*key*/, GNEUndoList* /*undoList*/) {
+GNENetworkElement::enableAttribute(SumoXMLAttr /*key*/, GNEUndoList* /*undoList*/) {
     //
 }
 
 
 void
-GNENetElement::disableAttribute(SumoXMLAttr /*key*/, GNEUndoList* /*undoList*/) {
+GNENetworkElement::disableAttribute(SumoXMLAttr /*key*/, GNEUndoList* /*undoList*/) {
     //
 }
 
 
 std::string
-GNENetElement::getPopUpID() const {
+GNENetworkElement::getPopUpID() const {
     if (myTagProperty.getTag() == SUMO_TAG_CONNECTION) {
         return getAttribute(SUMO_ATTR_FROM) + "_" + getAttribute(SUMO_ATTR_FROM_LANE) + " -> " + getAttribute(SUMO_ATTR_TO) + "_" + getAttribute(SUMO_ATTR_TO_LANE);
     } else {
@@ -155,7 +155,7 @@ GNENetElement::getPopUpID() const {
 
 
 std::string
-GNENetElement::getHierarchyName() const {
+GNENetworkElement::getHierarchyName() const {
     if (myTagProperty.getTag() == SUMO_TAG_LANE) {
         return toString(SUMO_TAG_LANE) + " " + getAttribute(SUMO_ATTR_INDEX);
     } else if (myTagProperty.getTag() == SUMO_TAG_CONNECTION) {
@@ -169,7 +169,7 @@ GNENetElement::getHierarchyName() const {
 
 
 void
-GNENetElement::setEnabledAttribute(const int /*enabledAttributes*/) {
+GNENetworkElement::setEnabledAttribute(const int /*enabledAttributes*/) {
     //
 }
 

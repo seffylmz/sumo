@@ -34,7 +34,7 @@
 // ===========================================================================
 
 class GNEViewNet;
-class GNENetElement;
+class GNENetworkElement;
 class GUIGLObjectPopupMenu;
 
 // ===========================================================================
@@ -174,7 +174,7 @@ public:
     virtual Boundary getCenteringBoundary() const = 0;
 
     /// @brief split geometry
-    virtual void splitEdgeGeometry(const double splitPosition, const GNENetElement* originalElement, const GNENetElement* newElement, GNEUndoList* undoList) = 0;
+    virtual void splitEdgeGeometry(const double splitPosition, const GNENetworkElement* originalElement, const GNENetworkElement* newElement, GNEUndoList* undoList) = 0;
     /// @}
 
     /// @brief update dotted contour

@@ -31,7 +31,7 @@
 // class declarations
 // ===========================================================================
 class GNEAttributeCarrier;
-class GNENetElement;
+class GNENetworkElement;
 class GNEAdditional;
 class GNEDemandElement;
 class GNEShape;

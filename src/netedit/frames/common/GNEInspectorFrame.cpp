@@ -133,7 +133,7 @@ GNEInspectorFrame::processNetworkSupermodeClick(const Position& clickedPosition,
         if (myViewNet->getKeyPressed().controlKeyPressed()) {
             // Check if this GLobject type is locked
             if (!myViewNet->getViewParent()->getSelectorFrame()->getLockGLObjectTypes()->IsObjectTypeLocked(objectsUnderCursor.getGlTypeFront())) {
-                // toogle netElement selection
+                // toogle networkElement selection
                 if (objectsUnderCursor.getAttributeCarrierFront()->isAttributeCarrierSelected()) {
                     objectsUnderCursor.getAttributeCarrierFront()->unselectAttributeCarrier();
                 } else {
@@ -169,7 +169,7 @@ GNEInspectorFrame::processDemandSupermodeClick(const Position& clickedPosition, 
         if (myViewNet->getKeyPressed().controlKeyPressed()) {
             // Check if this GLobject type is locked
             if (!myViewNet->getViewParent()->getSelectorFrame()->getLockGLObjectTypes()->IsObjectTypeLocked(objectsUnderCursor.getGlTypeFront())) {
-                // toogle netElement selection
+                // toogle networkElement selection
                 if (objectsUnderCursor.getAttributeCarrierFront()->isAttributeCarrierSelected()) {
                     objectsUnderCursor.getAttributeCarrierFront()->unselectAttributeCarrier();
                 } else {
@@ -205,7 +205,7 @@ GNEInspectorFrame::processDataSupermodeClick(const Position& clickedPosition, GN
         if (myViewNet->getKeyPressed().controlKeyPressed()) {
             // Check if this GLobject type is locked
             if (!myViewNet->getViewParent()->getSelectorFrame()->getLockGLObjectTypes()->IsObjectTypeLocked(objectsUnderCursor.getGlTypeFront())) {
-                // toogle netElement selection
+                // toogle networkElement selection
                 if (objectsUnderCursor.getAttributeCarrierFront()->isAttributeCarrierSelected()) {
                     objectsUnderCursor.getAttributeCarrierFront()->unselectAttributeCarrier();
                 } else {
@@ -274,7 +274,7 @@ GNEInspectorFrame::inspectMultisection(const std::vector<GNEAttributeCarrier*>& 
     if (ACs.size() > 0) {
         // Set header
         std::string headerString;
-        if (ACs.front()->getTagProperty().isNetElement()) {
+        if (ACs.front()->getTagProperty().isNetworkElement()) {
             headerString = "Net: ";
         } else if (ACs.front()->getTagProperty().isAdditional()) {
             headerString = "Additional: ";

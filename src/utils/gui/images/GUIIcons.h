@@ -260,7 +260,7 @@ enum GUIIcon {
     ICON_OPTIONS,
     /// @}
 
-    /// @name NETEDIT netElements icons
+    /// @name NETEDIT network elements icons
     /// @{
     ICON_JUNCTION,
     ICON_EDGE,
@@ -270,7 +270,7 @@ enum GUIIcon {
     ICON_CROSSING,
     /// @}
 
-    /// @name NETEDIT additional icons
+    /// @name NETEDIT additional elements icons
     /// @{
     ICON_BUSSTOP,
     ICON_ACCESS,
@@ -300,7 +300,7 @@ enum GUIIcon {
     ICON_TAZEDGE,
     /// @}
 
-    /// @name NETEDIT DemandElements icons
+    /// @name NETEDIT Demand elements icons
     /// @{
     ICON_ROUTE,
     ICON_VTYPE,
