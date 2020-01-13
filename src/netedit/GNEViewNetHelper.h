@@ -784,9 +784,6 @@ struct GNEViewNetHelper {
         /// @brief chekable button for edit mode select
         MFXCheckableButton* selectButton;
 
-        /// @brief chekable button for edit mode move
-        MFXCheckableButton* moveButton;
-
     private:
         /// @brief pointer to viewNet
         GNEViewNet* myViewNet;
@@ -812,6 +809,9 @@ struct GNEViewNetHelper {
 
         /// @brief update network checkable buttons
         void updateNetworkCheckableButtons();
+
+        /// @brief chekable button for edit mode "move net elements"
+        MFXCheckableButton* moveNetElementsButton;
 
         /// @brief chekable button for edit mode create edge
         MFXCheckableButton* createEdgeButton;
@@ -862,6 +862,9 @@ struct GNEViewNetHelper {
 
         /// @brief update Demand checkable buttons
         void updateDemandCheckableButtons();
+
+        /// @brief chekable button for edit mode "move demand elements"
+        MFXCheckableButton* moveDemandElementsButton;
 
         /// @brief chekable button for edit mode create routes
         MFXCheckableButton* routeButton;

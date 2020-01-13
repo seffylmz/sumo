@@ -2546,7 +2546,7 @@ GNEViewNet::updateNetworkModeSpecificControls() {
             myNetworkViewOptions.menuCheckWarnAboutMerge->show();
             myNetworkViewOptions.menuCheckShowJunctionBubble->show();
             myNetworkViewOptions.menuCheckMoveElevation->show();
-            myCommonCheckableButtons.moveButton->setChecked(true);
+            myNetworkCheckableButtons.moveNetElementsButton->setChecked(true);
             // show view options
             myCommonViewOptions.menuCheckShowGrid->show();
             // show toolbar grip of view options
@@ -2659,6 +2659,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getInspectorFrame()->show();
             myViewParent->getInspectorFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getInspectorFrame();
+            // set checkable button
             myCommonCheckableButtons.inspectButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2672,6 +2673,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getDeleteFrame()->show();
             myViewParent->getDeleteFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getDeleteFrame();
+            // set checkable button
             myCommonCheckableButtons.deleteButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2684,6 +2686,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getSelectorFrame()->show();
             myViewParent->getSelectorFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getSelectorFrame();
+            // set checkable button
             myCommonCheckableButtons.selectButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2693,7 +2696,8 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions->show();
             break;
         case GNE_DEMANDMODE_MOVE:
-            myCommonCheckableButtons.moveButton->setChecked(true);
+            // set checkable button
+            myDemandCheckableButtons.moveDemandElementsButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
             myCommonViewOptions.menuCheckShowGrid->show();
@@ -2707,6 +2711,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getRouteFrame()->show();
             myViewParent->getRouteFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getRouteFrame();
+            // set checkable button
             myDemandCheckableButtons.routeButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2719,6 +2724,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getVehicleFrame()->show();
             myViewParent->getVehicleFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getVehicleFrame();
+            // set checkable button
             myDemandCheckableButtons.vehicleButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2731,6 +2737,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getVehicleTypeFrame()->show();
             myViewParent->getVehicleTypeFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getVehicleTypeFrame();
+            // set checkable button
             myDemandCheckableButtons.vehicleTypeButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2743,6 +2750,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getStopFrame()->show();
             myViewParent->getStopFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getStopFrame();
+            // set checkable button
             myDemandCheckableButtons.stopButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2755,6 +2763,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getPersonTypeFrame()->show();
             myViewParent->getPersonTypeFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getPersonTypeFrame();
+            // set checkable button
             myDemandCheckableButtons.personTypeButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2767,6 +2776,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getPersonFrame()->show();
             myViewParent->getPersonFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getPersonFrame();
+            // set checkable button
             myDemandCheckableButtons.personButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
@@ -2779,6 +2789,7 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getPersonPlanFrame()->show();
             myViewParent->getPersonPlanFrame()->focusUpperElement();
             myCurrentFrame = myViewParent->getPersonPlanFrame();
+            // set checkable button
             myDemandCheckableButtons.personPlanButton->setChecked(true);
             // show view options
             myDemandViewOptions.menuCheckHideShapes->show();
