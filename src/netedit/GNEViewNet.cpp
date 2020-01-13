@@ -2491,6 +2491,8 @@ GNEViewNet::updateNetworkModeSpecificControls() {
     myCommonCheckableButtons.disableCommonCheckableButtons();
     // disable all network edit modes
     myNetworkCheckableButtons.disableNetworkCheckableButtons();
+    // disable all network edit modes
+    myDataCheckableButtons.disableDataCheckableButtons();
     // hide all frames
     myViewParent->hideAllFrames();
     // In network mode, always show option "show demand elements"
@@ -2650,6 +2652,8 @@ GNEViewNet::updateDemandModeSpecificControls() {
     myCommonCheckableButtons.disableCommonCheckableButtons();
     // disable all Demand edit modes
     myDemandCheckableButtons.disableDemandCheckableButtons();
+    // disable all network edit modes
+    myDataCheckableButtons.disableDataCheckableButtons();
     // hide all frames
     myViewParent->hideAllFrames();
     // enable selected controls
