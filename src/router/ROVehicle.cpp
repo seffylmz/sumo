@@ -204,6 +204,7 @@ ROVehicle::saveAsXML(OutputDevice& os, OutputDevice* const typeos, bool asAltern
 
     const bool writeTrip = options.exists("write-trips") && options.getBool("write-trips");
     const bool writeGeoTrip = writeTrip && options.getBool("write-trips.geo");
+    const bool writeJunctions = writeTrip && options.getBool("write-trips.junctions");
     // write the vehicle (new style, with included routes)
     getParameter().write(os, options, writeTrip ? SUMO_TAG_TRIP : SUMO_TAG_VEHICLE);
 
@@ -216,6 +217,10 @@ ROVehicle::saveAsXML(OutputDevice& os, OutputDevice* const typeos, bool asAltern
             if (edges.front()->isTazConnector()) {
                 if (edges.size() > 1) {
                     from = edges[1];
+                    if (from->isTazConnector() && writeJunctions && edges.front()->getSuccessors().size() > 0) {
+                        // routing was skipped
+                        from = edges.front()->getSuccessors(getVClass()).front();
+                    }
                 }
             } else {
                 from = edges[0];
@@ -223,6 +228,10 @@ ROVehicle::saveAsXML(OutputDevice& os, OutputDevice* const typeos, bool asAltern
             if (edges.back()->isTazConnector()) {
                 if (edges.size() > 1) {
                     to = edges[edges.size() - 2];
+                    if (to->isTazConnector() && writeJunctions && edges.back()->getPredecessors().size() > 0) {
+                        // routing was skipped
+                        to = edges.back()->getPredecessors().front();
+                    }
                 }
             } else {
                 to = edges[edges.size() - 1];
@@ -239,6 +248,8 @@ ROVehicle::saveAsXML(OutputDevice& os, OutputDevice* const typeos, bool asAltern
                 } else {
                     os.writeAttr(SUMO_ATTR_FROMXY, fromPos);
                 }
+            } else if (writeJunctions) {
+                os.writeAttr(SUMO_ATTR_FROMJUNCTION, from->getFromJunction()->getID());
             } else {
                 os.writeAttr(SUMO_ATTR_FROM, from->getID());
             }
@@ -254,6 +265,8 @@ ROVehicle::saveAsXML(OutputDevice& os, OutputDevice* const typeos, bool asAltern
                 } else {
                     os.writeAttr(SUMO_ATTR_TOXY, toPos);
                 }
+            } else if (writeJunctions) {
+                os.writeAttr(SUMO_ATTR_TOJUNCTION, to->getToJunction()->getID());
             } else {
                 os.writeAttr(SUMO_ATTR_TO, to->getID());
             }

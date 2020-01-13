@@ -1,4 +1,4 @@
-Eclipse SUMO duarouter Version v1_4_0+0427-e973ab2
+Eclipse SUMO duarouter Version v1_4_0+0455-334a419
  Copyright (C) 2001-2019 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 Shortest path router and DUE computer for the microscopic, multi-modal traffic
   simulation SUMO.
@@ -21,6 +21,9 @@ Input Options:
                                         and trips from FILE(s)
   --phemlight-path FILE               Determines where to load PHEMlight
                                         definitions from.
+  --junction-taz                      Initialize a TAZ for every junction to
+                                        use attributes toJunction and
+                                        fromJunction
   -w, --weight-files FILE             Read network weights from FILE(s)
   --lane-weight-files FILE            Read lane-based network weights from
                                         FILE(s)
@@ -54,6 +57,8 @@ Output Options:
   --write-trips                       Write trips instead of vehicles (for
                                         validating trip input)
   --write-trips.geo                   Write trips with geo-coordinates
+  --write-trips.junctions             Write trips with fromJunction and
+                                        toJunction
   --exit-times                        Write exit times (weights) for each edge
 
 Processing Options:
