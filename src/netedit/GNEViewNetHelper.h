@@ -369,9 +369,6 @@ struct GNEViewNetHelper {
         /// @brief build menu checks
         void buildCommonViewOptionsMenuChecks();
 
-        /// @brief hide all options menu checks
-        void hideCommonViewOptionsMenuChecks();
-
         /// @brief get visible common menu commands
         void getVisibleCommonMenuCommands(std::vector<FXMenuCheck*>& commands) const;
 

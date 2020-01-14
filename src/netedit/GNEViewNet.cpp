@@ -2525,8 +2525,6 @@ void
 GNEViewNet::updateNetworkModeSpecificControls() {
     // hide grid
     myCommonViewOptions.menuCheckShowGrid->setCheck(myVisualizationSettings->showGrid);
-    // hide all checkbox of view options Common
-    myCommonViewOptions.hideCommonViewOptionsMenuChecks();
     // hide all checkbox of view options Network
     myNetworkViewOptions.hideNetworkViewOptionsMenuChecks();
     // hide all checkbox of view options Demand
@@ -2582,21 +2580,19 @@ GNEViewNet::updateNetworkModeSpecificControls() {
             break;
         // specific modes
         case GNE_NETWORKMODE_CREATE_EDGE:
+            // show view options
             myNetworkViewOptions.menuCheckChainEdges->show();
             myNetworkViewOptions.menuCheckAutoOppositeEdge->show();
             myNetworkCheckableButtons.createEdgeButton->setChecked(true);
-            // show view options
-            myCommonViewOptions.menuCheckShowGrid->show();
             // show toolbar grip of view options
             myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions->show();
             break;
         case GNE_NETWORKMODE_MOVE:
+            // show view options
             myNetworkViewOptions.menuCheckWarnAboutMerge->show();
             myNetworkViewOptions.menuCheckShowJunctionBubble->show();
             myNetworkViewOptions.menuCheckMoveElevation->show();
             myNetworkCheckableButtons.moveNetworkElementsButton->setChecked(true);
-            // show view options
-            myCommonViewOptions.menuCheckShowGrid->show();
             // show toolbar grip of view options
             myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions->show();
             break;

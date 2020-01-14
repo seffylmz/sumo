@@ -1523,12 +1523,6 @@ GNEViewNetHelper::CommonViewOptions::buildCommonViewOptionsMenuChecks() {
 
 
 void
-GNEViewNetHelper::CommonViewOptions::hideCommonViewOptionsMenuChecks() {
-    menuCheckShowGrid->hide();
-}
-
-
-void
 GNEViewNetHelper::CommonViewOptions::getVisibleCommonMenuCommands(std::vector<FXMenuCheck*>& commands) const {
     // save visible menu commands in commands vector
     if (menuCheckShowGrid->shown()) {
