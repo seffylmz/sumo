@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Mon Jan 13 22:40:07 2020 by Eclipse SUMO duarouter Version v1_4_0+0481-53ce226bdd
+<!-- generated on Thu Feb  7 14:06:38 2019 by Eclipse SUMO duarouter Version v1_0_1+0645-93703db
 This data file and the accompanying materials
 are made available under the terms of the Eclipse Public License v2.0
 which accompanies this distribution, and is available at
@@ -10,14 +10,15 @@ SPDX-License-Identifier: EPL-2.0
 
     <input>
         <net-file value="input_net.net.xml"/>
-        <route-files value="input_routes.rou.xml"/>
-        <junction-taz value="true"/>
+        <additional-files value="input_additional.add.xml"/>
+        <route-files value="input_trips.trips.xml"/>
     </input>
 
     <output>
         <write-license value="true"/>
         <output-file value="routes.rou.xml"/>
         <alternatives-output value="routes.rou.alt.xml"/>
+        <write-trips value="true"/>
     </output>
 
     <report>
@@ -29,10 +30,8 @@ SPDX-License-Identifier: EPL-2.0
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
-    <vType id="DEFAULT_VEHTYPE" sigma="0"/>
-    <vehicle id="0" depart="0.00">
-        <routeDistribution last="0">
-            <route cost="24.07" probability="1.00000000" edges="A0toB0 B0toC0 C0toC1"/>
-        </routeDistribution>
-    </vehicle>
+    <trip id="0" depart="0.00" from="beg" to="rend">
+        <stop busStop="busStop#1" duration="10.00"/>
+    </trip>
+    <trip id="2" depart="0.00" from="beg" to="rend" via="left"/>
 </routes>
