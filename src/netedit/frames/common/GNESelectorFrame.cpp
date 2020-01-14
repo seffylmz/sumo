@@ -842,13 +842,13 @@ GNESelectorFrame::MatchAttribute::enableMatchAttribute() {
     // Set items depending of current item set
     std::vector<SumoXMLTag> listOfTags;
     if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_NETWORKELEMENT) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_NETWORKELEMENT, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_NETWORKELEMENT, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_ADDITIONALELEMENT) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONALELEMENT | GNEAttributeCarrier::TagType::TAGTYPE_TAZ, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_ADDITIONALELEMENT | GNETagProperties::TagType::TAGTYPE_TAZ, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_SHAPE) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_SHAPE, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_SHAPE, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_DEMANDELEMENT) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_DEMANDELEMENT | GNEAttributeCarrier::TagType::TAGTYPE_STOP, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_DEMANDELEMENT | GNETagProperties::TagType::TAGTYPE_STOP, true);
     } else {
         throw ProcessError("Invalid element set");
     }
@@ -884,13 +884,13 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBTag(FXObject*, FXSelector, void*) {
     // find current element tag
     std::vector<SumoXMLTag> listOfTags;
     if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_NETWORKELEMENT) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_NETWORKELEMENT, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_NETWORKELEMENT, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_ADDITIONALELEMENT) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONALELEMENT | GNEAttributeCarrier::TagType::TAGTYPE_TAZ, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_ADDITIONALELEMENT | GNETagProperties::TagType::TAGTYPE_TAZ, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_SHAPE) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_SHAPE, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_SHAPE, true);
     } else if (mySelectorFrameParent->myElementSet->getElementSet() == ElementSet::ELEMENTSET_DEMANDELEMENT) {
-        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_DEMANDELEMENT | GNEAttributeCarrier::TagType::TAGTYPE_STOP, true);
+        listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAGTYPE_DEMANDELEMENT | GNETagProperties::TagType::TAGTYPE_STOP, true);
     } else {
         throw ProcessError("Unkown set");
     }
@@ -957,16 +957,16 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBAttribute(FXObject*, FXSelector, voi
     // obtain tag property (only for improve code legibility)
     const auto& tagValue = GNEAttributeCarrier::getTagProperties(myCurrentTag);
     // add an extra AttributeValues to allow select ACs using as criterium "parameters"
-    GNEAttributeCarrier::AttributeProperties extraAttrProperty;
-    extraAttrProperty = GNEAttributeCarrier::AttributeProperties(GNE_ATTR_PARAMETERS,
-                        GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_STRING,
+    GNEAttributeProperties extraAttrProperty;
+    extraAttrProperty = GNEAttributeProperties(GNE_ATTR_PARAMETERS,
+                        GNEAttributeProperties::AttrProperty::ATTRPROPERTY_STRING,
                         "Parameters");
     tagPropertiesCopy.addAttribute(extraAttrProperty);
     // add extra attribute if item can block movement
     if (tagValue.canBlockMovement()) {
         // add an extra AttributeValues to allow select ACs using as criterium "block movement"
-        extraAttrProperty = GNEAttributeCarrier::AttributeProperties(GNE_ATTR_BLOCK_MOVEMENT,
-                            GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_BOOL | GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_DEFAULTVALUESTATIC,
+        extraAttrProperty = GNEAttributeProperties(GNE_ATTR_BLOCK_MOVEMENT,
+                            GNEAttributeProperties::AttrProperty::ATTRPROPERTY_BOOL | GNEAttributeProperties::AttrProperty::ATTRPROPERTY_DEFAULTVALUESTATIC,
                             "Block movement",
                             "false");
         tagPropertiesCopy.addAttribute(extraAttrProperty);
@@ -974,8 +974,8 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBAttribute(FXObject*, FXSelector, voi
     // add extra attribute if item can block shape
     if (tagValue.canBlockShape()) {
         // add an extra AttributeValues to allow select ACs using as criterium "block shape"
-        extraAttrProperty = GNEAttributeCarrier::AttributeProperties(GNE_ATTR_BLOCK_SHAPE,
-                            GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_BOOL | GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_DEFAULTVALUESTATIC,
+        extraAttrProperty = GNEAttributeProperties(GNE_ATTR_BLOCK_SHAPE,
+                            GNEAttributeProperties::AttrProperty::ATTRPROPERTY_BOOL | GNEAttributeProperties::AttrProperty::ATTRPROPERTY_DEFAULTVALUESTATIC,
                             "Block shape",
                             "false");
         tagPropertiesCopy.addAttribute(extraAttrProperty);
@@ -983,8 +983,8 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBAttribute(FXObject*, FXSelector, voi
     // add extra attribute if item can close shape
     if (tagValue.canCloseShape()) {
         // add an extra AttributeValues to allow select ACs using as criterium "close shape"
-        extraAttrProperty = GNEAttributeCarrier::AttributeProperties(GNE_ATTR_CLOSE_SHAPE,
-                            GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_BOOL | GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_DEFAULTVALUESTATIC,
+        extraAttrProperty = GNEAttributeProperties(GNE_ATTR_CLOSE_SHAPE,
+                            GNEAttributeProperties::AttrProperty::ATTRPROPERTY_BOOL | GNEAttributeProperties::AttrProperty::ATTRPROPERTY_DEFAULTVALUESTATIC,
                             "Close shape",
                             "true");
         tagPropertiesCopy.addAttribute(extraAttrProperty);
@@ -992,8 +992,8 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBAttribute(FXObject*, FXSelector, voi
     // add extra attribute if item can have parent
     if (tagValue.hasParent()) {
         // add an extra AttributeValues to allow select ACs using as criterium "parent"
-        extraAttrProperty = GNEAttributeCarrier::AttributeProperties(GNE_ATTR_PARENT,
-                            GNEAttributeCarrier::AttrProperty::ATTRPROPERTY_STRING,
+        extraAttrProperty = GNEAttributeProperties(GNE_ATTR_PARENT,
+                            GNEAttributeProperties::AttrProperty::ATTRPROPERTY_STRING,
                             "Parent element");
         tagPropertiesCopy.addAttribute(extraAttrProperty);
     }
