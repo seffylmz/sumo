@@ -156,7 +156,7 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
         NBRailwayTopologyAnalyzer::analyzeTopology(*this);
     }
 
-    if (oc.getBool("junctions.join") || (oc.exists("ramps.guess") && oc.getBool("ramps.guess")) || oc.getBool("tls.guess.joining")) {
+    if (oc.getBool("junctions.join") || (oc.exists("ramps.guess") && oc.getBool("ramps.guess")) || oc.getBool("tls.guess.joining") || oc.getBool("tls.guess-signals")) {
         // preliminary geometry computations to determine the length of edges
         // This depends on turning directions and sorting of edge list
         // in case junctions are joined geometry computations have to be repeated
@@ -189,10 +189,6 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
         before = PROGRESS_BEGIN_TIME_MESSAGE("Joining junction clusters");
         numJoined += myNodeCont.joinJunctions(oc.getFloat("junctions.join-dist"), myDistrictCont, myEdgeCont, myTLLCont, myPTStopCont);
         PROGRESS_TIME_MESSAGE(before);
-    }
-    if (oc.getBool("junctions.join") || (oc.exists("ramps.guess") && oc.getBool("ramps.guess"))) {
-        // reset geometry to avoid influencing subsequent steps (ramps.guess)
-        myEdgeCont.computeLaneShapes();
     }
     if (numJoined > 0) {
         // bit of a misnomer since we're already done

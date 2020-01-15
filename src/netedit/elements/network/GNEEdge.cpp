@@ -43,6 +43,7 @@
 
 //#define DEBUG_SMOOTH_GEOM
 //#define DEBUGCOND(obj) (true)
+#define VEHICLE_GAP 1
 
 // ===========================================================================
 // static
@@ -145,7 +146,7 @@ GNEEdge::updateGeometry() {
             pathElementChild->updatePartialGeometry(this);
         }
         // update vehicle geometry
-        updateVehicleGeometries();
+        updateStackedVehicleGeometries();
         // mark dotted geometry deprecated
         myDottedGeometry.markDottedGeometryDeprecated();
     }
@@ -1217,16 +1218,32 @@ GNEEdge::drawPartialTripFromTo(const GUIVisualizationSettings& s, const GNEDeman
     // draw trip from to
     if (junction) {
         // iterate over segments
-        for (const auto& segment : tripOrFromTo->getDemandElementSegmentGeometry()) {
-            // draw partial segment
-            GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, tripOrFromToWidth);
+        if (myNet->getViewNet()->getCommonViewOptions().drawStackedVehicles()) {
+            for (const auto& segment : tripOrFromTo->getDemandElementStackedSegmentGeometry()) {
+                // draw partial segment
+                GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, tripOrFromToWidth);
+            }
+        } else {
+            for (const auto& segment : tripOrFromTo->getDemandElementSegmentGeometry()) {
+                // draw partial segment
+                GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, tripOrFromToWidth);
+            }
         }
     } else {
         // iterate over segments
-        for (const auto& segment : tripOrFromTo->getDemandElementSegmentGeometry()) {
-            // draw partial segment
-            if ((segment.edge == this) && (segment.AC == tripOrFromTo)) {
-                GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, tripOrFromToWidth);
+        if (myNet->getViewNet()->getCommonViewOptions().drawStackedVehicles()) {
+            for (const auto& segment : tripOrFromTo->getDemandElementStackedSegmentGeometry()) {
+                // draw partial segment
+                if ((segment.edge == this) && (segment.AC == tripOrFromTo)) {
+                    GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, tripOrFromToWidth);
+                }
+            }
+        } else {
+            for (const auto& segment : tripOrFromTo->getDemandElementSegmentGeometry()) {
+                // draw partial segment
+                if ((segment.edge == this) && (segment.AC == tripOrFromTo)) {
+                    GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, tripOrFromToWidth);
+                }
             }
         }
     }
@@ -1416,29 +1433,40 @@ GNEEdge::invalidatePathChildElementss() {
 
 
 void
-GNEEdge::updateVehicleGeometries() {
+GNEEdge::updateStackedVehicleGeometries() {
     // get vehicles over edge
-    std::vector<GNEDemandElement* > vehicles = getVehiclesOverEdge();
-    // obtain total lenght
-    double totalLength = 0;
+    const std::vector<GNEDemandElement* > vehicles = getVehiclesOverEdge();
+    // now split vehicles by lanes
+    std::map<const GNELane*, std::vector<GNEDemandElement* > > laneVehiclesMap;
     for (const auto &vehicle : vehicles) {
-        totalLength += vehicle->getAttributeDouble(SUMO_ATTR_LENGTH);
+        const GNELane* vehicleLane = vehicle->getFirstAllowedVehicleLane();
+        if (vehicleLane) {
+            laneVehiclesMap[vehicleLane].push_back(vehicle);
+        }
     }
-    // calculate multiplier for vehicle positions
-    double multiplier = 1;
-    const double laneShapeLenght = myLanes.front()->getLaneShape().length();
-    if (laneShapeLenght == 0) {
-        multiplier = 0;
-    } else if (totalLength > laneShapeLenght) {
-        multiplier = (laneShapeLenght / totalLength);
-    }
-    // declare current lenght
-    double lenght = 0;
-    // iterate over vehicles to calculate position and rotations
-    for (const auto &vehicle : vehicles) {
-        vehicle->getDemandElementGeometry().updateGeometry(myLanes.front(), lenght * multiplier);
-        // update lenght
-        lenght += vehicle->getAttributeDouble(SUMO_ATTR_LENGTH);
+    // iterate over every lane
+    for (const auto &laneVehicle : laneVehiclesMap) {
+        // obtain total lenght
+        double totalLength = 0;
+        for (const auto &vehicle : laneVehicle.second) {
+            totalLength += vehicle->getAttributeDouble(SUMO_ATTR_LENGTH) + VEHICLE_GAP;
+        }
+        // calculate multiplier for vehicle positions
+        double multiplier = 1;
+        const double laneShapeLenght = laneVehicle.first->getLaneShape().length();
+        if (laneShapeLenght == 0) {
+            multiplier = 0;
+        } else if (totalLength > laneShapeLenght) {
+            multiplier = (laneShapeLenght / totalLength);
+        }
+        // declare current lenght
+        double lenght = 0;
+        // iterate over vehicles to calculate position and rotations
+        for (const auto &vehicle : laneVehicle.second) {
+            vehicle->updateDemandElementStackedGeometry(laneVehicle.first, lenght * multiplier);
+            // update lenght
+            lenght += vehicle->getAttributeDouble(SUMO_ATTR_LENGTH) + VEHICLE_GAP;
+        }
     }
 }
 

@@ -631,20 +631,20 @@ be loaded by pressing the "Load Decals" button.
 When defining decals in XML a single line which looks like this:
 
 ```
-<decal filename="background.gif" centerX="550.00" centerY="1530.00" width="64.00" height="64.00" rotation="0.00"/>
+<decal file="background.gif" centerX="550.00" centerY="1530.00" width="64.00" height="64.00" rotation="0.00"/>
 ```
 
 The following attributes are supported
 
 | Attribute Name | Value Type    | Description                                                                                                                     |
 | -------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **filename**   | path (string) | *picture file*, the full name of the background image                                                                           |
+| **file**   | path (string) | *picture file*, the full name of the background image                                                                           |
 | **centerX**    | float         | *center x*, the x-position of the center of the image in network coordinates (in meters)                                        |
 | **centerY**    | float         | *center y*, the y-position of the center of the image in network coordinates (in meters)                                        |
 | **width**      | float         | The width of the image in network coordinates (in meters)                                                                       |
 | **height**     | float         | The height of the image in network coordinates (in meters)                                                                      |
 | rotation       | float         | The angle of the image in degrees                                                                                               |
-| layer          | float         | The layer at which the image in drawn in meters over ground                                                                     |
+| layer          | float         | The layer at which the image is drawn in meters over ground                                                                     |
 | screenRelative | bool          | *relative*, whether the position and size are pixel coordinates relative to the screen rather then the network coordinates      |
 | centerZ        | float         | The z-position of the center of the object in network coordinates (in meters), only used in 3D visualization instead of *layer* |
 | tilt           | float         | The tilt angle of the object, only used in 3D visualization                                                                     |
@@ -698,7 +698,7 @@ When you are done the configuration files should look like below:
 
         <viewport zoom="200" x="100" y="-100"/>
         <delay value="42"/>
-        <decal filename="background.gif" centerX="550.00" centerY="1530.00" width="64.00" height="64.00" rotation="0.00"/>
+        <decal file="background.gif" centerX="550.00" centerY="1530.00" width="64.00" height="64.00" rotation="0.00"/>
         <breakpoint value="42"/>
         <breakpoint value="1337"/>
     </viewsettings>

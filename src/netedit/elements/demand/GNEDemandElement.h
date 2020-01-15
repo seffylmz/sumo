@@ -160,10 +160,16 @@ public:
     ~GNEDemandElement();
 
     /// @brief get demand element geometry
-    virtual GNEGeometry::Geometry& getDemandElementGeometry() = 0;
+    const GNEGeometry::Geometry& getDemandElementGeometry();
 
     /// @brief get demand element segment geometry
-    virtual const GNEGeometry::SegmentGeometry& getDemandElementSegmentGeometry() const = 0;
+    const GNEGeometry::SegmentGeometry& getDemandElementSegmentGeometry() const;
+
+    /// @brief get demand element segment stacked geometry
+    const GNEGeometry::SegmentGeometry& getDemandElementStackedSegmentGeometry() const;
+
+    /// @brief get demand element stacked geometry
+    void updateDemandElementStackedGeometry(const GNELane* lane, const double posOverLane);
 
     /// @brief gererate a new ID for an element child
     std::string generateChildID(SumoXMLTag childTag);
@@ -368,9 +374,27 @@ public:
     virtual std::string getHierarchyName() const = 0;
     /// @}
 
+    /// @brief get first allowed vehicle lane
+    GNELane* getFirstAllowedVehicleLane() const;
+
+    /// @brief get first allowed vehicle lane
+    GNELane* getLastAllowedVehicleLane() const;
+
 protected:
     /// @brief The GNEViewNet this demand element element belongs
     GNEViewNet* myViewNet;
+
+    /// @brief demand element geometry
+    GNEGeometry::Geometry myDemandElementGeometry;
+
+    /// @brief demand element segment geometry
+    GNEGeometry::SegmentGeometry myDemandElementSegmentGeometry;
+
+    /// @brief demand element stacked geometry
+    GNEGeometry::Geometry myStackedGeometry;
+
+    /// @brief demand element stacked segment geometry
+    GNEGeometry::SegmentGeometry myStackedSegmentGeometry;
 
     /// @name Functions relative to change values in setAttribute(...)
     /// @{
@@ -394,12 +418,6 @@ protected:
 
     /// @brief calculate personPlan start and end positions
     void calculatePersonPlanPositionStartEndPos(Position& startPos, Position& endPos) const;
-
-    /// @brief get first allowed vehicle lane
-    GNELane* getFirstAllowedVehicleLane() const;
-
-    /// @brief get first allowed vehicle lane
-    GNELane* getLastAllowedVehicleLane() const;
 
 private:
     /**@brief check restriction with the number of children
