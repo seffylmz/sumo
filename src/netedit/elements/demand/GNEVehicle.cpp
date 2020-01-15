@@ -293,7 +293,7 @@ GNEVehicle::GNEVehicle(GNEViewNet* viewNet, GNEDemandElement* vehicleType, const
 
 
 GNEVehicle::GNEVehicle(SumoXMLTag tag, GNEViewNet* viewNet, const std::string& vehicleID, GNEDemandElement* vehicleType, GNEEdge* fromEdge, GNEEdge* toEdge,
-                       const std::vector<GNEEdge*>& via) :
+    const std::vector<GNEEdge*>& via) :
     GNEDemandElement(vehicleID, viewNet, (tag == SUMO_TAG_FLOW) ? GLO_FLOW : GLO_TRIP, tag, 
         {fromEdge, toEdge}, {}, {}, {}, {vehicleType}, {}, {}, {}, {}, {}),
     SUMOVehicleParameter() {
@@ -305,7 +305,7 @@ GNEVehicle::GNEVehicle(SumoXMLTag tag, GNEViewNet* viewNet, const std::string& v
 
 
 GNEVehicle::GNEVehicle(GNEViewNet* viewNet, GNEDemandElement* vehicleType, GNEEdge* fromEdge, GNEEdge* toEdge, const std::vector<GNEEdge*>& via,
-                       const SUMOVehicleParameter& vehicleParameters) :
+    const SUMOVehicleParameter& vehicleParameters) :
     GNEDemandElement(vehicleParameters.id, viewNet, (vehicleParameters.tag == SUMO_TAG_FLOW) ? GLO_FLOW : GLO_TRIP, vehicleParameters.tag, 
         {fromEdge, toEdge}, {}, {}, {}, {vehicleType}, {}, {}, {}, {}, {}),
     SUMOVehicleParameter(vehicleParameters) {
@@ -317,6 +317,26 @@ GNEVehicle::GNEVehicle(GNEViewNet* viewNet, GNEDemandElement* vehicleType, GNEEd
 
 
 GNEVehicle::~GNEVehicle() {}
+
+
+GNEGeometry::Geometry&
+GNEVehicle::getDemandElementGeometry() {
+    if (myViewNet->getCommonViewOptions().drawStackedVehicles()) {
+        return myStackedGeometry;
+    } else {
+        return myDepartPosGeometry;
+    }
+}
+
+
+const GNEGeometry::SegmentGeometry& 
+GNEVehicle::getDemandElementSegmentGeometry() const {
+    if (myViewNet->getCommonViewOptions().drawStackedVehicles()) {
+        return myStackedSegmentGeometry;
+    } else {
+        return myDepartPosSegmentGeometry;
+    }
+}
 
 
 std::string
@@ -548,42 +568,13 @@ GNEVehicle::commitGeometryMoving(GNEUndoList*) {
 
 void
 GNEVehicle::updateGeometry() {
-    // declare two pointers for depart and arrival pos lanes
-    double departPosLane = -1;
-    double arrivalPosLane = -1;
-    // check if depart and arrival pos lanes are defiend
-    if (departPosProcedure == DEPART_POS_GIVEN) {
-        departPosLane = departPos;
-    }
-    if (arrivalPosProcedure == ARRIVAL_POS_GIVEN) {
-        arrivalPosLane = arrivalPos;
-    }
-    // calculate geometry path
-    if (getPathEdges().size() > 0) {
-        GNEGeometry::calculateEdgeGeometricPath(this, myDemandElementSegmentGeometry, getPathEdges(), getVClass(),
-                                                getFirstAllowedVehicleLane(), getLastAllowedVehicleLane(), departPosLane, arrivalPosLane);
-    } else {
-        GNEGeometry::calculateEdgeGeometricPath(this, myDemandElementSegmentGeometry, getParentEdges(), getVClass(),
-                                                getFirstAllowedVehicleLane(), getLastAllowedVehicleLane(), departPosLane, arrivalPosLane);
-    }
+    // update stacked geometry
+    updateStackedGeometry();
+    // update departPos geometry
+    updateDepartPosGeometry();
     // update child demand elementss
     for (const auto& i : getChildDemandElements()) {
         i->updateGeometry();
-    }
-    // get parent edge
-    GNEEdge* edgeParent = nullptr;
-    if ((myTagProperty.getTag() == SUMO_TAG_TRIP) || (myTagProperty.getTag() == SUMO_TAG_FLOW)) {
-        edgeParent = getParentEdges().front();
-    } else if (getParentDemandElements().size() == 2) {
-        edgeParent = getParentDemandElements().at(1)->getParentEdges().front();
-    } else if (getChildDemandElements().size() > 0) {
-        edgeParent = getChildDemandElements().at(0)->getParentEdges().front();
-    }
-    // update vehicle geometry depending of edgeParent
-    if (edgeParent) {
-        edgeParent->updateVehicleGeometries();
-    } else {
-        myDemandElementGeometry.updateGeometry(Position(0,0), 0);
     }
 }
 
@@ -596,18 +587,10 @@ GNEVehicle::updateDottedContour() {
 
 void
 GNEVehicle::updatePartialGeometry(const GNEEdge* edge) {
-    // declare two pointers for depart and arrival pos lanes
-    double departPosLane = -1;
-    double arrivalPosLane = -1;
-    // check if depart and arrival pos lanes are defiend
-    if (departPosProcedure == DEPART_POS_GIVEN) {
-        departPosLane = departPos;
-    }
-    if (arrivalPosProcedure == ARRIVAL_POS_GIVEN) {
-        arrivalPosLane = arrivalPos;
-    }
-    // update geometry path for the given edge
-    GNEGeometry::updateGeometricPath(myDemandElementSegmentGeometry, edge, departPosLane, arrivalPosLane);
+    // update partial stacked geometry
+    updatePartialStackedGeometry(edge);
+    // update partial departPos geometry
+    updatePartialDepartPosGeometry(edge);
     // update child demand elementss
     for (const auto& i : getChildDemandElements()) {
         i->updatePartialGeometry(edge);
@@ -710,22 +693,20 @@ GNEVehicle::drawGL(const GUIVisualizationSettings& s) const {
         const double width = getParentDemandElements().at(0)->getAttributeDouble(SUMO_ATTR_WIDTH);
         const double length = getParentDemandElements().at(0)->getAttributeDouble(SUMO_ATTR_LENGTH);
         double vehicleSizeSquared = width * length * exaggeration * width * length * exaggeration;
-        // declare a flag to check if glPushName() / glPopName() has to be added (needed due GNEEdge::drawGL(...))
-        const bool pushName = (myTagProperty.getTag() != SUMO_TAG_FLOW) && (myTagProperty.getTag() != SUMO_TAG_TRIP);
         // obtain Position an rotation (it depend of their parents)
         Position vehiclePosition;
         double vehicleRotation = 0;
-        if (myViewNet->getCommonViewOptions().drawStackedVehicles()) {
-            vehiclePosition = myDemandElementGeometry.getPosition();
-            vehicleRotation = myDemandElementGeometry.getRotation();
+        if (myViewNet->getCommonViewOptions().drawStackedVehicles() && (myStackedGeometry.getPosition() != Position::INVALID)) {
+            vehiclePosition = myStackedGeometry.getPosition();
+            vehicleRotation = myStackedGeometry.getRotation();
         } else if ((getParentDemandElements().size() == 2) && (getParentDemandElements().at(1)->getDemandElementSegmentGeometry().size() > 0)) {
             // obtain position and rotation of first edge route
             vehiclePosition = getParentDemandElements().at(1)->getDemandElementSegmentGeometry().getFirstPosition();
             vehicleRotation = getParentDemandElements().at(1)->getDemandElementSegmentGeometry().getFirstRotation();
-        } else if ((getParentEdges().size() > 0) && (myDemandElementSegmentGeometry.size() > 0)) {
+        } else if ((getParentEdges().size() > 0) && (myDepartPosSegmentGeometry.size() > 0)) {
             // obtain position and rotation of segments geometry
-            vehiclePosition = myDemandElementSegmentGeometry.getFirstPosition();
-            vehicleRotation = myDemandElementSegmentGeometry.getFirstRotation();
+            vehiclePosition = myDepartPosSegmentGeometry.getFirstPosition();
+            vehicleRotation = myDepartPosSegmentGeometry.getFirstRotation();
         } else if ((getChildDemandElements().size() > 0) && (getChildDemandElements().at(0)->getDemandElementSegmentGeometry().size() > 0)) {
             // obtain position and rotation of embedded route
             vehiclePosition = getChildDemandElements().at(0)->getDemandElementSegmentGeometry().getFirstPosition();
@@ -733,12 +714,10 @@ GNEVehicle::drawGL(const GUIVisualizationSettings& s) const {
         }
         // check that position is valid
         if (vehiclePosition != Position::INVALID) {
+            // first push name
+            glPushName(getGlID());
             // first check if if mouse is enought near to this vehicle to draw it
             if (s.drawForRectangleSelection && (myViewNet->getPositionInformation().distanceSquaredTo2D(vehiclePosition) >= (vehicleSizeSquared + 2))) {
-                // first push name
-                if (pushName) {
-                    glPushName(getGlID());
-                }
                 // push draw matrix
                 glPushMatrix();
                 // translate to drawing position
@@ -749,16 +728,8 @@ GNEVehicle::drawGL(const GUIVisualizationSettings& s) const {
                 GLHelper::drawBoxLine(Position(0, 1), 0, 2, 1);
                 // Pop last matrix
                 glPopMatrix();
-                // pop name
-                if (pushName) {
-                    glPopName();
-                }
             } else {
                 SUMOVehicleShape shape = getVehicleShapeID(getParentDemandElements().at(0)->getAttribute(SUMO_ATTR_GUISHAPE));
-                // first push name
-                if (pushName) {
-                    glPushName(getGlID());
-                }
                 // push draw matrix
                 glPushMatrix();
                 // translate to drawing position
@@ -829,11 +800,10 @@ GNEVehicle::drawGL(const GUIVisualizationSettings& s) const {
                 if (myViewNet->getDottedAC() == this) {
                     GLHelper::drawShapeDottedContourRectangle(s, getType(), vehiclePosition, width, length, vehicleRotation, 0, length / (-2));
                 }
-                // pop name
-                if (pushName) {
-                    glPopName();
-                }
+
             }
+            // pop name
+            glPopName();
         }
     }
 }
@@ -1678,5 +1648,96 @@ GNEVehicle::setEnabledAttribute(const int enabledAttributes) {
     parametersSet = enabledAttributes;
 }
 
+
+void 
+GNEVehicle::updateStackedGeometry() {
+    // get vehicle lane
+    const GNELane *vehicleLane = getFirstAllowedVehicleLane();
+    // update vehicle geometry depending of edgeParent
+    if (vehicleLane) {
+        vehicleLane->getParentEdge()->updateVehicleGeometries();
+    } else {
+        myStackedGeometry.updateGeometry(Position(), 0);
+    }
+    // declare two pointers for depart and arrival pos lanes
+    double departPosLane = -1;
+    double arrivalPosLane = -1;
+    // calculate departPosLane
+    if (vehicleLane && (myStackedGeometry.getPosition() != Position::INVALID)) {
+        departPosLane = vehicleLane->getLaneShape().nearest_offset_to_point2D(myStackedGeometry.getPosition());
+    }
+    // check if arrival pos lane is defined
+    if (arrivalPosProcedure == ARRIVAL_POS_GIVEN) {
+        arrivalPosLane = arrivalPos;
+    }
+    // calculate depart pos geometry path starting at the lane begin
+    if (getPathEdges().size() > 0) {
+        GNEGeometry::calculateEdgeGeometricPath(this, myStackedSegmentGeometry, getPathEdges(), getVClass(),
+            getFirstAllowedVehicleLane(), getLastAllowedVehicleLane(), departPosLane, arrivalPosLane);
+    } else {
+        GNEGeometry::calculateEdgeGeometricPath(this, myStackedSegmentGeometry, getParentEdges(), getVClass(),
+            getFirstAllowedVehicleLane(), getLastAllowedVehicleLane(), departPosLane, arrivalPosLane);
+    }
+}
+
+
+void 
+GNEVehicle::updatePartialStackedGeometry(const GNEEdge* edge) {
+    // get vehicle lane
+    const GNELane *vehicleLane = getFirstAllowedVehicleLane();
+    // declare two pointers for depart and arrival pos lanes
+    double departPosLane = -1;
+    double arrivalPosLane = -1;
+    // calculate departPosLane
+    if (vehicleLane && (myStackedGeometry.getPosition() != Position::INVALID)) {
+        departPosLane = vehicleLane->getLaneShape().nearest_offset_to_point2D(myStackedGeometry.getPosition());
+    }
+    // check if arrival pos lane is defined
+    if (arrivalPosProcedure == ARRIVAL_POS_GIVEN) {
+        arrivalPosLane = arrivalPos;
+    }
+    // update geometry path for the given edge
+    GNEGeometry::updateGeometricPath(myStackedSegmentGeometry, edge, departPosLane, arrivalPosLane);
+}
+
+
+void 
+GNEVehicle::updateDepartPosGeometry() {
+    // declare two pointers for depart and arrival pos lanes
+    double departPosLane = -1;
+    double arrivalPosLane = -1;
+    // check if depart and arrival pos lanes are defined
+    if (departPosProcedure == DEPART_POS_GIVEN) {
+        departPosLane = departPos;
+    }
+    if (arrivalPosProcedure == ARRIVAL_POS_GIVEN) {
+        arrivalPosLane = arrivalPos;
+    }
+    // calculate stacked geometry path
+    if (getPathEdges().size() > 0) {
+        GNEGeometry::calculateEdgeGeometricPath(this, myDepartPosSegmentGeometry, getPathEdges(), getVClass(),
+            getFirstAllowedVehicleLane(), getLastAllowedVehicleLane(), departPosLane, arrivalPosLane);
+    } else {
+        GNEGeometry::calculateEdgeGeometricPath(this, myDepartPosSegmentGeometry, getParentEdges(), getVClass(),
+            getFirstAllowedVehicleLane(), getLastAllowedVehicleLane(), departPosLane, arrivalPosLane);
+    }
+}
+
+
+void 
+GNEVehicle::updatePartialDepartPosGeometry(const GNEEdge* edge) {
+    // declare two pointers for depart and arrival pos lanes
+    double departPosLane = -1;
+    double arrivalPosLane = -1;
+    // check if depart and arrival pos lanes are defined
+    if (departPosProcedure == DEPART_POS_GIVEN) {
+        departPosLane = departPos;
+    }
+    if (arrivalPosProcedure == ARRIVAL_POS_GIVEN) {
+        arrivalPosLane = arrivalPos;
+    }
+    // update geometry path for the given edge
+    GNEGeometry::updateGeometricPath(myDepartPosSegmentGeometry, edge, departPosLane, arrivalPosLane);
+}
 
 /****************************************************************************/

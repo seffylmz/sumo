@@ -1,0 +1,28 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  
+  build-linux:
+    runs-on: ubuntu-latest 
+    steps:
+    - uses: actions/checkout@v1
+   
+    - name: prepare-system
+      run: sudo apt-get update && sudo apt-get install cmake libeigen3-dev libxerces-c-dev libfox-1.6-dev libgdal-dev libproj-dev libgtest-dev libgl2ps-dev python3-dev swig openjdk-8-jdk maven
+    
+    - name: prepare-gtest
+      run: pushd /usr/src/gtest; sudo mkdir build; cd build; sudo cmake ..; sudo make; sudo cp libgtest* /usr/lib/;
+    
+    - name: build-sumo
+      run: mkdir cmake-build && cd cmake-build && cmake .. && make -j4
+
+    - name: build-traas
+      run: cd cmake-build && make traas
+      
+    - name: make-install
+      run: cd cmake-build && sudo make install
+      
+    - name: make-examples-and-test
+      run: cd cmake-build && make CTEST_OUTPUT_ON_FAILURE=1 examples test
