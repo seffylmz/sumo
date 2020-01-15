@@ -1505,6 +1505,7 @@ GNEViewNetHelper::EditModes::setDataEditMode(DataEditMode mode, bool force) {
 
 GNEViewNetHelper::CommonViewOptions::CommonViewOptions(GNEViewNet* viewNet) :
     menuCheckShowGrid(nullptr),
+    menuCheckDrawStackedVehicles(nullptr),
     myViewNet(viewNet) {
 }
 
@@ -1515,9 +1516,18 @@ GNEViewNetHelper::CommonViewOptions::buildCommonViewOptionsMenuChecks() {
     menuCheckShowGrid = new FXMenuCheck(myViewNet->myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions,
                                         ("Grid\t\tshow grid and restrict movement to the grid (size defined in visualization options)"),
                                         myViewNet, MID_GNE_COMMONVIEWOPTIONS_SHOWGRID, LAYOUT_FIX_HEIGHT);
+
     menuCheckShowGrid->setHeight(23);
     menuCheckShowGrid->setCheck(false);
     menuCheckShowGrid->create();
+
+    menuCheckDrawStackedVehicles = new FXMenuCheck(myViewNet->myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions,
+        ("Stacked vehicles\t\tDraw vehicles as a stack or in begin position"),
+        myViewNet, MID_GNE_COMMONVIEWOPTIONS_DRAWSTACKEDVEHICLES, LAYOUT_FIX_HEIGHT);
+
+    menuCheckDrawStackedVehicles->setHeight(23);
+    menuCheckDrawStackedVehicles->setCheck(false);
+    menuCheckDrawStackedVehicles->create();
 
 }
 
@@ -1528,6 +1538,15 @@ GNEViewNetHelper::CommonViewOptions::getVisibleCommonMenuCommands(std::vector<FX
     if (menuCheckShowGrid->shown()) {
         commands.push_back(menuCheckShowGrid);
     }
+    if (menuCheckDrawStackedVehicles->shown()) {
+        commands.push_back(menuCheckDrawStackedVehicles);
+    }
+}
+
+
+bool 
+GNEViewNetHelper::CommonViewOptions::drawStackedVehicles() const {
+    return (menuCheckDrawStackedVehicles->getCheck() == TRUE);
 }
 
 // ---------------------------------------------------------------------------

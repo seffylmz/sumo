@@ -55,10 +55,20 @@
 #include "NBPTLineCont.h"
 #include "NBParking.h"
 
+// ===========================================================================
+// Algorithm constants
+// ===========================================================================
+#define MAX_SLIPLANE_LENGTH 1000
+
+// ===========================================================================
+// Debug Flags
+// ===========================================================================
+
 //#define DEBUG_JOINJUNCTIONS
-#define DEBUGNODEID "C1"
+#define DEBUGNODEID "2617545588"
 //#define DEBUGNODEID "5548037023"
 #define DEBUGCOND(obj) ((obj != 0 && (obj)->getID() == DEBUGNODEID))
+
 
 // ===========================================================================
 // method definitions
@@ -648,6 +658,14 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
     generateNodeClusters(maxDist, cands);
     for (NodeClusters::iterator i = cands.begin(); i != cands.end(); ++i) {
         NodeSet cluster = (*i);
+#ifdef DEBUG_JOINJUNCTIONS
+        gDebugFlag1 = false;
+        for (NBNode* n : cluster) {
+            if (DEBUGCOND(n)) {
+                gDebugFlag1 = true;
+            }
+        }
+#endif
         // remove join exclusions
         for (NodeSet::iterator j = cluster.begin(); j != cluster.end();) {
             NodeSet::iterator check = j;
@@ -664,9 +682,7 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
             for (NBEdge* edge : n->getOutgoingEdges()) {
                 if (cluster.count(edge->getToNode()) != 0 && edge->getLoadedLength() > maxDist /*&& (edge->getPermissions() & SVC_PASSENGER) != 0*/) {
 #ifdef DEBUG_JOINJUNCTIONS
-                    if (DEBUGCOND(n) || DEBUGCOND(edge->getToNode())) {
-                        std::cout << "long edge " << edge->getID() << " (" << edge->getLoadedLength() << ", max=" << maxDist << ")\n";
-                    }
+                    if (gDebugFlag1) std::cout << "long edge " << edge->getID() << " (" << edge->getLoadedLength() << ", max=" << maxDist << ")\n";
 #endif
                     toRemove.insert(n);
                     toRemove.insert(edge->getToNode());
@@ -676,6 +692,8 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
         for (std::set<NBNode*>::iterator j = toRemove.begin(); j != toRemove.end(); ++j) {
             cluster.erase(*j);
         }
+        // remove nodes that are part of a bypass lane (typically for turning right without waiting at a traffic light)
+        pruneSlipLaneNodes(cluster);
         if (cluster.size() < 2) {
             continue;
         }
@@ -740,6 +758,9 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
                 clusters.push_back(*it_comp);
             }
         }
+#ifdef DEBUG_JOINJUNCTIONS
+        gDebugFlag1 = false;
+#endif
     }
     joinNodeClusters(clusters, dc, ec, tlc);
     return (int)clusters.size();
@@ -749,9 +770,7 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
 void
 NBNodeCont::pruneClusterFringe(NodeSet& cluster) const {
 #ifdef DEBUG_JOINJUNCTIONS
-    if (true) {
-        std::cout << "pruning cluster=" << joinNamedToString(cluster, ' ') << "\n";
-    }
+    if (gDebugFlag1) std::cout << "pruning cluster=" << joinNamedToString(cluster, ' ') << "\n";
 #endif
     // iteratively remove the fringe
     bool pruneFringe = true;
@@ -800,7 +819,7 @@ NBNodeCont::pruneClusterFringe(NodeSet& cluster) const {
                 }
             }
 #ifdef DEBUG_JOINJUNCTIONS
-            if (DEBUGCOND(n)) std::cout << "  check n=" << n->getID()
+            if (gDebugFlag1) std::cout << "  check n=" << n->getID()
                                             << " clusterDist=" << clusterDist
                                             << " cd<th=" << (clusterDist <= pedestrianFringeThreshold)
                                             << " touching=" << touchingCluster
@@ -814,15 +833,149 @@ NBNodeCont::pruneClusterFringe(NodeSet& cluster) const {
                 cluster.erase(check);
                 pruneFringe = true; // other nodes could belong to the fringe now
 #ifdef DEBUG_JOINJUNCTIONS
-                if (DEBUGCOND(n)) {
-                    std::cout << "  pruned n=" << n->getID() << "\n";
-                }
+                if (gDebugFlag1) std::cout << "  pruned n=" << n->getID() << "\n";
 #endif
             }
         }
     }
 }
 
+
+void
+NBNodeCont::pruneSlipLaneNodes(NodeSet& cluster) const {
+#ifdef DEBUG_JOINJUNCTIONS
+    if (gDebugFlag1) std::cout << "pruning slip-lanes at cluster=" << joinNamedToString(cluster, ' ') << "\n";
+#endif
+    // fringe has already been removed
+    NodeSet toRemove;
+    for (NBNode* n : cluster) {
+        EdgeVector outgoing;
+        double inAngle;
+        if (maybeSlipLaneStart(n, outgoing, inAngle)) {
+            // potential slip lane start but we don't know which of the outgoing edges it is
+#ifdef DEBUG_JOINJUNCTIONS
+            if (gDebugFlag1) std::cout << "   candidate slip-lane start=" << n->getID() << " outgoing=" << outgoing << "\n";
+#endif
+            for (NBEdge* contEdge : outgoing) {
+                if ((contEdge->getPermissions() & SVC_PASSENGER) == 0) {
+                    continue;
+                }
+                double slipLength = contEdge->getLength();
+                NBNode* cont = contEdge->getToNode();
+                NodeSet cands;
+                cands.insert(n);
+                while (cont->getIncomingEdges().size() == 1 && cont->getOutgoingEdges().size() == 1 && slipLength < MAX_SLIPLANE_LENGTH) {
+                    if (cands.count(cont) != 0) {
+                        break; // circle, should not happen
+                    }
+                    cands.insert(cont);
+#ifdef DEBUG_JOINJUNCTIONS
+                    if (gDebugFlag1) std::cout << "   candidate slip-lane cont=" << cont->getID() << "\n";
+#endif
+                    NBEdge* next = cont->getOutgoingEdges().front();
+                    slipLength += next->getLength();
+                    cont = next->getToNode();
+                }
+#ifdef DEBUG_JOINJUNCTIONS
+                if (gDebugFlag1) std::cout << "   candidate slip-lane end=" << cont->getID() << " slipLength=" << slipLength << "\n";
+#endif
+                if (cont->getIncomingEdges().size() >= 2 && cont->getOutgoingEdges().size() == 1 &&
+                        // slip lanes are for turning so there needs to be a sufficient angle
+                        abs(NBHelpers::relAngle(inAngle, cont->getOutgoingEdges().front()->getAngleAtNode(cont))) > 45) {
+                    // check whether the other continuation at n is also connected to the sliplane end
+                    NBEdge* otherEdge = (contEdge == outgoing.front() ? outgoing.back() : outgoing.front());
+                    double otherLength = otherEdge->getLength();
+                    NBNode* cont2 = otherEdge->getToNode();
+
+                    NodeSet visited;
+                    visited.insert(n);
+                    std::vector<NodeAndDist> toProc;
+                    toProc.push_back(std::make_pair(cont2, otherLength));
+                    bool found = false;
+                    while (!toProc.empty()) {
+                        NodeAndDist nodeAndDist = toProc.back();
+                        NBNode* cont2 = nodeAndDist.first;
+                        double dist = nodeAndDist.second;
+#ifdef DEBUG_JOINJUNCTIONS
+                        if (gDebugFlag1) std::cout << "   search alternative cont2=" << cont2->getID() << " dist=" << dist << "\n";
+#endif
+                        toProc.pop_back();
+                        if (visited.find(cont2) != visited.end()) {
+                            continue;
+                        }
+                        visited.insert(cont2);
+                        if (cont2 == cont) {
+                            found = true;
+                            break;
+                        }
+                        for (NBEdge* e : cont2->getOutgoingEdges()) {
+                            const double dist2 = dist + e->getLength();
+                            if (dist2 < slipLength * 2 && (e->getPermissions() & SVC_PASSENGER) != 0) {
+                                toProc.push_back(std::make_pair(e->getToNode(), dist2));
+                            }
+                        }
+                    }
+                    if (found) {
+                        // found slip lane
+                        cands.insert(cont);
+                        toRemove.insert(cands.begin(), cands.end());
+#ifdef DEBUG_JOINJUNCTIONS
+                        if (gDebugFlag1) std::cout << "   found slip-lane with nodes=" << joinNamedToString(cands, ' ') << "\n";
+#endif
+                    }
+                }
+            }
+        }
+    }
+    int numRemoved = 0;
+    for (NBNode* n : toRemove) {
+        numRemoved += cluster.erase(n);
+    }
+    if (numRemoved > 0) {
+#ifdef DEBUG_JOINJUNCTIONS
+        if (gDebugFlag1) {
+            std::cout << "   removed " << numRemoved << " nodes from cluster: " << joinNamedToString(toRemove, ' ') << "\n";
+        }
+#endif
+        pruneClusterFringe(cluster);
+    }
+}
+
+
+bool
+NBNodeCont::maybeSlipLaneStart(const NBNode* n, EdgeVector& outgoing, double& inAngle) const {
+    if (n->getIncomingEdges().size() == 1 && n->getOutgoingEdges().size() == 2) {
+        outgoing.insert(outgoing.begin(), n->getOutgoingEdges().begin(), n->getOutgoingEdges().end());
+        inAngle = n->getIncomingEdges().front()->getAngleAtNode(n);
+        return true;
+    } else if (n->getIncomingEdges().size() == 2 && n->getOutgoingEdges().size() == 3) {
+        // check if the incoming edges are going in opposite directions and then
+        // use the incoming edge that has 2 almost-straight outgoing edges
+        const double inRelAngle = fabs(NBHelpers::relAngle(n->getIncomingEdges().front()->getAngleAtNode(n), n->getIncomingEdges().back()->getAngleAtNode(n)));
+        //std::cout << "n=" << n->getID() << " inRelAngle=" << inRelAngle << "\n";
+        if (inRelAngle < 135) {
+            return false; // not opposite incoming
+        }
+        for (NBEdge* in : n->getIncomingEdges()) {
+            EdgeVector straight;
+            int numReverse = 0;
+            for (NBEdge* out : n->getOutgoingEdges()) {
+                const double outRelAngle = fabs(NBHelpers::relAngle(in->getAngleAtNode(n), out->getAngleAtNode(n)));
+                if (outRelAngle <= 45) {
+                    straight.push_back(out);
+                } else if (outRelAngle >= 135) {
+                    numReverse++;
+                }
+            }
+            if (straight.size() == 2 && numReverse == 1) {
+                outgoing.insert(outgoing.begin(), straight.begin(), straight.end());
+                inAngle = in->getAngleAtNode(n);
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 bool
 NBNodeCont::feasibleCluster(const NodeSet& cluster, const NBEdgeCont& ec, const NBPTStopCont& sc, std::string& reason) const {

@@ -29,7 +29,7 @@
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/changes/GNEChange_Lane.h>
 #include <netedit/elements/demand/GNERoute.h>
-#include <netedit/demandelements/GNEVehicle.h>
+#include <netedit/elements/demand/GNEVehicle.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
