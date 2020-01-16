@@ -66,10 +66,8 @@ public:
      *
      * @param[in] app The application this window belongs to
      * @param[in] o The gl-object this table describes
-     * @param[in] noRows Number of rows to allocate
      */
-    GUIParameterTableWindow(GUIMainWindow& app,
-                            GUIGlObject& o, int noRows);
+    GUIParameterTableWindow(GUIMainWindow& app, GUIGlObject& o);
 
 
     /// @brief Destructor
@@ -106,6 +104,7 @@ public:
      */
     template<class T>
     void mkItem(const char* name, bool dynamic, ValueSource<T>* src) {
+        myTable->insertRows(myItems.size() + 1);
         GUIParameterTableItemInterface* i = new GUIParameterTableItem<T>(myTable, myCurrentPos++, name, dynamic, src);
         myItems.push_back(i);
     }

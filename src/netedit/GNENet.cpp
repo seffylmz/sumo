@@ -202,7 +202,7 @@ GNENet::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
 GUIParameterTableWindow*
 GNENet::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
     // Nets lanes don't have attributes
-    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, 2);
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this);
     // close building
     ret->closeBuilding();
     return ret;

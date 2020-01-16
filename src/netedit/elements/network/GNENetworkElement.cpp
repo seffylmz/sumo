@@ -69,7 +69,7 @@ GNENetworkElement::getNet() const {
 GUIParameterTableWindow*
 GNENetworkElement::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
     // Create table
-    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, myTagProperty.getNumberOfAttributes());
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this);
     // Iterate over attributes
     for (const auto& i : myTagProperty) {
         // Add attribute and set it dynamic if aren't unique

@@ -85,7 +85,7 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_R_RELOAD,                           GNEApplicationWindow::onUpdReload),
     // network
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK,       GNEApplicationWindow::onCmdSaveNetwork),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK,       GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK,       GNEApplicationWindow::onUpdSaveNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_S_SAVENETWORK_AS,             GNEApplicationWindow::onCmdSaveAsNetwork),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_SHIFT_S_SAVENETWORK_AS,             GNEApplicationWindow::onUpdNeedsNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_L_SAVEASPLAINXML,                   GNEApplicationWindow::onCmdSaveAsPlainXML),
@@ -289,15 +289,17 @@ GNEApplicationWindow::ToolbarsGrip::buildViewParentToolbarsGrips() {
     // build menu bar for supermodes (next to menu bar)
     myToolBarShellSuperModes = new FXToolBarShell(myGNEApp, GUIDesignToolBar);
     superModes = new FXMenuBar(myGNEApp->myTopDock, myToolBarShellSuperModes, GUIDesignToolBarRaisedSame);
-    // declare toolbar grip for menu bar Supermodes
+    // declare toolbar grip for menu bar superModes
     new FXToolBarGrip(superModes, superModes, FXMenuBar::ID_TOOLBARGRIP, GUIDesignToolBarGrip);
     // build menu bar for save elements (bot to menu bar)
     myToolBarShellSaveElements = new FXToolBarShell(myGNEApp, GUIDesignToolBar);
     saveElements = new FXMenuBar(myGNEApp->myTopDock, myToolBarShellSaveElements, GUIDesignToolBarRaisedNext);
+    // declare toolbar grip for menu bar saveElements
+    new FXToolBarGrip(saveElements, saveElements, FXMenuBar::ID_TOOLBARGRIP, GUIDesignToolBarGrip);
     // build menu bar for navigation
     myToolBarShellNavigation = new FXToolBarShell(myGNEApp, GUIDesignToolBar);
     navigation = new FXMenuBar(myGNEApp->myTopDock, myToolBarShellNavigation, GUIDesignToolBarRaisedSame);
-    // declare toolbar grip for menu bar Navigation
+    // declare toolbar grip for menu bar navigation
     new FXToolBarGrip(navigation, navigation, FXMenuBar::ID_TOOLBARGRIP, GUIDesignToolBarGrip);
     // build menu bar for modes
     myToolBarShellModes = new FXToolBarShell(myGNEApp, GUIDesignToolBar);
@@ -1151,10 +1153,10 @@ GNEApplicationWindow::FileMenuCommands::buildFileMenuCommands(FXMenuPane* fileMe
         GUIIconSubSys::getIcon(ICON_RELOAD), myGNEApp, MID_HOTKEY_CTRL_R_RELOAD);
     new FXMenuCommand(fileMenu,
         "&Save Network...\tCtrl+S\tSave the network.",
-        GUIIconSubSys::getIcon(ICON_SAVE), myGNEApp, MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK);
+        GUIIconSubSys::getIcon(ICON_SAVENETWORKELEMENTS), myGNEApp, MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK);
     new FXMenuCommand(fileMenu,
         "Save Net&work As...\tCtrl+Shift+S\tSave the network in another file.",
-        GUIIconSubSys::getIcon(ICON_SAVE), myGNEApp, MID_HOTKEY_CTRL_SHIFT_S_SAVENETWORK_AS);
+        GUIIconSubSys::getIcon(ICON_SAVENETWORKELEMENTS), myGNEApp, MID_HOTKEY_CTRL_SHIFT_S_SAVENETWORK_AS);
     new FXMenuCommand(fileMenu,
         "Save plain XM&L...\tCtrl+L\tSave plain xml representation the network.",
         GUIIconSubSys::getIcon(ICON_SAVE), myGNEApp, MID_HOTKEY_CTRL_L_SAVEASPLAINXML);
@@ -2735,7 +2737,7 @@ long
 GNEApplicationWindow::onCmdSaveAsNetwork(FXObject*, FXSelector, void*) {
     FXString file = MFXUtils::getFilename2Write(this,
                     "Save Network as", ".net.xml",
-                    GUIIconSubSys::getIcon(ICON_SAVE),
+                    GUIIconSubSys::getIcon(ICON_SAVENETWORKELEMENTS),
                     gCurrentFolder);
     // add xml extension
     std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".net.xml");
@@ -2851,6 +2853,14 @@ GNEApplicationWindow::onUpdReload(FXObject* sender, FXSelector, void*) {
     sender->handle(this, ((myNet == nullptr) || !OptionsCont::getOptions().isSet("sumo-net-file")) ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
     return 1;
 }
+
+
+long
+GNEApplicationWindow::onUpdSaveNetwork(FXObject* sender, FXSelector, void*) {
+    sender->handle(this, ((myNet == nullptr) || myNet->isNetSaved()) ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    return 1;
+}
+
 
 long
 GNEApplicationWindow::onUpdSaveAdditionals(FXObject* sender, FXSelector, void*) {
@@ -3196,19 +3206,6 @@ GNEApplicationWindow::onCmdSaveDataElementsAs(FXObject*, FXSelector, void*) {
     } else {
         return 1;
     }
-}
-
-
-long
-GNEApplicationWindow::onUpdSaveNetwork(FXObject* sender, FXSelector, void*) {
-    OptionsCont& oc = OptionsCont::getOptions();
-    bool enable = myNet != nullptr && oc.isSet("output-file");
-    sender->handle(this, FXSEL(SEL_COMMAND, enable ? ID_ENABLE : ID_DISABLE), nullptr);
-    if (enable) {
-        FXString caption = ("Save " + oc.getString("output-file")).c_str();
-        sender->handle(this, FXSEL(SEL_COMMAND, FXMenuCaption::ID_SETSTRINGVALUE), (void*)&caption);
-    }
-    return 1;
 }
 
 

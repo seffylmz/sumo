@@ -95,11 +95,8 @@ GUIVehicle::~GUIVehicle() {
 GUIParameterTableWindow*
 GUIVehicle::getParameterWindow(GUIMainWindow& app,
                                GUISUMOAbstractView&) {
-    const int sublaneParams = MSGlobals::gLateralResolution > 0 ? 4 : 0;
     const bool isElecHybrid = getDevice(typeid(MSDevice_ElecHybrid)) != nullptr ? true : false;
-    const int elecHybridParams = isElecHybrid ? 2 : 0;
-    GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 39 + sublaneParams + elecHybridParams + (int)getParameter().getParametersMap().size());
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this);
     // add items
     ret->mkItem("lane [id]", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getLaneID));
     if (MSAbstractLaneChangeModel::haveLateralDynamics()) {
@@ -164,7 +161,7 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getElectricityConsumption));
     ret->mkItem("noise (Harmonoise) [dB]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getHarmonoise_NoiseEmissions));
-    ret->mkItem("devices", false, toString(myDevices));
+    ret->mkItem("devices", false, getDeviceDescription());
     ret->mkItem("persons", true,
                 new FunctionBinding<GUIVehicle, int>(this, &MSVehicle::getPersonNumber));
     ret->mkItem("containers", true,
@@ -193,11 +190,7 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
 GUIParameterTableWindow*
 GUIVehicle::getTypeParameterWindow(GUIMainWindow& app,
                                    GUISUMOAbstractView&) {
-    GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 27
-                                    + (int)myType->getParameter().getParametersMap().size()
-                                    + (int)myType->getParameter().lcParameter.size()
-                                    + (int)myType->getParameter().jmParameter.size());
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this);
     // add items
     ret->mkItem("Type Information:", false, "");
     ret->mkItem("type [id]", false, myType->getID());

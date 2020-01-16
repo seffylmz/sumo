@@ -60,8 +60,7 @@ GUIMEVehicle::~GUIMEVehicle() { }
 GUIParameterTableWindow*
 GUIMEVehicle::getParameterWindow(GUIMainWindow& app,
                                  GUISUMOAbstractView&) {
-    GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 21 + (int)getParameter().getParametersMap().size());
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this);
     // add items
     ret->mkItem("edge [id]", true, new FunctionBindingString<GUIMEVehicle>(this, &GUIMEVehicle::getEdgeID));
     ret->mkItem("segment [#]", true,  new FunctionBinding<GUIMEVehicle, int>(this, &GUIMEVehicle::getSegmentIndex));
@@ -106,7 +105,7 @@ GUIMEVehicle::getParameterWindow(GUIMainWindow& app,
     //            new FunctionBinding<GUIMEVehicle, double>(this, &GUIMEVehicle::getFuelConsumption));
     //ret->mkItem("noise (Harmonoise) [dB]", true,
     //            new FunctionBinding<GUIMEVehicle, double>(this, &GUIMEVehicle::getHarmonoise_NoiseEmissions));
-    ret->mkItem("devices", false, toString(myDevices));
+    ret->mkItem("devices", false, getDeviceDescription());
     //ret->mkItem("persons", true,
     //            new FunctionBinding<GUIMEVehicle, int>(this, &GUIMEVehicle::getPersonNumber));
     //ret->mkItem("containers", true,
@@ -126,8 +125,7 @@ GUIMEVehicle::getParameterWindow(GUIMainWindow& app,
 GUIParameterTableWindow*
 GUIMEVehicle::getTypeParameterWindow(GUIMainWindow& app,
                                      GUISUMOAbstractView&) {
-    GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 9 + (int)myType->getParameter().getParametersMap().size());
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this);
     // add items
     ret->mkItem("Type Information:", false, "");
     ret->mkItem("type [id]", false, myType->getID());
