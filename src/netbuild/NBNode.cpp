@@ -1771,8 +1771,7 @@ NBNode::mustBrakeForCrossing(const NBEdge* const from, const NBEdge* const to, c
 
 bool
 NBNode::rightTurnConflict(const NBEdge* from, const NBEdge* to, int fromLane,
-                          const NBEdge* prohibitorFrom, const NBEdge* prohibitorTo, int prohibitorFromLane,
-                          bool lefthand) {
+                          const NBEdge* prohibitorFrom, const NBEdge* prohibitorTo, int prohibitorFromLane) {
     if (from != prohibitorFrom) {
         return false;
     }
@@ -1795,22 +1794,28 @@ NBNode::rightTurnConflict(const NBEdge* from, const NBEdge* to, int fromLane,
         return false;
     } else {
         const LinkDirection d2 = prohibitorFrom->getToNode()->getDirection(prohibitorFrom, prohibitorTo);
+        /* std::cout
+            << "from=" << from->getID() << " to=" << to->getID() << " fromLane=" << fromLane
+            << " pFrom=" << prohibitorFrom->getID() << " pTo=" << prohibitorTo->getID() << " pFromLane=" << prohibitorFromLane
+            << " d1=" << toString(d1) << " d2=" << toString(d2)
+            << "\n"; */
+        bool flip = false;
         if (d1 == LINKDIR_LEFT || d1 == LINKDIR_PARTLEFT) {
             // check for leftTurnConflicht
-            lefthand = !lefthand;
+            flip = !flip;
             if (d2 == LINKDIR_RIGHT || d1 == LINKDIR_PARTRIGHT) {
                 // assume that the left-turning bicycle goes straight at first
                 // and thus gets precedence over a right turning vehicle
                 return false;
             }
         }
-        if ((!lefthand && fromLane <= prohibitorFromLane) ||
-                (lefthand && fromLane >= prohibitorFromLane)) {
+        if ((!flip && fromLane <= prohibitorFromLane) ||
+                (flip && fromLane >= prohibitorFromLane)) {
             return false;
         }
         const double toAngleAtNode = fmod(to->getStartAngle() + 180, (double)360.0);
         const double prohibitorToAngleAtNode = fmod(prohibitorTo->getStartAngle() + 180, (double)360.0);
-        return (lefthand != (GeomHelper::getCWAngleDiff(from->getEndAngle(), toAngleAtNode) <
+        return (flip != (GeomHelper::getCWAngleDiff(from->getEndAngle(), toAngleAtNode) <
                              GeomHelper::getCWAngleDiff(from->getEndAngle(), prohibitorToAngleAtNode)));
     }
 }
