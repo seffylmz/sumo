@@ -283,7 +283,7 @@ NBLoadedSUMOTLDef::collectLinks() {
         // maybe we only loaded a different program for a default traffic light.
         // Try to build links now.
         myOriginalNodes.insert(myControlledNodes.begin(), myControlledNodes.end());
-        collectAllLinks();
+        collectAllLinks(myControlledLinks);
     }
 }
 
@@ -557,6 +557,7 @@ NBLoadedSUMOTLDef::getMaxIndex() {
     int maxIndex = -1;
     for (const NBConnection& c : myControlledLinks) {
         maxIndex = MAX2(maxIndex, c.getTLIndex());
+        maxIndex = MAX2(maxIndex, c.getTLIndex2());
     }
     for (NBNode* n : myControlledNodes) {
         for (NBNode::Crossing* c : n->getCrossings()) {
@@ -590,6 +591,116 @@ NBLoadedSUMOTLDef::hasValidIndices() const {
     }
     // method getMaxIndex() is const but cannot be declare as such due to inheritance
     return const_cast<NBLoadedSUMOTLDef*>(this)->getMaxIndex() < myTLLogic->getNumLinks();
+}
+
+
+std::string
+NBLoadedSUMOTLDef::getStates(int index) {
+    assert(index >= 0);
+    assert(index <= getMaxIndex());
+    std::string result;
+    for (auto& pd : myTLLogic->getPhases()) {
+        result += pd.state[index];
+    }
+    return result;
+}
+
+bool
+NBLoadedSUMOTLDef::isUsed(int index) {
+    for (const NBConnection& c : myControlledLinks) {
+        if (c.getTLIndex() == index || c.getTLIndex2() == index) {
+            return true;
+        }
+    }
+    for (NBNode* n : myControlledNodes) {
+        for (NBNode::Crossing* c : n->getCrossings()) {
+            if (c->tlLinkIndex == index || c->tlLinkIndex2 == index) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void
+NBLoadedSUMOTLDef::replaceIndex(int oldIndex, int newIndex) {
+    if (oldIndex == newIndex) {
+        return;
+    }
+    for (NBConnection& c : myControlledLinks) {
+        if (c.getTLIndex() == oldIndex) {
+            c.setTLIndex(newIndex);
+        }
+        if (c.getTLIndex2() == oldIndex) {
+            c.setTLIndex2(newIndex);
+        }
+    }
+    for (NBNode* n : myControlledNodes) {
+        for (NBNode::Crossing* c : n->getCrossings()) {
+            if (c->tlLinkIndex == oldIndex) {
+                c->tlLinkIndex = newIndex;
+            }
+            if (c->tlLinkIndex2 == oldIndex) {
+                c->tlLinkIndex2 = newIndex;
+            }
+        }
+    }
+}
+
+void
+NBLoadedSUMOTLDef::groupSignals() {
+    const int maxIndex = getMaxIndex();
+    std::vector<int> unusedIndices;
+    for (int i = 0; i <= maxIndex; i++) {
+        if (isUsed(i)) {
+            std::string states = getStates(i);
+            replaceIndex(i, i - unusedIndices.size());
+            for (int j = i + 1; j <= maxIndex; j++) {
+                std::string states2 = getStates(j);
+                if (states2 == states) {
+                    replaceIndex(j, i - unusedIndices.size());
+                }
+            }
+        } else {
+            unusedIndices.push_back(i);
+        }
+    }
+    for (int i = (int)unusedIndices.size() - 1; i >= 0; i--) {
+        myTLLogic->deleteStateIndex(unusedIndices[i]);
+    }
+    cleanupStates();
+    //std::cout << "oldMaxIndex=" << maxIndex << " newMaxIndex=" << getMaxIndex() << " unused=" << toString(unusedIndices) << "\n";
+    setTLControllingInformation();
+}
+
+void
+NBLoadedSUMOTLDef::ungroupSignals() {
+    NBConnectionVector defaultOrdering;
+    collectAllLinks(defaultOrdering);
+    myTLLogic->setStateLength(myControlledLinks.size());
+    std::vector<std::string> states; // organized per link rather than phase
+    int index = 0;
+    for (NBConnection& c : defaultOrdering) {
+        NBConnection& c2 = *find_if(myControlledLinks.begin(), myControlledLinks.end(), connection_equal(c));
+        states.push_back(getStates(c2.getTLIndex()));
+        c2.setTLIndex(index++);
+    }
+    for (NBNode* n : myControlledNodes) {
+        for (NBNode::Crossing* c : n->getCrossings()) {
+            states.push_back(getStates(c->tlLinkIndex));
+            c->tlLinkIndex = index++;
+            if (c->tlLinkIndex2 != NBConnection::InvalidTlIndex) {
+                states.push_back(getStates(c->tlLinkIndex2));
+                c->tlLinkIndex2 = index++;
+            }
+        }
+    }
+    for (int i = 0; i < (int)states.size(); i++) {
+        for (int p = 0; p < (int)states[i].size(); p++) {
+            myTLLogic->setPhaseState(p, i, (LinkState)states[i][p]);
+        }
+    }
+    setTLControllingInformation();
 }
 
 
@@ -639,7 +750,7 @@ NBLoadedSUMOTLDef::guessMinMaxDuration() {
     bool hasMinMaxDur = false;
     for (auto phase : myTLLogic->getPhases()) {
         if (phase.maxDur != UNSPECIFIED_DURATION) {
-            std::cout << " phase=" << phase.state << " maxDur=" << phase.maxDur << "\n";
+            //std::cout << " phase=" << phase.state << " maxDur=" << phase.maxDur << "\n";
             hasMinMaxDur = true;
         }
     }

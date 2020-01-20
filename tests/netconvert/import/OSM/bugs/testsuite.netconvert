@@ -4,6 +4,9 @@ ticket868
 ticket869
 ticket870
 ticket871
+
+# improve search for joinable subsets
+ticket876
 ticket1755
 ticket2790
 
@@ -18,6 +21,9 @@ ticket6470
 
 # ramps.guess must consider turning restrictions
 ticket6482
+
+# test handling multiple "only" restrictions for the same edge
+ticket6482b
 
 # guess-signals must work indendepent of the junction size
 ticket6493

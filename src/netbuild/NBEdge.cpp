@@ -968,7 +968,7 @@ NBEdge::checkGeometry(const double maxAngle, const double minRadius, bool fix, b
 
 // ----------- Setting and getting connections
 bool
-NBEdge::addEdge2EdgeConnection(NBEdge* dest) {
+NBEdge::addEdge2EdgeConnection(NBEdge* dest, bool overrideRemoval) {
     if (myStep == EdgeBuildingStep::INIT_REJECT_CONNECTIONS) {
         return true;
     }
@@ -983,6 +983,16 @@ NBEdge::addEdge2EdgeConnection(NBEdge* dest) {
         myConnections.push_back(Connection(-1, dest, -1));
     } else if (find_if(myConnections.begin(), myConnections.end(), connections_toedge_finder(dest)) == myConnections.end()) {
         myConnections.push_back(Connection(-1, dest, -1));
+    }
+    if (overrideRemoval) {
+        // override earlier delete decision
+        for (std::vector<Connection>::iterator it = myConnectionsToDelete.begin(); it != myConnectionsToDelete.end();) {
+            if (it->toEdge == dest) {
+                it = myConnectionsToDelete.erase(it);
+            } else {
+                it++;
+            }
+        }
     }
     if (myStep < EdgeBuildingStep::EDGE2EDGES) {
         myStep = EdgeBuildingStep::EDGE2EDGES;
@@ -2254,6 +2264,10 @@ NBEdge::recheckLanes() {
         }
     }
 #endif
+    // check delayed removals
+    for (std::vector<Connection>::iterator it = myConnectionsToDelete.begin(); it != myConnectionsToDelete.end(); ++it) {
+        removeFromConnections(it->toEdge, it->fromLane, it->toLane, false, false, true);
+    }
     std::vector<int> connNumbersPerLane(myLanes.size(), 0);
     for (std::vector<Connection>::iterator i = myConnections.begin(); i != myConnections.end();) {
         if ((*i).toEdge == nullptr || (*i).fromLane < 0 || (*i).toLane < 0) {
@@ -2359,10 +2373,6 @@ NBEdge::recheckLanes() {
             }
         }
     }
-    // check delayed removals
-    for (std::vector<Connection>::iterator it = myConnectionsToDelete.begin(); it != myConnectionsToDelete.end(); ++it) {
-        removeFromConnections(it->toEdge, it->fromLane, it->toLane, false, false, true);
-    }
     // check involuntary dead end at "real" junctions
     if (getPermissions() != SVC_PEDESTRIAN) {
         if (myConnections.empty() && myTo->getOutgoingEdges().size() > 1 && (getPermissions() & ~SVC_PEDESTRIAN) != 0) {
@@ -2386,8 +2396,8 @@ NBEdge::recheckLanes() {
             }
         }
     }
-    // check for connections with bad access permissions
 #ifdef ADDITIONAL_WARNINGS
+    // check for connections with bad access permissions
     for (const Connection& c : myConnections) {
         SVCPermissions fromP = getPermissions(c.fromLane);
         SVCPermissions toP = c.toEdge->getPermissions(c.toLane);
@@ -2405,6 +2415,37 @@ NBEdge::recheckLanes() {
             }
         }
     }
+    // check for dead-end passenger lanes when there are still unconnected outgoing edges
+    int passengerLanes = 0;
+    int passengerTargetLanes = 0;
+    for (const Lane& lane : myLanes) {
+        if ((lane.permissions & SVC_PASSENGER) != 0) {
+            passengerLanes++;
+        }
+    }
+    for (const NBEdge* out : myTo->getOutgoingEdges()) {
+        if (!isTurningDirectionAt(out)) {
+            for (const Lane& lane : out->getLanes()) {
+                if ((lane.permissions & SVC_PASSENGER) != 0) {
+                    passengerTargetLanes++;
+                }
+            }
+        }
+    }
+    if (passengerLanes <= passengerTargetLanes) {
+        // no need for dead-ends
+        connNumbersPerLane = std::vector<int>(myLanes.size(), 0);
+        for (const Connection& c : myConnections) {
+            connNumbersPerLane[c.fromLane]++;
+        }
+        for (int i = 0; i < (int)myLanes.size(); i++) {
+            if (connNumbersPerLane[i] == 0 && !isForbidden(getPermissions(i))) {
+                // dead-end lane found
+                WRITE_WARNING("Found dead-end lane " + getLaneID(i));
+            }
+        }
+    }
+
 #endif
 #ifdef DEBUG_CONNECTION_GUESSING
     if (DEBUGCOND) {

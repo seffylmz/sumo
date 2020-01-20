@@ -177,7 +177,6 @@ GNEViewNet::GNEViewNet(FXComposite* tmpParent, FXComposite* actualParent, GUIMai
     GUISUMOAbstractView(tmpParent, app, viewParent, net->getVisualisationSpeedUp(), glVis, share),
     myEditModes(this),
     myTestingMode(this),
-    mySaveElements(this),
     myCommonCheckableButtons(this),
     myNetworkCheckableButtons(this),
     myDemandCheckableButtons(this),
@@ -190,6 +189,7 @@ GNEViewNet::GNEViewNet(FXComposite* tmpParent, FXComposite* actualParent, GUIMai
     myMoveMultipleElementValues(this),
     myVehicleOptions(this),
     myVehicleTypeOptions(this),
+    mySaveElements(this),
     mySelectingArea(this),
     myEditShapes(this),
     myViewParent(viewParent),
@@ -559,9 +559,8 @@ GNEViewNet::showJunctionAsBubbles() const {
 
 
 GNEViewNet::GNEViewNet() :
-    myTestingMode(this),
     myEditModes(this),
-    mySaveElements(this),
+    myTestingMode(this),
     myCommonCheckableButtons(this),
     myNetworkCheckableButtons(this),
     myDemandCheckableButtons(this),
@@ -574,6 +573,7 @@ GNEViewNet::GNEViewNet() :
     myMoveMultipleElementValues(this),
     myVehicleOptions(this),
     myVehicleTypeOptions(this),
+    mySaveElements(this),
     mySelectingArea(this),
     myEditShapes(this) {
 }

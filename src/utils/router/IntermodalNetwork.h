@@ -108,29 +108,34 @@ public:
         bool haveSeenWalkingArea = false;
         for (const E* const edge : edges) {
             if (edge->isTazConnector()) {
-                continue;
-            }
-            const L* lane = getSidewalk<E, L>(edge);
-            if (lane != 0) {
-                if (edge->isWalkingArea()) {
-                    // only a single edge
-                    addEdge(new _PedestrianEdge(myNumericalID++, edge, lane, true));
-                    myBidiLookup[edge] = std::make_pair(myEdges.back(), myEdges.back());
-                    myDepartLookup[edge].push_back(myEdges.back());
-                    myArrivalLookup[edge].push_back(myEdges.back());
-                    haveSeenWalkingArea = true;
-                } else { // regular edge or crossing
-                    // forward and backward edges
-                    addEdge(new _PedestrianEdge(myNumericalID++, edge, lane, true));
-                    addEdge(new _PedestrianEdge(myNumericalID++, edge, lane, false));
-                    myBidiLookup[edge] = std::make_pair(myEdges[myNumericalID - 2], myEdges.back());
+                // only a single edge
+                _AccessEdge* access = new _AccessEdge(myNumericalID++, edge->getID(), edge);
+                addEdge(access);
+                myDepartLookup[edge].push_back(access);
+                myArrivalLookup[edge].push_back(access);
+            } else {
+                const L* lane = getSidewalk<E, L>(edge);
+                if (lane != 0) {
+                    if (edge->isWalkingArea()) {
+                        // only a single edge
+                        addEdge(new _PedestrianEdge(myNumericalID++, edge, lane, true));
+                        myBidiLookup[edge] = std::make_pair(myEdges.back(), myEdges.back());
+                        myDepartLookup[edge].push_back(myEdges.back());
+                        myArrivalLookup[edge].push_back(myEdges.back());
+                        haveSeenWalkingArea = true;
+                    } else { // regular edge or crossing
+                        // forward and backward edges
+                        addEdge(new _PedestrianEdge(myNumericalID++, edge, lane, true));
+                        addEdge(new _PedestrianEdge(myNumericalID++, edge, lane, false));
+                        myBidiLookup[edge] = std::make_pair(myEdges[myNumericalID - 2], myEdges.back());
+                    }
                 }
-            }
-            if (!edge->isWalkingArea()) {
-                // depart and arrival edges (the router can decide the initial direction to take and the direction to arrive from)
-                _IntermodalEdge* const departConn = new _IntermodalEdge(edge->getID() + "_depart_connector", myNumericalID++, edge, "!connector");
-                _IntermodalEdge* const arrivalConn = new _IntermodalEdge(edge->getID() + "_arrival_connector", myNumericalID++, edge, "!connector");
-                addConnectors(departConn, arrivalConn, 0);
+                if (!edge->isWalkingArea()) {
+                    // depart and arrival edges (the router can decide the initial direction to take and the direction to arrive from)
+                    _IntermodalEdge* const departConn = new _IntermodalEdge(edge->getID() + "_depart_connector", myNumericalID++, edge, "!connector");
+                    _IntermodalEdge* const arrivalConn = new _IntermodalEdge(edge->getID() + "_arrival_connector", myNumericalID++, edge, "!connector");
+                    addConnectors(departConn, arrivalConn, 0);
+                }
             }
         }
 
@@ -162,6 +167,20 @@ public:
         // build the connections
         for (const E* const edge : edges) {
             if (edge->isTazConnector()) {
+                // since pedestrians walk in both directions, also allow departing at sinks and arriving at sources
+                _IntermodalEdge* const tazDepart = getDepartConnector(edge);
+                _IntermodalEdge* const tazArrive = getArrivalConnector(edge);
+                const E* other = edge->getOtherTazConnector();
+                _IntermodalEdge* const otherTazDepart = other != nullptr ? getDepartConnector(other) : tazDepart;
+                _IntermodalEdge* const otherTazArrive = other != nullptr ? getArrivalConnector(other) : tazArrive;
+                for (const E* out : edge->getSuccessors()) {
+                    tazDepart->addSuccessor(getDepartConnector(out));
+                    getArrivalConnector(out)->addSuccessor(otherTazArrive);
+                }
+                for (const E* in : edge->getPredecessors()) {
+                    getArrivalConnector(in)->addSuccessor(tazArrive);
+                    otherTazDepart->addSuccessor(getDepartConnector(in));
+                }
                 continue;
             }
             const L* const sidewalk = getSidewalk<E, L>(edge);

@@ -258,6 +258,7 @@ MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now
         myDepartPos = previous->getArrivalPos();
     }
     // TODO This works currently only for a single vehicle type
+    const int oldNumStages = transportable->getNumStages();
     for (SUMOVehicleParameter* vehPar : pars) {
         SUMOVehicle* vehicle = nullptr;
         bool isTaxi = false;
@@ -293,15 +294,33 @@ MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now
                         localArrivalPos = myArrivalPos;
                     }
                     if (it->line == "") {
+                        // determine walk departPos
                         double depPos = previous->getArrivalPos();
                         if (previous->getDestinationStop() != nullptr) {
                             depPos = previous->getDestinationStop()->getAccessPos(it->edges.front());
+                        } else if (myOrigin->isTazConnector()) {
+                            // walk the whole length of the first edge
+                            const MSEdge* first = it->edges.front();
+                            if (std::find(first->getPredecessors().begin(), first->getPredecessors().end(), myOrigin) != first->getPredecessors().end()) {
+                                depPos = 0;
+                            } else {
+                                depPos = first->getLength();
+                            }
                         } else if (previous->getEdge() != it->edges.front()) {
 //                            if (previous->getEdge()->getToJunction() == it->edges.front()->getToJunction()) {
 //                                depPos = it->edges.front()->getLength();
 //                            } else {
                             depPos = 0.;
 //                            }
+                        }
+                        if (myDestination->isTazConnector()) {
+                            // walk the whole length of the last edge
+                            const MSEdge* last = it->edges.back();
+                            if (std::find(last->getSuccessors().begin(), last->getSuccessors().end(), myDestination) != last->getSuccessors().end()) {
+                                localArrivalPos = last->getLength();
+                            } else {
+                                localArrivalPos = 0;
+                            }
                         }
                         previous = new MSPerson::MSPersonStage_Walking(transportable->getID(), it->edges, bs, myDuration, mySpeed, depPos, localArrivalPos, myDepartPosLat);
                         transportable->appendStage(previous, stageIndex++);
@@ -346,6 +365,13 @@ MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now
         }
         if (vehicle != nullptr && !isTaxi && !carUsed) {
             vehControl.deleteVehicle(vehicle, true);
+        }
+    }
+    if (transportable->getNumStages() == oldNumStages) {
+        // append stage so the GUI won't crash due to inconsistent state
+        transportable->appendStage(new MSPerson::MSPersonStage_Walking(transportable->getID(), ConstMSEdgeVector({ myOrigin, myDestination }), myDestinationStop, myDuration, mySpeed, previous->getArrivalPos(), myArrivalPos, myDepartPosLat), -1);
+        if (MSGlobals::gCheckRoutes) {  // if not pedestrians will teleport
+            return "Empty route between edge '" + myOrigin->getID() + "' and edge '" + (myDestinationStop != nullptr ? myDestinationStop->getID() : myDestination->getID()) + "' for person '" + transportable->getID() + "'.";
         }
     }
     return "";

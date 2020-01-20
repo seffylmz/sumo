@@ -76,12 +76,6 @@ public:
         /// @brief text field for junction ID
         FXTextField* myTextFieldJunctionID;
 
-        /// @brief label for junction status
-        FXLabel* myLabelJunctionStatus;
-
-        /// @brief text field for junction status
-        FXTextField* myTextFieldJunctionStatus;
-
         /// @brief the junction of the tls is being modified
         GNEJunction* myCurrentJunction;
     };
@@ -373,6 +367,12 @@ public:
 
     /// @brief Called when the user cleans up states
     long onCmdAddUnused(FXObject*, FXSelector, void*);
+
+    /// @brief Called when the user groups states
+    long onCmdGroupStates(FXObject*, FXSelector, void*);
+
+    /// @brief Called when the user ungroups states
+    long onCmdUngroupStates(FXObject*, FXSelector, void*);
 
     /// @brief Called when the user edits a Phase
     long onCmdPhaseEdit(FXObject*, FXSelector, void*);

@@ -32,6 +32,7 @@
 #include "NBTrafficLightLogic.h"
 #include "NBTrafficLightLogicCont.h"
 #include "NBOwnTLDef.h"
+#include "NBLoadedSUMOTLDef.h"
 #include "NBEdgeCont.h"
 #include "NBNodeCont.h"
 
@@ -145,10 +146,41 @@ NBTrafficLightLogicCont::computeLogics(OptionsCont& oc) {
     }
     myComputed.clear();
 
+    if (oc.getBool("tls.group-signals")) {
+        // replace NBOwnTLDef tld with NBLoadedSUMOTLDef
+        for (NBTrafficLightDefinition* def : getDefinitions()) {
+            NBLoadedSUMOTLDef* lDef = dynamic_cast<NBLoadedSUMOTLDef*>(def);
+            if (lDef == nullptr) {
+                NBTrafficLightLogic* logic = def->compute(oc);
+                if (logic != nullptr) {
+                    lDef = new NBLoadedSUMOTLDef(def, logic);
+                    lDef->setParticipantsInformation();
+                    for (NBNode* node : lDef->getNodes()) {
+                        node->removeTrafficLight(def);
+                        node->addTrafficLight(lDef);
+                    }
+                    removeProgram(def->getID(), def->getProgramID());
+                    insert(lDef);
+                }
+            }
+            if (lDef != nullptr) {
+                lDef->groupSignals();
+            }
+        }
+    } else if (oc.getBool("tls.ungroup-signals")) {
+        for (NBTrafficLightDefinition* def : getDefinitions()) {
+            NBLoadedSUMOTLDef* lDef = dynamic_cast<NBLoadedSUMOTLDef*>(def);
+            // NBOwnTLDef are always ungrouped
+            if (lDef != nullptr) {
+                if (lDef->usingSignalGroups()) {
+                    lDef->ungroupSignals();
+                }
+            }
+        }
+    }
     int numPrograms = 0;
-    Definitions definitions = getDefinitions();
-    for (Definitions::iterator it = definitions.begin(); it != definitions.end(); it++) {
-        if (computeSingleLogic(oc, *it)) {
+    for (NBTrafficLightDefinition* def : getDefinitions()) {
+        if (computeSingleLogic(oc, def)) {
             numPrograms++;
         }
     }

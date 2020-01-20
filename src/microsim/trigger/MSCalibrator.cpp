@@ -183,8 +183,8 @@ MSCalibrator::myStartElement(int element,
         } catch (NumberFormatException&) {
             WRITE_ERROR("Non-numeric value for numeric attribute in definition of calibrator '" + getID() + "'.");
         }
-        if (state.q < 0 && state.v < 0) {
-            WRITE_ERROR("Either 'vehsPerHour' or 'speed' has to be given in flow definition of calibrator '" + getID() + "'.");
+        if (state.q < 0 && state.v < 0 && state.vehicleParameter->vtypeid == DEFAULT_VTYPE_ID) {
+            WRITE_ERROR("Either 'vehsPerHour',  'speed' or 'type' has to be set in flow definition of calibrator '" + getID() + "'.");
         }
         if (myIntervals.size() > 0 && myIntervals.back().end == -1) {
             myIntervals.back().end = state.begin;
@@ -285,8 +285,10 @@ MSCalibrator::removePending() {
 
 SUMOTime
 MSCalibrator::execute(SUMOTime currentTime) {
+    const bool calibrateFlow = myCurrentStateInterval->q >= 0;
+    const bool calibrateSpeed = myCurrentStateInterval->v >= 0;
     // get current simulation values (valid for the last simulation second)
-    myHaveInvalidJam = invalidJam(myLane == 0 ? -1 : myLane->getIndex());
+    myHaveInvalidJam = (calibrateFlow || calibrateSpeed) && invalidJam(myLane == 0 ? -1 : myLane->getIndex());
     // XXX could we miss vehicle movements if this is called less often than every DELTA_T (default) ?
     updateMeanData();
     const bool hadRemovals = removePending();
@@ -313,7 +315,7 @@ MSCalibrator::execute(SUMOTime currentTime) {
         return myFrequency;
     }
     // we are active
-    if (!myDidSpeedAdaption && myCurrentStateInterval->v >= 0) {
+    if (!myDidSpeedAdaption && calibrateSpeed) {
         if (myLane == nullptr) {
             myEdge->setMaxSpeed(myCurrentStateInterval->v);
         } else {
@@ -323,7 +325,6 @@ MSCalibrator::execute(SUMOTime currentTime) {
         myDidSpeedAdaption = true;
     }
 
-    const bool calibrateFlow = myCurrentStateInterval->q >= 0;
     const int totalWishedNum = totalWished();
     int adaptedNum = passed() + myClearedInJam;
 #ifdef MSCalibrator_DEBUG
@@ -539,6 +540,31 @@ MSCalibrator::VehicleRemover::notifyEnter(SUMOTrafficObject& veh, Notification /
             }
             if (myParent->scheduleRemoval(vehicle)) {
                 myParent->myClearedInJam++;
+            }
+        }
+        const std::string typeID = myParent->myCurrentStateInterval->vehicleParameter->vtypeid;
+        if (!calibrateFlow && typeID != DEFAULT_VTYPE_ID) {
+            // calibrate type
+            MSVehicle* vehicle = dynamic_cast<MSVehicle*>(&veh);
+            const std::string origType = vehicle->getParameter().vtypeid; // could by id of vTypeDistribution
+            const MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
+            const RandomDistributor<MSVehicleType*>* oldDist = vc.getVTypeDistribution(origType);
+            const RandomDistributor<MSVehicleType*>* newDist = vc.getVTypeDistribution(typeID);
+            bool matchDistribution = false;
+            if (oldDist != nullptr && newDist != nullptr &&  oldDist->getVals().size() == newDist->getVals().size()) {
+                auto it = std::find(oldDist->getVals().begin(), oldDist->getVals().end(), &vehicle->getVehicleType());
+                if (it != oldDist->getVals().end()) {
+                    matchDistribution = true;
+                    const int distIndex = it - oldDist->getVals().begin();
+                    vehicle->replaceVehicleType(newDist->getVals()[distIndex]);
+                }
+            }
+            if (!matchDistribution) {
+                MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(typeID);
+                if (vehicleType == nullptr) {
+                    throw ProcessError("Unknown vehicle type '" + typeID + "' in calibrator '" + myParent->getID() + "'");
+                }
+                vehicle->replaceVehicleType(vehicleType);
             }
         }
     }

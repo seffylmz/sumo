@@ -136,6 +136,7 @@
 
 #include "cut.xpm"
 #include "ext.xpm"
+#include "tracker.xpm"
 
 #include "savenetworkelements.xpm"
 #include "saveaditionalelements.xpm"
@@ -424,6 +425,7 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
 
     myIcons[ICON_EXT] = new FXXPMIcon(a, ext_xpm);
     myIcons[ICON_CUT_SWELL] = new FXXPMIcon(a, cut_xpm);
+    myIcons[ICON_TRACKER] = new FXXPMIcon(a, tracker_xpm);
 
     myIcons[ICON_SAVENETWORKELEMENTS] = new FXXPMIcon(a, savenetworkelements_xpm);
     myIcons[ICON_SAVEADDITIONALELEMENTS] = new FXXPMIcon(a, saveadditionalelements_xpm);

@@ -84,8 +84,8 @@ MSRouteHandler::deleteActivePlans() {
 
 
 void
-MSRouteHandler::parseFromViaTo(std::string element,
-                               const SUMOSAXAttributes& attrs) {
+MSRouteHandler::parseFromViaTo(SumoXMLTag tag, const SUMOSAXAttributes& attrs) {
+    const std::string element = toString(tag);
     myActiveRoute.clear();
     bool useTaz = OptionsCont::getOptions().getBool("with-taz");
     if (useTaz && !myVehicleParameter->wasSet(VEHPARS_FROM_TAZ_SET) && !myVehicleParameter->wasSet(VEHPARS_TO_TAZ_SET)) {
@@ -103,7 +103,7 @@ MSRouteHandler::parseFromViaTo(std::string element,
         if (fromTaz == nullptr) {
             throw ProcessError("Source " + tazType + " '" + tazID + "' not known for " + element + " '" + myVehicleParameter->id + "'!"
                     + (useJunction ? JUNCTION_TAZ_MISSING_HELP : ""));
-        } else if (fromTaz->getNumSuccessors() == 0) {
+        } else if (fromTaz->getNumSuccessors() == 0 && tag != SUMO_TAG_PERSON) {
             throw ProcessError("Source " + tazType + " '" + tazID + "' has no outgoing edges for " + element + " '" + myVehicleParameter->id + "'!");
         } else {
             myActiveRoute.push_back(fromTaz);
@@ -146,7 +146,7 @@ MSRouteHandler::parseFromViaTo(std::string element,
         if (toTaz == nullptr) {
             throw ProcessError("Sink " + tazType + " '" + tazID + "' not known for " + element + " '" + myVehicleParameter->id + "'!"
                     + (useJunction ? JUNCTION_TAZ_MISSING_HELP : ""));
-        } else if (toTaz->getNumPredecessors() == 0) {
+        } else if (toTaz->getNumPredecessors() == 0 && tag != SUMO_TAG_PERSON) {
             throw ProcessError("Sink " + tazType + " '" + tazID + "' has no incoming edges for " + element + " '" + myVehicleParameter->id + "'!");
         } else {
             myActiveRoute.push_back(toTaz);
@@ -365,10 +365,10 @@ MSRouteHandler::myStartElement(int element,
                 break;
             }
             case SUMO_TAG_FLOW:
-                parseFromViaTo("flow", attrs);
+                parseFromViaTo((SumoXMLTag)element, attrs);
                 break;
             case SUMO_TAG_TRIP:
-                parseFromViaTo("trip", attrs);
+                parseFromViaTo((SumoXMLTag)element, attrs);
                 break;
             default:
                 break;
@@ -1174,22 +1174,27 @@ void
 MSRouteHandler::addPersonTrip(const SUMOSAXAttributes& attrs) {
     myActiveRoute.clear();
     bool ok = true;
-    MSVehicleControl& vehControl = MSNet::getInstance()->getVehicleControl();
     const char* const id = myVehicleParameter->id.c_str();
+    const MSEdge* from = nullptr;
+    const MSEdge* to = nullptr;
+    parseFromViaTo(SUMO_TAG_PERSON, attrs);
+    myInsertStopEdgesAt = -1;
+    if (attrs.hasAttribute(SUMO_ATTR_FROM) || attrs.hasAttribute(SUMO_ATTR_FROMJUNCTION) || attrs.hasAttribute(SUMO_ATTR_FROM_TAZ)) {
+        from = myActiveRoute.front();
+    } else if (myActivePlan->empty()) {
+        throw ProcessError("Start edge not defined for person '" + myVehicleParameter->id + "'.");
+    } else {
+        from = myActivePlan->back()->getDestination();
+    }
+    if (attrs.hasAttribute(SUMO_ATTR_TO) || attrs.hasAttribute(SUMO_ATTR_TOJUNCTION) || attrs.hasAttribute(SUMO_ATTR_TO_TAZ)) {
+        to = myActiveRoute.back();
+    } // else, to may also be derived from stopping place
+
     const SUMOTime duration = attrs.getOptSUMOTimeReporting(SUMO_ATTR_DURATION, id, ok, -1);
     if (attrs.hasAttribute(SUMO_ATTR_DURATION) && duration <= 0) {
         throw ProcessError("Non-positive walking duration for  '" + myVehicleParameter->id + "'.");
     }
-    const std::string fromID = attrs.getOpt<std::string>(SUMO_ATTR_FROM, id, ok, "");
-    const MSEdge* from = fromID != "" || myActivePlan->empty() ? MSEdge::dictionary(fromID) : myActivePlan->back()->getDestination();
-    if (from == nullptr) {
-        throw ProcessError("The from edge '" + fromID + "' within a walk of person '" + myVehicleParameter->id + "' is not known.");
-    }
-    const std::string toID = attrs.getOpt<std::string>(SUMO_ATTR_TO, myVehicleParameter->id.c_str(), ok, "");
-    const MSEdge* to = MSEdge::dictionary(toID);
-    if (toID != "" && to == nullptr) {
-        throw ProcessError("The to edge '" + toID + "' within a walk of person '" + myVehicleParameter->id + "' is not known.");
-    }
+
     double departPos = 0;
     double arrivalPos = 0;
     MSStoppingPlace* stoppingPlace = nullptr;
@@ -1202,6 +1207,7 @@ MSRouteHandler::addPersonTrip(const SUMOSAXAttributes& attrs) {
     if (!SUMOVehicleParameter::parsePersonModes(modes, "person", id, modeSet, errorMsg)) {
         throw InvalidArgument(errorMsg);
     }
+    MSVehicleControl& vehControl = MSNet::getInstance()->getVehicleControl();
     const std::string types = attrs.getOpt<std::string>(SUMO_ATTR_VTYPES, id, ok, "");
     for (StringTokenizer st(types); st.hasNext();) {
         const std::string vtypeid = st.next();
