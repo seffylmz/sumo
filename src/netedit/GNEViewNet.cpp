@@ -2157,6 +2157,10 @@ long
 GNEViewNet::onCmdClearConnections(FXObject*, FXSelector, void*) {
     GNEJunction* junction = getJunctionAtPopupPosition();
     if (junction != nullptr) {
+        if (myDottedAC != nullptr && myDottedAC->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
+            // make sure we do not inspect the connection will it is being deleted
+            myViewParent->getInspectorFrame()->clearInspectedAC();
+        }
         // check if we're handling a selection
         if (junction->isAttributeCarrierSelected()) {
             std::vector<GNEJunction*> selectedJunction = myNet->retrieveJunctions(true);
@@ -2181,6 +2185,10 @@ long
 GNEViewNet::onCmdResetConnections(FXObject*, FXSelector, void*) {
     GNEJunction* junction = getJunctionAtPopupPosition();
     if (junction != nullptr) {
+        if (myDottedAC != nullptr && myDottedAC->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
+            // make sure we do not inspect the connection will it is being deleted
+            myViewParent->getInspectorFrame()->clearInspectedAC();
+        }
         // check if we're handling a selection
         if (junction->isAttributeCarrierSelected()) {
             std::vector<GNEJunction*> selectedJunction = myNet->retrieveJunctions(true);
