@@ -54,11 +54,11 @@ algorithms are available
 
 - greedy: Assigns taxis to customers in the order of their reservations. The
   closest taxi (in terms of travel time) is assigned. If the reservation date is
-  too far in the future, the customr is postponed
+  too far in the future, the customer is postponed.
 
 - greedyClosest: For each available taxi, the closest customer (in terms of
   travel time) is assigned. If the reservation date is too far in the future,
-  the customr is postponed.
+  the customer is postponed.
 
 !!! note
     User-contributed dispatch algorithms are welcome.
@@ -74,7 +74,7 @@ By default, taxis will remain in the simulation until all persons have left. To 
         <param key="has.taxi.device" value="true"/>
         <param key="device.taxi.end" value="3600"/>
     </vType>
- ```
+```
 
 # Outputs
 
