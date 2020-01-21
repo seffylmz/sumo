@@ -1969,7 +1969,8 @@ GNEViewNetHelper::DataViewOptions::hideDataViewOptionsMenuChecks() {
 
 
 void
-GNEViewNetHelper::DataViewOptions::getVisibleDataMenuCommands(std::vector<FXMenuCheck*>& commands) const {
+GNEViewNetHelper::DataViewOptions::getVisibleDataMenuCommands(std::vector<FXMenuCheck*>& /*commands*/) const {
+    // currently unused
 }
 
 // ---------------------------------------------------------------------------
@@ -2329,6 +2330,7 @@ GNEViewNetHelper::DataCheckableButtons::updateDataCheckableButtons() {
 GNEViewNetHelper::EditShapes::EditShapes(GNEViewNet* viewNet) :
     editedShapePoly(nullptr),
     editingNetworkElementShapes(false),
+    myPreviousNetworkEditMode(GNE_NETWORKMODE_NONE),
     myViewNet(viewNet) {
 }
 
