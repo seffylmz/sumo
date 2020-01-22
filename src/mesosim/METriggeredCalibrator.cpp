@@ -94,7 +94,9 @@ METriggeredCalibrator::execute(SUMOTime currentTime) {
     // check whether an adaptation value exists
     if (isCurrentStateActive(currentTime)) {
         // all happens in isCurrentStateActive()
+        myAmActive = true;
     } else {
+        myAmActive = false;
         myEdgeMeanData.reset(); // discard collected values
         if (!mySpeedIsDefault) {
             // if not, reset adaptation values
@@ -113,8 +115,10 @@ METriggeredCalibrator::execute(SUMOTime currentTime) {
         }
         return myFrequency;
     }
+    const bool calibrateFlow = myCurrentStateInterval->q >= 0;
+    const bool calibrateSpeed = myCurrentStateInterval->v >= 0;
     // we are active
-    if (!myDidSpeedAdaption && myCurrentStateInterval->v >= 0 && myCurrentStateInterval->v != mySegment->getEdge().getSpeedLimit()) {
+    if (!myDidSpeedAdaption && calibrateSpeed && myCurrentStateInterval->v != mySegment->getEdge().getSpeedLimit()) {
         mySegment->getEdge().setMaxSpeed(myCurrentStateInterval->v);
         MESegment* first = MSGlobals::gMesoNet->getSegmentForEdge(mySegment->getEdge());
         while (first != nullptr) {
@@ -126,7 +130,7 @@ METriggeredCalibrator::execute(SUMOTime currentTime) {
     }
     // clear invalid jams
     bool hadInvalidJam = false;
-    while (invalidJam()) {
+    while ((calibrateFlow || calibrateSpeed) && invalidJam()) {
         hadInvalidJam = true;
         if (!myHaveWarnedAboutClearingJam) {
             WRITE_WARNING("Clearing jam at calibrator '" + getID() + "' at time " + time2string(currentTime));
@@ -143,7 +147,7 @@ METriggeredCalibrator::execute(SUMOTime currentTime) {
         }
         myHaveWarnedAboutClearingJam = true;
     }
-    if (myCurrentStateInterval->q >= 0) {
+    if (calibrateFlow) {
         // flow calibration starts here ...
         // compute the number of vehicles that should have passed the calibrator within the time
         // rom begin of the interval

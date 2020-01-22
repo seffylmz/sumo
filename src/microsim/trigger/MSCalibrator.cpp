@@ -50,6 +50,7 @@
 // ===========================================================================
 std::vector<MSMoveReminder*> MSCalibrator::LeftoverReminders;
 std::vector<SUMOVehicleParameter*> MSCalibrator::LeftoverVehicleParameters;
+std::set<MSCalibrator*> MSCalibrator::myInstances;
 
 // ===========================================================================
 // method definitions
@@ -79,7 +80,9 @@ MSCalibrator::MSCalibrator(const std::string& id,
     myDefaultSpeed(myLane == nullptr ? myEdge->getSpeedLimit() : myLane->getSpeedLimit()),
     myHaveWarnedAboutClearingJam(false),
     myAmActive(false),
-    myHaveInvalidJam(false) {
+    myHaveInvalidJam(false)
+{
+    myInstances.insert(this);
     if (outputFilename != "") {
         myOutput = &OutputDevice::getDevice(outputFilename);
         writeXMLDetectorProlog(*myOutput);
@@ -131,6 +134,7 @@ MSCalibrator::~MSCalibrator() {
     for (VehicleRemover* const remover : myVehicleRemovers) {
         remover->disable();
     }
+    myInstances.erase(this);
 }
 
 
@@ -185,6 +189,9 @@ MSCalibrator::myStartElement(int element,
         }
         if (state.q < 0 && state.v < 0 && state.vehicleParameter->vtypeid == DEFAULT_VTYPE_ID) {
             WRITE_ERROR("Either 'vehsPerHour',  'speed' or 'type' has to be set in flow definition of calibrator '" + getID() + "'.");
+        }
+        if (MSGlobals::gUseMesoSim && state.q < 0 && state.vehicleParameter->vtypeid != DEFAULT_VTYPE_ID) {
+            WRITE_ERROR("Type calibration is not supported in meso for calibrator '" + getID() + "'.");
         }
         if (myIntervals.size() > 0 && myIntervals.back().end == -1) {
             myIntervals.back().end = state.begin;
@@ -493,6 +500,7 @@ MSCalibrator::cleanup() {
         delete *it;
     }
     LeftoverVehicleParameters.clear();
+    myInstances.clear(); // deletion is performed in MSTrigger::cleanup()
 }
 
 

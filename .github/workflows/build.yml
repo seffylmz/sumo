@@ -67,6 +67,13 @@ jobs:
   ###########################
   build-linux:
     runs-on: ubuntu-latest 
+    strategy:
+      # Allow all other matrix-jobs to continue running, even if one of the jobs fails
+      fail-fast: false   
+      matrix:
+        build_type: [full, minimal]
+        compiler: [gcc, clang]
+
     steps:
     - name: Cloning SUMO
       uses: actions/checkout@v2
@@ -81,15 +88,19 @@ jobs:
         pushd /usr/src/gtest
         sudo mkdir build
         cd build
-        sudo cmake ..
+        if [[ "${{ matrix.compiler }}" == "gcc" ]]; then sudo CC=gcc CXX=g++ cmake ..; fi
+        if [[ "${{ matrix.compiler }}" == "clang" ]]; then sudo CC=clang CXX=clang++ cmake ..; fi
         sudo make
         sudo cp libgtest* /usr/lib/
     
     - name: Building SUMO
       run: |
+        if [[ "${{ matrix.compiler }}" == "gcc" ]]; then export CC=gcc; export CXX=g++; fi
+        if [[ "${{ matrix.compiler }}" == "clang" ]]; then export CC=clang; export CXX=clang++; fi
         mkdir cmake-build 
         cd cmake-build 
-        cmake .. 
+        if [[ "${{ matrix.build_type }}" == "full" ]]; then cmake ..; fi
+        if [[ "${{ matrix.build_type }}" == "minimal" ]]; then cmake -DFOX_CONFIG= -DPROJ_LIBRARY= -DCHECK_OPTIONAL_LIBS=OFF ..; fi 
         make -j4
 
     - name: Building Traas
@@ -105,7 +116,7 @@ jobs:
     - name: Building Examples and Tests
       run: |
         cd cmake-build
-        make CTEST_OUTPUT_ON_FAILURE=1 examples test
+        if [[ "${{ matrix.build_type }}" == "full" ]]; then make CTEST_OUTPUT_ON_FAILURE=1 examples test; fi
 
   ###################
   # BUILDING ON OSX
