@@ -79,7 +79,7 @@ GNERoute::GNERoutePopupMenu::onCmdApplyDistance(FXObject*, FXSelector, void*) {
 
 GNERoute::GNERoute(GNEViewNet* viewNet) :
     GNEDemandElement(viewNet->getNet()->generateDemandElementID("", SUMO_TAG_ROUTE), viewNet, GLO_ROUTE, SUMO_TAG_ROUTE,
-        {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+        {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
     Parameterised(),
     myColor(RGBColor::YELLOW),
     myVClass(SVC_PASSENGER) {
@@ -87,8 +87,8 @@ GNERoute::GNERoute(GNEViewNet* viewNet) :
 
 
 GNERoute::GNERoute(GNEViewNet* viewNet, const GNERouteHandler::RouteParameter& routeParameters) :
-    GNEDemandElement(routeParameters.routeID, viewNet, GLO_ROUTE, SUMO_TAG_ROUTE,
-        routeParameters.edges, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+    GNEDemandElement(routeParameters.routeID, viewNet, GLO_ROUTE, SUMO_TAG_ROUTE, routeParameters.edges, 
+        {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
     Parameterised(routeParameters.parameters),
     myColor(routeParameters.color),
     myVClass(routeParameters.vClass) {
@@ -96,8 +96,9 @@ GNERoute::GNERoute(GNEViewNet* viewNet, const GNERouteHandler::RouteParameter& r
 
 
 GNERoute::GNERoute(GNEViewNet* viewNet, GNEDemandElement* vehicleParent, const GNERouteHandler::RouteParameter& routeParameters) :
-    GNEDemandElement(viewNet->getNet()->generateDemandElementID("", SUMO_TAG_EMBEDDEDROUTE), viewNet, GLO_EMBEDDEDROUTE, SUMO_TAG_EMBEDDEDROUTE,
-        routeParameters.edges, {}, {}, {}, {vehicleParent}, {}, {}, {}, {}, {}),
+    GNEDemandElement(viewNet->getNet()->generateDemandElementID("", SUMO_TAG_EMBEDDEDROUTE), viewNet, 
+        GLO_EMBEDDEDROUTE, SUMO_TAG_EMBEDDEDROUTE, routeParameters.edges, 
+        {}, {}, {}, {vehicleParent}, {}, {}, {}, {}, {}, {}),
     Parameterised(routeParameters.parameters),
     myColor(routeParameters.color),
     myVClass(routeParameters.vClass) {
@@ -105,8 +106,9 @@ GNERoute::GNERoute(GNEViewNet* viewNet, GNEDemandElement* vehicleParent, const G
 
 
 GNERoute::GNERoute(GNEDemandElement* route) :
-    GNEDemandElement(route->getViewNet()->getNet()->generateDemandElementID("", SUMO_TAG_ROUTE), route->getViewNet(), GLO_ROUTE, SUMO_TAG_ROUTE,
-        route->getParentEdges(), {}, {}, {}, {}, {}, {}, {}, {}, {}),
+    GNEDemandElement(route->getViewNet()->getNet()->generateDemandElementID("", SUMO_TAG_ROUTE), route->getViewNet(), 
+        GLO_ROUTE, SUMO_TAG_ROUTE, route->getParentEdges(), 
+        {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
     Parameterised(),
     myColor(route->getColor()),
     myVClass(route->getVClass()) {
