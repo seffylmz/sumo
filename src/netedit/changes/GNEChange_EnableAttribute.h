@@ -25,16 +25,6 @@
 #include "GNEChange.h"
 
 // ===========================================================================
-// class declarations
-// ===========================================================================
-class GNEAttributeCarrier;
-class GNENetworkElement;
-class GNEAdditional;
-class GNEDemandElement;
-class GNEShape;
-class GNENet;
-
-// ===========================================================================
 // class definitions
 // ===========================================================================
 /**

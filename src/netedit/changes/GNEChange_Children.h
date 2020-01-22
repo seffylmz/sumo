@@ -11,7 +11,7 @@
 /// @author  Pablo Alvarez Lopez
 /// @date    Jul 2019
 ///
-// A network change used to modify sorting of hierarchical element childrens
+// A network change used to modify sorting of hierarchical element children
 /****************************************************************************/
 #ifndef GNEChange_Children_h
 #define GNEChange_Children_h
@@ -22,13 +22,6 @@
 #include <config.h>
 
 #include "GNEChange.h"
-
-// ===========================================================================
-// class declarations
-// ===========================================================================
-
-class GNEViewNet;
-class GNEDemandElement;
 
 // ===========================================================================
 // class definitions
@@ -86,7 +79,7 @@ private:
     /// @brief copy of child demand elementss before apply operation
     const std::vector<GNEDemandElement*> myOriginalChildElements;
 
-    /// @brief element childrens after apply operation
+    /// @brief element children after apply operation
     std::vector<GNEDemandElement*> myEditedChildElements;
 };
 

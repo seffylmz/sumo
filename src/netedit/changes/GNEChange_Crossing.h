@@ -22,21 +22,7 @@
 // ===========================================================================
 #include <config.h>
 
-#include <fx.h>
-#include <utils/foxtools/fxexdefs.h>
-#include <utils/geom/PositionVector.h>
-#include <netbuild/NBNode.h>
-#include <vector>
-#include <map>
 #include "GNEChange.h"
-
-// ===========================================================================
-// class declarations
-// ===========================================================================
-class GNENet;
-class GNEJunction;
-class GNECrossing;
-class NBEdge;
 
 // ===========================================================================
 // class definitions

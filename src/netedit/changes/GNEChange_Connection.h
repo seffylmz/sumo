@@ -22,17 +22,7 @@
 // ===========================================================================
 #include <config.h>
 
-#include <fx.h>
-#include <string>
-#include <utils/foxtools/fxexdefs.h>
-#include <netbuild/NBEdge.h>
 #include "GNEChange.h"
-
-// ===========================================================================
-// class declarations
-// ===========================================================================
-class GNEEdge;
-class GNEConnection;
 
 // ===========================================================================
 // class definitions
