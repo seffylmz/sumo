@@ -58,8 +58,21 @@ jobs:
         cmake .. -G"Visual Studio 16 2019" -A x64
         cmake --build . --config Release
         cd ..
-      # python tools\build\setup-libsumo.py bdist_wheel
+        python -c "import sys; print('[bdist_wheel]\npython-tag=cp%s%s' % sys.version_info[0:2], file=open('tools/build/setup.cfg', 'w'))"
+        python tools\build\setup-libsumo.py bdist_wheel --plat-name win_amd64
  
+    - name: Upload artifacts (SUMO binaries)
+      uses: actions/upload-artifact@v1
+      with:
+        name: Windows-python${{ matrix.python-version }}-binaries
+        path: sumo/bin
+
+    - name: Upload artifacts (Python wheels)
+      uses: actions/upload-artifact@v1
+      with:
+        name: Python${{ matrix.python-version }}-wheels
+        path: sumo/dist
+        
   ###########################
   # BUILDING ON LINUX
   ###########################
@@ -116,6 +129,12 @@ jobs:
         cd cmake-build
         if [[ "${{ matrix.build_type }}" == "full" ]]; then make CTEST_OUTPUT_ON_FAILURE=1 examples test; fi
 
+    - name: Upload artifacts (SUMO binaries)
+      uses: actions/upload-artifact@v1
+      with:
+        name: Linux-${{ matrix.compiler }}-${{ matrix.build_type }}-binaries
+        path: bin
+        
   ###################
   # BUILDING ON OSX
   ###################
@@ -163,3 +182,8 @@ jobs:
         cd cmake-build
         make CTEST_OUTPUT_ON_FAILURE=1 examples test
      
+    - name: Upload artifacts (SUMO binaries)
+      uses: actions/upload-artifact@v1
+      with:
+        name: MacOS-binaries
+        path: bin

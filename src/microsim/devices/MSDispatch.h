@@ -100,6 +100,9 @@ public:
         }
     };
 
+    /// @brief Constructor;
+    MSDispatch();
+
     /// @brief Destructor
     virtual ~MSDispatch() { }
 
@@ -120,7 +123,17 @@ public:
         return myHasServableReservations;
     }
 
+    ///@brief compute time to pick up the given reservation
     static SUMOTime computePickupTime(SUMOTime t, const MSDevice_Taxi* taxi, const Reservation& res, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router);
+
+    ///@brief compute directTime and detourTime
+    static double computeDetourTime(SUMOTime t, SUMOTime viaTime, const MSDevice_Taxi* taxi, 
+        const MSEdge* from, double fromPos, 
+        const MSEdge* via, double viaPos,
+        const MSEdge* to, double toPos,
+        SUMOAbstractRouter<MSEdge, SUMOVehicle>& router,
+        double& timeDirect) ;
+
 
     /// @brief whether the last call to computeDispatch has left servable reservations
     bool myHasServableReservations = false;
@@ -129,6 +142,9 @@ protected:
     std::vector<Reservation*> getReservations();
 
     void servedReservation(const Reservation* res);
+
+    /// @brief optional file output for dispatch information
+    OutputDevice* myOutput;
 
 private:
     std::map<std::string, std::vector<Reservation*> > myGroupReservations;
@@ -150,6 +166,9 @@ public:
     virtual void computeDispatch(SUMOTime now, const std::vector<MSDevice_Taxi*>& fleet);
 
 protected:
+    /// @brief trigger taxi dispatch. @note: method exists so subclasses can inject code at this point (ride sharing)
+    virtual int dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, std::vector<Reservation*>& reservations); 
+
     /// @brief which router/edge weights to use
     int myRoutingMode;
 

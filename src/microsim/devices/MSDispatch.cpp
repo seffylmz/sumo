@@ -27,15 +27,27 @@
 #include "MSDispatch.h"
 
 //#define DEBUG_RESERVATION
-//#define DEBUG_TRAVELTIME
 //#define DEBUG_DISPATCH
 //#define DEBUG_SERVABLE
+//#define DEBUG_TRAVELTIME
+//#define DEBUG_DETOUR
 //#define DEBUG_COND2(obj) (obj->getID() == "p0")
 #define DEBUG_COND2(obj) (true)
 
 // ===========================================================================
 // MSDispatch methods
 // ===========================================================================
+
+MSDispatch::MSDispatch() :
+    myOutput(nullptr)
+{
+    const std::string outFile = OptionsCont::getOptions().getString("device.taxi.dispatch-algorithm.output");
+    if (outFile != "") {
+        myOutput = &OutputDevice::getDevice(outFile);
+        myOutput->writeXMLHeader("DispatchInfo", "");
+    }
+}
+
 
 void
 MSDispatch::addReservation(MSTransportable* person,
@@ -118,6 +130,46 @@ MSDispatch::computePickupTime(SUMOTime t, const MSDevice_Taxi* taxi, const Reser
     return TIME2STEPS(router.recomputeCosts(edges, &taxi->getHolder(), t));
 }
 
+
+double
+MSDispatch::computeDetourTime(SUMOTime t, SUMOTime viaTime, const MSDevice_Taxi* taxi, 
+        const MSEdge* from, double fromPos, 
+        const MSEdge* via, double viaPos,
+        const MSEdge* to, double toPos,
+        SUMOAbstractRouter<MSEdge, SUMOVehicle>& router,
+        double& timeDirect) 
+{
+    ConstMSEdgeVector edges;
+    if (timeDirect < 0) {
+        router.compute(from, fromPos, to, toPos, &taxi->getHolder(), t, edges);
+        timeDirect = router.recomputeCosts(edges, &taxi->getHolder(), fromPos, toPos, t);
+        edges.clear();
+    }
+
+    router.compute(from, fromPos, via, viaPos, &taxi->getHolder(), t, edges);
+    const double start = STEPS2TIME(t);
+    const double leg1 = router.recomputeCosts(edges, &taxi->getHolder(), fromPos, viaPos, t);
+#ifdef DEBUG_DETOUR
+    std::cout << "        leg1=" << toString(edges) << " startPos=" << fromPos << " toPos=" << viaPos << " time=" << leg1 << "\n";
+#endif
+    const double wait = MAX2(0.0, STEPS2TIME(viaTime) - (start + leg1));
+    edges.clear();
+    const SUMOTime timeContinue = TIME2STEPS(start + leg1 + wait);
+    router.compute(via, viaPos, to, toPos, &taxi->getHolder(), timeContinue, edges);
+    const double leg2 = router.recomputeCosts(edges, &taxi->getHolder(), viaPos, toPos, timeContinue);
+    const double timeDetour = leg1 + wait + leg2;
+#ifdef DEBUG_DETOUR
+    std::cout << "        leg2=" << toString(edges) << " startPos=" << viaPos << " toPos=" << toPos << " time=" << leg2 << "\n";
+    std::cout << "    t=" << STEPS2TIME(t) << " vt=" << STEPS2TIME(viaTime)
+        << " from=" << from->getID() << " to=" << to->getID() << " via=" << via->getID()
+        << " direct=" << timeDirect << " detour=" << timeDetour << " wait=" << wait << "\n";
+#endif
+    return timeDetour;
+}
+
+
+
+
 // ===========================================================================
 // MSDispatch_Greedy methods
 // ===========================================================================
@@ -179,14 +231,9 @@ MSDispatch_Greedy::computeDispatch(SUMOTime now, const std::vector<MSDevice_Taxi
             it++;
             numPostponed++;
         } else {
-#ifdef DEBUG_DISPATCH
-            if (DEBUG_COND2(person)) std::cout << SIMTIME << " dispatch taxi=" << closest->getHolder().getID() << " person=" << toString(res->persons) << "\n";
-#endif
-            closest->dispatch(*res);
-            servedReservation(res); // deleting res
-            available.erase(closest);
+            numDispatched += dispatch(closest, res, router, reservations);
             it = reservations.erase(it);
-            numDispatched++; 
+            available.erase(closest);
         }
     }
     // check if any taxis are able to service the remaining requests
@@ -196,6 +243,18 @@ MSDispatch_Greedy::computeDispatch(SUMOTime now, const std::vector<MSDevice_Taxi
         << " fleet=" << fleet.size() << " postponed=" << numPostponed << " dispatched=" << numDispatched << "\n";
 #endif
 }
+
+
+int
+MSDispatch_Greedy::dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbstractRouter<MSEdge, SUMOVehicle>& /*router*/, std::vector<Reservation*>& /*reservations*/) {
+#ifdef DEBUG_DISPATCH
+    if (DEBUG_COND2(person)) std::cout << SIMTIME << " dispatch taxi=" << taxi->getHolder().getID() << " person=" << toString(res->persons) << "\n";
+#endif
+    taxi->dispatch(*res);
+    servedReservation(res); // deleting res
+    return 1;
+}
+
 
 // ===========================================================================
 // MSDispatch_GreedyClosest methods
