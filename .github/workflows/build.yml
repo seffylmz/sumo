@@ -23,8 +23,13 @@ jobs:
     - name: Cloning SUMO
       uses: actions/checkout@v2
       with:
-        path: sumo 
-      
+        path: sumo
+
+    - name: Fetching SUMO tags
+      run: |
+        cd sumo
+        git fetch --prune --unshallow
+
     - name: Cloning SUMO Libraries
       uses: actions/checkout@v2
       with:
@@ -64,13 +69,13 @@ jobs:
     - name: Upload artifacts (SUMO binaries)
       uses: actions/upload-artifact@v1
       with:
-        name: Windows-python${{ matrix.python-version }}-binaries
+        name: Windows-py${{ matrix.python-version }}
         path: sumo/bin
 
     - name: Upload artifacts (Python wheels)
       uses: actions/upload-artifact@v1
       with:
-        name: Python${{ matrix.python-version }}-wheels
+        name: Py${{ matrix.python-version }}-wheels
         path: sumo/dist
         
   ###########################
@@ -88,6 +93,8 @@ jobs:
     steps:
     - name: Cloning SUMO
       uses: actions/checkout@v2
+      with:
+        path: sumo
    
     - name: Preparing Build System
       run: |
@@ -106,34 +113,34 @@ jobs:
     
     - name: Building SUMO
       run: |
+        mkdir -p sumo/cmake-build 
+        cd sumo/cmake-build 
         if [[ "${{ matrix.compiler }}" == "gcc" ]]; then export CC=gcc; export CXX=g++; fi
         if [[ "${{ matrix.compiler }}" == "clang" ]]; then export CC=clang; export CXX=clang++; fi
-        mkdir cmake-build 
-        cd cmake-build 
         if [[ "${{ matrix.build_type }}" == "full" ]]; then cmake ..; fi
         if [[ "${{ matrix.build_type }}" == "minimal" ]]; then cmake -DFOX_CONFIG= -DPROJ_LIBRARY= -DCHECK_OPTIONAL_LIBS=OFF ..; fi 
         make -j4
 
     - name: Building Traas
       run: |
-        cd cmake-build 
+        cd sumo/cmake-build 
         make traas
       
     - name: Installing SUMO
       run: |
-        cd cmake-build 
+        cd sumo/cmake-build 
         sudo make install
       
     - name: Building Examples and Tests
       run: |
-        cd cmake-build
+        cd sumo/cmake-build
         if [[ "${{ matrix.build_type }}" == "full" ]]; then make CTEST_OUTPUT_ON_FAILURE=1 examples test; fi
 
     - name: Upload artifacts (SUMO binaries)
       uses: actions/upload-artifact@v1
       with:
-        name: Linux-${{ matrix.compiler }}-${{ matrix.build_type }}-binaries
-        path: bin
+        name: Linux-${{ matrix.compiler }}-${{ matrix.build_type }}
+        path: sumo/bin
         
   ###################
   # BUILDING ON OSX
@@ -143,6 +150,8 @@ jobs:
     steps:
     - name: Cloning SUMO
       uses: actions/checkout@v2
+      with:
+        path: sumo
    
     - name: Preparing Build System
       run: |
@@ -162,28 +171,28 @@ jobs:
         
     - name: Building SUMO
       run: |
-        mkdir cmake-build 
-        cd cmake-build 
+        mkdir -p sumo/cmake-build 
+        cd sumo/cmake-build 
         cmake .. 
         make -j4
 
     - name: Building Traas
       run: |
-        cd cmake-build 
+        cd sumo/cmake-build 
         make traas
       
     - name: Installing SUMO
       run: |
-        cd cmake-build 
+        cd sumo/cmake-build 
         sudo make install
     
     - name: Building Examples and Tests
       run: |
-        cd cmake-build
+        cd sumo/cmake-build
         make CTEST_OUTPUT_ON_FAILURE=1 examples test
      
     - name: Upload artifacts (SUMO binaries)
       uses: actions/upload-artifact@v1
       with:
-        name: MacOS-binaries
-        path: bin
+        name: MacOS
+        path: sumo/bin

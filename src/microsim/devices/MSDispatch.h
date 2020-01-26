@@ -25,12 +25,9 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <utils/common/Parameterised.h>
 #include <utils/common/SUMOTime.h>
 #include "MSDevice_Taxi.h"
-
-#ifdef HAVE_FOX
-#include <utils/foxtools/FXWorkerThread.h>
-#endif
 
 
 // ===========================================================================
@@ -85,7 +82,7 @@ struct Reservation {
  * @class MSDispatch
  * @brief An algorithm that performs distpach for a taxi fleet
  */
-class MSDispatch {
+class MSDispatch : public Parameterised {
 public:
 
     /// @brief sorts reservations by time
@@ -101,7 +98,7 @@ public:
     };
 
     /// @brief Constructor;
-    MSDispatch();
+    MSDispatch(const std::map<std::string, std::string>& params); 
 
     /// @brief Destructor
     virtual ~MSDispatch() { }
@@ -158,10 +155,13 @@ private:
  */
 class MSDispatch_Greedy : public MSDispatch {
 public:
-    MSDispatch_Greedy(int routingMode = 1, SUMOTime maximumWaitingTime = STEPS2TIME(300)) : 
-        myRoutingMode(routingMode),
-        myMaximumWaitingTime(maximumWaitingTime)
-    {}
+    MSDispatch_Greedy(const std::map<std::string, std::string>& params) :
+        MSDispatch(params),
+        myRoutingMode(StringUtils::toInt(getParameter("routingMode", "1"))),
+        myMaximumWaitingTime(TIME2STEPS(StringUtils::toInt(getParameter("maxWaitingTime", "300")))),
+        myRecheckTime(TIME2STEPS(StringUtils::toInt(getParameter("recheckTime", "120")))),
+        myRecheckSafety(TIME2STEPS(StringUtils::toInt(getParameter("recheckSafety", "3600"))))
+    { }
 
     virtual void computeDispatch(SUMOTime now, const std::vector<MSDevice_Taxi*>& fleet);
 
@@ -170,14 +170,14 @@ protected:
     virtual int dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, std::vector<Reservation*>& reservations); 
 
     /// @brief which router/edge weights to use
-    int myRoutingMode;
+    const int myRoutingMode;
 
     /// @brief maximum time to arrive earlier at customer
     const SUMOTime myMaximumWaitingTime;
 
     /// @brief recheck interval for early reservations
-    const SUMOTime myRecheckTime = TIME2STEPS(120);
-    const SUMOTime myRecheckSafety = TIME2STEPS(3600);
+    const SUMOTime myRecheckTime;
+    const SUMOTime myRecheckSafety;
 
 private:
     /// @brief Invalidated assignment operator.
@@ -192,8 +192,8 @@ private:
  */
 class MSDispatch_GreedyClosest : public MSDispatch_Greedy {
 public:
-    MSDispatch_GreedyClosest(int routingMode = 1, SUMOTime maximumWaitingTime = STEPS2TIME(300)) : 
-        MSDispatch_Greedy(routingMode, maximumWaitingTime)
+    MSDispatch_GreedyClosest(const std::map<std::string, std::string>& params) :
+        MSDispatch_Greedy(params)
     {}
 
     void computeDispatch(SUMOTime now, const std::vector<MSDevice_Taxi*>& fleet);

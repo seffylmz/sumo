@@ -38,7 +38,8 @@
 // MSDispatch methods
 // ===========================================================================
 
-MSDispatch::MSDispatch() :
+MSDispatch::MSDispatch(const std::map<std::string, std::string>& params) :
+    Parameterised(params),
     myOutput(nullptr)
 {
     const std::string outFile = OptionsCont::getOptions().getString("device.taxi.dispatch-algorithm.output");
@@ -319,14 +320,9 @@ MSDispatch_GreedyClosest::computeDispatch(SUMOTime now, const std::vector<MSDevi
             */
         }
         if (closestTaxi != nullptr) {
-#ifdef DEBUG_DISPATCH
-            if (DEBUG_COND2(person)) std::cout << SIMTIME << " dispatch taxi=" << closestTaxi->getHolder().getID() << " person=" << toString(closest->persons) << "\n";
-#endif
-            closestTaxi->dispatch(*closest);
+            numDispatched += dispatch(closestTaxi, closest, router, activeReservations);
             available.erase(closestTaxi);
             activeReservations.erase(std::find(activeReservations.begin(), activeReservations.end(), closest));
-            servedReservation(closest); // deleting closest
-            numDispatched++; 
         } else {
             // all current reservations are too early or too big
             havePostponed = true;
