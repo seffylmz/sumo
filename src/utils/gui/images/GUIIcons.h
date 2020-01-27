@@ -326,6 +326,13 @@ enum GUIIcon {
     ICON_PERSON_LANESTOP,
     /// @}
 
+    /// @name NETEDIT data elements icons
+    /// @{
+    ICON_DATASET,
+    ICON_DATAINTERVAL,
+    ICON_EDGEDATA,
+    /// @}
+
     /// @name vehicle Class icons
     /// @{
     ICON_VCLASS_IGNORING,
