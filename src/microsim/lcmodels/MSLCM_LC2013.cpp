@@ -112,6 +112,7 @@ MSLCM_LC2013::MSLCM_LC2013(MSVehicle& v) :
     myLookaheadLeft(v.getVehicleType().getParameter().getLCParam(SUMO_ATTR_LCA_LOOKAHEADLEFT, 2.0)),
     mySpeedGainRight(v.getVehicleType().getParameter().getLCParam(SUMO_ATTR_LCA_SPEEDGAINRIGHT, 0.1)),
     myAssertive(v.getVehicleType().getParameter().getLCParam(SUMO_ATTR_LCA_ASSERTIVE, 1)),
+    mySpeedGainLookahead(v.getVehicleType().getParameter().getLCParam(SUMO_ATTR_LCA_SPEEDGAIN_LOOKAHEAD, 0)),
     myOvertakeRightParam(v.getVehicleType().getParameter().getLCParam(SUMO_ATTR_LCA_OVERTAKE_RIGHT, 0)),
     myExperimentalParam1(v.getVehicleType().getParameter().getLCParam(SUMO_ATTR_LCA_EXPERIMENTAL1, 0)) {
     initDerivedParameters();
@@ -1551,46 +1552,14 @@ MSLCM_LC2013::_wantsChange(
     //    return ret;
     //}
 
-    double neighLaneVSafe = neighLane.getVehicleMaxSpeed(&myVehicle);
-
     // we wish to anticipate future speeds. This is difficult when the leading
-    // vehicles are still accelerating so we resort to comparing next speeds in this case
+    // vehicles are still accelerating so we resort to comparing speeds for the near future (1s) in this case
     const bool acceleratingLeader = (neighLead.first != 0 && neighLead.first->getAcceleration() > 0)
                                     || (leader.first != 0 && leader.first->getAcceleration() > 0);
+    double neighLaneVSafe = anticipateFollowSpeed(neighLead, neighDist, vMax, acceleratingLeader);
+    thisLaneVSafe = MIN2(thisLaneVSafe, anticipateFollowSpeed(leader, currentDist, vMax, acceleratingLeader));
 
-    if (acceleratingLeader) {
-        // followSpeed allows acceleration for 1 step, to always compare speeds
-        // after 1 second of acceleration we have call the function with a correct speed value
-        // TODO: This should be explained better. Refs #2
-        const double correctedSpeed = (myVehicle.getSpeed() + myVehicle.getCarFollowModel().getMaxAccel()
-                                       - ACCEL2SPEED(myVehicle.getCarFollowModel().getMaxAccel()));
-
-        if (neighLead.first == 0) {
-            neighLaneVSafe = MIN2(neighLaneVSafe, myCarFollowModel.followSpeed(&myVehicle, correctedSpeed, neighDist, 0, 0));
-        } else {
-            neighLaneVSafe = MIN2(neighLaneVSafe, myCarFollowModel.followSpeed(
-                                      &myVehicle, correctedSpeed, neighLead.second, neighLead.first->getSpeed(), neighLead.first->getCarFollowModel().getMaxDecel()));
-        }
-        if (leader.first == 0) {
-            thisLaneVSafe = MIN2(thisLaneVSafe, myCarFollowModel.followSpeed(&myVehicle, correctedSpeed, currentDist, 0, 0));
-        } else {
-            thisLaneVSafe = MIN2(thisLaneVSafe, myCarFollowModel.followSpeed(
-                                     &myVehicle, correctedSpeed, leader.second, leader.first->getSpeed(), leader.first->getCarFollowModel().getMaxDecel()));
-        }
-    } else {
-        if (neighLead.first == 0) {
-            neighLaneVSafe = MIN2(neighLaneVSafe, myCarFollowModel.maximumSafeStopSpeed(neighDist, myVehicle.getSpeed(), true));
-        } else {
-            neighLaneVSafe = MIN2(neighLaneVSafe, myCarFollowModel.maximumSafeFollowSpeed(neighLead.second, myVehicle.getSpeed(),
-                                  neighLead.first->getSpeed(), neighLead.first->getCarFollowModel().getMaxDecel(), true));
-        }
-        if (leader.first == 0) {
-            thisLaneVSafe = MIN2(thisLaneVSafe, myCarFollowModel.maximumSafeStopSpeed(currentDist, myVehicle.getSpeed(), true));
-        } else {
-            thisLaneVSafe = MIN2(thisLaneVSafe, myCarFollowModel.maximumSafeFollowSpeed(leader.second, myVehicle.getSpeed(),
-                                 leader.first->getSpeed(), leader.first->getCarFollowModel().getMaxDecel(), true));
-        }
-    }
+    //std::cout << SIMTIME << " veh=" << myVehicle.getID() << " thisLaneVSafe=" << thisLaneVSafe << " neighLaneVSafe=" << neighLaneVSafe << "\n";
 
     if (neighLane.getEdge().getPersons().size() > 0) {
         // react to pedestrians
@@ -1781,6 +1750,50 @@ MSLCM_LC2013::_wantsChange(
 #endif
 
     return ret;
+}
+
+
+double
+MSLCM_LC2013::anticipateFollowSpeed(const std::pair<MSVehicle*, double>& leaderDist, double dist, double vMax, bool acceleratingLeader) {
+    const MSVehicle* leader = leaderDist.first;
+    const double gap = leaderDist.second;
+    double futureSpeed;
+    if (acceleratingLeader) {
+        // XXX see #6562
+        const double maxSpeed1s = (myVehicle.getSpeed() + myVehicle.getCarFollowModel().getMaxAccel()
+                - ACCEL2SPEED(myVehicle.getCarFollowModel().getMaxAccel()));
+        if (leader == nullptr) {
+            futureSpeed = myCarFollowModel.followSpeed(&myVehicle, maxSpeed1s, dist, 0, 0);
+        } else {
+            futureSpeed = myCarFollowModel.followSpeed(&myVehicle, maxSpeed1s, gap, leader->getSpeed(), leader->getCarFollowModel().getMaxDecel());
+        }
+    } else {
+        // onInsertion = true because the vehicle has already moved
+        if (leader == nullptr) {
+            futureSpeed = myCarFollowModel.maximumSafeStopSpeed(dist, myVehicle.getSpeed(), true);
+        } else {
+            futureSpeed = myCarFollowModel.maximumSafeFollowSpeed(gap, myVehicle.getSpeed(), leader->getSpeed(), leader->getCarFollowModel().getMaxDecel(), true);
+        }
+    }
+    futureSpeed = MIN2(vMax, futureSpeed);
+    if (leader != nullptr && gap > 0 && mySpeedGainLookahead > 0) {
+        const double futureLeaderSpeed = acceleratingLeader ? leader->getLane()->getVehicleMaxSpeed(leader) : leader->getSpeed();
+        const double deltaV = vMax - futureLeaderSpeed;
+        if (deltaV > 0 && gap > 0) {
+            const double secGap = myCarFollowModel.getSecureGap(&myVehicle, leader, futureSpeed, leader->getSpeed(), myCarFollowModel.getMaxDecel());
+            const double fullSpeedGap = gap - secGap;
+            if (fullSpeedGap / deltaV < mySpeedGainLookahead) {
+                // anticipate future braking by computing the average
+                // speed over the next few seconds
+                const double gapClosingTime = fullSpeedGap / deltaV;
+                const double foreCastTime = mySpeedGainLookahead * 2;
+                //if (DEBUG_COND) std::cout << SIMTIME << " veh=" << myVehicle.getID() << " leader=" << leader->getID() << " gap=" << gap << " deltaV=" << deltaV << " futureSpeed=" << futureSpeed << " futureLeaderSpeed=" << futureLeaderSpeed;
+                futureSpeed = MIN2(futureSpeed, (gapClosingTime * futureSpeed + (foreCastTime - gapClosingTime) * futureLeaderSpeed) / foreCastTime);
+                //if (DEBUG_COND) std::cout << " newFutureSpeed=" << futureSpeed << "\n";
+            }
+        }
+    }
+    return futureSpeed;
 }
 
 
@@ -2116,6 +2129,8 @@ MSLCM_LC2013::getParameter(const std::string& key) const {
         return toString(myOvertakeRightParam);
     } else if (key == toString(SUMO_ATTR_LCA_SIGMA)) {
         return toString(mySigma);
+    } else if (key == toString(SUMO_ATTR_LCA_SPEEDGAIN_LOOKAHEAD)) {
+        return toString(mySpeedGainLookahead);
     }
     throw InvalidArgument("Parameter '" + key + "' is not supported for laneChangeModel of type '" + toString(myModel) + "'");
 }
@@ -2149,6 +2164,8 @@ MSLCM_LC2013::setParameter(const std::string& key, const std::string& value) {
         myOvertakeRightParam = doubleValue;
     } else if (key == toString(SUMO_ATTR_LCA_SIGMA)) {
         mySigma = doubleValue;
+    } else if (key == toString(SUMO_ATTR_LCA_SPEEDGAIN_LOOKAHEAD)) {
+        mySpeedGainLookahead = doubleValue;
     } else {
         throw InvalidArgument("Setting parameter '" + key + "' is not supported for laneChangeModel of type '" + toString(myModel) + "'");
     }
