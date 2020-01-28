@@ -30,9 +30,11 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
+
 // ---------------------------------------------------------------------------
 // SAXWeightsHandler::ToRetrieveDefinition methods
 // ---------------------------------------------------------------------------
+
 SAXWeightsHandler::ToRetrieveDefinition::ToRetrieveDefinition(const std::string& attributeName,
     bool edgeBased, EdgeFloatTimeLineRetriever& destination) : 
     myAttributeName(attributeName), 
@@ -47,10 +49,10 @@ SAXWeightsHandler::ToRetrieveDefinition::ToRetrieveDefinition(const std::string&
 SAXWeightsHandler::ToRetrieveDefinition::~ToRetrieveDefinition() {
 }
 
-
 // ---------------------------------------------------------------------------
 // SAXWeightsHandler methods
 // ---------------------------------------------------------------------------
+
 SAXWeightsHandler::SAXWeightsHandler(const std::vector<ToRetrieveDefinition*>& defs, const std::string& file) : 
     SUMOSAXHandler(file), 
     myDefinitions(defs),
@@ -61,9 +63,9 @@ SAXWeightsHandler::SAXWeightsHandler(const std::vector<ToRetrieveDefinition*>& d
 
 SAXWeightsHandler::SAXWeightsHandler(ToRetrieveDefinition* def, const std::string& file) : 
     SUMOSAXHandler(file),
+    myDefinitions({def}),
     myCurrentTimeBeg(-1), 
     myCurrentTimeEnd(-1) {
-    myDefinitions.push_back(def);
 }
 
 
@@ -74,7 +76,8 @@ SAXWeightsHandler::~SAXWeightsHandler() {
 }
 
 
-void SAXWeightsHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
+void 
+SAXWeightsHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
     switch (element) {
         case SUMO_TAG_INTERVAL: {
             bool ok = true;
@@ -140,7 +143,6 @@ SAXWeightsHandler::tryParse(const SUMOSAXAttributes& attrs, bool isEdge) {
 void
 SAXWeightsHandler::myEndElement(int element) {
     if (element == SUMO_TAG_EDGE) {
-        std::vector<ToRetrieveDefinition*>::iterator i;
         for (const auto &definition : myDefinitions) {
             if (definition->myHadAttribute) {
                 definition->myDestination.addEdgeWeight(myCurrentEdgeID,
@@ -150,8 +152,6 @@ SAXWeightsHandler::myEndElement(int element) {
         }
     }
 }
-
-
 
 /****************************************************************************/
 
