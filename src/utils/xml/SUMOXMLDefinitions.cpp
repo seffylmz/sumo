@@ -423,6 +423,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "lcLookaheadLeft",            SUMO_ATTR_LCA_LOOKAHEADLEFT },
     { "lcSpeedGainRight",           SUMO_ATTR_LCA_SPEEDGAINRIGHT },
     { "lcSpeedGainLookahead",       SUMO_ATTR_LCA_SPEEDGAIN_LOOKAHEAD },
+    { "lcCooperativeRoundabout",    SUMO_ATTR_LCA_COOPERATIVE_ROUNDABOUT },
     { "lcMaxSpeedLatStanding",      SUMO_ATTR_LCA_MAXSPEEDLATSTANDING },
     { "lcMaxSpeedLatFactor",        SUMO_ATTR_LCA_MAXSPEEDLATFACTOR },
     { "lcLaneDiscipline",           SUMO_ATTR_LCA_LANE_DISCIPLINE },
@@ -659,6 +660,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "limitTurnSpeed",         SUMO_ATTR_LIMIT_TURN_SPEED },
     { "checkLaneFoesAll",       SUMO_ATTR_CHECKLANEFOES_ALL },
     { "checkLaneFoesRoundabout", SUMO_ATTR_CHECKLANEFOES_ROUNDABOUT },
+    { "tlsIgnoreInternalJunctionJam", SUMO_ATTR_TLS_IGNORE_INTERNAL_JUNCTION_JAM },
 
     { "actorConfig",            SUMO_ATTR_ACTORCONFIG },
     { "vehicle",                SUMO_ATTR_VEHICLE },
