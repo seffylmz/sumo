@@ -245,7 +245,6 @@ MSNet::closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionCont
                      std::vector<std::string> stateDumpFiles,
                      bool hasInternalLinks,
                      bool hasNeighs,
-                     bool lefthand,
                      double version) {
     myEdges = edges;
     myJunctions = junctions;
@@ -267,7 +266,6 @@ MSNet::closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionCont
     myHasElevation = checkElevation();
     myHasPedestrianNetwork = checkWalkingarea();
     myHasBidiEdges = checkBidiEdges();
-    myLefthand = lefthand;
     myVersion = version;
 }
 

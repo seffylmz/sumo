@@ -181,14 +181,13 @@ public:
      * @param[in] stateDumpTimes List of time steps at which state shall be written
      * @param[in] stateDumpFiles Filenames for states
      * @param[in] hasInternalLinks Whether the network actually contains internal links
-     * @param[in] lefthand Whether the network was built for left-hand traffic
      * @param[in] version The network version
      * @todo Try to move all this to the constructor?
      */
     void closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionControl* junctions,
                        SUMORouteLoaderControl* routeLoaders, MSTLLogicControl* tlc,
                        std::vector<SUMOTime> stateDumpTimes, std::vector<std::string> stateDumpFiles,
-                       bool hasInternalLinks, bool hasNeighs, bool lefthand,
+                       bool hasInternalLinks, bool hasNeighs,
                        double version);
 
 
@@ -683,11 +682,6 @@ public:
     /// @brief return whether the network contains bidirectional rail edges
     bool hasBidiEdges() const {
         return myHasBidiEdges;
-    }
-
-    /// @brief return whether the network was built for lefthand traffic
-    bool lefthand() const {
-        return myLefthand;
     }
 
     /// @brief return the network version

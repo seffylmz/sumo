@@ -113,6 +113,9 @@ MSLink::MSLink(MSLane* predLane, MSLane* succLane, MSLane* via, LinkDirection di
             } catch (InvalidArgument&) {
             }
             myLateralShift = (from.back().distanceTo2D(to.front()) < dist) ? dist : -dist;
+            if (MSGlobals::gLefthand) {
+                myLateralShift *= -1;
+            }
             //std::cout << " lateral shift link=" << myLaneBefore->getID() << "->" << getViaLaneOrLane()->getID() << " dist=" << dist << " shift=" << myLateralShift << "\n";
         }
     }
@@ -496,7 +499,7 @@ MSLink::opened(SUMOTime arrivalTime, double arrivalSpeed, double leaveSpeed, dou
         }
         // check for foes on the same lane with a different target edge
         // (straight movers take precedence if the paths cross)
-        const int lhSign = MSNet::getInstance()->lefthand() ? -1 : 1;
+        const int lhSign = MSGlobals::gLefthand ? -1 : 1;
         for (const MSLink* foeLink : mySublaneFoeLinks2) {
             assert(myDirection != LINKDIR_STRAIGHT);
             for (const auto& it : foeLink->myApproachingVehicles) {

@@ -13,6 +13,8 @@ permalink: /ChangeLog/
   - Fixed unsafe insertion speed when using 'stopOffset'. Issue #6411
   - Extra device output (emissions etc.) is now included in tripinfo-output when using option **--tripinfo-output.write-unfinished**. Issue #6422
   - Time spent parking is now included in tripinfo-output 'stopTime'. Issue #6423
+  - Fixed lateral jump when driving across lanes with different width in a left-hand network and using sublane simulation. Issue #6573
+  - Fixed bug where rerouting failed for no reason. Issue #6572
 
 - SUMO-GUI
   - Fixed visualisation of containers. Issue #6426
@@ -33,9 +35,12 @@ permalink: /ChangeLog/
   - Fixed bug where option **--tls.guess-signals** failed to detect signals on incoming edges. Issue #6493
   - Fixed invalid right-of-way rules in left-hand network. Issue #6496
   - Connection attribute 'pass' now overrides conflicts between straight and turning connections from the same edge. Issue #6497
+  - Fixed invalid permissions for internal lanes when the incoming lane has more restrictions than the outgoing lane. Issue #5557  
 
 - TraCI
   - Context subscriptions can now be removed individually from the python client (before every unsubscribeContext removed all)
+  - Fixed invalid changing to the opposite side when using changeLaneRelative(vehID, -1) on lane 0. Issue #6576
+  - Fixed premature changing from the opposide side when a duration was set for changeLaneRelative. Issue #6577
 
 ### Enhancements
 - Simulation
@@ -49,6 +54,9 @@ permalink: /ChangeLog/
   - Trips, flows, personTrips and walks with attributes `fromJunction`, `toJunction` and `viaJunctions` are now supported when setting option **--junction-taz**. Issue #6474
   - Calibrators can now be used to update vehicle types by defining flows with the 'type' attribute and without the 'vehsPerHour' attribute. Issue #6219
   - When definining [automated switching between traffic light programs](Simulation/Traffic_Lights.md#defining_program_switch_times_and_procedure), the new attribute 'period' can now be used to define repeating switch times. Issue #6540
+  - Cooperative lane changing at roundabouts can now be configured independently from other cooperation by setting the new vType attribute 'lcCooperativeRoundabout'. Issue #6565
+  - Cooperative speed adjustment can now be configured independently from other cooperation by setting the new vType attribute 'lcCooperativeSpeed'. Issue #6534
+  - Vehicles can now foresee speed reductions on their lane and change before being slowed down (configurable by new vType attribute 'lcSpeedGainLookahead'. Issue #6547
 
 - SUMO-GUI
   - Dead-end links in the middle of a road are now colored in magenta to highlight connectivity problems. Issue #6391
@@ -61,6 +69,7 @@ permalink: /ChangeLog/
   - Geometry points are now clearly distinguished from junctions by color and size. Issue #6514
   - Traffic light mode now allows grouping and ungrouping signals. Issue #2958
   - Traffic light mode 'Clean States' function now also compactifies state and removes all unused indices. Issue #3828
+  - The background grid size can now be increased and decreased with hotkeys CTRL+PAGE_UP, CTRL+PAGE_DOWN. Issue #6542
 
 - NETCONVERT
   - Improved connection building heuristic. Issue #6295, #6467, #6468
@@ -69,6 +78,8 @@ permalink: /ChangeLog/
   - Added options **--numerical-ids.edge-start INT**, **--numerical-ids.node-start INT** to relabel network elements with numbers starting at the given value. Issue #6372
   - Added option **--no-turnarounds.except-turnlane** which causes turnlanes to be built only if there is an exclusive (left) turn lane. Issue #6444
   - Added option **--tls.group-signals** which assigns the same signal index to connections that share the same sequence signal states. Added option **--tls.ungroup-signals** which reverts grouping and assigns a distinct signal index to every connection. Issue #2958
+  - Symbolic speed limits in OSM are now supported for all countries. Issue #6566
+  - The status of option **--tls.ignore-internal-junction-jam** is no longer lost when loading a '.net.xml' file. Issue #6559
 
 - DUAROUTER
   - The maximum [map-matching](Demand/Shortest_or_Optimal_Path_Routing.md#mapmatching) distance is now configurable using option **--mapmatch.distance**. Also, mapmatching with large distance is now computationally efficient. Issue #6476
