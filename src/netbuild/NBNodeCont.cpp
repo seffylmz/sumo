@@ -66,7 +66,8 @@
 
 //#define DEBUG_JOINJUNCTIONS
 //#define DEBUG_GUESSSIGNALS
-#define DEBUGNODEID "354916004"
+//#define DEBUGNODEID "21487209"
+#define DEBUGNODEID ""
 #define DEBUGNODEID2 ""
 //#define DEBUGNODEID "5548037023"
 #define DEBUGCOND(obj) ((obj) != 0 && ((obj)->getID() == DEBUGNODEID || (obj)->getID() == DEBUGNODEID2))
@@ -621,8 +622,12 @@ NBNodeCont::addCluster2Join(std::set<std::string> cluster, NBNode* node) {
             }
         }
     }
-    myJoined.insert(validCluster.begin(), validCluster.end());
-    myClusters2Join.push_back(std::make_pair(validCluster, node));
+    if (validCluster.size() > 1) {
+        myJoined.insert(validCluster.begin(), validCluster.end());
+        myClusters2Join.push_back(std::make_pair(validCluster, node));
+    } else {
+        WRITE_WARNINGF("Ignoring join-cluster '%s' because it has size '%'.", node->getID(), validCluster.size());
+    }
 }
 
 
@@ -680,21 +685,7 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
         // remove nodes that can be eliminated by geometry.remove
         pruneClusterFringe(cluster);
         // avoid removal of long edges (must have been added via an alternative path).
-        std::set<NBNode*> toRemove;
-        for (NBNode* n : cluster) {
-            for (NBEdge* edge : n->getOutgoingEdges()) {
-                if (cluster.count(edge->getToNode()) != 0 && edge->getLoadedLength() > maxDist /*&& (edge->getPermissions() & SVC_PASSENGER) != 0*/) {
-#ifdef DEBUG_JOINJUNCTIONS
-                    if (gDebugFlag1) std::cout << "long edge " << edge->getID() << " (" << edge->getLoadedLength() << ", max=" << maxDist << ")\n";
-#endif
-                    toRemove.insert(n);
-                    toRemove.insert(edge->getToNode());
-                }
-            }
-        }
-        for (std::set<NBNode*>::iterator j = toRemove.begin(); j != toRemove.end(); ++j) {
-            cluster.erase(*j);
-        }
+        pruneLongEdges(cluster, maxDist);
         // remove nodes that are part of a bypass lane (typically for turning right without waiting at a traffic light)
         pruneSlipLaneNodes(cluster);
         if (cluster.size() < 2) {
@@ -704,8 +695,10 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
         std::string origReason;
         std::string origCluster;
         bool feasible = feasibleCluster(cluster, ec, sc, origReason);
-        //if (!feasible) std::cout << "\ntry to reduce cluster " << joinNamedToString(cluster, ',') << "\n";
         if (!feasible) {
+#ifdef DEBUG_JOINJUNCTIONS
+            if (gDebugFlag1) std::cout << "   try to reduce to 4-circle nodes=" << joinNamedToString(cluster, ',') << "\n";
+#endif
             origCluster = joinNamedToString(cluster, ',');
             if (reduceToCircle(cluster, 4, cluster)) {
                 feasible = feasibleCluster(cluster, ec, sc, reason);
@@ -715,6 +708,9 @@ NBNodeCont::joinJunctions(double maxDist, NBDistrictCont& dc, NBEdgeCont& ec, NB
             }
         }
         if (!feasible) {
+#ifdef DEBUG_JOINJUNCTIONS
+            if (gDebugFlag1) std::cout << "   try to reduce to 2-circle nodes=" << joinNamedToString(cluster, ',') << "\n";
+#endif
             origCluster = joinNamedToString(cluster, ',');
             if (reduceToCircle(cluster, 2, cluster)) {
                 feasible = feasibleCluster(cluster, ec, sc, reason);
@@ -830,9 +826,10 @@ NBNodeCont::pruneClusterFringe(NodeSet& cluster) const {
                                             << " in=" << joinNamedToString(clusterNeighbors, ',')
                                             << "\n";
 #endif
-            if (outsideNeighbors.size() <= 1
+            if (clusterNeighbors.size() == 0 
+                    || (outsideNeighbors.size() <= 1
                     && clusterNeighbors.size() == 1
-                    && !n->isTLControlled()) {
+                    && !n->isTLControlled())) {
                 cluster.erase(check);
                 pruneFringe = true; // other nodes could belong to the fringe now
 #ifdef DEBUG_JOINJUNCTIONS
@@ -843,6 +840,62 @@ NBNodeCont::pruneClusterFringe(NodeSet& cluster) const {
     }
 }
 
+
+void
+NBNodeCont::pruneLongEdges(NodeSet& cluster, double maxDist) const {
+    std::set<NBNode*> toRemove;
+    int maxPassengerLanes = 0;
+    for (NBNode* n : cluster) {
+        for (NBEdge* edge : n->getEdges()) {
+            maxPassengerLanes = MAX2(maxPassengerLanes, edge->getNumLanesThatAllow(SVC_PASSENGER));
+        }
+    }
+    for (NBNode* n : cluster) {
+        for (NBEdge* edge : n->getOutgoingEdges()) {
+            // we must track the edge length accross geometry like nodes
+            // Also, intersecions that are geometry-like
+            // from the perspective of passenger traffic should be tracked accross
+            std::set<NBNode*> passed;
+            double length = 0;
+            NBEdge* cur = edge;
+            NBNode* to = edge->getToNode();
+            while (cluster.count(to) != 0) {
+                length += cur->getLoadedLength();
+                bool goStraight = (passed.count(to) == 0 
+                        && (edge->getPermissions() & SVC_PASSENGER) != 0
+                        && to->geometryLike(
+                            NBEdge::filterByPermissions(to->getIncomingEdges(), SVC_PASSENGER),
+                            NBEdge::filterByPermissions(to->getOutgoingEdges(), SVC_PASSENGER)));
+                passed.insert(to);
+                if (goStraight) {
+                    cur = cur->getStraightContinuation(SVC_PASSENGER);
+                    if (cur != nullptr) {
+                        to = cur->getToNode();
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+            // allow higher threshold at larger junctions
+            double longThreshold = maxDist + SUMO_const_laneWidth * MAX2(0, maxPassengerLanes - 1);
+#ifdef DEBUG_JOINJUNCTIONS
+            if (gDebugFlag1) std::cout << "check edge length " << edge->getID() << " (" << length << ", passed=" << passed.size() << ", max=" << longThreshold << ")\n";
+#endif
+            if (length > longThreshold /*&& (edge->getPermissions() & SVC_PASSENGER) != 0*/) {
+#ifdef DEBUG_JOINJUNCTIONS
+                if (gDebugFlag1) std::cout << "long edge " << edge->getID() << " (" << length << ", passed=" << passed.size() << ", max=" << longThreshold << ")\n";
+#endif
+                toRemove.insert(n);
+                toRemove.insert(passed.begin(), passed.end());
+            }
+        }
+    }
+    for (std::set<NBNode*>::iterator j = toRemove.begin(); j != toRemove.end(); ++j) {
+        cluster.erase(*j);
+    }
+}
 
 void
 NBNodeCont::pruneSlipLaneNodes(NodeSet& cluster) const {
@@ -1704,7 +1757,7 @@ NBNodeCont::guessTLs(OptionsCont& oc, NBTrafficLightLogicCont& tlc) {
         const double signalDist = oc.getFloat("tls.guess-signals.dist");
         for (const auto& item : myNodes) {
             const NBNode* node = item.second;
-            if (node->isTLControlled() && node->geometryLike()) {
+            if (node->isTLControlled() && (node->getIncomingEdges().size() == 1 || node->geometryLike())) {
 #ifdef DEBUG_GUESSSIGNALS
                 if (DEBUGCOND(node) || true) std::cout << " propagate TLS from " << node->getID() << " downstream\n";
 #endif
@@ -1895,7 +1948,7 @@ void NBNodeCont::recheckGuessedTLS(NBTrafficLightLogicCont& tlc) {
         if (!node->hasConflict()) {
             const std::set<NBTrafficLightDefinition*>& tlDefs = node->getControllingTLS();
             recompute.insert(tlDefs.begin(), tlDefs.end());
-            node->removeTrafficLights();
+            node->removeTrafficLights(true);
             for (NBEdge* edge : node->getIncomingEdges()) {
                 edge->clearControllingTLInformation();
             }

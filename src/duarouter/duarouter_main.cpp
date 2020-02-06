@@ -39,6 +39,9 @@
 #include <utils/common/SystemFrame.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/ToString.h>
+#ifdef HAVE_FOX
+#include <utils/foxtools/MsgHandlerSynchronized.h>
+#endif
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/options/Option.h>
 #include <utils/options/OptionsCont.h>
@@ -83,7 +86,6 @@ initNet(RONet& net, ROLoader& loader, OptionsCont& oc) {
 }
 
 
-
 /**
  * Computes the routes saving them
  */
@@ -107,11 +109,20 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
             if (oc.isSet("astar.all-distances")) {
                 lookup = std::make_shared<const AStar::FLT>(oc.getString("astar.all-distances"), (int)ROEdge::getAllEdges().size());
             } else if (oc.isSet("astar.landmark-distances")) {
-                CHRouterWrapper<ROEdge, ROVehicle> chrouter(
+                /* CHRouterWrapper<ROEdge, ROVehicle> chrouter(
                     ROEdge::getAllEdges(), true, &ROEdge::getTravelTimeStatic,
-                    begin, end, SUMOTime_MAX, 1);
+                    begin, end, SUMOTime_MAX, 1); */
+                DijkstraRouter<ROEdge, ROVehicle> forward(ROEdge::getAllEdges(), true, &ROEdge::getTravelTimeStatic);
+                std::vector<ReversedEdge<ROEdge, ROVehicle>*> reversed;
+                for (ROEdge* edge : ROEdge::getAllEdges()) {
+                    reversed.push_back(edge->getReversedRoutingEdge());
+                }
+                for (ReversedEdge<ROEdge, ROVehicle>* redge : reversed) {
+                    redge->init();
+                }
+                DijkstraRouter<ReversedEdge<ROEdge, ROVehicle>, ROVehicle> backward(reversed, true, &ReversedEdge<ROEdge, ROVehicle>::getTravelTimeStatic);
                 ROVehicle defaultVehicle(SUMOVehicleParameter(), nullptr, net.getVehicleTypeSecure(DEFAULT_VTYPE_ID), &net);
-                lookup = std::make_shared<const AStar::LMLT>(oc.getString("astar.landmark-distances"), ROEdge::getAllEdges(), &chrouter, &defaultVehicle,
+                lookup = std::make_shared<const AStar::LMLT>(oc.getString("astar.landmark-distances"), ROEdge::getAllEdges(), &forward, &backward, &defaultVehicle,
                          oc.isSet("astar.save-landmark-distances") ? oc.getString("astar.save-landmark-distances") : "", oc.getInt("routing-threads"));
             }
             router = new AStar(ROEdge::getAllEdges(), oc.getBool("ignore-errors"), ttFunction, lookup, net.hasPermissions(), oc.isSet("restriction-params"));
@@ -204,6 +215,12 @@ main(int argc, char** argv) {
             return 0;
         }
         XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+#ifdef HAVE_FOX
+        if (oc.getInt("routing-threads") > 1) {
+            // make the output aware of threading
+            MsgHandler::setFactory(&MsgHandlerSynchronized::create);
+        }
+#endif
         MsgHandler::initOutputOptions();
         if (!(RODUAFrame::checkOptions() && SystemFrame::checkOptions())) {
             throw ProcessError();
