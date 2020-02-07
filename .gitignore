@@ -84,7 +84,6 @@ lib*.a
 *.log
 *.tlog
 *.lastbuildstate
-*.exe
 *.jar
 *.ilk
 *.pdb
