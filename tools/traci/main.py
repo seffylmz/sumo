@@ -121,7 +121,7 @@ def start(cmd, port=None, numRetries=10, label="default", verbose=False):
         cmd2 = cmd + ["--remote-port", str(sumoPort)]
         if verbose:
             print("Calling " + ' '.join(cmd2))
-        sumoProcess = subprocess.Popen(cmd2)
+        sumoProcess = subprocess.Popen(cmd2, shell=True)
         try:
             return init(sumoPort, numRetries, "localhost", label, sumoProcess)
         except TraCIException:
