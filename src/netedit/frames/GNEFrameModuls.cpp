@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GNEFrameModuls.cpp
 /// @author  Pablo Alvarez Lopez
@@ -13,11 +17,6 @@
 ///
 // Auxiliar class for GNEFrame Moduls
 /****************************************************************************/
-
-// ===========================================================================
-// included modules
-// ===========================================================================
-
 #include <config.h>
 
 #include <netedit/GNEApplicationWindow.h>
@@ -25,15 +24,20 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewParent.h>
-#include <netedit/additionals/GNEPOI.h>
-#include <netedit/additionals/GNETAZ.h>
 #include <netedit/changes/GNEChange_Children.h>
-#include <netedit/demandelements/GNEDemandElement.h>
-#include <netedit/netelements/GNEConnection.h>
-#include <netedit/netelements/GNECrossing.h>
-#include <netedit/netelements/GNEEdge.h>
-#include <netedit/netelements/GNEJunction.h>
-#include <netedit/netelements/GNELane.h>
+#include <netedit/elements/additional/GNEAdditional.h>
+#include <netedit/elements/additional/GNEPOI.h>
+#include <netedit/elements/additional/GNETAZ.h>
+#include <netedit/elements/data/GNEDataInterval.h>
+#include <netedit/elements/data/GNEGenericData.h>
+#include <netedit/elements/data/GNEDataSet.h>
+#include <netedit/elements/demand/GNEDemandElement.h>
+#include <netedit/elements/network/GNEConnection.h>
+#include <netedit/elements/network/GNECrossing.h>
+#include <netedit/elements/network/GNEEdge.h>
+#include <netedit/elements/network/GNEJunction.h>
+#include <netedit/elements/network/GNELane.h>
+#include <netedit/frames/common/GNEInspectorFrame.h>
 #include <utils/foxtools/MFXMenuHeader.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/div/GUIDesigns.h>
@@ -41,7 +45,7 @@
 #include <utils/gui/windows/GUIAppEnum.h>
 
 #include "GNEFrameModuls.h"
-#include "GNEInspectorFrame.h"
+
 
 
 // ===========================================================================
@@ -86,6 +90,14 @@ FXDEFMAP(GNEFrameModuls::OverlappedInspection) OverlappedInspectionMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_HELP,                           GNEFrameModuls::OverlappedInspection::onCmdOverlappingHelp)
 };
 
+FXDEFMAP(GNEFrameModuls::PathCreator) PathCreatorMap[] = {
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_EDGEPATH_ABORT,          GNEFrameModuls::PathCreator::onCmdAbortPathCreation),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_EDGEPATH_FINISH,         GNEFrameModuls::PathCreator::onCmdCreatePath),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_EDGEPATH_REMOVELAST,     GNEFrameModuls::PathCreator::onCmdRemoveLastElement),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_EDGEPATH_SHOWCANDIDATES, GNEFrameModuls::PathCreator::onCmdShowCandidateEdges)
+};
+
+
 // Object implementation
 FXIMPLEMENT(GNEFrameModuls::TagSelector,                FXGroupBox,     TagSelectorMap,                 ARRAYNUMBER(TagSelectorMap))
 FXIMPLEMENT(GNEFrameModuls::DemandElementSelector,      FXGroupBox,     DemandElementSelectorMap,       ARRAYNUMBER(DemandElementSelectorMap))
@@ -93,6 +105,7 @@ FXIMPLEMENT(GNEFrameModuls::EdgePathCreator,            FXGroupBox,     EdgePath
 FXIMPLEMENT(GNEFrameModuls::AttributeCarrierHierarchy,  FXGroupBox,     AttributeCarrierHierarchyMap,   ARRAYNUMBER(AttributeCarrierHierarchyMap))
 FXIMPLEMENT(GNEFrameModuls::DrawingShape,               FXGroupBox,     DrawingShapeMap,                ARRAYNUMBER(DrawingShapeMap))
 FXIMPLEMENT(GNEFrameModuls::OverlappedInspection,       FXGroupBox,     OverlappedInspectionMap,        ARRAYNUMBER(OverlappedInspectionMap))
+FXIMPLEMENT(GNEFrameModuls::PathCreator,                FXGroupBox,     PathCreatorMap,                 ARRAYNUMBER(PathCreatorMap))
 
 
 // ===========================================================================
@@ -103,50 +116,50 @@ FXIMPLEMENT(GNEFrameModuls::OverlappedInspection,       FXGroupBox,     Overlapp
 // GNEFrameModuls::TagSelector - methods
 // ---------------------------------------------------------------------------
 
-GNEFrameModuls::TagSelector::TagSelector(GNEFrame* frameParent, GNEAttributeCarrier::TagType type, bool onlyDrawables) :
+GNEFrameModuls::TagSelector::TagSelector(GNEFrame* frameParent, GNETagProperties::TagType type, bool onlyDrawables) :
     FXGroupBox(frameParent->myContentFrame, "Element", GUIDesignGroupBoxFrame),
     myFrameParent(frameParent) {
     // first check that property is valid
     switch (type) {
-        case GNEAttributeCarrier::TagType::TAGTYPE_NETELEMENT:
-            setText("Net elements");
+        case GNETagProperties::TagType::NETWORKELEMENT:
+            setText("network elements");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONAL:
+        case GNETagProperties::TagType::ADDITIONALELEMENT:
             setText("Additional elements");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_SHAPE:
+        case GNETagProperties::TagType::SHAPE:
             setText("Shape elements");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_TAZ:
+        case GNETagProperties::TagType::TAZELEMENT:
             setText("TAZ elements");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_VEHICLE:
+        case GNETagProperties::TagType::VEHICLE:
             setText("Vehicles");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_STOP:
+        case GNETagProperties::TagType::STOP:
             setText("Stops");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_PERSON:
+        case GNETagProperties::TagType::PERSON:
             setText("Persons");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_PERSONPLAN:
+        case GNETagProperties::TagType::PERSONPLAN:
             setText("Person plans");
             // person plan type has four sub-groups
-            myListOfTagTypes.push_back(std::make_pair("person trips", GNEAttributeCarrier::TagType::TAGTYPE_PERSONTRIP));
-            myListOfTagTypes.push_back(std::make_pair("walks", GNEAttributeCarrier::TagType::TAGTYPE_WALK));
-            myListOfTagTypes.push_back(std::make_pair("rides", GNEAttributeCarrier::TagType::TAGTYPE_RIDE));
-            myListOfTagTypes.push_back(std::make_pair("stops", GNEAttributeCarrier::TagType::TAGTYPE_PERSONSTOP));
+            myListOfTagTypes.push_back(std::make_pair("person trips", GNETagProperties::TagType::PERSONTRIP));
+            myListOfTagTypes.push_back(std::make_pair("walks", GNETagProperties::TagType::WALK));
+            myListOfTagTypes.push_back(std::make_pair("rides", GNETagProperties::TagType::RIDE));
+            myListOfTagTypes.push_back(std::make_pair("stops", GNETagProperties::TagType::PERSONSTOP));
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_PERSONTRIP:
+        case GNETagProperties::TagType::PERSONTRIP:
             setText("Person trips");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_WALK:
+        case GNETagProperties::TagType::WALK:
             setText("Walks");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_RIDE:
+        case GNETagProperties::TagType::RIDE:
             setText("Rides");
             break;
-        case GNEAttributeCarrier::TagType::TAGTYPE_PERSONSTOP:
+        case GNETagProperties::TagType::PERSONSTOP:
             setText("Person stops");
             break;
         default:
@@ -166,12 +179,11 @@ GNEFrameModuls::TagSelector::TagSelector(GNEFrame* frameParent, GNEAttributeCarr
         // Set visible items
         myTagTypesMatchBox->setNumVisible((int)myTagTypesMatchBox->getNumItems());
         // fill myListOfTags with personTrips (the first Tag Type)
-        myListOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_PERSONTRIP, onlyDrawables);
+        myListOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::PERSONTRIP, onlyDrawables);
     } else {
         myTagTypesMatchBox->hide();
         // fill myListOfTags
         myListOfTags = GNEAttributeCarrier::allowedTagsByCategory(type, onlyDrawables);
-
     }
     // fill myTypeMatchBox with list of tags
     for (const auto& i : myListOfTags) {
@@ -199,22 +211,22 @@ GNEFrameModuls::TagSelector::hideTagSelector() {
 }
 
 
-const GNEAttributeCarrier::TagProperties&
+const GNETagProperties&
 GNEFrameModuls::TagSelector::getCurrentTagProperties() const {
     return myCurrentTagProperties;
 }
 
 
 void
-GNEFrameModuls::TagSelector::setCurrentTagType(GNEAttributeCarrier::TagType tagType) {
+GNEFrameModuls::TagSelector::setCurrentTagType(GNETagProperties::TagType tagType) {
     // set empty tag properties
-    myCurrentTagProperties = GNEAttributeCarrier::TagProperties();
+    myCurrentTagProperties = GNETagProperties();
     // make sure that tag is in myTypeMatchBox
     for (int i = 0; i < (int)myTagsMatchBox->getNumItems(); i++) {
         if (myTagsMatchBox->getItem(i).text() == toString(tagType)) {
             myTagsMatchBox->setCurrentItem(i);
             // fill myListOfTags with personTrips (the first Tag Type)
-            myListOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_PERSONTRIP, true);
+            myListOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::PERSONTRIP, true);
             // clear myTagsMatchBox
             myTagsMatchBox->clearItems();
             // fill myTypeMatchBox with list of tags
@@ -233,7 +245,7 @@ GNEFrameModuls::TagSelector::setCurrentTagType(GNEAttributeCarrier::TagType tagT
 void
 GNEFrameModuls::TagSelector::setCurrentTag(SumoXMLTag newTag) {
     // set empty tag properties
-    myCurrentTagProperties = GNEAttributeCarrier::TagProperties();
+    myCurrentTagProperties = GNETagProperties();
     // make sure that tag is in myTypeMatchBox
     for (int i = 0; i < (int)myTagsMatchBox->getNumItems(); i++) {
         if (myTagsMatchBox->getItem(i).text() == toString(newTag)) {
@@ -336,7 +348,7 @@ GNEFrameModuls::DemandElementSelector::DemandElementSelector(GNEFrame* framePare
 }
 
 
-GNEFrameModuls::DemandElementSelector::DemandElementSelector(GNEFrame* frameParent, const std::vector<GNEAttributeCarrier::TagType>& tagTypes) :
+GNEFrameModuls::DemandElementSelector::DemandElementSelector(GNEFrame* frameParent, const std::vector<GNETagProperties::TagType>& tagTypes) :
     FXGroupBox(frameParent->myContentFrame, "Parent element", GUIDesignGroupBoxFrame),
     myFrameParent(frameParent),
     myCurrentDemandElement(nullptr) {
@@ -425,7 +437,7 @@ GNEFrameModuls::DemandElementSelector::refreshDemandElementSelector() {
             myDemandElementsMatchBox->appendItem(DEFAULT_VTYPE_ID.c_str());
             myDemandElementsMatchBox->appendItem(DEFAULT_BIKETYPE_ID.c_str());
             // add rest of vTypes
-            for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(i)) {
+            for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(i)) {
                 // avoid insert duplicated default vType
                 if ((j.first != DEFAULT_VTYPE_ID) && (j.first != DEFAULT_BIKETYPE_ID)) {
                     myDemandElementsMatchBox->appendItem(j.first.c_str());
@@ -435,7 +447,7 @@ GNEFrameModuls::DemandElementSelector::refreshDemandElementSelector() {
             // add default Person type in the firs
             myDemandElementsMatchBox->appendItem(DEFAULT_PEDTYPE_ID.c_str());
             // add rest of pTypes
-            for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(i)) {
+            for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(i)) {
                 // avoid insert duplicated default pType
                 if (j.first != DEFAULT_PEDTYPE_ID) {
                     myDemandElementsMatchBox->appendItem(j.first.c_str());
@@ -443,7 +455,7 @@ GNEFrameModuls::DemandElementSelector::refreshDemandElementSelector() {
             }
         } else {
             // insert all Ids
-            for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(i)) {
+            for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(i)) {
                 myDemandElementsMatchBox->appendItem(j.first.c_str());
             }
         }
@@ -466,16 +478,16 @@ GNEFrameModuls::DemandElementSelector::refreshDemandElementSelector() {
     } else {
         // set first element in the list as myCurrentDemandElement (Special case for default person and vehicle type)
         if (myDemandElementsMatchBox->getItem(0).text() == DEFAULT_VTYPE_ID) {
-            myCurrentDemandElement = myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(SUMO_TAG_VTYPE).at(DEFAULT_VTYPE_ID);
+            myCurrentDemandElement = myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(SUMO_TAG_VTYPE).at(DEFAULT_VTYPE_ID);
         } else if (myDemandElementsMatchBox->getItem(0).text() == DEFAULT_PEDTYPE_ID) {
-            myCurrentDemandElement = myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(SUMO_TAG_PTYPE).at(DEFAULT_PEDTYPE_ID);
+            myCurrentDemandElement = myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(SUMO_TAG_PTYPE).at(DEFAULT_PEDTYPE_ID);
         } else {
             // disable myCurrentDemandElement
             myCurrentDemandElement = nullptr;
             // update myCurrentDemandElement with the first allowed element
             for (auto i = myDemandElementTags.begin(); (i != myDemandElementTags.end()) && (myCurrentDemandElement == nullptr); i++) {
-                if (myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(*i).size() > 0) {
-                    myCurrentDemandElement = myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(*i).begin()->second;
+                if (myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(*i).size() > 0) {
+                    myCurrentDemandElement = myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(*i).begin()->second;
                 }
             }
         }
@@ -487,7 +499,7 @@ long
 GNEFrameModuls::DemandElementSelector::onCmdSelectDemandElement(FXObject*, FXSelector, void*) {
     // Check if value of myTypeMatchBox correspond to a demand element
     for (const auto& i : myDemandElementTags) {
-        for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers().demandElements.at(i)) {
+        for (const auto& j : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getDemandElements().at(i)) {
             if (j.first == myDemandElementsMatchBox->getText().text()) {
                 // set color of myTypeMatchBox to black (valid)
                 myDemandElementsMatchBox->setTextColor(FXRGB(0, 0, 0));
@@ -517,18 +529,18 @@ GNEFrameModuls::DemandElementSelector::onCmdSelectDemandElement(FXObject*, FXSel
 // ---------------------------------------------------------------------------
 
 GNEFrameModuls::EdgePathCreator::EdgePathCreator(GNEFrame* frameParent, int edgePathCreatorModes) :
-    FXGroupBox(frameParent->myContentFrame, "Route creator", GUIDesignGroupBoxFrame),
+    FXGroupBox(frameParent->myContentFrame, "Path creator", GUIDesignGroupBoxFrame),
     myFrameParent(frameParent),
     myVClass(SVC_PASSENGER),
     mySelectedBusStop(nullptr),
-    myEdgePathCreatorModes(edgePathCreatorModes) {
+    myModes(edgePathCreatorModes) {
 
     // create button for create GEO POIs
-    myFinishCreationButton = new FXButton(this, "Finish route creation", nullptr, this, MID_GNE_EDGEPATH_FINISH, GUIDesignButton);
+    myFinishCreationButton = new FXButton(this, "Finish path creation", nullptr, this, MID_GNE_EDGEPATH_FINISH, GUIDesignButton);
     myFinishCreationButton->disable();
 
     // create button for create GEO POIs
-    myAbortCreationButton = new FXButton(this, "Abort route creation", nullptr, this, MID_GNE_EDGEPATH_ABORT, GUIDesignButton);
+    myAbortCreationButton = new FXButton(this, "Abort path creation", nullptr, this, MID_GNE_EDGEPATH_ABORT, GUIDesignButton);
     myAbortCreationButton->disable();
 
     // create button for create GEO POIs
@@ -584,8 +596,8 @@ GNEFrameModuls::EdgePathCreator::setVClass(SUMOVehicleClass vClass) {
 
 
 void
-GNEFrameModuls::EdgePathCreator::setEdgePathCreatorModes(int edgePathCreatorModes) {
-    myEdgePathCreatorModes = edgePathCreatorModes;
+GNEFrameModuls::EdgePathCreator::setModes(int edgePathCreatorModes) {
+    myModes = edgePathCreatorModes;
 }
 
 
@@ -602,7 +614,7 @@ GNEFrameModuls::EdgePathCreator::getClickedBusStop() const {
 
 
 bool
-GNEFrameModuls::EdgePathCreator::addEdge(GNEEdge* edge) {
+GNEFrameModuls::EdgePathCreator::addPathEdge(GNEEdge* edge) {
     bool addEdge = true;
     // check if final busStop was selected
     if (mySelectedBusStop != nullptr) {
@@ -642,10 +654,8 @@ GNEFrameModuls::EdgePathCreator::addEdge(GNEEdge* edge) {
         myAbortCreationButton->enable();
         // disable undo/redo
         myFrameParent->myViewNet->getViewParent()->getGNEAppWindows()->disableUndoRedo("trip creation");
-        // set special color
-        for (auto i : edge->getLanes()) {
-            i->setSpecialColor(&myFrameParent->getEdgeCandidateSelectedColor());
-        }
+        // set candidate color
+        edge->setPossibleCandidate(true);
         // enable remove last edge button
         myRemoveLastInsertedEdge->enable();
         // enable finish button
@@ -653,7 +663,7 @@ GNEFrameModuls::EdgePathCreator::addEdge(GNEEdge* edge) {
         // calculate route if there is more than two edges
         if (myClickedEdges.size() > 1) {
             // calculate temporal route
-            myTemporalRoute = GNEDemandElement::getRouteCalculatorInstance()->calculateDijkstraRoute(myVClass, myClickedEdges);
+            myTemporalRoute = myFrameParent->getViewNet()->getNet()->getPathCalculator()->calculatePath(myVClass, myClickedEdges);
         } else {
             // use single edge as temporal route
             myTemporalRoute = myClickedEdges;
@@ -670,7 +680,7 @@ GNEFrameModuls::EdgePathCreator::addBusStop(GNEAdditional* busStop) {
     // check that at least there is a selected edge
     if (!myClickedEdges.empty() && (mySelectedBusStop == nullptr)) {
         mySelectedBusStop = busStop;
-        mySelectedBusStop->setSpecialColor(&myFrameParent->getEdgeCandidateSelectedColor());
+        mySelectedBusStop->setSpecialColor(&RGBColor::GREEN);
     }
     return false;
 }
@@ -696,7 +706,7 @@ GNEFrameModuls::EdgePathCreator::clearEdges() {
 
 
 void
-GNEFrameModuls::EdgePathCreator::drawTemporalRoute() const {
+GNEFrameModuls::EdgePathCreator::drawTemporalPath() const {
     // draw depending of number of edges
     if (myClickedEdges.size() > 0) {
         // Add a draw matrix
@@ -779,6 +789,8 @@ GNEFrameModuls::EdgePathCreator::onCmdAbortRouteCreation(FXObject*, FXSelector, 
     myAbortCreationButton->disable();
     myFinishCreationButton->disable();
     myRemoveLastInsertedEdge->disable();
+    // update view
+    myFrameParent->myViewNet->updateViewNet();
     return 1;
 }
 
@@ -788,14 +800,14 @@ GNEFrameModuls::EdgePathCreator::onCmdFinishRouteCreation(FXObject*, FXSelector,
     // only create route if there is more than two edges
     if (myClickedEdges.size() > 0) {
         // depending of tag, check if last element is a busStop
-        if ((myEdgePathCreatorModes == GNE_EDGEPATHCREATOR_TO_BUSSTOP) && (mySelectedBusStop == nullptr)) {
+        if ((myModes == TO_BUSSTOP) && (mySelectedBusStop == nullptr)) {
             WRITE_WARNING("Last clicked element must be a " + toString(SUMO_TAG_BUS_STOP));
             return 1;
         }
         // call edgePathCreated
         myFrameParent->edgePathCreated();
         // update view
-        myFrameParent->myViewNet->update();
+        myFrameParent->myViewNet->updateViewNet();
         // clear edges after creation
         clearEdges();
         // disable buttons
@@ -815,9 +827,9 @@ GNEFrameModuls::EdgePathCreator::onCmdRemoveLastInsertedElement(FXObject*, FXSel
         // remove last edge
         myClickedEdges.pop_back();
         // calculate temporal route
-        myTemporalRoute = GNEDemandElement::getRouteCalculatorInstance()->calculateDijkstraRoute(myVClass, myClickedEdges);
+        myTemporalRoute = myFrameParent->getViewNet()->getNet()->getPathCalculator()->calculatePath(myVClass, myClickedEdges);
         // update view (to see the new temporal route)
-        myFrameParent->myViewNet->update();
+        myFrameParent->myViewNet->updateViewNet();
         // check if after pop edge, there is more than one edge
         if (myClickedEdges.size() == 1) {
             // disable remove last edge button
@@ -851,8 +863,12 @@ GNEFrameModuls::AttributeCarrierHierarchy::AttributeCarrierHierarchy(GNEFrame* f
     myClickedCrossing(nullptr),
     myClickedConnection(nullptr),
     myClickedShape(nullptr),
+    myClickedTAZElement(nullptr),
     myClickedAdditional(nullptr),
-    myClickedDemandElement(nullptr) {
+    myClickedDemandElement(nullptr),
+    myClickedDataSet(nullptr),
+    myClickedDataInterval(nullptr),
+    myClickedGenericData(nullptr) {
     // Create three list
     myTreelist = new FXTreeList(this, this, MID_GNE_ACHIERARCHY_SHOWCHILDMENU, GUIDesignTreeListFrame);
     hide();
@@ -884,8 +900,12 @@ GNEFrameModuls::AttributeCarrierHierarchy::hideAttributeCarrierHierarchy() {
     myClickedCrossing = nullptr;
     myClickedConnection = nullptr;
     myClickedShape = nullptr;
+    myClickedTAZElement = nullptr;
     myClickedAdditional = nullptr;
     myClickedDemandElement = nullptr;
+    myClickedDataSet = nullptr;
+    myClickedDataInterval = nullptr;
+    myClickedGenericData = nullptr;
     // hide modul
     hide();
 }
@@ -900,6 +920,15 @@ GNEFrameModuls::AttributeCarrierHierarchy::refreshAttributeCarrierHierarchy() {
     // show ACChildren of myAC
     if (myAC) {
         showAttributeCarrierChildren(myAC, showAttributeCarrierParents());
+    }
+}
+
+
+void
+GNEFrameModuls::AttributeCarrierHierarchy::removeCurrentEditedAttribute(const GNEAttributeCarrier* AC) {
+    // simply check if AC is the same of myAC
+    if (AC == myAC) {
+        myAC = nullptr;
     }
 }
 
@@ -935,11 +964,15 @@ GNEFrameModuls::AttributeCarrierHierarchy::onCmdCenterItem(FXObject*, FXSelector
         myFrameParent->myViewNet->centerTo(myClickedAdditional->getGlID(), true, -1);
     } else if (myClickedShape) {
         myFrameParent->myViewNet->centerTo(myClickedShape->getGlID(), true, -1);
+    } else if (myClickedTAZElement) {
+        myFrameParent->myViewNet->centerTo(myClickedTAZElement->getGlID(), true, -1);
     } else if (myClickedDemandElement) {
         myFrameParent->myViewNet->centerTo(myClickedDemandElement->getGlID(), true, -1);
+    } else if (myClickedGenericData) {
+        myFrameParent->myViewNet->centerTo(myClickedGenericData->getGlID(), true, -1);
     }
     // update view after centering
-    myFrameParent->myViewNet->update();
+    myFrameParent->myViewNet->updateViewNet();
     return 1;
 }
 
@@ -972,6 +1005,8 @@ GNEFrameModuls::AttributeCarrierHierarchy::onCmdDeleteItem(FXObject*, FXSelector
         myFrameParent->myViewNet->getNet()->deleteAdditional(myClickedAdditional, myFrameParent->myViewNet->getUndoList());
     } else if (myClickedShape) {
         myFrameParent->myViewNet->getNet()->deleteShape(myClickedShape, myFrameParent->myViewNet->getUndoList());
+    } else if (myClickedTAZElement) {
+        myFrameParent->myViewNet->getNet()->deleteTAZElement(myClickedTAZElement, myFrameParent->myViewNet->getUndoList());
     } else if (myClickedDemandElement) {
         // check that default VTypes aren't removed
         if ((myClickedDemandElement->getTagProperty().getTag() == SUMO_TAG_VTYPE) && (GNEAttributeCarrier::parse<bool>(myClickedDemandElement->getAttribute(GNE_ATTR_DEFAULT_VTYPE)))) {
@@ -983,9 +1018,30 @@ GNEFrameModuls::AttributeCarrierHierarchy::onCmdDeleteItem(FXObject*, FXSelector
         } else {
             myFrameParent->myViewNet->getNet()->deleteDemandElement(myClickedDemandElement, myFrameParent->myViewNet->getUndoList());
         }
+    } else if (myClickedDataSet) {
+        myFrameParent->myViewNet->getNet()->deleteDataSet(myClickedDataSet, myFrameParent->myViewNet->getUndoList());
+    } else if (myClickedDataInterval) {
+        // check if we have to remove data Set
+        if (myClickedDataInterval->getDataSetParent()->getDataIntervalChildren().size() == 1) {
+            myFrameParent->myViewNet->getNet()->deleteDataSet(myClickedDataInterval->getDataSetParent(), myFrameParent->myViewNet->getUndoList());
+        } else {
+            myFrameParent->myViewNet->getNet()->deleteDataInterval(myClickedDataInterval, myFrameParent->myViewNet->getUndoList());
+        }
+    } else if (myClickedGenericData) {
+        // check if we have to remove interval
+        if (myClickedGenericData->getDataIntervalParent()->getGenericDataChildren().size() == 1) {
+            // check if we have to remove data Set
+            if (myClickedGenericData->getDataIntervalParent()->getDataSetParent()->getDataIntervalChildren().size() == 1) {
+                myFrameParent->myViewNet->getNet()->deleteDataSet(myClickedGenericData->getDataIntervalParent()->getDataSetParent(), myFrameParent->myViewNet->getUndoList());
+            } else {
+                myFrameParent->myViewNet->getNet()->deleteDataInterval(myClickedGenericData->getDataIntervalParent(), myFrameParent->myViewNet->getUndoList());
+            }
+        } else {
+            myFrameParent->myViewNet->getNet()->deleteGenericData(myClickedGenericData, myFrameParent->myViewNet->getUndoList());
+        }
     }
-    // update viewNet
-    myFrameParent->myViewNet->update();
+    // update net
+    myFrameParent->myViewNet->updateViewNet();
     // refresh AC Hierarchy
     refreshAttributeCarrierHierarchy();
     // check if inspector frame has to be shown again
@@ -1046,8 +1102,12 @@ GNEFrameModuls::AttributeCarrierHierarchy::createPopUpMenu(int X, int Y, GNEAttr
         myClickedCrossing = dynamic_cast<GNECrossing*>(clickedAC);
         myClickedConnection = dynamic_cast<GNEConnection*>(clickedAC);
         myClickedShape = dynamic_cast<GNEShape*>(clickedAC);
+        myClickedTAZElement = dynamic_cast<GNETAZElement*>(clickedAC);
         myClickedAdditional = dynamic_cast<GNEAdditional*>(clickedAC);
         myClickedDemandElement = dynamic_cast<GNEDemandElement*>(clickedAC);
+        myClickedDataSet = dynamic_cast<GNEDataSet*>(clickedAC);
+        myClickedDataInterval = dynamic_cast<GNEDataInterval*>(clickedAC);
+        myClickedGenericData = dynamic_cast<GNEGenericData*>(clickedAC);
         // create FXMenuPane
         FXMenuPane* pane = new FXMenuPane(myTreelist);
         // set item name and icon
@@ -1055,17 +1115,17 @@ GNEFrameModuls::AttributeCarrierHierarchy::createPopUpMenu(int X, int Y, GNEAttr
         // insert separator
         new FXMenuSeparator(pane);
         // create center menu command
-        FXMenuCommand* centerMenuCommand = new FXMenuCommand(pane, "Center", GUIIconSubSys::getIcon(ICON_RECENTERVIEW), this, MID_GNE_CENTER);
-        // disable Centering for Vehicle Types
-        if (myClickedAC->getTagProperty().isVehicleType()) {
+        FXMenuCommand* centerMenuCommand = new FXMenuCommand(pane, "Center", GUIIconSubSys::getIcon(GUIIcon::RECENTERVIEW), this, MID_GNE_CENTER);
+        // disable Centering for Vehicle Types, data sets and data intervals
+        if (myClickedAC->getTagProperty().isVehicleType() || (myClickedAC->getTagProperty().getTag() == SUMO_TAG_DATASET) ||
+                (myClickedAC->getTagProperty().getTag() == SUMO_TAG_DATAINTERVAL)) {
             centerMenuCommand->disable();
         }
         // create inspect and delete menu commands
-        FXMenuCommand* inspectMenuCommand = new FXMenuCommand(pane, "Inspect", GUIIconSubSys::getIcon(ICON_MODEINSPECT), this, MID_GNE_INSPECT);
-        FXMenuCommand* deleteMenuCommand = new FXMenuCommand(pane, "Delete", GUIIconSubSys::getIcon(ICON_MODEDELETE), this, MID_GNE_DELETE);
+        FXMenuCommand* inspectMenuCommand = new FXMenuCommand(pane, "Inspect", GUIIconSubSys::getIcon(GUIIcon::MODEINSPECT), this, MID_GNE_INSPECT);
+        FXMenuCommand* deleteMenuCommand = new FXMenuCommand(pane, "Delete", GUIIconSubSys::getIcon(GUIIcon::MODEDELETE), this, MID_GNE_DELETE);
         // check if inspect and delete menu commands has to be disabled
-        if ((myClickedAC->getTagProperty().isNetElement() && (myFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_DEMAND)) ||
-                (myClickedAC->getTagProperty().isDemandElement() && (myFrameParent->myViewNet->getEditModes().currentSupermode == GNE_SUPERMODE_NETWORK))) {
+        if (GNEFrameAttributesModuls::isSupermodeValid(myFrameParent->myViewNet, myClickedAC) == false) {
             inspectMenuCommand->disable();
             deleteMenuCommand->disable();
         }
@@ -1074,8 +1134,8 @@ GNEFrameModuls::AttributeCarrierHierarchy::createPopUpMenu(int X, int Y, GNEAttr
             // insert separator
             new FXMenuSeparator(pane);
             // create both moving menu commands
-            FXMenuCommand* moveUpMenuCommand = new FXMenuCommand(pane, "Move up", GUIIconSubSys::getIcon(ICON_ARROW_UP), this, MID_GNE_ACHIERARCHY_MOVEUP);
-            FXMenuCommand* moveDownMenuCommand = new FXMenuCommand(pane, "Move down", GUIIconSubSys::getIcon(ICON_ARROW_DOWN), this, MID_GNE_ACHIERARCHY_MOVEDOWN);
+            FXMenuCommand* moveUpMenuCommand = new FXMenuCommand(pane, "Move up", GUIIconSubSys::getIcon(GUIIcon::ARROW_UP), this, MID_GNE_ACHIERARCHY_MOVEUP);
+            FXMenuCommand* moveDownMenuCommand = new FXMenuCommand(pane, "Move down", GUIIconSubSys::getIcon(GUIIcon::ARROW_DOWN), this, MID_GNE_ACHIERARCHY_MOVEDOWN);
             // check if both commands has to be disabled
             if (myClickedDemandElement->getTagProperty().isPersonStop()) {
                 moveUpMenuCommand->setText("Move up (Stops cannot be moved)");
@@ -1115,15 +1175,19 @@ GNEFrameModuls::AttributeCarrierHierarchy::createPopUpMenu(int X, int Y, GNEAttr
         myClickedCrossing = nullptr;
         myClickedConnection = nullptr;
         myClickedShape = nullptr;
+        myClickedTAZElement = nullptr;
         myClickedAdditional = nullptr;
         myClickedDemandElement = nullptr;
+        myClickedDataSet = nullptr;
+        myClickedDataInterval = nullptr;
+        myClickedGenericData = nullptr;
     }
 }
 
 
 FXTreeItem*
 GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
-    if (myAC->getTagProperty().isNetElement()) {
+    if (myAC->getTagProperty().isNetworkElement()) {
         // check demand element type
         switch (myAC->getTagProperty().getTag()) {
             case SUMO_TAG_EDGE: {
@@ -1131,12 +1195,12 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
                 GNEEdge* edge = myFrameParent->myViewNet->getNet()->retrieveEdge(myAC->getID(), false);
                 if (edge) {
                     // insert Junctions of edge in tree (Pararell because a edge has always two Junctions)
-                    FXTreeItem* junctionSourceItem = myTreelist->insertItem(nullptr, nullptr, (edge->getGNEJunctionSource()->getHierarchyName() + " origin").c_str(), edge->getGNEJunctionSource()->getIcon(), edge->getGNEJunctionSource()->getIcon());
-                    FXTreeItem* junctionDestinyItem = myTreelist->insertItem(nullptr, nullptr, (edge->getGNEJunctionSource()->getHierarchyName() + " destiny").c_str(), edge->getGNEJunctionSource()->getIcon(), edge->getGNEJunctionSource()->getIcon());
+                    FXTreeItem* junctionSourceItem = myTreelist->insertItem(nullptr, nullptr, (edge->getFirstParentJunction()->getHierarchyName() + " origin").c_str(), edge->getFirstParentJunction()->getIcon(), edge->getFirstParentJunction()->getIcon());
+                    FXTreeItem* junctionDestinyItem = myTreelist->insertItem(nullptr, nullptr, (edge->getFirstParentJunction()->getHierarchyName() + " destiny").c_str(), edge->getFirstParentJunction()->getIcon(), edge->getFirstParentJunction()->getIcon());
                     junctionDestinyItem->setExpanded(true);
                     // Save items in myTreeItemToACMap
-                    myTreeItemToACMap[junctionSourceItem] = edge->getGNEJunctionSource();
-                    myTreeItemToACMap[junctionDestinyItem] = edge->getGNEJunctionDestiny();
+                    myTreeItemToACMap[junctionSourceItem] = edge->getFirstParentJunction();
+                    myTreeItemToACMap[junctionDestinyItem] = edge->getSecondParentJunction();
                     // return junction destiny Item
                     return junctionDestinyItem;
                 } else {
@@ -1150,15 +1214,15 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
                     // obtain parent edge
                     GNEEdge* edge = myFrameParent->myViewNet->getNet()->retrieveEdge(lane->getParentEdge()->getID());
                     //inser Junctions of lane of edge in tree (Pararell because a edge has always two Junctions)
-                    FXTreeItem* junctionSourceItem = myTreelist->insertItem(nullptr, nullptr, (edge->getGNEJunctionSource()->getHierarchyName() + " origin").c_str(), edge->getGNEJunctionSource()->getIcon(), edge->getGNEJunctionSource()->getIcon());
-                    FXTreeItem* junctionDestinyItem = myTreelist->insertItem(nullptr, nullptr, (edge->getGNEJunctionSource()->getHierarchyName() + " destiny").c_str(), edge->getGNEJunctionSource()->getIcon(), edge->getGNEJunctionSource()->getIcon());
+                    FXTreeItem* junctionSourceItem = myTreelist->insertItem(nullptr, nullptr, (edge->getFirstParentJunction()->getHierarchyName() + " origin").c_str(), edge->getFirstParentJunction()->getIcon(), edge->getFirstParentJunction()->getIcon());
+                    FXTreeItem* junctionDestinyItem = myTreelist->insertItem(nullptr, nullptr, (edge->getFirstParentJunction()->getHierarchyName() + " destiny").c_str(), edge->getFirstParentJunction()->getIcon(), edge->getFirstParentJunction()->getIcon());
                     junctionDestinyItem->setExpanded(true);
                     // Create edge item
                     FXTreeItem* edgeItem = myTreelist->insertItem(nullptr, junctionDestinyItem, edge->getHierarchyName().c_str(), edge->getIcon(), edge->getIcon());
                     edgeItem->setExpanded(true);
                     // Save items in myTreeItemToACMap
-                    myTreeItemToACMap[junctionSourceItem] = edge->getGNEJunctionSource();
-                    myTreeItemToACMap[junctionDestinyItem] = edge->getGNEJunctionDestiny();
+                    myTreeItemToACMap[junctionSourceItem] = edge->getFirstParentJunction();
+                    myTreeItemToACMap[junctionDestinyItem] = edge->getSecondParentJunction();
                     myTreeItemToACMap[edgeItem] = edge;
                     // return edge item
                     return edgeItem;
@@ -1211,15 +1275,15 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
         }
     } else if (myAC->getTagProperty().getTag() == SUMO_TAG_POILANE) {
         // Obtain POILane
-        GNEPOI* POILane = myFrameParent->myViewNet->getNet()->retrievePOI(myAC->getID(), false);
+        GNEShape* POILane = myFrameParent->myViewNet->getNet()->retrieveShape(SUMO_TAG_POILANE, myAC->getID(), false);
         if (POILane) {
             // obtain parent lane
             GNELane* lane = myFrameParent->myViewNet->getNet()->retrieveLane(POILane->getParentLanes().at(0)->getID());
             // obtain parent edge
             GNEEdge* edge = myFrameParent->myViewNet->getNet()->retrieveEdge(lane->getParentEdge()->getID());
             //inser Junctions of lane of edge in tree (Pararell because a edge has always two Junctions)
-            FXTreeItem* junctionSourceItem = myTreelist->insertItem(nullptr, nullptr, (edge->getGNEJunctionSource()->getHierarchyName() + " origin").c_str(), edge->getGNEJunctionSource()->getIcon(), edge->getGNEJunctionSource()->getIcon());
-            FXTreeItem* junctionDestinyItem = myTreelist->insertItem(nullptr, nullptr, (edge->getGNEJunctionSource()->getHierarchyName() + " destiny").c_str(), edge->getGNEJunctionSource()->getIcon(), edge->getGNEJunctionSource()->getIcon());
+            FXTreeItem* junctionSourceItem = myTreelist->insertItem(nullptr, nullptr, (edge->getFirstParentJunction()->getHierarchyName() + " origin").c_str(), edge->getFirstParentJunction()->getIcon(), edge->getFirstParentJunction()->getIcon());
+            FXTreeItem* junctionDestinyItem = myTreelist->insertItem(nullptr, nullptr, (edge->getFirstParentJunction()->getHierarchyName() + " destiny").c_str(), edge->getFirstParentJunction()->getIcon(), edge->getFirstParentJunction()->getIcon());
             junctionDestinyItem->setExpanded(true);
             // Create edge item
             FXTreeItem* edgeItem = myTreelist->insertItem(nullptr, junctionDestinyItem, edge->getHierarchyName().c_str(), edge->getIcon(), edge->getIcon());
@@ -1228,8 +1292,8 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
             FXTreeItem* laneItem = myTreelist->insertItem(nullptr, edgeItem, lane->getHierarchyName().c_str(), lane->getIcon(), lane->getIcon());
             laneItem->setExpanded(true);
             // Save items in myTreeItemToACMap
-            myTreeItemToACMap[junctionSourceItem] = edge->getGNEJunctionSource();
-            myTreeItemToACMap[junctionDestinyItem] = edge->getGNEJunctionDestiny();
+            myTreeItemToACMap[junctionSourceItem] = edge->getFirstParentJunction();
+            myTreeItemToACMap[junctionDestinyItem] = edge->getSecondParentJunction();
             myTreeItemToACMap[edgeItem] = edge;
             myTreeItemToACMap[laneItem] = lane;
             // return Lane item
@@ -1237,7 +1301,7 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
         } else {
             return nullptr;
         }
-    } else if (myAC->getTagProperty().isAdditional() || myAC->getTagProperty().isTAZ()) {
+    } else if (myAC->getTagProperty().isAdditionalElement()) {
         // Obtain Additional
         GNEAdditional* additional = myFrameParent->myViewNet->getNet()->retrieveAdditional(myAC->getTagProperty().getTag(), myAC->getID(), false);
         if (additional) {
@@ -1298,6 +1362,71 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
                 }
                 // return last inserted item
                 root = addListItem(additional->getParentLanes().back());
+            }
+            // return last inserted list item
+            return root;
+        }
+    } else if (myAC->getTagProperty().isTAZElement()) {
+        // Obtain TAZElement
+        GNETAZElement* TAZElement = myFrameParent->myViewNet->getNet()->retrieveTAZElement(myAC->getTagProperty().getTag(), myAC->getID(), false);
+        if (TAZElement) {
+            // declare auxiliar FXTreeItem, due a demand element can have multiple "roots"
+            FXTreeItem* root = nullptr;
+            // check if there is demand elements parents
+            if (TAZElement->getParentTAZElements().size() > 0) {
+                // check if we have more than one edge
+                if (TAZElement->getParentTAZElements().size() > 1) {
+                    // insert first item
+                    addListItem(TAZElement->getParentTAZElements().front());
+                    // insert "spacer"
+                    if (TAZElement->getParentTAZElements().size() > 2) {
+                        addListItem(nullptr, ("..." + toString((int)TAZElement->getParentTAZElements().size() - 2) + " TAZElements...").c_str(), 0, false);
+                    }
+                }
+                // return last inserted item
+                root = addListItem(TAZElement->getParentTAZElements().back());
+            }
+            // check if there is parent demand elements
+            if (TAZElement->getParentDemandElements().size() > 0) {
+                // check if we have more than one demand element
+                if (TAZElement->getParentDemandElements().size() > 1) {
+                    // insert first item
+                    addListItem(TAZElement->getParentDemandElements().front());
+                    // insert "spacer"
+                    if (TAZElement->getParentDemandElements().size() > 2) {
+                        addListItem(nullptr, ("..." + toString((int)TAZElement->getParentDemandElements().size() - 2) + " demand elements...").c_str(), 0, false);
+                    }
+                }
+                // return last inserted item
+                root = addListItem(TAZElement->getParentDemandElements().back());
+            }
+            // check if there is parent edges
+            if (TAZElement->getParentEdges().size() > 0) {
+                // check if we have more than one edge
+                if (TAZElement->getParentEdges().size() > 1) {
+                    // insert first item
+                    addListItem(TAZElement->getParentEdges().front());
+                    // insert "spacer"
+                    if (TAZElement->getParentEdges().size() > 2) {
+                        addListItem(nullptr, ("..." + toString((int)TAZElement->getParentEdges().size() - 2) + " edges...").c_str(), 0, false);
+                    }
+                }
+                // return last inserted item
+                root = addListItem(TAZElement->getParentEdges().back());
+            }
+            // check if there is parent lanes
+            if (TAZElement->getParentLanes().size() > 0) {
+                // check if we have more than one parent lane
+                if (TAZElement->getParentLanes().size() > 1) {
+                    // insert first item
+                    addListItem(TAZElement->getParentLanes().front());
+                    // insert "spacer"
+                    if (TAZElement->getParentLanes().size() > 2) {
+                        addListItem(nullptr, ("..." + toString((int)TAZElement->getParentLanes().size() - 2) + " lanes...").c_str(), 0, false);
+                    }
+                }
+                // return last inserted item
+                root = addListItem(TAZElement->getParentLanes().back());
             }
             // return last inserted list item
             return root;
@@ -1367,6 +1496,91 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
             // return last inserted list item
             return root;
         }
+
+    } else if (myAC->getTagProperty().isDataElement()) {
+        // check if is a GNEDataInterval or a GNEGenericData
+        if (myAC->getTagProperty().getTag() == SUMO_TAG_DATASET) {
+            return nullptr;
+        } else if (myAC->getTagProperty().getTag() == SUMO_TAG_DATAINTERVAL) {
+            return addListItem(myFrameParent->myViewNet->getNet()->retrieveDataSet(myAC->getID()));
+        } else {
+            // Obtain DataElement
+            GNEGenericData* dataElement = dynamic_cast<GNEGenericData*>(myAC);
+            if (dataElement) {
+                // declare auxiliar FXTreeItem, due a data element can have multiple "roots"
+                FXTreeItem* root = nullptr;
+                // set dataset
+                addListItem(dataElement->getDataIntervalParent()->getDataSetParent());
+                // set data interval
+                addListItem(dataElement->getDataIntervalParent());
+                // check if there is data elements parents
+                if (dataElement->getParentAdditionals().size() > 0) {
+                    // check if we have more than one edge
+                    if (dataElement->getParentAdditionals().size() > 1) {
+                        // insert first item
+                        addListItem(dataElement->getParentAdditionals().front());
+                        // insert "spacer"
+                        if (dataElement->getParentAdditionals().size() > 2) {
+                            addListItem(nullptr, ("..." + toString((int)dataElement->getParentAdditionals().size() - 2) + " additionals...").c_str(), 0, false);
+                        }
+                    }
+                    // return last inserted item
+                    root = addListItem(dataElement->getParentAdditionals().back());
+                }
+                // check if there is parent demand elements
+                if (dataElement->getParentDemandElements().size() > 0) {
+                    // check if we have more than one demand element
+                    if (dataElement->getParentDemandElements().size() > 1) {
+                        // insert first item
+                        addListItem(dataElement->getParentDemandElements().front());
+                        // insert "spacer"
+                        if (dataElement->getParentDemandElements().size() > 2) {
+                            addListItem(nullptr, ("..." + toString((int)dataElement->getParentDemandElements().size() - 2) + " demand elements...").c_str(), 0, false);
+                        }
+                    }
+                    // return last inserted item
+                    root = addListItem(dataElement->getParentDemandElements().back());
+                }
+                // check if there is parent edges
+                if (dataElement->getParentEdges().size() > 0) {
+                    // check if we have more than one edge
+                    if (dataElement->getParentEdges().size() > 1) {
+                        // insert first ege
+                        if (dataElement->getTagProperty().getTag() == SUMO_TAG_EDGEREL) {
+                            addListItem(dataElement->getParentEdges().front(), nullptr, "from ");
+                        } else {
+                            addListItem(dataElement->getParentEdges().front());
+                        }
+                        // insert "spacer"
+                        if (dataElement->getParentEdges().size() > 2) {
+                            addListItem(nullptr, ("..." + toString((int)dataElement->getParentEdges().size() - 2) + " edges...").c_str(), 0, false);
+                        }
+                    }
+                    // insert last ege
+                    if (dataElement->getTagProperty().getTag() == SUMO_TAG_EDGEREL) {
+                        addListItem(dataElement->getParentEdges().back(), nullptr, "to ");
+                    } else {
+                        addListItem(dataElement->getParentEdges().back());
+                    }
+                }
+                // check if there is parent lanes
+                if (dataElement->getParentLanes().size() > 0) {
+                    // check if we have more than one parent lane
+                    if (dataElement->getParentLanes().size() > 1) {
+                        // insert first item
+                        addListItem(dataElement->getParentLanes().front());
+                        // insert "spacer"
+                        if (dataElement->getParentLanes().size() > 2) {
+                            addListItem(nullptr, ("..." + toString((int)dataElement->getParentLanes().size() - 2) + " lanes...").c_str(), 0, false);
+                        }
+                    }
+                    // return last inserted item
+                    root = addListItem(dataElement->getParentLanes().back());
+                }
+                // return last inserted list item
+                return root;
+            }
+        }
     }
     // there aren't parents
     return nullptr;
@@ -1375,7 +1589,7 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierParents() {
 
 void
 GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttributeCarrier* AC, FXTreeItem* itemParent) {
-    if (AC->getTagProperty().isNetElement()) {
+    if (AC->getTagProperty().isNetworkElement()) {
         // Switch gl type of ac
         switch (AC->getTagProperty().getTag()) {
             case SUMO_TAG_JUNCTION: {
@@ -1405,12 +1619,16 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
                     for (const auto& i : edge->getLanes()) {
                         showAttributeCarrierChildren(i, edgeItem);
                     }
+                    // insert child additional
+                    for (const auto& i : edge->getChildAdditionals()) {
+                        showAttributeCarrierChildren(i, edgeItem);
+                    }
                     // insert child shapes
                     for (const auto& i : edge->getChildShapes()) {
                         showAttributeCarrierChildren(i, edgeItem);
                     }
-                    // insert child additional
-                    for (const auto& i : edge->getChildAdditionals()) {
+                    // insert child TAZElements
+                    for (const auto& i : edge->getChildTAZElements()) {
                         showAttributeCarrierChildren(i, edgeItem);
                     }
                     // insert demand elements children (note: use getChildDemandElementsSortedByType to avoid duplicated elements)
@@ -1423,6 +1641,10 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
                     for (const auto& i : edge->getChildDemandElementsByType(SUMO_TAG_FLOW)) {
                         showAttributeCarrierChildren(i, edgeItem);
                     }
+                    // show data elements
+                    for (const auto& i : edge->getChildGenericDataElements()) {
+                        showAttributeCarrierChildren(i, edgeItem);
+                    }
                 }
                 break;
             }
@@ -1432,12 +1654,16 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
                 if (lane) {
                     // insert lane item
                     FXTreeItem* laneItem = addListItem(AC, itemParent);
+                    // insert child additional
+                    for (const auto& i : lane->getChildAdditionals()) {
+                        showAttributeCarrierChildren(i, laneItem);
+                    }
                     // insert child shapes
                     for (const auto& i : lane->getChildShapes()) {
                         showAttributeCarrierChildren(i, laneItem);
                     }
-                    // insert child additional
-                    for (const auto& i : lane->getChildAdditionals()) {
+                    // insert child TAZElements
+                    for (const auto& i : lane->getChildTAZElements()) {
                         showAttributeCarrierChildren(i, laneItem);
                     }
                     // insert demand elements children
@@ -1479,7 +1705,7 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
     } else if (AC->getTagProperty().isShape()) {
         // insert shape item
         addListItem(AC, itemParent);
-    } else if (AC->getTagProperty().isAdditional() || AC->getTagProperty().isTAZ()) {
+    } else if (AC->getTagProperty().isAdditionalElement()) {
         // retrieve additional
         GNEAdditional* additional = myFrameParent->myViewNet->getNet()->retrieveAdditional(AC->getTagProperty().getTag(), AC->getID(), false);
         if (additional) {
@@ -1493,12 +1719,16 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
             for (const auto& i : additional->getChildLanes()) {
                 showAttributeCarrierChildren(i, additionalItem);
             }
+            // insert additional children
+            for (const auto& i : additional->getChildAdditionals()) {
+                showAttributeCarrierChildren(i, additionalItem);
+            }
             // insert child shapes
             for (const auto& i : additional->getChildShapes()) {
                 showAttributeCarrierChildren(i, additionalItem);
             }
-            // insert additionals children
-            for (const auto& i : additional->getChildAdditionals()) {
+            // insert TAZElements children
+            for (const auto& i : additional->getChildTAZElements()) {
                 showAttributeCarrierChildren(i, additionalItem);
             }
             // insert child demand elements
@@ -1506,6 +1736,39 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
                 showAttributeCarrierChildren(i, additionalItem);
             }
         }
+
+    } else if (AC->getTagProperty().isTAZElement()) {
+        // retrieve TAZElement
+        GNETAZElement* TAZElement = myFrameParent->myViewNet->getNet()->retrieveTAZElement(AC->getTagProperty().getTag(), AC->getID(), false);
+        if (TAZElement) {
+            // insert TAZElement item
+            FXTreeItem* TAZElementItem = addListItem(AC, itemParent);
+            // insert child edges
+            for (const auto& i : TAZElement->getChildEdges()) {
+                showAttributeCarrierChildren(i, TAZElementItem);
+            }
+            // insert child lanes
+            for (const auto& i : TAZElement->getChildLanes()) {
+                showAttributeCarrierChildren(i, TAZElementItem);
+            }
+            // insert additional children
+            for (const auto& i : TAZElement->getChildAdditionals()) {
+                showAttributeCarrierChildren(i, TAZElementItem);
+            }
+            // insert child shapes
+            for (const auto& i : TAZElement->getChildShapes()) {
+                showAttributeCarrierChildren(i, TAZElementItem);
+            }
+            // insert TAZElements children
+            for (const auto& i : TAZElement->getChildTAZElements()) {
+                showAttributeCarrierChildren(i, TAZElementItem);
+            }
+            // insert child demand elements
+            for (const auto& i : TAZElement->getChildDemandElements()) {
+                showAttributeCarrierChildren(i, TAZElementItem);
+            }
+        }
+
     } else if (AC->getTagProperty().isDemandElement()) {
         // retrieve demandElement
         GNEDemandElement* demandElement = myFrameParent->myViewNet->getNet()->retrieveDemandElement(AC->getTagProperty().getTag(), AC->getID(), false);
@@ -1520,17 +1783,38 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
             for (const auto& i : demandElement->getChildLanes()) {
                 showAttributeCarrierChildren(i, demandElementItem);
             }
+            // insert additional children
+            for (const auto& i : demandElement->getChildAdditionals()) {
+                showAttributeCarrierChildren(i, demandElementItem);
+            }
             // insert child shapes
             for (const auto& i : demandElement->getChildShapes()) {
                 showAttributeCarrierChildren(i, demandElementItem);
             }
-            // insert additionals children
-            for (const auto& i : demandElement->getChildAdditionals()) {
+            // insert TAZElements children
+            for (const auto& i : demandElement->getChildTAZElements()) {
                 showAttributeCarrierChildren(i, demandElementItem);
             }
             // insert child demand elements
             for (const auto& i : demandElement->getChildDemandElements()) {
                 showAttributeCarrierChildren(i, demandElementItem);
+            }
+        }
+    } else if (AC->getTagProperty().isDataElement()) {
+        // insert data item
+        FXTreeItem* dataElementItem = addListItem(AC, itemParent);
+        // insert intervals
+        if (AC->getTagProperty().getTag() == SUMO_TAG_DATASET) {
+            GNEDataSet* dataSet = myFrameParent->myViewNet->getNet()->retrieveDataSet(AC->getID());
+            // iterate over intevals
+            for (const auto& interval : dataSet->getDataIntervalChildren()) {
+                showAttributeCarrierChildren(interval.second, dataElementItem);
+            }
+        } else if (AC->getTagProperty().getTag() == SUMO_TAG_DATAINTERVAL) {
+            GNEDataInterval* dataInterval = dynamic_cast<GNEDataInterval*>(AC);
+            // iterate over generic datas
+            for (const auto& genericData : dataInterval->getGenericDataChildren()) {
+                showAttributeCarrierChildren(genericData, dataElementItem);
             }
         }
     }
@@ -1572,18 +1856,15 @@ GNEFrameModuls::DrawingShape::DrawingShape(GNEFrame* frameParent) :
     myStartDrawingButton = new FXButton(this, "Start drawing", 0, this, MID_GNE_STARTDRAWING, GUIDesignButton);
     myStopDrawingButton = new FXButton(this, "Stop drawing", 0, this, MID_GNE_STOPDRAWING, GUIDesignButton);
     myAbortDrawingButton = new FXButton(this, "Abort drawing", 0, this, MID_GNE_ABORTDRAWING, GUIDesignButton);
-
     // create information label
     std::ostringstream information;
     information
-            << "- 'Start drawing' or ENTER\n"
-            << "  draws shape boundary.\n"
-            << "- 'Stop drawing' or ENTER\n"
-            << "  creates shape.\n"
-            << "- 'Shift + Click'\n"
-            << "  removes last created point.\n"
-            << "- 'Abort drawing' or ESC\n"
-            << "  removes drawed shape.";
+        << "- 'Start drawing' or ENTER\n"
+        << "  to create shape.\n"
+        << "- 'Stop drawing' or ESC to\n"
+        << "  abort shape creation.\n"
+        << "- 'Shift + Click' to remove\n"
+        << "  last inserted point.";
     myInformationLabel = new FXLabel(this, information.str().c_str(), 0, GUIDesignLabelFrameInformation);
     // disable stop and abort functions as init
     myStopDrawingButton->disable();
@@ -1627,8 +1908,7 @@ GNEFrameModuls::DrawingShape::stopDrawing() {
     // try to build shape
     if (myFrameParent->shapeDrawed()) {
         // clear created points
-        myTemporalShapeShape.clear();
-        myFrameParent->myViewNet->update();
+        myTemporalShape.clear();
         // change buttons
         myStartDrawingButton->enable();
         myStopDrawingButton->disable();
@@ -1643,8 +1923,7 @@ GNEFrameModuls::DrawingShape::stopDrawing() {
 void
 GNEFrameModuls::DrawingShape::abortDrawing() {
     // clear created points
-    myTemporalShapeShape.clear();
-    myFrameParent->myViewNet->update();
+    myTemporalShape.clear();
     // change buttons
     myStartDrawingButton->enable();
     myStopDrawingButton->disable();
@@ -1655,7 +1934,7 @@ GNEFrameModuls::DrawingShape::abortDrawing() {
 void
 GNEFrameModuls::DrawingShape::addNewPoint(const Position& P) {
     if (myStopDrawingButton->isEnabled()) {
-        myTemporalShapeShape.push_back(P);
+        myTemporalShape.push_back(P);
     } else {
         throw ProcessError("A new point cannot be added if drawing wasn't started");
     }
@@ -1664,13 +1943,15 @@ GNEFrameModuls::DrawingShape::addNewPoint(const Position& P) {
 
 void
 GNEFrameModuls::DrawingShape::removeLastPoint() {
-
+    if (myTemporalShape.size() > 1) {
+        myTemporalShape.pop_back();
+    }
 }
 
 
 const PositionVector&
 GNEFrameModuls::DrawingShape::getTemporalShape() const {
-    return myTemporalShapeShape;
+    return myTemporalShape;
 }
 
 
@@ -1763,7 +2044,7 @@ GNEFrameModuls::SelectorParent::setIDSelected(const std::string& id) {
 bool
 GNEFrameModuls::SelectorParent::showSelectorParentModul(SumoXMLTag additionalType) {
     // make sure that we're editing an additional tag
-    auto listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNEAttributeCarrier::TagType::TAGTYPE_ADDITIONAL, false);
+    auto listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::ADDITIONALELEMENT, false);
     for (auto i : listOfTags) {
         if (i == additionalType) {
             myParentTag = additionalType;
@@ -1789,7 +2070,7 @@ GNEFrameModuls::SelectorParent::refreshSelectorParentModul() {
     myParentsList->clearItems();
     if (myParentTag != SUMO_TAG_NOTHING) {
         // fill list with IDs of additionals
-        for (const auto& i : myFrameParent->getViewNet()->getNet()->getAttributeCarriers().additionals.at(myParentTag)) {
+        for (const auto& i : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getAdditionals().at(myParentTag)) {
             myParentsList->appendItem(i.first.c_str());
         }
     }
@@ -1826,15 +2107,22 @@ void
 GNEFrameModuls::OverlappedInspection::showOverlappedInspection(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const Position& clickedPosition) {
     // first clear myOverlappedACs
     myOverlappedACs.clear();
-    // check if we have to filter objects under cursor
-    if (myFilteredTag == SUMO_TAG_NOTHING) {
-        myOverlappedACs = objectsUnderCursor.getClickedAttributeCarriers();
-    } else {
-        // filter objects under cursor
-        for (const auto& i : objectsUnderCursor.getClickedAttributeCarriers()) {
-            if (i->getTagProperty().getTag() == myFilteredTag) {
-                myOverlappedACs.push_back(i);
-            }
+    // reserve
+    myOverlappedACs.reserve(objectsUnderCursor.getClickedAttributeCarriers().size());
+    // iterate over objects under cursor
+    for (const auto& AC : objectsUnderCursor.getClickedAttributeCarriers()) {
+        bool insert = true;
+        // special case for supermode data
+        if (myFrameParent->getViewNet()->getEditModes().isCurrentSupermodeData() &&
+                !AC->getTagProperty().isGenericData()) {
+            insert = false;
+        }
+        // check filter
+        if ((myFilteredTag != SUMO_TAG_NOTHING) && (AC->getTagProperty().getTag() != myFilteredTag)) {
+            insert = false;
+        }
+        if (insert) {
+            myOverlappedACs.push_back(AC);
         }
     }
     mySavedClickedPosition = clickedPosition;
@@ -2009,7 +2297,7 @@ GNEFrameModuls::OverlappedInspection::onCmdOverlappingHelp(FXObject*, FXSelector
             << "   previous element";
     new FXLabel(helpDialog, help.str().c_str(), nullptr, GUIDesignLabelFrameInformation);
     // "OK"
-    new FXButton(helpDialog, "OK\t\tclose", GUIIconSubSys::getIcon(ICON_ACCEPT), helpDialog, FXDialogBox::ID_ACCEPT, GUIDesignButtonOK);
+    new FXButton(helpDialog, "OK\t\tclose", GUIIconSubSys::getIcon(GUIIcon::ACCEPT), helpDialog, FXDialogBox::ID_ACCEPT, GUIDesignButtonOK);
     helpDialog->create();
     helpDialog->show();
     return 1;
@@ -2017,7 +2305,14 @@ GNEFrameModuls::OverlappedInspection::onCmdOverlappingHelp(FXObject*, FXSelector
 
 
 GNEFrameModuls::OverlappedInspection::OverlappedInspection() :
-    myFilteredTag(SUMO_TAG_NOTHING) {
+    myFrameParent(nullptr),
+    myPreviousElement(nullptr),
+    myCurrentIndexButton(nullptr),
+    myNextElement(nullptr),
+    myOverlappedElementList(nullptr),
+    myHelpButton(nullptr),
+    myFilteredTag(SUMO_TAG_NOTHING),
+    myItemIndex(0) {
 }
 
 
@@ -2025,11 +2320,11 @@ void
 GNEFrameModuls::OverlappedInspection::buildFXElements() {
     FXHorizontalFrame* frameButtons = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
     // Create previous Item Button
-    myPreviousElement = new FXButton(frameButtons, "", GUIIconSubSys::getIcon(ICON_BIGARROWLEFT), this, MID_GNE_OVERLAPPED_PREVIOUS, GUIDesignButtonIconRectangular);
+    myPreviousElement = new FXButton(frameButtons, "", GUIIconSubSys::getIcon(GUIIcon::BIGARROWLEFT), this, MID_GNE_OVERLAPPED_PREVIOUS, GUIDesignButtonIconRectangular);
     // create current index button
     myCurrentIndexButton = new FXButton(frameButtons, "", nullptr, this, MID_GNE_OVERLAPPED_SHOWLIST, GUIDesignButton);
     // Create next Item Button
-    myNextElement = new FXButton(frameButtons, "", GUIIconSubSys::getIcon(ICON_BIGARROWRIGHT), this, MID_GNE_OVERLAPPED_NEXT, GUIDesignButtonIconRectangular);
+    myNextElement = new FXButton(frameButtons, "", GUIIconSubSys::getIcon(GUIIcon::BIGARROWRIGHT), this, MID_GNE_OVERLAPPED_NEXT, GUIDesignButtonIconRectangular);
     // Create list of overlapped elements (by default hidden)
     myOverlappedElementList = new FXList(this, this, MID_GNE_OVERLAPPED_ITEMSELECTED, GUIDesignListSingleElement);
     // disable vertical scrolling
@@ -2038,6 +2333,486 @@ GNEFrameModuls::OverlappedInspection::buildFXElements() {
     myOverlappedElementList->hide();
     // Create help button
     myHelpButton = new FXButton(this, "Help", nullptr, this, MID_HELP, GUIDesignButtonRectangular);
+}
+
+// ---------------------------------------------------------------------------
+// GNEFrameModuls::PathCreator - methods
+// ---------------------------------------------------------------------------
+
+GNEFrameModuls::PathCreator::Path::Path(const SUMOVehicleClass vClass, GNEEdge* edge) :
+    mySubPath({edge}),
+    myFromBusStop(nullptr),
+    myToBusStop(nullptr),
+    myConflictVClass(false),
+    myConflictDisconnected(false) {
+    // check if we have to change vClass flag
+    if (edge->getNBEdge()->getNumLanesThatAllow(vClass) == 0) {
+        myConflictVClass = true;
+    }
+}
+
+
+GNEFrameModuls::PathCreator::Path::Path(GNEViewNet* viewNet, const SUMOVehicleClass vClass, GNEEdge* edgeFrom, GNEEdge* edgeTo) :
+    myFromBusStop(nullptr),
+    myToBusStop(nullptr),
+    myConflictVClass(false),
+    myConflictDisconnected(false) {
+    // calculate subpath
+    mySubPath = viewNet->getNet()->getPathCalculator()->calculatePath(vClass, {edgeFrom, edgeTo});
+    // if subPath is empty, try it with pedestrian (i.e. ignoring vCass)
+    if (mySubPath.empty()) {
+        mySubPath = viewNet->getNet()->getPathCalculator()->calculatePath(SVC_PEDESTRIAN, {edgeFrom, edgeTo});
+        if (mySubPath.empty()) {
+            mySubPath = { edgeFrom, edgeTo };
+            myConflictDisconnected = true;
+        } else {
+            myConflictVClass = true;
+        }
+    }
+}
+
+
+const std::vector<GNEEdge*>& 
+GNEFrameModuls::PathCreator::Path::getSubPath() const {
+    return mySubPath;
+}
+
+
+GNEAdditional* GNEFrameModuls::PathCreator::Path::getFromBusStop() const{
+    return myFromBusStop;
+}
+
+
+GNEAdditional* GNEFrameModuls::PathCreator::Path::getToBusStop() const {
+    return myToBusStop;
+}
+
+
+bool 
+GNEFrameModuls::PathCreator::Path::isConflictVClass() const {
+    return myConflictVClass;
+}
+
+
+bool 
+GNEFrameModuls::PathCreator::Path::isConflictDisconnected() const {
+    return myConflictDisconnected;
+}
+
+
+GNEFrameModuls::PathCreator::Path::Path() :
+    myFromBusStop(nullptr),
+    myToBusStop(nullptr),
+    myConflictVClass(false),
+    myConflictDisconnected(false) {
+}
+
+
+GNEFrameModuls::PathCreator::PathCreator(GNEFrame* frameParent, GNEFrameModuls::PathCreator::Mode mode) :
+    FXGroupBox(frameParent->myContentFrame, "Route creator", GUIDesignGroupBoxFrame),
+    myFrameParent(frameParent),
+    myVClass(SVC_PASSENGER),
+    myMode(mode) {
+    // create label for route info
+    myInfoRouteLabel = new FXLabel(this, "No edges selected", 0, GUIDesignLabelFrameThicked);
+    // create button for finish route creation
+    myFinishCreationButton = new FXButton(this, "Finish route creation", nullptr, this, MID_GNE_EDGEPATH_FINISH, GUIDesignButton);
+    myFinishCreationButton->disable();
+    // create button for abort route creation
+    myAbortCreationButton = new FXButton(this, "Abort route creation", nullptr, this, MID_GNE_EDGEPATH_ABORT, GUIDesignButton);
+    myAbortCreationButton->disable();
+    // create button for remove last inserted edge
+    myRemoveLastInsertedEdge = new FXButton(this, "Remove last inserted edge", nullptr, this, MID_GNE_EDGEPATH_REMOVELAST, GUIDesignButton);
+    myRemoveLastInsertedEdge->disable();
+    // create check button
+    myShowCandidateEdges = new FXCheckButton(this, "Show candidate edges", this, MID_GNE_EDGEPATH_SHOWCANDIDATES, GUIDesignCheckButton);
+    myShowCandidateEdges->setCheck(TRUE);
+    // create shift label
+    myShiftLabel = new FXLabel(this,
+        "- Hold SHIFT while clicking\n  to add an invalid vclass edge.",
+        0, GUIDesignLabelFrameInformation);
+    // create control label
+    myControlLabel = new FXLabel(this,
+        "- Hold CONTROL while clicking\n  to add a disconnected edge.",
+        0, GUIDesignLabelFrameInformation);
+    // create backspace label (always shown)
+    new FXLabel(this,
+        "- Press BACKSPACE to remove\n  last inserted edge.",
+        0, GUIDesignLabelFrameInformation);
+}
+
+
+GNEFrameModuls::PathCreator::~PathCreator() {}
+
+
+void
+GNEFrameModuls::PathCreator::showPathCreatorModul() {
+    // disable buttons
+    myFinishCreationButton->disable();
+    myAbortCreationButton->disable();
+    myRemoveLastInsertedEdge->disable();
+    // recalc before show (to avoid graphic problems)
+    recalc();
+    // show modul
+    show();
+}
+
+
+void
+GNEFrameModuls::PathCreator::hidePathCreatorModul() {
+    // clear path
+    clearPath();
+    // hide modul
+    hide();
+}
+
+
+std::vector<GNEEdge*>
+GNEFrameModuls::PathCreator::getSelectedEdges() const {
+    return mySelectedElements;
+}
+
+
+SUMOVehicleClass 
+GNEFrameModuls::PathCreator::getVClass() const {
+    return myVClass;
+}
+
+
+void 
+GNEFrameModuls::PathCreator::setVClass(SUMOVehicleClass vClass) {
+    myVClass = vClass;
+}
+
+
+void
+GNEFrameModuls::PathCreator::setPathCreatorMode(GNEFrameModuls::PathCreator::Mode mode) {
+    // first abort route
+    onCmdAbortPathCreation(nullptr, 0, nullptr);
+    myMode = mode;
+}
+
+
+bool
+GNEFrameModuls::PathCreator::addEdge(GNEEdge* edge, const bool shiftKeyPressed, const bool controlKeyPressed) {
+    if (mySelectedElements.size() > 0) {
+        // check double edges
+        if ((mySelectedElements.back() == edge)) {
+            // Write warning
+            WRITE_WARNING("Double edges aren't allowed");
+            // abort add edge
+            return false;
+        }
+        // check consecutive edges
+        if (myMode == Mode::CONSECUTIVE) {
+            // check that new edge is consecutive
+            const auto& outgoingEdges = mySelectedElements.back()->getSecondParentJunction()->getGNEOutgoingEdges();
+            if (std::find(outgoingEdges.begin(), outgoingEdges.end(), edge) == outgoingEdges.end()) {
+                // Write warning
+                WRITE_WARNING("Only consecutives edges are allowed");
+                // abort add edge
+                return false;
+            }
+        }
+    }
+    // check candidate edge
+    if ((myShowCandidateEdges->getCheck() == TRUE) && !edge->isPossibleCandidate()) {
+        if (edge->isSpecialCandidate()) {
+            if (!shiftKeyPressed) {
+                // Write warning
+                WRITE_WARNING("Invalid edge (SHIFT + click to add an invalid vClass edge)");
+                // abort add edge
+                return false;
+            }
+        } else if (edge->isConflictedCandidate()) {
+            if (!controlKeyPressed) {
+                // Write warning
+                WRITE_WARNING("Invalid edge (CONTROL + click to add a disconnected edge)");
+                // abort add edge
+                return false;
+            }
+        }
+    }
+    // All checks ok, then add it in selected elements
+    mySelectedElements.push_back(edge);
+    // enable abort route button
+    myAbortCreationButton->enable();
+    // enable finish button
+    myFinishCreationButton->enable();
+    // disable undo/redo
+    myFrameParent->myViewNet->getViewParent()->getGNEAppWindows()->disableUndoRedo("route creation");
+    // enable or disable remove last edge button
+    if (mySelectedElements.size() > 1) {
+        myRemoveLastInsertedEdge->enable();
+    } else {
+        myRemoveLastInsertedEdge->disable();
+    }
+    // recalculate path
+    recalculatePath();
+    // update info route label
+    updateInfoRouteLabel();
+    // update edge colors
+    updateEdgeColors();
+    return true;
+}
+
+
+void
+GNEFrameModuls::PathCreator::clearPath() {
+    // reset all flags
+    for (const auto& edge : myFrameParent->myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+        edge.second->resetCandidateFlags();
+    }
+    // clear edges
+    mySelectedElements.clear();
+    myPath.clear();
+    // update info route label
+    updateInfoRouteLabel();
+}
+
+
+const std::vector<GNEFrameModuls::PathCreator::Path>&
+GNEFrameModuls::PathCreator::getPath() const {
+    return myPath;
+}
+
+
+bool
+GNEFrameModuls::PathCreator::drawCandidateEdgesWithSpecialColor() const {
+    return (myShowCandidateEdges->getCheck() == TRUE);
+}
+
+
+void
+GNEFrameModuls::PathCreator::updateEdgeColors() {
+    // reset all flags
+    for (const auto& edge : myFrameParent->myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+        edge.second->resetCandidateFlags();
+    }
+    // set reachability
+    if (mySelectedElements.size() > 0) {
+        // only coloring edges if checkbox "show candidate edges" is enabled
+        if (myShowCandidateEdges->getCheck() == TRUE) {
+            // mark all edges as conflicted (to mark special candidates) 
+            for (const auto& edge : myFrameParent->myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+                edge.second->setConflictedCandidate(true);
+            }
+            // set special candidates (Edges that are connected but aren't compatibles with current vClass
+            setSpecialCandidates(mySelectedElements.back());
+            // mark again all edges as conflicted (to mark possible candidates)
+            for (const auto& edge : myFrameParent->myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+                edge.second->setConflictedCandidate(true);
+            }
+            // set possible candidates (Edges that are connected AND are compatibles with current vClass
+            setPossibleCandidates(mySelectedElements.back(), myVClass);
+        }
+        // now mark selected eges
+        for (const auto& edge : mySelectedElements) {
+            edge->resetCandidateFlags();
+            edge->setSourceCandidate(true);
+        }
+        // finally mark last selected element as target
+        mySelectedElements.back()->resetCandidateFlags();
+        mySelectedElements.back()->setTargetCandidate(true);
+    } else if (myShowCandidateEdges->getCheck() == TRUE) {
+        // mark all edges that have at least one lane that allow given vClass
+        for (const auto& edge : myFrameParent->myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+            if (edge.second->getNBEdge()->getNumLanesThatAllow(myVClass) > 0) {
+                edge.second->setPossibleCandidate(true);
+            } else {
+                edge.second->setSpecialCandidate(true);
+            }
+        }
+    }
+    // update view net
+    myFrameParent->myViewNet->updateViewNet();
+}
+
+
+long
+GNEFrameModuls::PathCreator::onCmdCreatePath(FXObject*, FXSelector, void*) {
+    // just call create path
+    myFrameParent->createPath();
+    return 1;
+}
+
+
+long
+GNEFrameModuls::PathCreator::onCmdAbortPathCreation(FXObject*, FXSelector, void*) {
+    // first check that there is route edges selected
+    if (mySelectedElements.size() > 0) {
+        // unblock undo/redo
+        myFrameParent->myViewNet->getViewParent()->getGNEAppWindows()->enableUndoRedo();
+        // clear edges
+        clearPath();
+        // disable buttons
+        myFinishCreationButton->disable();
+        myAbortCreationButton->disable();
+        myRemoveLastInsertedEdge->disable();
+        // update info route label
+        updateInfoRouteLabel();
+        // update reachability
+        updateEdgeColors();
+        // update view (to see the new route)
+        myFrameParent->getViewNet()->updateViewNet();
+    }
+    return 1;
+}
+
+
+long
+GNEFrameModuls::PathCreator::onCmdRemoveLastElement(FXObject*, FXSelector, void*) {
+    if (mySelectedElements.size() > 1) {
+        // remove special color of last selected edge
+        mySelectedElements.back()->resetCandidateFlags();
+        // remove last edge
+        mySelectedElements.pop_back();
+        // change last edge flag
+        if (mySelectedElements.size() > 0 && mySelectedElements.back()->isSourceCandidate()) {
+            mySelectedElements.back()->setSourceCandidate(false);
+            mySelectedElements.back()->setTargetCandidate(true);
+        }
+        // enable or disable remove last edge button
+        if (mySelectedElements.size() > 1) {
+            myRemoveLastInsertedEdge->enable();
+        } else {
+            myRemoveLastInsertedEdge->disable();
+        }
+        // recalculate path
+        recalculatePath();
+        // update info route label
+        updateInfoRouteLabel();
+        // update reachability
+        updateEdgeColors();
+        // update view
+        myFrameParent->myViewNet->updateViewNet();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+long
+GNEFrameModuls::PathCreator::onCmdShowCandidateEdges(FXObject*, FXSelector, void*) {
+    // update labels
+    if (myShowCandidateEdges->getCheck() == TRUE) {
+        myShiftLabel->show();
+        myControlLabel->show();
+    } else {
+        myShiftLabel->hide();
+        myControlLabel->hide();
+    }
+    // recalc frame
+    recalc();
+    // update edge colors (view will be updated within function)
+    updateEdgeColors();
+    return 1;
+}
+
+
+void
+GNEFrameModuls::PathCreator::updateInfoRouteLabel() {
+    if (myPath.size() > 0) {
+        // declare variables for route info
+        double length = 0;
+        double speed = 0;
+        int pathSize = 0;
+        for (const auto& path : myPath) {
+            for (const auto& edge : path.getSubPath()) {
+                length += edge->getNBEdge()->getLength();
+                speed += edge->getNBEdge()->getSpeed();
+            }
+            pathSize += (int)path.getSubPath().size();
+        }
+        // declare ostringstream for label and fill it
+        std::ostringstream information;
+        information
+            << "- Selected edges: " << toString(mySelectedElements.size()) << "\n"
+            << "- Path edges: " << toString(pathSize) << "\n"
+            << "- Length: " << toString(length) << "\n"
+            << "- Average speed: " << toString(speed / pathSize);
+        // set new label
+        myInfoRouteLabel->setText(information.str().c_str());
+    } else {
+        myInfoRouteLabel->setText("No edges selected");
+    }
+}
+
+
+void
+GNEFrameModuls::PathCreator::recalculatePath() {
+    // first clear path
+    myPath.clear();
+    // check if remove last route edge button has to be disabled
+    if (mySelectedElements.size() == 1) {
+        myPath.push_back(Path(myVClass, mySelectedElements.front()));
+    } else {
+        // add every segment
+        for (int i = 1; i < (int)mySelectedElements.size(); i++) {
+            myPath.push_back(Path(myFrameParent->getViewNet(), myVClass, mySelectedElements.at(i - 1), mySelectedElements.at(i)));
+        }
+    }
+}
+
+
+void
+GNEFrameModuls::PathCreator::setSpecialCandidates(GNEEdge* originEdge) {
+    // first calculate reachability for pedestrians (we use it, because pedestran can walk in almost all edges)
+    myFrameParent->getViewNet()->getNet()->getPathCalculator()->calculateReachability(SVC_PEDESTRIAN, originEdge);
+    // change flags
+    for (const auto& edge : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getEdges()) {
+        for (const auto& lane : edge.second->getLanes()) {
+            if (lane->getReachability() > 0) {
+                lane->getParentEdge()->resetCandidateFlags();
+                lane->getParentEdge()->setSpecialCandidate(true);
+            }
+        }
+    }
+}
+
+void
+GNEFrameModuls::PathCreator::setPossibleCandidates(GNEEdge* originEdge, const SUMOVehicleClass vClass) {
+    // first calculate reachability for pedestrians
+    myFrameParent->getViewNet()->getNet()->getPathCalculator()->calculateReachability(vClass, originEdge);
+    // change flags
+    for (const auto& edge : myFrameParent->getViewNet()->getNet()->getAttributeCarriers()->getEdges()) {
+        for (const auto& lane : edge.second->getLanes()) {
+            if (lane->getReachability() > 0) {
+                lane->getParentEdge()->resetCandidateFlags();
+                lane->getParentEdge()->setPossibleCandidate(true);
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GNEFrameModuls - methods
+// ---------------------------------------------------------------------------
+
+FXLabel*
+GNEFrameModuls::buildRainbow(FXComposite* parent, std::vector<RGBColor>& scaleColors) {
+    // create label for color information
+    FXLabel* label = new FXLabel(parent, "Scale: Min -> Max", nullptr, GUIDesignLabelCenterThick);
+    // fill scale colors (10)
+    scaleColors.push_back(RGBColor(232, 35,  0));
+    scaleColors.push_back(RGBColor(255, 165, 0));
+    scaleColors.push_back(RGBColor(255, 255, 0));
+    scaleColors.push_back(RGBColor(28,  215, 0));
+    scaleColors.push_back(RGBColor(0,   181, 100));
+    scaleColors.push_back(RGBColor(0,   255, 191));
+    scaleColors.push_back(RGBColor(178, 255, 255));
+    scaleColors.push_back(RGBColor(0,   112, 184));
+    scaleColors.push_back(RGBColor(56,  41,  131));
+    scaleColors.push_back(RGBColor(127, 0,   255));
+    // create frame for color scale
+    FXHorizontalFrame* horizontalFrameColors = new FXHorizontalFrame(parent, GUIDesignAuxiliarHorizontalFrame);
+    for (const auto& color : scaleColors) {
+        FXLabel* colorLabel = new FXLabel(horizontalFrameColors, "", nullptr, GUIDesignLabelLeft);
+        colorLabel->setBackColor(MFXUtils::getFXColor(color));
+    }
+    // return label
+    return label;
 }
 
 /****************************************************************************/

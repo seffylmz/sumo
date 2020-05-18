@@ -30,7 +30,7 @@ There are three lists available:
   releases or documents.
   Post to the list if you have to announce something by yourself.
   Frequency: few mails per year
-  Archive: [Eclipse Archive](https://dev.eclipse.org/mhonarc/lists/sumo-dev/), [Mail Archive](https://www.mail-archive.com/sumo-dev@eclipse.org/), [SF Archive](https://sourceforge.net/p/sumo/mailman/sumo-announce/)
+  Archive: [Eclipse Archive](https://dev.eclipse.org/mhonarc/lists/sumo-announce/), [Mail Archive](https://www.mail-archive.com/sumo-announce@eclipse.org/), [SF Archive](https://sourceforge.net/p/sumo/mailman/sumo-announce/)
 
 - [sumo-dev](https://dev.eclipse.org/mailman/listinfo/sumo-dev)<br>
   This list is for topics related to sumo development. If you want to
@@ -58,8 +58,8 @@ If you want to receive regular updates on commits, you can subscribe to
 up an [IFTTT link](https://ifttt.com/applets/147561p-rss-feed-to-email)
 or use <https://hubnotify.com/> to send you an email.
 
-Occasional development updates are posted on our [facebook page](https://www.facebook.com/simulationofurbanmobility/) and you can
-[follow us on Twitter](https://twitter.com/EclipseSumo).
+Occasional development updates are posted on our [Facebook page](https://www.facebook.com/simulationofurbanmobility/) and you can
+[follow us on Twitter](https://twitter.com/EclipseSumo) and on [Instagram](https://instagram.com/eclipse.sumo).
 
 Our institute's address:
 

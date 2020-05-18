@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSRailSignal.h
 /// @author  Melanie Weber
@@ -14,13 +18,7 @@
 ///
 // A rail signal logic
 /****************************************************************************/
-#ifndef MSRailSignal_h
-#define MSRailSignal_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -199,6 +197,14 @@ public:
     }
     /// @}
 
+    /// @brief return vehicles that block the intersection/rail signal for vehicles that wish to pass the given linkIndex
+    VehicleVector getBlockingVehicles(int linkIndex);
+
+    /// @brief return vehicles that approach the intersection/rail signal and are in conflict with vehicles that wish to pass the given linkIndex
+    VehicleVector getRivalVehicles(int linkIndex);
+
+    /// @brief return vehicles that approach the intersection/rail signal and have priority over vehicles that wish to pass the given linkIndex
+    VehicleVector getPriorityVehicles(int linkIndex);
 
     /// @brief write rail signal block output for all links and driveways
     void writeBlocks(OutputDevice& od) const;
@@ -269,14 +275,17 @@ protected:
          * current link and any of the conflict links */
         std::vector<MSLink*> myConflictLinks;
 
-        /// @brief whether any of myConflictLanes is occupied
-        bool conflictLaneOccupied() const;
+        /// @brief whether any of myConflictLanes is occupied (vehicles that are the target of a join must be ignored)
+        bool conflictLaneOccupied(const std::string& joinVehicle = "", bool store = true) const;
 
         /// @brief attempt reserve this driveway for the given vehicle
         bool reserve(const Approaching& closest, MSEdgeVector& occupied);
 
         /// @brief Whether the approaching vehicle is prevent from driving by another vehicle approaching the given link
         bool hasLinkConflict(const Approaching& closest, MSLink* foeLink) const;
+
+        /// @brief Whether veh must yield to the foe train
+        bool mustYield(const Approaching& veh, const Approaching& foe) const;
 
         /// @brief Whether any of the conflict linkes have approaching vehicles
         bool conflictLinkApproached() const;
@@ -373,10 +382,17 @@ protected:
 
     static int myNumWarnings;
 
+protected:
+    /// @brief update vehicle lists for traci calls
+    void storeTraCIVehicles(int linkIndex);
+
+    /// @name traci result storage
+    //@{
+    static bool myStoreVehicles;
+    static VehicleVector myBlockingVehicles;
+    static VehicleVector myRivalVehicles;
+    static VehicleVector myPriorityVehicles;
+    //@}
+
+
 };
-
-
-#endif
-
-/****************************************************************************/
-

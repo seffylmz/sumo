@@ -45,6 +45,7 @@
 /docs/web/*.pyc
 
 # tools dir
+/tools/[0-9]*
 /tools/game/*.netstate.xml
 /tools/game/*.tlsstate.xml
 /tools/game/*.tripinfos.xml
@@ -71,6 +72,7 @@ Makefile.in
 *.class
 lib*.a
 .deps
+**/.DS_Store
 .libs
 *.o
 *.pyc
@@ -93,3 +95,4 @@ lib*.a
 *.res
 *.ipch
 .vscode
+*.aps

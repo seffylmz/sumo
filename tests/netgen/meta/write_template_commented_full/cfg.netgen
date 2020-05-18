@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Sat Jan 18 02:30:57 2020 by Eclipse SUMO netgenerate Version v1_4_0+0632-3958f5e20f
+<!-- generated on Thu Mar  5 10:18:40 2020 by Eclipse SUMO netgenerate Version v1_5_0+0517-ca1f5da
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netgenerateConfiguration.xsd">
@@ -246,6 +246,9 @@
         <!-- Ensure that opposite edges have the same length -->
         <opposites.guess.fix-lengths value="false" type="BOOL"/>
 
+        <!-- Enable guessing of network fringe nodes -->
+        <fringe.guess value="false" type="BOOL"/>
+
         <!-- Assumes left-hand traffic on the network -->
         <lefthand value="false" type="BOOL"/>
 
@@ -260,6 +263,9 @@
 
         <!-- The default width of lanes -->
         <default.lanewidth value="-1" synonymes="lanewidth" type="FLOAT"/>
+
+        <!-- The default method for computing lane shapes from edge shapes -->
+        <default.spreadtype value="right" type="STR"/>
 
         <!-- The default speed on an edge (in m/s) -->
         <default.speed value="13.89" synonymes="S speed" type="FLOAT"/>
@@ -287,6 +293,9 @@
 
         <!-- The default turning radius of intersections -->
         <default.junctions.radius value="4" type="FLOAT"/>
+
+        <!-- The default length when overriding connection lengths -->
+        <default.connection-length value="-1" type="FLOAT"/>
 
         <!-- The default algorithm for computing right of way rules (&apos;default&apos;, &apos;edgePriority&apos;) -->
         <default.right-of-way value="default" type="STR"/>
@@ -443,6 +452,9 @@
 
         <!-- Disables building turnarounds except at at junctions with a dedicated turning lane -->
         <no-turnarounds.except-turnlane value="false" type="BOOL"/>
+
+        <!-- Disables building turnarounds at fringe junctions -->
+        <no-turnarounds.fringe value="false" type="BOOL"/>
 
         <!-- Disables building connections to left -->
         <no-left-connections value="false" type="BOOL"/>

@@ -12,7 +12,7 @@ cross-platform, cross-language, and networked interaction with
 communication overhead due to the protocol and the socket communication.
 To have a more efficient coupling without the need for socket
 communication, the TraCI API is provided as a C++ library with the
-followin properties:
+following properties:
 
 - C++ interface based on static functions and a few simple wrapper
   classes for results which can be linked directly to the client code
@@ -33,6 +33,7 @@ The following things currently do not work (or work differently than with the Tr
   - TraCI client may accept any object where Libsumo needs a boolean value
 - using traci.init or traci.connect is not possible (you always need to use libsumo.start)
 - with traci every TraCIException will generate a message on stderr, Libsumo does not generate this message
+- the stepListener interface is not supported
 
 # Building it
 
@@ -64,5 +65,5 @@ import libsumo as traci
 ```
 
 In case you have a lot of scripts you can also set the environment
-variable LIBSUMO_AS_TRACI to a non empty value which will trigger the
+variable `LIBSUMO_AS_TRACI` to a non empty value which will trigger the
 import as above.

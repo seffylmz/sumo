@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MELoop.cpp
 /// @author  Daniel Krajzewicz
@@ -13,11 +17,6 @@
 ///
 // The main mesocopic simulation loop
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <queue>
@@ -62,11 +61,11 @@ void
 MELoop::simulate(SUMOTime tMax) {
     while (!myLeaderCars.empty()) {
         const SUMOTime time = myLeaderCars.begin()->first;
-        assert(time > tMax - DELTA_T);
+        std::vector<MEVehicle*> vehs = myLeaderCars[time];
+        assert(time > tMax - DELTA_T || vehs.size() == 0);
         if (time > tMax) {
             return;
         }
-        std::vector<MEVehicle*> vehs = myLeaderCars[time];
         myLeaderCars.erase(time);
         for (std::vector<MEVehicle*>::const_iterator i = vehs.begin(); i != vehs.end(); ++i) {
             checkCar(*i);
@@ -77,11 +76,11 @@ MELoop::simulate(SUMOTime tMax) {
 
 
 bool
-MELoop::changeSegment(MEVehicle* veh, SUMOTime leaveTime, MESegment* const toSegment, const bool ignoreLink) {
+MELoop::changeSegment(MEVehicle* veh, SUMOTime leaveTime, MESegment* const toSegment, MSMoveReminder::Notification reason, const bool ignoreLink) {
     MESegment* const onSegment = veh->getSegment();
     if (MESegment::isInvalid(toSegment)) {
         if (onSegment != nullptr) {
-            onSegment->send(veh, toSegment, leaveTime, toSegment == nullptr ? MSMoveReminder::NOTIFICATION_ARRIVED : MSMoveReminder::NOTIFICATION_VAPORIZED);
+            onSegment->send(veh, toSegment, leaveTime, reason);
         } else {
             WRITE_WARNING("Vehicle '" + veh->getID() + "' teleports beyond arrival edge '" + veh->getEdge()->getID() + "', time " + time2string(leaveTime) + ".");
         }
@@ -100,6 +99,9 @@ MELoop::changeSegment(MEVehicle* veh, SUMOTime leaveTime, MESegment* const toSeg
             // this is not quite correct but suffices for interrogation by
             // subsequent methods (veh->getSpeed() needs segment != 0)
             veh->setSegment(myEdges2FirstSegments[veh->getEdge()->getNumericalID()]);
+            // clean up detectors (do not add traffic data)
+            // note: updateDatector is not called if leaveTime == getLastEntryTime()
+            veh->updateDetectors(veh->getLastEntryTime(), true, MSMoveReminder::NOTIFICATION_TELEPORT);
             toSegment->receive(veh, leaveTime, false, true);
         }
         return true;
@@ -114,7 +116,8 @@ MELoop::checkCar(MEVehicle* veh) {
     MESegment* const onSegment = veh->getSegment();
     MESegment* const toSegment = nextSegment(onSegment, veh);
     const bool teleporting = (onSegment == nullptr); // is the vehicle currently teleporting?
-    if (changeSegment(veh, leaveTime, toSegment, teleporting)) {
+    // @note reason is only evaluated if toSegment == nullptr
+    if (changeSegment(veh, leaveTime, toSegment, MSMoveReminder::NOTIFICATION_ARRIVED, teleporting)) {
         return;
     }
     if (MSGlobals::gTimeToGridlock > 0 && veh->getWaitingTime() > MSGlobals::gTimeToGridlock) {
@@ -163,7 +166,7 @@ MELoop::teleportVehicle(MEVehicle* veh, MESegment* const toSegment) {
                           + ", time " + time2string(leaveTime) + ".");
             MSNet::getInstance()->getVehicleControl().registerTeleportJam();
         }
-        changeSegment(veh, leaveTime, teleSegment, true);
+        changeSegment(veh, leaveTime, teleSegment, MSMoveReminder::NOTIFICATION_TELEPORT, true);
         teleSegment->setEntryBlockTime(leaveTime); // teleports should not block normal flow
     } else {
         // teleport across the current edge and try insertion later
@@ -182,7 +185,7 @@ MELoop::teleportVehicle(MEVehicle* veh, MESegment* const toSegment) {
         const bool atDest = veh->moveRoutePointer();
         if (atDest) {
             // teleporting to end of route
-            changeSegment(veh, teleArrival, nullptr, true);
+            changeSegment(veh, teleArrival, nullptr, MSMoveReminder::NOTIFICATION_TELEPORT_ARRIVED, true);
         } else {
             veh->setEventTime(teleArrival);
             addLeaderCar(veh, nullptr);
@@ -213,16 +216,23 @@ MELoop::setApproaching(MEVehicle* veh, MSLink* link) {
     }
 }
 
+void
+MELoop::clearState() {
+    myLeaderCars.clear();
+}
 
 void
 MELoop::removeLeaderCar(MEVehicle* v) {
     std::vector<MEVehicle*>& cands = myLeaderCars[v->getEventTime()];
-    cands.erase(find(cands.begin(), cands.end(), v));
+    auto it = find(cands.begin(), cands.end(), v);
+    if (it != cands.end()) {
+        cands.erase(it);
+    }
 }
 
 void
-MELoop::vaporizeCar(MEVehicle* v) {
-    v->getSegment()->send(v, nullptr, MSNet::getInstance()->getCurrentTimeStep(), MSMoveReminder::NOTIFICATION_VAPORIZED);
+MELoop::vaporizeCar(MEVehicle* v, MSMoveReminder::Notification reason) {
+    v->getSegment()->send(v, nullptr, MSNet::getInstance()->getCurrentTimeStep(), reason);
     // try removeLeaderCar
     std::vector<MEVehicle*>& cands = myLeaderCars[v->getEventTime()];
     auto it = find(cands.begin(), cands.end(), v);
@@ -315,5 +325,6 @@ MELoop::isEnteringRoundabout(const MSEdge& e) {
     }
     return false;
 }
+
 
 /****************************************************************************/

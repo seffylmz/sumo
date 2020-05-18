@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBAlgorithms_Ramps.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // Algorithms for highway on-/off-ramps computation
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <cassert>
@@ -273,12 +272,12 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
     // set connections from ramp/highway to added ramp
     if (addLanes) {
         if (potHighway->getStep() < NBEdge::EdgeBuildingStep::LANES2LANES_USER) {
-            if (!potHighway->addLane2LaneConnections(0, first, potRamp->getNumLanes(), MIN2(first->getNumLanes() - potRamp->getNumLanes(), potHighway->getNumLanes()), NBEdge::L2L_VALIDATED, true)) {
+            if (!potHighway->addLane2LaneConnections(0, first, potRamp->getNumLanes(), MIN2(first->getNumLanes() - potRamp->getNumLanes(), potHighway->getNumLanes()), NBEdge::Lane2LaneInfoType::VALIDATED, true)) {
                 throw ProcessError("Could not set connection!");
             }
         }
         if (potRamp->getStep() < NBEdge::EdgeBuildingStep::LANES2LANES_USER) {
-            if (!potRamp->addLane2LaneConnections(0, first, 0, potRamp->getNumLanes(), NBEdge::L2L_VALIDATED, true)) {
+            if (!potRamp->addLane2LaneConnections(0, first, 0, potRamp->getNumLanes(), NBEdge::Lane2LaneInfoType::VALIDATED, true)) {
                 throw ProcessError("Could not set connection!");
             }
         }
@@ -289,8 +288,7 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
 
 void
 NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDistrictCont& dc, double rampLength, bool dontSplit, bool addLanes,
-        const std::set<NBNode*, ComparatorIdLess>& potOnRamps)
-{
+                              const std::set<NBNode*, ComparatorIdLess>& potOnRamps) {
     NBEdge* potHighway, *potRamp, *prev;
     getOffRampEdges(cur, &potHighway, &potRamp, &prev);
 #ifdef DEBUG_RAMPS
@@ -390,10 +388,10 @@ NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDis
     // set connections from added ramp to ramp/highway
     if (addLanes) {
         if (first->getStep() < NBEdge::EdgeBuildingStep::LANES2LANES_USER) {
-            if (!first->addLane2LaneConnections(potRamp->getNumLanes(), potHighway, 0, MIN2(first->getNumLanes() - 1, potHighway->getNumLanes()), NBEdge::L2L_VALIDATED, true)) {
+            if (!first->addLane2LaneConnections(potRamp->getNumLanes(), potHighway, 0, MIN2(first->getNumLanes() - 1, potHighway->getNumLanes()), NBEdge::Lane2LaneInfoType::VALIDATED, true)) {
                 throw ProcessError("Could not set connection!");
             }
-            if (!first->addLane2LaneConnections(0, potRamp, 0, potRamp->getNumLanes(), NBEdge::L2L_VALIDATED, false)) {
+            if (!first->addLane2LaneConnections(0, potRamp, 0, potRamp->getNumLanes(), NBEdge::Lane2LaneInfoType::VALIDATED, false)) {
                 throw ProcessError("Could not set connection!");
             }
         }
@@ -404,7 +402,7 @@ NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDis
 
 void
 NBRampsComputer::moveRampRight(NBEdge* ramp, int addedLanes) {
-    if (ramp->getLaneSpreadFunction() != LANESPREAD_CENTER) {
+    if (ramp->getLaneSpreadFunction() != LaneSpreadFunction::CENTER) {
         return;
     }
     try {
@@ -589,7 +587,7 @@ NBRampsComputer::hasWrongMode(NBEdge* edge) {
 void
 NBRampsComputer::patchRampGeometry(NBEdge* potRamp, NBEdge* first, NBEdge* potHighway, bool onRamp) {
     // geometry of first and highway should allign on the left side
-    if (first->getLaneSpreadFunction() == LANESPREAD_CENTER && first->hasDefaultGeometryEndpoints()) {
+    if (first->getLaneSpreadFunction() == LaneSpreadFunction::CENTER && first->hasDefaultGeometryEndpoints()) {
         const NBNode* n = onRamp ? potHighway->getToNode() : potHighway->getFromNode();
         if (potHighway->hasDefaultGeometryEndpointAtNode(n)) {
             PositionVector p2 = first->getGeometry();
@@ -604,7 +602,7 @@ NBRampsComputer::patchRampGeometry(NBEdge* potRamp, NBEdge* first, NBEdge* potHi
     PositionVector p = potRamp->getGeometry();
     double offset = 0;
     int firstIndex = MAX2(0, MIN2(potRamp->getNumLanes(), first->getNumLanes()) - 1);
-    if (potRamp->getLaneSpreadFunction() == LANESPREAD_RIGHT) {
+    if (potRamp->getLaneSpreadFunction() == LaneSpreadFunction::RIGHT) {
         offset = -first->getLaneWidth(firstIndex) / 2;
     } else {
         if (firstIndex % 2 == 1) {
@@ -631,5 +629,5 @@ NBRampsComputer::patchRampGeometry(NBEdge* potRamp, NBEdge* first, NBEdge* potHi
 
 }
 
-/****************************************************************************/
 
+/****************************************************************************/

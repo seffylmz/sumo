@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSVehicleControl.h
 /// @author  Daniel Krajzewicz
@@ -15,13 +19,7 @@
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
-#ifndef MSVehicleControl_h
-#define MSVehicleControl_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <cmath>
@@ -43,6 +41,7 @@
 // ===========================================================================
 class SUMOVehicle;
 class SUMOVehicleParameter;
+class MSBaseVehicle;
 class MSVehicle;
 class MSRoute;
 class MSVehicleType;
@@ -142,6 +141,11 @@ public:
      */
     virtual void deleteVehicle(SUMOVehicle* v, bool discard = false);
 
+    void fixVehicleCounts() {
+        myLoadedVehNo++;
+        myEndedVehNo++;
+        myDiscarded++;
+    }
 
     /** @brief Removes a vehicle after it has ended
      *
@@ -313,6 +317,11 @@ public:
         return myEmergencyStops;
     }
 
+    /// @brief return the number of vehicles that are currently stopped
+    int getStoppedVehiclesCount() const {
+        return myStoppedVehicles;
+    }
+
     /** @brief Returns the total departure delay
      * @return Sum of steps vehicles had to wait until being inserted
      */
@@ -459,6 +468,16 @@ public:
         myEmergencyStops++;
     }
 
+    /// @brief register emergency stop
+    void registerStopStarted() {
+        myStoppedVehicles++;
+    }
+
+    /// @brief register emergency stop
+    void registerStopEnded() {
+        myStoppedVehicles--;
+    }
+
     /// @name State I/O
     /// @{
 
@@ -469,6 +488,9 @@ public:
     /** @brief Saves the current state into the given stream
      */
     void saveState(OutputDevice& out);
+
+    /** @brief Remove all vehicles before quick-loading state */
+    void clearState();
     /// @}
 
     /// @brief avoid counting a vehicle twice if it was loaded from state and route input
@@ -517,13 +539,15 @@ private:
     bool isPendingRemoval(SUMOVehicle* veh);
 
 protected:
+    void initVehicle(MSBaseVehicle* built, const bool ignoreStopErrors);
+
+private:
     /// @name Vehicle statistics (always accessible)
     /// @{
 
     /// @brief The number of build vehicles
     int myLoadedVehNo;
 
-private:
     /// @brief The number of vehicles within the network (build and inserted but not removed)
     int myRunningVehNo;
 
@@ -548,6 +572,8 @@ private:
     /// @brief The number of emergency stops
     int myEmergencyStops;
 
+    /// @brief The number of stopped vehicles
+    int myStoppedVehicles;
     /// @}
 
 
@@ -636,9 +662,3 @@ private:
 
 
 };
-
-
-#endif
-
-/****************************************************************************/
-

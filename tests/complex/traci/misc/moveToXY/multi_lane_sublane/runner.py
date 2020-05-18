@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    runner.py
 # @author  Jakob Erdmann
@@ -42,8 +46,8 @@ INVALID = traci.constants.INVALID_DOUBLE_VALUE
 vehID = "v0"
 
 
-def check(x, y, angle, exLane, exPos, exPosLat, comment):
-    traci.vehicle.moveToXY(vehID, "", 0, x, y, angle)
+def check(x, y, angle, exLane, exPos, exPosLat, comment, edgeHint="", laneHint=0):
+    traci.vehicle.moveToXY(vehID, edgeHint, laneHint, x, y, angle)
     traci.simulationStep()
     x2, y2 = traci.vehicle.getPosition(vehID)
     lane2 = traci.vehicle.getLaneID(vehID)
@@ -66,11 +70,12 @@ def check(x, y, angle, exLane, exPos, exPosLat, comment):
           " left=%s, %s" % traci.vehicle.getLaneChangeStatePretty(vehID,  1),
           " accel=%s" % traci.vehicle.getAcceleration(vehID),
           " nextTLS=%s" % traci.vehicle.getNextTLS(vehID),
-          " leader=%s" % traci.vehicle.getLeader(vehID, 500),
+          " leader=%s" % (traci.vehicle.getLeader(vehID, 500),),
           )
 
 
 traci.start(cmd)
+traci.setLegacyGetLeader(False)
 traci.simulationStep()
 traci.route.add("SE", ["SC", "CE"])
 traci.vehicle.add(vehID, "SE")
@@ -81,4 +86,6 @@ check(101.65, 50,   ANGLE_UNDEF, None,         None, None,       "correct lane")
 check(101.65, 60,   ANGLE_UNDEF, None,         None, None,       "correct lane")
 check(101.65, 70,   ANGLE_UNDEF, None,         None, None,       "correct lane")
 check(101.65, 80,   ANGLE_UNDEF, None,         None, None,       "correct lane")
+# test misleading lane hints (vehicle is on SC_1 and should move to SC_0
+check(104.95, 90,   ANGLE_UNDEF, "SC_0",         None, None,       "correct lane", edgeHint="SC", laneHint=1)
 traci.close()

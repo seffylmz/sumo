@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    SUMOVehicle.h
 /// @author  Michael Behrisch
@@ -15,13 +19,7 @@
 ///
 // Abstract base class for vehicle representations
 /****************************************************************************/
-#ifndef SUMOVehicle_h
-#define SUMOVehicle_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -86,6 +84,9 @@ public:
 
     /// Returns the current route
     virtual const MSRoute& getRoute() const = 0;
+
+    /// @brief return index of edge within route
+    virtual int getRoutePosition() const = 0;
 
     /** @brief Returns the nSuccs'th successor of edge the vehicle is currently at
      *
@@ -164,6 +165,11 @@ public:
      * @return Whether the vehicle is simulated
      */
     virtual bool isOnRoad() const = 0;
+
+    /** @brief Returns whether the vehicle is idling (waiting to re-enter the net
+     * @return true if the vehicle is waiting to enter the net (eg after parking)
+    */
+    virtual bool isIdling() const = 0;
 
     /** @brief Returns the information whether the front of the vehhicle is on the given lane
      * @return Whether the vehicle's front is on that lane
@@ -261,6 +267,9 @@ public:
     /// @brief return list of route indices and stop positions for the remaining stops
     virtual std::vector<std::pair<int, double> > getStopIndices() const = 0;
 
+    /// @brief returns whether the vehicle serves a public transport line that serves the given stop
+    virtual bool isLineStop(double position) const = 0;
+
 
     /**
     * returns the next imminent stop in the stop queue
@@ -292,11 +301,16 @@ public:
     /** @brief Returns whether the vehicle stops at the given edge */
     virtual bool stopsAtEdge(const MSEdge* edge) const = 0;
 
+    /** @brief Returns parameters of the next stop or nullptr **/
+    virtual const SUMOVehicleParameter::Stop* getNextStopParameter() const = 0;
+
     virtual void setChosenSpeedFactor(const double factor) = 0;
 
     virtual SUMOTime getAccumulatedWaitingTime() const = 0;
 
     virtual SUMOTime getDepartDelay() const = 0;
+
+    virtual SUMOTime getTimeLoss() const = 0;
 
     /// @brief get distance for coming to a stop (used for rerouting checks)
     virtual double getBrakeGap() const = 0;
@@ -327,6 +341,9 @@ public:
     //  (especially fast comparison in maps which need vehicles as keys)
     virtual NumericalID getNumericalID() const = 0;
 
+    /// @brief Returns the vehicles's length
+    virtual double getLength() const = 0;
+
     /// @name state io
     //@{
 
@@ -338,8 +355,3 @@ public:
     virtual void loadState(const SUMOSAXAttributes& attrs, const SUMOTime offset) = 0;
     //@}
 };
-
-
-#endif
-
-/****************************************************************************/

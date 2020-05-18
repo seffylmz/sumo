@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBContHelper.h
 /// @author  Daniel Krajzewicz
@@ -15,13 +19,7 @@
 ///
 // Some methods for traversing lists of edges
 /****************************************************************************/
-#ifndef NBContHelper_h
-#define NBContHelper_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -82,7 +80,7 @@ public:
 
     public:
         /// comparing operation
-        int operator()(const NBEdge* e1, const NBEdge* e2) const;
+        bool operator()(const NBEdge* e1, const NBEdge* e2) const;
 
     private:
         /// @brief the reference angle to compare edges agains
@@ -106,7 +104,7 @@ public:
 
     public:
         /// comparing operation
-        int operator()(const NBEdge* e1, const NBEdge* e2) const;
+        bool operator()(const NBEdge* e1, const NBEdge* e2) const;
 
     private:
         /// @brief the reference angle to compare edges agains
@@ -221,13 +219,15 @@ public:
     class edge_similar_direction_sorter {
     public:
         /// constructor
-        explicit edge_similar_direction_sorter(const NBEdge* const e)
-            : myAngle(e->getShapeEndAngle()) {}
+        explicit edge_similar_direction_sorter(const NBEdge* const e, bool outgoing = true) :
+            myCompareOutgoing(outgoing),
+            myAngle(outgoing ? e->getShapeEndAngle() : e->getShapeStartAngle())
+        {}
 
         /// comparing operation
         int operator()(const NBEdge* e1, const NBEdge* e2) const {
-            const double d1 = angleDiff(e1->getShapeStartAngle(), myAngle);
-            const double d2 = angleDiff(e2->getShapeStartAngle(), myAngle);
+            const double d1 = angleDiff(myCompareOutgoing ? e1->getShapeStartAngle() : e1->getShapeEndAngle(), myAngle);
+            const double d2 = angleDiff(myCompareOutgoing ? e2->getShapeStartAngle() : e2->getShapeEndAngle(), myAngle);
             if (fabs(fabs(d1) - fabs(d2)) < NUMERICAL_EPS) {
                 if (fabs(d1 - d2) > NUMERICAL_EPS) {
                     return d1 < d2;
@@ -253,6 +253,7 @@ public:
 
     private:
         /// the angle to find the edge with the opposite direction
+        bool myCompareOutgoing;
         double myAngle;
     };
 
@@ -403,7 +404,7 @@ public:
 
     public:
         /// comparing operation
-        int operator()(const NBEdge* e1, const NBEdge* e2) const;
+        bool operator()(const NBEdge* e1, const NBEdge* e2) const;
 
     private:
         /// the edge to compute the relative angle of
@@ -411,9 +412,3 @@ public:
     };
 
 };
-
-
-#endif
-
-/****************************************************************************/
-

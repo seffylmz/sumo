@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBNode.h
 /// @author  Daniel Krajzewicz
@@ -16,13 +20,7 @@
 ///
 // The representation of a single node
 /****************************************************************************/
-#ifndef NBNode_h
-#define NBNode_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -30,6 +28,7 @@
 #include <utility>
 #include <string>
 #include <set>
+#include <memory>
 #include <utils/common/StdDefs.h>
 #include <utils/common/Named.h>
 #include <utils/geom/Bresenham.h>
@@ -292,6 +291,11 @@ public:
     FringeType getFringeType() const {
         return myFringeType;
     }
+
+    /// @brief Returns intersection name
+    const std::string& getName() const {
+        return myName;
+    }
     /// @}
 
     /// @name Methods for dealing with assigned traffic lights
@@ -530,6 +534,11 @@ public:
         myFringeType = fringeType;
     }
 
+    /// @brief set intersection name
+    void setName(const std::string& name) {
+        myName = name;
+    }
+
     /// @brief return whether the shape was set by the user
     bool hasCustomShape() const {
         return myHaveCustomPoly;
@@ -651,6 +660,9 @@ public:
     /// @brief update the type of this node as a roundabout
     void setRoundabout();
 
+    /// @brief return whether this node is part of a roundabout
+    bool isRoundabout() const;
+
     /// @brief add a pedestrian crossing to this node
     NBNode::Crossing* addCrossing(EdgeVector edges, double width, bool priority, int tlIndex = -1, int tlIndex2 = -1,
                                   const PositionVector& customShape = PositionVector::EMPTY, bool fromSumoNet = false);
@@ -674,7 +686,7 @@ public:
 
     /// @brief return this junctions pedestrian crossings
     std::vector<Crossing*> getCrossings() const;
-    inline const std::vector<Crossing*>& getCrossingsIncludingInvalid() const {
+    inline const std::vector<std::unique_ptr<Crossing> >& getCrossingsIncludingInvalid() const {
         return myCrossings;
     }
 
@@ -833,7 +845,7 @@ private:
     EdgeVector myAllEdges;
 
     /// @brief Vector of crossings
-    std::vector<Crossing*> myCrossings;
+    std::vector<std::unique_ptr<Crossing> > myCrossings;
 
     /// @brief Vector of walking areas
     std::vector<WalkingArea> myWalkingAreas;
@@ -874,6 +886,9 @@ private:
     /// @brief fringe type of this node
     FringeType myFringeType;
 
+    /// @brief The intersection name (or whatever arbitrary string you wish to attach)
+    std::string myName;
+
     /// @brief whether to discard all pedestrian crossings
     bool myDiscardAllCrossings;
 
@@ -891,7 +906,6 @@ private:
     /// @brief whether the node type was guessed rather than loaded
     bool myTypeWasGuessed;
 
-
 private:
     /// @brief invalidated copy constructor
     NBNode(const NBNode& s);
@@ -899,9 +913,3 @@ private:
     /// @brief invalidated assignment operator
     NBNode& operator=(const NBNode& s);
 };
-
-
-#endif
-
-/****************************************************************************/
-

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    SUMORouteHandler.cpp
 /// @author  Daniel Krajzewicz
@@ -16,11 +20,6 @@
 ///
 // Parser for routes during their loading
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <utils/common/MsgHandler.h>
@@ -119,8 +118,14 @@ SUMORouteHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             myVehicleParameter = SUMOVehicleParserHelper::parseFlowAttributes(attrs, myHardFail, myBeginDefault, myEndDefault);
             // check if myVehicleParameter was sucesfully created
             if (myVehicleParameter) {
-                // open a flow (using openTrip function)
-                openTrip(attrs);
+                // check tag
+                if ((myVehicleParameter->routeid.empty()) || (myVehicleParameter->tag == SUMO_TAG_ROUTEFLOW)) {
+                    // open a route flow
+                    openRouteFlow(attrs);
+                } else {
+                    // open a route flow
+                    openFlow(attrs);
+                }
             }
             break;
         case SUMO_TAG_PERSONFLOW:
@@ -361,6 +366,9 @@ SUMORouteHandler::addParam(const SUMOSAXAttributes& attrs) {
 bool
 SUMORouteHandler::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOSAXAttributes& attrs, std::string errorSuffix, MsgHandler* const errorOutput) {
     stop.parametersSet = 0;
+    if (attrs.hasAttribute(SUMO_ATTR_ARRIVAL)) {
+        stop.parametersSet |= STOP_ARRIVAL_SET;
+    }
     if (attrs.hasAttribute(SUMO_ATTR_DURATION)) {
         stop.parametersSet |= STOP_DURATION_SET;
     }
@@ -441,6 +449,7 @@ SUMORouteHandler::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOSAXAttri
         triggers.push_back(toString(SUMO_TAG_CONTAINER));
     };
     SUMOVehicleParameter::parseStopTriggers(triggers, expectTrigger, stop);
+    stop.arrival = attrs.getOptSUMOTimeReporting(SUMO_ATTR_ARRIVAL, nullptr, ok, -1);
     stop.duration = attrs.getOptSUMOTimeReporting(SUMO_ATTR_DURATION, nullptr, ok, -1);
     stop.until = attrs.getOptSUMOTimeReporting(SUMO_ATTR_UNTIL, nullptr, ok, -1);
     if (!expectTrigger && (!ok || (stop.duration < 0 && stop.until < 0 && stop.speed == 0))) {
@@ -497,5 +506,6 @@ SUMORouteHandler::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOSAXAttri
     }
     return true;
 }
+
 
 /****************************************************************************/

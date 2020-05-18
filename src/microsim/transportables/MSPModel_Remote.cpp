@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2014-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2014-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSPModel_Remote.cpp
 /// @author  Gregor Laemmel
@@ -29,8 +33,8 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-MSPModel_Remote::MSPModel_Remote(const OptionsCont& oc, MSNet* net)
-    : myNet(net) {
+MSPModel_Remote::MSPModel_Remote(const OptionsCont& oc, MSNet* net) : 
+    myNet(net) {
     const std::string address = oc.getString("pedestrian.remote.address");
     myHybridsimStub = hybridsim::HybridSimulation::NewStub(grpc::CreateChannel(
                           address, grpc::InsecureChannelCredentials()));
@@ -40,8 +44,9 @@ MSPModel_Remote::MSPModel_Remote(const OptionsCont& oc, MSNet* net)
     Event* e = new Event(this);
     net->getBeginOfTimestepEvents()->addEvent(e, net->getCurrentTimeStep() + DELTA_T);
 }
-PedestrianState* MSPModel_Remote::add(MSPerson* person, MSPerson::MSPersonStage_Walking* stage, SUMOTime now) {
 
+
+PedestrianState* MSPModel_Remote::add(MSPerson* person, MSPerson::MSPersonStage_Walking* stage, SUMOTime now) {
     assert(person->getCurrentStageType() == MSTransportable::MOVING_WITHOUT_VEHICLE);
 
     PState* state = new PState(person, stage);
@@ -209,6 +214,7 @@ MSLane* MSPModel_Remote::getFirstPedestrianLane(const MSEdge* const& edge) {
 }
 
 void MSPModel_Remote::remove(PedestrianState* state) {
+    // XXX do something here
 
 }
 

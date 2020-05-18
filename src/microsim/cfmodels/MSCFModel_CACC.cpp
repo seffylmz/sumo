@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSCFModel_CACC.cpp
 /// @author  Kallirroi Porfyri
@@ -20,10 +24,6 @@
 //     Control Vehicles. Transportation Research Record: Journal of the
 //     Transportation Research Board, No. 2623, 2017. (DOI: 10.3141/2623-01).
 /****************************************************************************/
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <stdio.h>
@@ -64,6 +64,10 @@
 // override followSpeed when deemed unsafe by the given margin (the value was selected to reduce the number of necessary interventions)
 #define DEFAULT_EMERGENCY_OVERRIDE_THRESHOLD 2.0
 
+std::map<MSCFModel_CACC::VehicleMode, std::string> MSCFModel_CACC::VehicleModeNames = {
+    {ACC_MODE, "ACC"},
+    {CACC_MODE, "CACC"}
+};
 
 // ===========================================================================
 // method definitions
@@ -84,6 +88,14 @@ MSCFModel_CACC::MSCFModel_CACC(const MSVehicleType* vtype) :
 
 MSCFModel_CACC::~MSCFModel_CACC() {}
 
+double
+MSCFModel_CACC::freeSpeed(const MSVehicle* const veh, double speed, double seen, double maxSpeed, const bool onInsertion) const {
+    // set "caccVehicleMode" parameter to default value
+    if (!MSGlobals::gComputeLC) {
+        const_cast<SUMOVehicleParameter&>(veh->getParameter()).setParameter("caccVehicleMode", VehicleModeNames[CACC_MODE]);
+    }
+    return MSCFModel::freeSpeed(veh, speed, seen, maxSpeed, onInsertion);
+}
 
 double
 MSCFModel_CACC::followSpeed(const MSVehicle* const veh, double speed, double gap2pred, double predSpeed, double predMaxDecel, const MSVehicle* const pred) const {
@@ -190,8 +202,9 @@ MSCFModel_CACC::interactionGap(const MSVehicle* const /* veh */, double /* vL */
     return 250;
 }
 
-double MSCFModel_CACC::speedSpeedContol(const double speed, double vErr) const {
+double MSCFModel_CACC::speedSpeedControl(const double speed, double vErr, VehicleMode& vehMode) const {
     // Speed control law
+    vehMode = CACC_MODE;
     double sclAccel = mySpeedControlGain * vErr;
     double newSpeed = speed + ACCEL2SPEED(sclAccel);
     return newSpeed;
@@ -199,22 +212,21 @@ double MSCFModel_CACC::speedSpeedContol(const double speed, double vErr) const {
 
 double MSCFModel_CACC::speedGapControl(const MSVehicle* const veh, const double gap2pred,
                                        const double speed, const double predSpeed, const double desSpeed, double vErr,
-                                       const MSVehicle* const pred) const {
+                                       const MSVehicle* const pred, VehicleMode& vehMode) const {
     // Gap control law
     double newSpeed = 0.0;
 
     if (pred != nullptr) {
         if (pred->getCarFollowModel().getModelID() != SUMO_TAG_CF_CACC) {
-            //ACC control mode
+            vehMode = ACC_MODE;
             newSpeed = acc_CFM._v(veh, gap2pred, speed, predSpeed, desSpeed, true);
 #if DEBUG_CACC == 1
             if (DEBUG_COND) {
                 std::cout << "        acc control mode" << std::endl;
             }
 #endif
-
         } else {
-            //CACC control mode
+            vehMode = CACC_MODE;
 #if DEBUG_CACC == 1
             if (DEBUG_COND) {
                 std::cout << "        CACC control mode" << std::endl;
@@ -261,7 +273,7 @@ double MSCFModel_CACC::speedGapControl(const MSVehicle* const veh, const double 
             std::cout << "        no leader" << std::endl;
         }
 #endif
-        newSpeed = speedSpeedContol(speed, vErr);
+        newSpeed = speedSpeedControl(speed, vErr, vehMode);
     }
 
     return newSpeed;
@@ -272,6 +284,7 @@ double
 MSCFModel_CACC::_v(const MSVehicle* const veh, const MSVehicle* const pred, const double gap2pred, const double speed,
                    const double predSpeed, const double desSpeed, const bool /* respectMinGap */) const {
     double newSpeed = 0.0;
+    VehicleMode vehMode = CACC_MODE;
 
 #if DEBUG_CACC == 1
     if (DEBUG_COND) {
@@ -298,10 +311,13 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, const MSVehicle* const pred, cons
         }
 #endif
         // Find acceleration - Speed control law
-        newSpeed = speedSpeedContol(speed, vErr);
+        newSpeed = speedSpeedControl(speed, vErr, vehMode);
         // Set cl to vehicle parameters
         if (setControlMode) {
             vars->CACC_ControlMode = 0;
+            if (!MSGlobals::gComputeLC) {
+                const_cast<SUMOVehicleParameter&>(veh->getParameter()).setParameter("caccVehicleMode", VehicleModeNames[vehMode]);
+            }
         }
     } else if (time_gap < 1.5) {
         // Find acceleration - Gap control law
@@ -310,29 +326,37 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, const MSVehicle* const pred, cons
             std::cout << "        speedGapControl" << std::endl;
         }
 #endif
-        newSpeed = speedGapControl(veh, gap2pred, speed, predSpeed, desSpeed, vErr, pred);
+
+        newSpeed = speedGapControl(veh, gap2pred, speed, predSpeed, desSpeed, vErr, pred, vehMode);
         // Set cl to vehicle parameters
         if (setControlMode) {
             vars->CACC_ControlMode = 1;
+            if (!MSGlobals::gComputeLC) {
+                const_cast<SUMOVehicleParameter&>(veh->getParameter()).setParameter("caccVehicleMode", VehicleModeNames[vehMode]);
+            }
         }
     } else {
         // Follow previous applied law
         int cm = vars->CACC_ControlMode;
-        if (!cm) {
+        if (!cm) {  // CACC_ControlMode = speed control
 
 #if DEBUG_CACC == 1
             if (DEBUG_COND) {
                 std::cout << "        applying speedControl (previous)" << std::endl;
             }
 #endif
-            newSpeed = speedSpeedContol(speed, vErr);
-        } else {
+            newSpeed = speedSpeedControl(speed, vErr, vehMode);
+        } else {  // CACC_ControlMode = gap control
 #if DEBUG_CACC == 1
             if (DEBUG_COND) {
                 std::cout << "        previous speedGapControl (previous)" << std::endl;
             }
 #endif
-            newSpeed = speedGapControl(veh, gap2pred, speed, predSpeed, desSpeed, vErr, pred);
+            newSpeed = speedGapControl(veh, gap2pred, speed, predSpeed, desSpeed, vErr, pred, vehMode);
+        }
+
+        if (setControlMode && !MSGlobals::gComputeLC) {
+            const_cast<SUMOVehicleParameter&>(veh->getParameter()).setParameter("caccVehicleMode", VehicleModeNames[vehMode]);
         }
     }
 

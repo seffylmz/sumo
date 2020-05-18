@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    xml.py
 # @author  Michael Behrisch
@@ -17,6 +21,8 @@ from __future__ import absolute_import
 import os
 import sys
 import re
+import gzip
+import io
 import datetime
 try:
     import xml.etree.cElementTree as ET
@@ -188,14 +194,14 @@ def compound_object(element_name, attrnames, warn=False):
             return "<%s,child_dict=%s%s>" % (self.getAttributes(), dict(self._child_dict), nodeText)
 
         def toXML(self, initialIndent="", indent="    "):
-            fields = ['%s="%s"' % (self._original_fields[i], str_possibly_unicode(getattr(self, k)))
+            fields = ['%s="%s"' % (self._original_fields[i], getattr(self, k))
                       for i, k in enumerate(self._fields) if getattr(self, k) is not None and
                       # see #3454
                       '{' not in self._original_fields[i]]
             if not self._child_dict and self._text is None:
-                return "%s<%s %s/>\n" % (initialIndent, self.name, " ".join(fields))
+                return initialIndent + "<%s %s/>\n" % (self.name, " ".join(fields))
             else:
-                s = "%s<%s %s>\n" % (initialIndent, self.name, " ".join(fields))
+                s = initialIndent + "<%s %s>\n" % (self.name, " ".join(fields))
                 for c in self._child_list:
                     s += c.toXML(initialIndent + indent)
                 if self._text is not None:
@@ -206,14 +212,6 @@ def compound_object(element_name, attrnames, warn=False):
             return str(self)
 
     return CompoundObject
-
-
-def str_possibly_unicode(val):
-    # there is probably a better way to do this
-    try:
-        return str(val)
-    except UnicodeEncodeError:
-        return val.encode('utf8')
 
 
 def parse(xmlfile, element_names, element_attrs={}, attr_conversions={},
@@ -244,7 +242,7 @@ def parse(xmlfile, element_names, element_attrs={}, attr_conversions={},
     if isinstance(element_names, str):
         element_names = [element_names]
     elementTypes = {}
-    for _, parsenode in ET.iterparse(xmlfile):
+    for _, parsenode in ET.iterparse(_open(xmlfile, None)):
         if parsenode.tag in element_names:
             yield _get_compound_object(parsenode, elementTypes,
                                        parsenode.tag, element_attrs,
@@ -318,7 +316,16 @@ def _createRecordAndPattern(element_name, attrnames, warn, optional):
     return Record, reprog
 
 
-def parse_fast(xmlfile, element_name, attrnames, warn=False, optional=False):
+def _open(xmlfile, encoding="utf8"):
+    if isinstance(xmlfile, str):
+        if xmlfile.endswith(".gz"):
+            return gzip.open(xmlfile, "rt")
+        if encoding is not None:
+            return io.open(xmlfile, encoding=encoding)
+    return xmlfile
+
+
+def parse_fast(xmlfile, element_name, attrnames, warn=False, optional=False, encoding="utf8"):
     """
     Parses the given attrnames from all elements with element_name
     @Note: The element must be on its own line and the attributes must appear in
@@ -326,7 +333,7 @@ def parse_fast(xmlfile, element_name, attrnames, warn=False, optional=False):
     @Example: parse_fast('plain.edg.xml', 'edge', ['id', 'speed'])
     """
     Record, reprog = _createRecordAndPattern(element_name, attrnames, warn, optional)
-    for line in open(xmlfile):
+    for line in _open(xmlfile, encoding):
         m = reprog.search(line)
         if m:
             if optional:
@@ -335,7 +342,8 @@ def parse_fast(xmlfile, element_name, attrnames, warn=False, optional=False):
                 yield Record(*m.groups())
 
 
-def parse_fast_nested(xmlfile, element_name, attrnames, element_name2, attrnames2, warn=False, optional=False):
+def parse_fast_nested(xmlfile, element_name, attrnames, element_name2, attrnames2,
+                      warn=False, optional=False, encoding="utf8"):
     """
     Parses the given attrnames from all elements with element_name
     And attrnames2 from element_name2 where element_name2 is a child element of element_name
@@ -346,7 +354,7 @@ def parse_fast_nested(xmlfile, element_name, attrnames, element_name2, attrnames
     Record, reprog = _createRecordAndPattern(element_name, attrnames, warn, optional)
     Record2, reprog2 = _createRecordAndPattern(element_name2, attrnames2, warn, optional)
     record = None
-    for line in open(xmlfile):
+    for line in _open(xmlfile, encoding):
         m2 = reprog2.search(line)
         if m2:
             if optional:
@@ -364,7 +372,7 @@ def parse_fast_nested(xmlfile, element_name, attrnames, element_name2, attrnames
 
 def writeHeader(outf, script=None, root=None, schemaPath=None):
     script = os.path.basename(sys.argv[0]) + " " + version.gitDescribe()
-    outf.write("""<?xml version="1.0" encoding="UTF-8"?>
+    outf.write(u"""<?xml version="1.0" encoding="UTF-8"?>
 <!-- generated on %s by %s
   options: %s
 -->
@@ -373,8 +381,8 @@ def writeHeader(outf, script=None, root=None, schemaPath=None):
     if root is not None:
         if schemaPath is None:
             schemaPath = root + "_file.xsd"
-        outf.write(('<%s xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-                    'xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/%s">\n') % (root, schemaPath))
+        outf.write((u'<%s xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+                    u'xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/%s">\n') % (root, schemaPath))
 
 
 def quoteattr(val):

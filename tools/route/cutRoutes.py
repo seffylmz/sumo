@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2012-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    cutRoutes.py
 # @author  Jakob Erdmann
@@ -23,6 +27,8 @@ from __future__ import print_function
 import os
 import sys
 import copy
+import itertools
+import io
 
 from optparse import OptionParser
 from collections import defaultdict
@@ -62,14 +68,13 @@ extrapolated based on edge-lengths and maximum speeds multiplied with --speed-fa
     optParser.add_option("--trips-output", help="output trip file")
     optParser.add_option("--pt-input", help="read public transport flows from file")
     optParser.add_option("--pt-output", help="write reduced public transport flows to file")
-    optParser.add_option("--min-length", type='int', dest="min_length",
+    optParser.add_option("--min-length", type='int',
                          default=0, help="minimum route length in the subnetwork (in #edges)")
-    optParser.add_option("--min-air-dist", type='int', dest="min_air_dist",
-                         default=0, help="minimum route length in the subnetwork (in meters)")
+    optParser.add_option("--min-air-dist", type='float',
+                         default=0., help="minimum route length in the subnetwork (in meters)")
     optParser.add_option("-o", "--routes-output", help="output route file")
     optParser.add_option("--stops-output", help="output filtered stop file")
-    optParser.add_option(
-        "-a", "--additional-input", help="additional file (for bus stop locations)")
+    optParser.add_option("-a", "--additional-input", help="additional file (for bus stop locations)")
     optParser.add_option("--speed-factor", type='float', default=1.0,
                          help="Factor for modifying maximum edge speeds when extrapolating new departure times " +
                               "(default 1.0)")
@@ -85,6 +90,8 @@ extrapolated based on edge-lengths and maximum speeds multiplied with --speed-fa
                               "its parts.")
     optParser.add_option("-e", "--heterogeneous", action="store_true", default=False,
                          help="enable, if you use mixed style (external and internal routes) in the same file")
+    optParser.add_option("--missing-edges", type='int', metavar="N",
+                         default=0, help="print N most missing edges")
     # optParser.add_option("--orig-weights",
     # help="weight file for the original network for extrapolating new departure times")
     options, args = optParser.parse_args(args=args)
@@ -175,7 +182,8 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, finalEdgeMap=None):
 
     for routeFile in options.routeFiles:
         print("Parsing routes from %s" % routeFile)
-        for moving in parse(routeFile, ('vehicle', 'person', 'flow'), heterogeneous=options.heterogeneous):
+        for moving in parse(routeFile, (u'vehicle', u'person', u'flow'), {u"walk": (u"edges", u"busStop")},
+                            heterogeneous=options.heterogeneous):
             old_route = None
             if moving.name == 'person':
                 stats.num_persons += 1
@@ -297,9 +305,12 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, finalEdgeMap=None):
         if options.min_air_dist > 0:
             msg += " or the air-line distance between start and end is less than %s" % options.min_air_dist
         print(msg)
-    print("Number of disconnected routes: %s. Most frequent missing edges:" %
-          stats.multiAffectedRoutes)
-    printTop(stats.missingEdgeOccurences)
+    print("Number of disconnected routes: %s." % stats.multiAffectedRoutes)
+    if options.missing_edges > 0:
+        print("Most frequent missing edges:")
+        counts = sorted([(v, k) for k, v in stats.missingEdgeOccurences.items()], reverse=True)
+        for count, edge in itertools.islice(counts, options.missing_edges):
+            print(count, edge)
 
 
 def cut_stops(vehicle, busStopEdges, remaining, departShift=0, defaultDuration=0):
@@ -358,29 +369,21 @@ def missingEdges(areaEdges, edges, missingEdgeOccurences):
     return route_intervals
 
 
-def printTop(missingEdgeOccurences, num=1000):
-    counts = sorted(
-        [(v, k) for k, v in missingEdgeOccurences.items()], reverse=True)
-    counts.sort(reverse=True)
-    for count, edge in counts[:num]:
-        print(count, edge)
-
-
 def write_trip(file, vehicle):
     edges = vehicle.route[0].edges.split()
-    file.write('    <trip depart="%s" id="%s" from="%s" to="%s" type="%s"' % (
-               vehicle.depart, vehicle.id, edges[0], edges[-1], vehicle.type))
+    file.write(u'    <trip depart="%s" id="%s" from="%s" to="%s" type="%s"' %
+               (vehicle.depart, vehicle.id, edges[0], edges[-1], vehicle.type))
     if vehicle.stop:
-        file.write('>\n')
+        file.write(u'>\n')
         for stop in vehicle.stop:
-            file.write(stop.toXML('        '))
-        file.write('</trip>\n')
+            file.write(stop.toXML(u'        '))
+        file.write(u'</trip>\n')
     else:
-        file.write('/>\n')
+        file.write(u'/>\n')
 
 
 def write_route(file, vehicle):
-    file.write(vehicle.toXML('    '))
+    file.write(vehicle.toXML(u'    '))
 
 
 def parse_standalone_routes(file, into, typesMap, heterogeneous):
@@ -408,7 +411,7 @@ def main(options):
 
     busStopEdges = {}
     if options.stops_output:
-        busStops = open(options.stops_output, 'w')
+        busStops = io.open(options.stops_output, 'w', encoding="utf8")
         writeHeader(busStops, os.path.basename(__file__), 'additional')
     if options.additional_input:
         num_busstops = 0
@@ -423,7 +426,7 @@ def main(options):
                 kept_busstops += 1
                 if busStop.access:
                     busStop.access = [acc for acc in busStop.access if acc.lane[:-2] in edges]
-                busStops.write(busStop.toXML('    '))
+                busStops.write(busStop.toXML(u'    '))
         for taz in parse(options.additional_input, 'taz'):
             num_taz += 1
             taz_edges = [e for e in taz.edges.split() if e in edges]
@@ -431,19 +434,17 @@ def main(options):
                 taz.edges = " ".join(taz_edges)
                 if options.stops_output:
                     kept_taz += 1
-                    busStops.write(taz.toXML('    '))
+                    busStops.write(taz.toXML(u'    '))
         if num_busstops > 0 and num_taz > 0:
             print("Kept %s of %s busStops and %s of %s tazs" % (
                 kept_busstops, num_busstops, kept_taz, num_taz))
         elif num_busstops > 0:
-            print("Kept %s of %s busStops" % (
-                kept_busstops, num_busstops))
+            print("Kept %s of %s busStops" % (kept_busstops, num_busstops))
         elif num_taz > 0:
-            print("Kept %s of %s tazs" % (
-                kept_taz, num_taz))
+            print("Kept %s of %s tazs" % (kept_taz, num_taz))
 
     if options.stops_output:
-        busStops.write('</additional>\n')
+        busStops.write(u'</additional>\n')
         busStops.close()
 
     def write_to_file(vehicles, f):
@@ -455,10 +456,10 @@ def main(options):
             else:
                 numRefs[v.name] += 1
             if v.name == "vType":
-                f.write(v.toXML('    '))
+                f.write(v.toXML(u'    '))
             else:
                 writer(f, v)
-        f.write('</routes>\n')
+        f.write(u'</routes>\n')
         if numRefs:
             print("Wrote", ", ".join(["%s %ss" % (k[1], k[0]) for k in sorted(numRefs.items())]))
         else:
@@ -470,30 +471,30 @@ def main(options):
         options.routeFiles = [options.pt_input]
         finalRouteEdge = {}
         finalEdgeMap = {}
-        with open(options.pt_output if options.pt_output else options.pt_input + ".cut", 'w') as f:
+        with io.open(options.pt_output if options.pt_output else options.pt_input + ".cut", 'w', encoding="utf8") as f:
             writeHeader(f, os.path.basename(__file__), 'routes')
             for _, v in cut_routes(edges, orig_net, options, busStopEdges):
-                f.write(v.toXML('    '))
+                f.write(v.toXML(u'    '))
                 if v.name == "route":
                     finalRouteEdge[v.id] = v.edges.split()[-1]
                 elif isinstance(v.route, list):
                     finalEdgeMap[v.line] = v.route[0].edges.split()[-1]
                 elif v.route is not None:
                     finalEdgeMap[v.line] = finalRouteEdge[v.route]
-            f.write('</routes>\n')
+            f.write(u'</routes>\n')
         options.routeFiles = allRouteFiles
 
     if options.big:
         # write output unsorted
         tmpname = options.output + ".unsorted"
-        with open(tmpname, 'w') as f:
+        with io.open(tmpname, 'w', encoding="utf8") as f:
             write_to_file(cut_routes(edges, orig_net, options, busStopEdges, finalEdgeMap), f)
         # sort out of memory
         sort_routes.main([tmpname, '--big', '--outfile', options.output])
     else:
         routes = list(cut_routes(edges, orig_net, options, busStopEdges, finalEdgeMap))
         routes.sort(key=lambda v: v[0])
-        with open(options.output, 'w') as f:
+        with io.open(options.output, 'w', encoding="utf8") as f:
             write_to_file(routes, f)
 
 

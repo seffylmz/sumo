@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2011-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBLoadedSUMOTLDef.h
 /// @author  Jakob Erdmann
@@ -15,13 +19,7 @@
 // A complete traffic light logic loaded from a sumo-net. (opted to reimplement
 // since NBLoadedTLDef is quite vissim specific)
 /****************************************************************************/
-#ifndef NBLoadedSUMOTLDef_h
-#define NBLoadedSUMOTLDef_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -56,7 +54,7 @@ public:
      * @param[in] def The definition to copy
      * @param[in] logic The computed logic of the given def
      */
-    NBLoadedSUMOTLDef(NBTrafficLightDefinition* def, NBTrafficLightLogic* logic);
+    NBLoadedSUMOTLDef(const NBTrafficLightDefinition& def, const NBTrafficLightLogic& logic);
 
 
     /// @brief Destructor
@@ -87,7 +85,7 @@ public:
      * @param[in] byLane This edge's lane to insert instead
      */
     void replaceRemoved(NBEdge* removed, int removedLane,
-                        NBEdge* by, int byLane);
+                        NBEdge* by, int byLane, bool incoming);
 
     /** @brief patches signal plans by modifying lane indices
      * with the given offset, only indices with a value above threshold are modified
@@ -209,9 +207,6 @@ private:
     /** @brief phases are added directly to myTLLogic which is then returned in myCompute() */
     NBTrafficLightLogic* myTLLogic;
 
-    /// @brief The original nodes for which the loaded logic is valid
-    std::set<NBNode*> myOriginalNodes;
-
     /// @brief repair the plan if controlled nodes received pedestrian crossings
     void patchIfCrossingsAdded();
 
@@ -256,9 +251,3 @@ private:
     };
 
 };
-
-
-#endif
-
-/****************************************************************************/
-

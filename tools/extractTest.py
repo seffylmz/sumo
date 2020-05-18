@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2009-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2009-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    extractTest.py
 # @author  Daniel Krajzewicz
@@ -54,6 +58,8 @@ def get_options(args=None):
                          help="skips creation of an application config from the options.app file")
     optParser.add_option("-x", "--skip-validation", default=False, action="store_true",
                          help="remove all options related to XML validation")
+    optParser.add_option("-d", "--no-subdir", dest="noSubdir", action="store_true",
+                         default=False, help="store test files directly in the output directory")
     options, args = optParser.parse_args(args=args)
     if not options.file and len(args) == 0:
         optParser.print_help()
@@ -149,7 +155,7 @@ for p in [
         if not configFiles:
             print("Config not found for %s." % source, file=sys.stderr)
             continue
-        if target == "":
+        if target == "" and not options.noSubdir:
             target = generateTargetName(
                 os.path.dirname(configFiles[-1]), source)
         testPath = os.path.abspath(join(options.output, target))

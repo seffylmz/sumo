@@ -102,19 +102,22 @@ found by following its link.
   calculation of the actual tailback in front of a junction
 
 ## values for junctions
+There is no dedicated output format for traffic at junctions. Instead junction related traffic can be measured by placing detectors that measure traffic at the intersection.
 
 - [Tools/Output\#generateTLSE1Detectors.py](../Tools/Output.md#generatetlse1detectorspy)
   script for generating induction loop detectors around all
-  TLS-controlled intersections
+  TLS-controlled intersections (point-based detected on individual lanes)
 - [Tools/Output\#generateTLSE2Detectors.py](../Tools/Output.md#generatetlse2detectorspy)
   script for generating lane-area detectors around all TLS-controlled
-  intersections
+  intersections (area-based detection on individual lanes)
 - [Tools/Output\#generateTLSE3Detectors.py](../Tools/Output.md#generatetlse3detectorspy)
   script for generating multi-entry-exit detectors around all
   TLS-controlled intersections or for an arbitrary list of
   intersections. The detectors can be configured to either aggregate
   or separate the approaching edges and to include or exclude the
-  junction interior.
+  junction interior. (area-based detection on edges)
+
+Alternatively, the [values for edges or lanes](Output.md#values_for_edges_or_lanes) can be manually aggregated to obtain the flow at at a junction.
 
 ## vehicle-based information
 
@@ -134,7 +137,9 @@ found by following its link.
 ## simulation(network)-based information
 
 - [simulation state statistics](../Simulation/Output/Summary.md):
-  information about the current state of the simulation
+  information about the current state of the simulation (vehicle count etc.)
+- [simulation state person statistics](../Simulation/Output/PersonSummary.md):
+  information about the current state of persons the simulation (person count etc.)
 
 ## [traffic lights-based information](../Simulation/Output/Traffic_Lights.md)
 
@@ -218,8 +223,9 @@ If the simulation contained persons the following output will be added:
 - "Real time factor": The quotient of *simulated time* / *computation
   time*. If one hour is simulated in 360 seconds the real time factor
   is 10.
-- UPS: (updates per second). The number of vehicles that were
-  simulated on average per second of computation time.
+- UPS: (updates per second). The number of vehicle updates that were
+  performed on average per second of computation time. If a single 
+  vehicle update takes on average one millisecond, this will be 1000.
 
 If routing took place in the simulation, Each routing algorithm instance
 will report

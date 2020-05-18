@@ -4,6 +4,9 @@ fork_without_signal
 # a simulation with a step size of 0.3 seconds  involving rail signals
 small_step_size
 
+# a simulation with a step size of 3 seconds  involving rail signals
+large_step_size
+
 # a train is following another one through several blocks
 two_following_trains
 
@@ -73,3 +76,6 @@ circle_1signal
 
 # upstream signal that guards switch must take route of approaching trains into account for deciding signal state
 indirect_guard_check_route
+
+# driveway computation should end when hitting a buffer stop
+siding_deadend

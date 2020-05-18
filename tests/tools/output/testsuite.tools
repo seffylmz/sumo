@@ -21,3 +21,7 @@ tripinfoDiff
 # difference of tripinfo output with personInfo elements
 tripinfoDiff_persons
 tripinfoByTAZ
+attributeStats
+
+# tests for evaluating the coordination factor along a corridor
+computeCoordination

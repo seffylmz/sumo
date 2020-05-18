@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NIImporter_OpenStreetMap.h
 /// @author  Daniel Krajzewicz
@@ -17,13 +21,7 @@
 ///
 // Importer for networks stored in OpenStreetMap format
 /****************************************************************************/
-#ifndef NIImporter_OpenStreetMap_h
-#define NIImporter_OpenStreetMap_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <string>
@@ -160,7 +158,9 @@ protected:
 
         explicit Edge(long long int _id)
             :
-            id(_id), myNoLanes(-1), myNoLanesForward(0), myMaxSpeed(MAXSPEED_UNGIVEN),
+            id(_id), myNoLanes(-1), myNoLanesForward(0),
+            myMaxSpeed(MAXSPEED_UNGIVEN),
+            myMaxSpeedBackward(MAXSPEED_UNGIVEN),
             myCyclewayType(WAY_UNKNOWN), // building of extra lane depends on bikelaneWidth of loaded typemap
             myBuswayType(WAY_NONE), // buslanes are always built when declared
             mySidewalkType(WAY_UNKNOWN), // building of extra lanes depends on sidewalkWidth of loaded typemap
@@ -185,6 +185,8 @@ protected:
         int myNoLanesForward;
         /// @brief maximum speed in km/h, or MAXSPEED_UNGIVEN
         double myMaxSpeed;
+        /// @brief maximum speed in km/h, or MAXSPEED_UNGIVEN
+        double myMaxSpeedBackward;
         /// @brief The type, stored in "highway" key
         std::string myHighWayType;
         /// @brief Information whether this is an one-way road
@@ -255,6 +257,9 @@ private:
 
     /** @brief the map from OSM way ids to platform shapes */
     std::map<long long int, Edge*> myPlatformShapes;
+
+    /** @brief the map from stop_area relations to member node */
+    std::map<long long int, std::set<long long int> > myStopAreas;
 
     /// @brief The compounds types that do not contain known types
     std::set<std::string> myUnusableTypes;
@@ -441,6 +446,7 @@ protected:
         void myEndElement(int element) override;
         //@}
 
+        double interpretSpeed(const std::string& key, std::string value);
 
     private:
         /// @brief The previously parsed nodes
@@ -493,7 +499,6 @@ protected:
 
         /// @brief Destructor
         ~RelationHandler() override;
-
 
     protected:
         /// @name inherited from GenericSAXHandler
@@ -628,9 +633,3 @@ protected:
     };
 
 };
-
-
-#endif
-
-/****************************************************************************/
-

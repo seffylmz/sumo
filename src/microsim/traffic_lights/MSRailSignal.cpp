@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSRailSignal.cpp
 /// @author  Melanie Weber
@@ -14,11 +18,6 @@
 ///
 // A rail signal logic
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <cassert>
@@ -60,6 +59,7 @@
 #define DEBUG_SIGNALSTATE
 #define DEBUG_SIGNALSTATE_PRIORITY
 #define DEBUG_FIND_PROTECTION
+//#define DEBUG_DRIVEWAY_BUILDROUTE
 //#define DEBUG_REROUTE
 
 #define DEBUG_COND DEBUG_HELPER(this)
@@ -72,6 +72,10 @@
 // static value definitions
 // ===========================================================================
 int MSRailSignal::myNumWarnings(0);
+bool MSRailSignal::myStoreVehicles(false);
+MSRailSignal::VehicleVector MSRailSignal::myBlockingVehicles;
+MSRailSignal::VehicleVector MSRailSignal::myRivalVehicles;
+MSRailSignal::VehicleVector MSRailSignal::myPriorityVehicles;
 
 // ===========================================================================
 // method definitions
@@ -79,9 +83,10 @@ int MSRailSignal::myNumWarnings(0);
 MSRailSignal::MSRailSignal(MSTLLogicControl& tlcontrol,
                            const std::string& id, const std::string& programID, SUMOTime delay,
                            const std::map<std::string, std::string>& parameters) :
-    MSTrafficLightLogic(tlcontrol, id, programID, TLTYPE_RAIL_SIGNAL, delay, parameters),
+    MSTrafficLightLogic(tlcontrol, id, programID, TrafficLightType::RAIL_SIGNAL, delay, parameters),
     myCurrentPhase(DELTA_T, std::string(SUMO_MAX_CONNECTIONS, 'X'), -1), // dummy phase
-    myPhaseIndex(0) {
+    myPhaseIndex(0)
+{
     myDefaultCycleTime = DELTA_T;
 }
 
@@ -97,6 +102,7 @@ MSRailSignal::init(NLDetectorBuilder&) {
     }
     updateCurrentPhase();
     setTrafficLightSignals(MSNet::getInstance()->getCurrentTimeStep());
+    myNumLinks = (int)myLinks.size();
 }
 
 
@@ -294,7 +300,7 @@ MSRailSignal::writeBlocks(OutputDevice& od) const {
 
 bool
 MSRailSignal::hasOncomingRailTraffic(MSLink* link) {
-    if (link->getJunction()->getType() == NODETYPE_RAIL_SIGNAL && link->getState() == LINKSTATE_TL_RED) {
+    if (link->getJunction()->getType() == SumoXMLNodeType::RAIL_SIGNAL && link->getState() == LINKSTATE_TL_RED) {
         const MSEdge* bidi = link->getLaneBefore()->getEdge().getBidiEdge();
         if (bidi == nullptr) {
             return false;
@@ -360,7 +366,25 @@ MSRailSignal::LinkInfo::getDriveWay(const SUMOVehicle* veh) {
     MSEdge* first = &myLink->getLane()->getEdge();
     MSRouteIterator firstIt = std::find(veh->getCurrentRouteEdge(), veh->getRoute().end(), first);
     if (firstIt == veh->getRoute().end()) {
-        WRITE_WARNING("Invalid approach information after rerouting");
+        // possibly the vehicle has already gone past the first edge (i.e.
+        // because first is short or the step-length is high)
+        // lets look backward along the route
+        // give some slack because the vehicle might have been braking from a higher speed and using ballistic integration
+        double lookBack = SPEED2DIST(veh->getSpeed() + 10);
+        int routeIndex = veh->getRoutePosition() - 1;
+        while (lookBack > 0 && routeIndex > 0) {
+            const MSEdge* prevEdge = veh->getRoute().getEdges()[routeIndex];
+            if (prevEdge == first) {
+                firstIt = veh->getRoute().begin() + routeIndex;
+                break;
+            }
+            lookBack -= prevEdge->getLength();
+            routeIndex--;
+        }
+    }
+    if (firstIt == veh->getRoute().end()) {
+        WRITE_WARNING("Invalid approach information after rerouting for vehicle '" + veh->getID()
+                      + "' time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
         return myDriveways.front();
     }
     //std::cout << SIMTIME << " veh=" << veh->getID() << " rsl=" << getID() << " dws=" << myDriveways.size() << "\n";
@@ -456,11 +480,12 @@ void
 MSRailSignal::LinkInfo::reroute(SUMOVehicle* veh, const MSEdgeVector& occupied) {
     MSDevice_Routing* rDev = static_cast<MSDevice_Routing*>(veh->getDevice(typeid(MSDevice_Routing)));
     const SUMOTime now = MSNet::getInstance()->getCurrentTimeStep();
-    if (rDev != nullptr &&
-            (myLastRerouteVehicle != veh
-             // reroute each vehicle only once if no periodic routing is allowed,
-             // otherwise with the specified period
-             || (rDev->getPeriod() > 0 && myLastRerouteTime + rDev->getPeriod() <= now))) {
+    if (rDev != nullptr
+            && rDev->mayRerouteRailSignal()
+            && (myLastRerouteVehicle != veh
+                // reroute each vehicle only once if no periodic routing is allowed,
+                // otherwise with the specified period
+                || (rDev->getPeriod() > 0 && myLastRerouteTime + rDev->getPeriod() <= now))) {
         myLastRerouteVehicle = veh;
         myLastRerouteTime = now;
 
@@ -489,7 +514,14 @@ MSRailSignal::LinkInfo::reroute(SUMOVehicle* veh, const MSEdgeVector& occupied) 
 
 bool
 MSRailSignal::DriveWay::reserve(const Approaching& closest, MSEdgeVector& occupied) {
-    if (conflictLaneOccupied()) {
+    std::string joinVehicle = "";
+    if (!MSGlobals::gUseMesoSim) {
+        const SUMOVehicleParameter::Stop* stop = closest.first->getNextStopParameter();
+        if (stop != nullptr) {
+            joinVehicle = stop->join;
+        }
+    }
+    if (conflictLaneOccupied(joinVehicle)) {
         for (MSLane* bidi : myBidi) {
             if (!bidi->empty() && bidi->getBidiLane() != nullptr) {
                 occupied.push_back(&bidi->getBidiLane()->getEdge());
@@ -558,11 +590,11 @@ MSRailSignal::DriveWay::hasLinkConflict(const Approaching& veh, MSLink* foeLink)
         MSRailSignal* foeRS = const_cast<MSRailSignal*>(constFoeRS);
         if (foeRS != nullptr) {
             const DriveWay& foeDriveWay = foeRS->myLinkInfos[foeLink->getTLIndex()].getDriveWay(foe.first);
-            if (foeDriveWay.conflictLaneOccupied() ||
+            if (foeDriveWay.conflictLaneOccupied("", false) ||
                     !overlap(foeDriveWay)) {
 #ifdef DEBUG_SIGNALSTATE_PRIORITY
                 if (gDebugFlag4) {
-                    if (foeDriveWay.conflictLaneOccupied()) {
+                    if (foeDriveWay.conflictLaneOccupied("", false)) {
                         std::cout << "     foe blocked\n";
                     } else {
                         std::cout << "     no overlap\n";
@@ -581,23 +613,14 @@ MSRailSignal::DriveWay::hasLinkConflict(const Approaching& veh, MSLink* foeLink)
                         << "\n";
             }
 #endif
-            if (foe.second.arrivalSpeedBraking == veh.second.arrivalSpeedBraking) {
-                if (foe.second.arrivalTime == veh.second.arrivalTime) {
-                    if (foe.first->getSpeed() == veh.first->getSpeed()) {
-                        if (foe.second.dist  == veh.second.dist) {
-                            return foe.first->getNumericalID() < veh.first->getNumericalID();
-                        } else {
-                            return foe.second.dist < veh.second.dist;
-                        }
-                    } else {
-                        return foe.first->getSpeed() > veh.first->getSpeed();
-                    }
-                } else {
-                    return foe.second.arrivalTime < veh.second.arrivalTime;
+            const bool yield = mustYield(veh, foe);
+            if (myStoreVehicles) {
+                myRivalVehicles.push_back(foe.first);
+                if (yield) {
+                    myPriorityVehicles.push_back(foe.first);
                 }
-            } else {
-                return foe.second.arrivalSpeedBraking > veh.second.arrivalSpeedBraking;
             }
+            return yield;
         }
     }
     return false;
@@ -605,14 +628,56 @@ MSRailSignal::DriveWay::hasLinkConflict(const Approaching& veh, MSLink* foeLink)
 
 
 bool
-MSRailSignal::DriveWay::conflictLaneOccupied() const {
+MSRailSignal::DriveWay::mustYield(const Approaching& veh, const Approaching& foe) const {
+    if (foe.second.arrivalSpeedBraking == veh.second.arrivalSpeedBraking) {
+        if (foe.second.arrivalTime == veh.second.arrivalTime) {
+            if (foe.first->getSpeed() == veh.first->getSpeed()) {
+                if (foe.second.dist  == veh.second.dist) {
+                    return foe.first->getNumericalID() < veh.first->getNumericalID();
+                } else {
+                    return foe.second.dist < veh.second.dist;
+                }
+            } else {
+                return foe.first->getSpeed() > veh.first->getSpeed();
+            }
+        } else {
+            return foe.second.arrivalTime < veh.second.arrivalTime;
+        }
+    } else {
+        return foe.second.arrivalSpeedBraking > veh.second.arrivalSpeedBraking;
+    }
+}
+
+
+bool
+MSRailSignal::DriveWay::conflictLaneOccupied(const std::string& joinVehicle, bool store) const {
     for (const MSLane* lane : myConflictLanes) {
         if (!lane->isEmpty()) {
 #ifdef DEBUG_SIGNALSTATE
             if (gDebugFlag4) {
                 std::cout << SIMTIME << " conflictLane " << lane->getID() << " occupied\n";
+                if (joinVehicle != "") {
+                    std::cout << "  joinVehicle=" << joinVehicle << " occupant=" << toString(lane->getVehiclesSecure()) << "\n";
+                    lane->releaseVehicles();
+                }
             }
 #endif
+            if (lane->getVehicleNumber() == 1 && joinVehicle != "") {
+                std::vector<MSVehicle*> vehs = lane->getVehiclesSecure();
+                const bool ignoreJoinTarget = vehs.front()->getID() == joinVehicle && vehs.front()->isStopped();
+                lane->releaseVehicles();
+                if (ignoreJoinTarget) {
+#ifdef DEBUG_SIGNALSTATE
+                    if (gDebugFlag4) {
+                        std::cout << "    ignore join-target '" << joinVehicle << ";\n";
+                    }
+#endif
+                    continue;
+                }
+            }
+            if (myStoreVehicles && store) {
+                myBlockingVehicles.push_back(lane->getLastAnyVehicle());
+            }
             return true;
         }
     }
@@ -636,7 +701,8 @@ MSRailSignal::DriveWay::findProtection(const Approaching& veh, MSLink* link) con
         if (l2->getLane() != link->getLane()) {
 #ifdef DEBUG_FIND_PROTECTION
             if (gDebugFlag4) {
-                std::cout << " protectionCandidate=" << l2->getDescription() << " l2Via=" << Named::getIDSecure(l2->getViaLane()) << " occupied=" << !l2->getViaLane()->isEmpty() << "\n";
+                std::cout << " protectionCandidate=" << l2->getDescription() << " l2Via=" << Named::getIDSecure(l2->getViaLane())
+                    << " occupied=" << (l2->getViaLane() != nullptr && !l2->getViaLane()->isEmpty()) << "\n";
             }
 #endif
             if (l2->getViaLane() != nullptr && !l2->getViaLane()->isEmpty()) {
@@ -726,7 +792,11 @@ MSRailSignal::DriveWay::buildRoute(MSLink* origin, double length,
     bool seekForwardSignal = true;
     bool seekBidiSwitch = true;
     MSLane* toLane = origin->getViaLaneOrLane();
-    //std::cout << "buildRoute origin=" << getTLLinkID(origin) << " vehRoute=" << toString(ConstMSEdgeVector(next, end)) << " visited=" << joinNamedToString(visited, " ") << "\n";
+#ifdef DEBUG_DRIVEWAY_BUILDROUTE
+    gDebugFlag4 = getClickableTLLinkID(origin) == "junction '36745', link 0";
+    if (gDebugFlag4) std::cout << "buildRoute origin=" << getTLLinkID(origin) << " vehRoute=" << toString(ConstMSEdgeVector(next, end))
+                                   << " visited=" << joinNamedToString(visited, " ") << "\n";
+#endif
     while ((seekForwardSignal || seekBidiSwitch)) {
         if (length > MAX_BLOCK_LENGTH) {
             if (myNumWarnings < MAX_SIGNAL_WARNINGS) {
@@ -737,9 +807,14 @@ MSRailSignal::DriveWay::buildRoute(MSLink* origin, double length,
             // length exceeded
             return;
         }
-        //std::cout << "   toLane=" << toLane->getID() << " visited=" << joinNamedToString(visited, " ") << "\n";
+#ifdef DEBUG_DRIVEWAY_BUILDROUTE
+        if (gDebugFlag4) {
+            std::cout << "   toLane=" << toLane->getID() << " visited=" << joinNamedToString(visited, " ") << "\n";
+        }
+#endif
         if (visited.count(toLane) != 0) {
             WRITE_WARNING("Found circular block after railSignal " + getClickableTLLinkID(origin) + " (" + toString(myRoute.size()) + " edges, length " + toString(length) + ")");
+            //std::cout << getClickableTLLinkID(origin) << " circularBlock1=" << toString(myRoute) << " visited=" << joinNamedToString(visited, " ") << "\n";
             return;
         }
         if (toLane->getEdge().isNormal()) {
@@ -762,11 +837,11 @@ MSRailSignal::DriveWay::buildRoute(MSLink* origin, double length,
             if (!seekForwardSignal) {
                 // look for switch that could protect from oncoming vehicles
                 for (const auto& ili : bidi->getIncomingLanes()) {
-                    if (ili.viaLink->getDirection() == LINKDIR_TURN) {
+                    if (ili.viaLink->getDirection() == LinkDirection::TURN) {
                         continue;
                     }
                     for (MSLink* link : ili.lane->getLinkCont()) {
-                        if (link->getDirection() == LINKDIR_TURN) {
+                        if (link->getDirection() == LinkDirection::TURN) {
                             continue;
                         }
                         if (link->getViaLaneOrLane() != bidi) {
@@ -779,15 +854,21 @@ MSRailSignal::DriveWay::buildRoute(MSLink* origin, double length,
             }
         }
         const MSLinkCont& links = toLane->getLinkCont();
+        const MSEdge* current = &toLane->getEdge();
         toLane = nullptr;
         for (MSLink* link : links) {
             if (((next != end && &link->getLane()->getEdge() == *next) ||
-                    (next == end && link->getDirection() != LINKDIR_TURN))
+                    (next == end && link->getDirection() != LinkDirection::TURN))
                     && isRailway(link->getViaLaneOrLane()->getPermissions())) {
                 toLane = link->getViaLaneOrLane();
+                if (link->getLane()->getBidiLane() != nullptr && &link->getLane()->getEdge() == current->getBidiEdge()) {
+                    // do not follow turn-arounds even if the route contains a reversal
+                    return;
+                }
                 if (link->getTLLogic() != nullptr) {
                     if (link->getTLLogic() == origin->getTLLogic()) {
                         WRITE_WARNING("Found circular block at railSignal " + getClickableTLLinkID(origin) + " (" + toString(myRoute.size()) + " edges, length " + toString(length) + ")");
+                        //std::cout << getClickableTLLinkID(origin) << " circularBlock2=" << toString(myRoute) << "\n";
                         return;
                     }
                     seekForwardSignal = false;
@@ -893,7 +974,7 @@ MSRailSignal::DriveWay::findFlankProtection(MSLink* link, double length, LaneSet
 #ifdef DEBUG_CHECK_FLANKS
                     std::cout << "   lane=" << lane->getID() << " cand=" << l2->getDescription() << "\n";
 #endif
-                    if (l2->getDirection() != LINKDIR_TURN && l2->getLane() != link->getLane()) {
+                    if (l2->getDirection() != LinkDirection::TURN && l2->getLane() != link->getLane()) {
                         foundPSwitch = true;
                         // found potential protection
 #ifdef DEBUG_CHECK_FLANKS
@@ -906,7 +987,7 @@ MSRailSignal::DriveWay::findFlankProtection(MSLink* link, double length, LaneSet
                     myFlank.push_back(lane);
                     // continue search for protection upstream recursively
                     for (auto ili : lane->getIncomingLanes()) {
-                        if (ili.viaLink->getDirection() != LINKDIR_TURN) {
+                        if (ili.viaLink->getDirection() != LinkDirection::TURN) {
                             findFlankProtection(ili.viaLink, length, visited, origLink);
                         }
                     }
@@ -917,6 +998,40 @@ MSRailSignal::DriveWay::findFlankProtection(MSLink* link, double length, LaneSet
     myMaxFlankLength = MAX2(myMaxFlankLength, length);
 }
 
+void
+MSRailSignal::storeTraCIVehicles(int linkIndex) {
+    myBlockingVehicles.clear();
+    myRivalVehicles.clear();
+    myPriorityVehicles.clear();
+    myStoreVehicles = true;
+    LinkInfo& li = myLinkInfos[linkIndex];
+    if (li.myLink->getApproaching().size() > 0) {
+        Approaching closest = getClosest(li.myLink);
+        DriveWay& driveway = li.getDriveWay(closest.first);
+        MSEdgeVector occupied;
+        driveway.reserve(closest, occupied);
+    } else {
+        li.myDriveways.front().conflictLaneOccupied();
+    }
+    myStoreVehicles = false;
+}
+
+MSRailSignal::VehicleVector
+MSRailSignal::getBlockingVehicles(int linkIndex) {
+    storeTraCIVehicles(linkIndex);
+    return myBlockingVehicles;
+}
+
+MSRailSignal::VehicleVector
+MSRailSignal::getRivalVehicles(int linkIndex) {
+    storeTraCIVehicles(linkIndex);
+    return myRivalVehicles;
+}
+
+MSRailSignal::VehicleVector
+MSRailSignal::getPriorityVehicles(int linkIndex) {
+    storeTraCIVehicles(linkIndex);
+    return myPriorityVehicles;
+}
 
 /****************************************************************************/
-

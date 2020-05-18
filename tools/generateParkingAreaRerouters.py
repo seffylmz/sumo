@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2010-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2010-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    generateParkingAreaRerouters.py
 # @author  Lara CODECA
@@ -84,15 +88,11 @@ def get_options(cmd_args=None):
 class ReroutersGeneration(object):
     """ Generate parking area rerouters from the parking area definition. """
 
-    _opt = None
-
-    _sumo_net = None
-    _parking_areas = dict()
-    _sumo_rerouters = dict()
-
     def __init__(self, options):
 
         self._opt = options
+        self._parking_areas = dict()
+        self._sumo_rerouters = dict()
 
         logging.info('Loading SUMO network: %s', options.sumo_net_definition)
         self._sumo_net = sumolib.net.readNet(options.sumo_net_definition)
@@ -125,8 +125,6 @@ class ReroutersGeneration(object):
         pool = multiprocessing.Pool(processes=self._opt.processes)
         list_parameters = list()
         splits = numpy.array_split(list(self._parking_areas.keys()), self._opt.processes)
-        import pickle
-        pickle.loads(pickle.dumps(self._parking_areas))
         for parkings in splits:
             parameters = {
                 'selection': parkings,

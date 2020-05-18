@@ -2,7 +2,7 @@ Debug: Selected item 'DEFAULT_VEHTYPE' in DemandElementSelector
 Debug: Selected item 'DEFAULT_PEDTYPE' in DemandElementSelector
 Debug: Adding busStop 'busStop_3_1_0' in GNEChange_Additional
 Debug: Additionals has to be saved
-Debug: Current saving Status: net saved, additionals unsaved, demand elements saved
+Debug: Current saving Status: net saved, additionals unsaved, demand elements saved, data sets saved
 Debug: Adding e3Detector 'e3Detector_0' in GNEChange_Additional
 Debug: Adding detEntry 'e3Detector_0detEntry0' in GNEChange_Additional
 Debug: Adding detExit 'e3Detector_0detExit1' in GNEChange_Additional
@@ -23,7 +23,7 @@ Debug: Adding poi 'POI_3' into viewNet
 Debug: Adding poiLane 'POI_4' into viewNet
 Debug: Adding poiLane 'POI_5' into viewNet
 Debug: net has to be saved
-Debug: Current saving Status: net unsaved, additionals unsaved, demand elements saved
+Debug: Current saving Status: net unsaved, additionals unsaved, demand elements saved, data sets saved
 Debug: Key F5 (Compute) pressed
 Debug: Created connection 'from5_1to4_1' in retrieveGNEConnection()
 Debug: Created connection 'from5_1to2_1' in retrieveGNEConnection()
@@ -41,8 +41,6 @@ Debug: Created connection 'from8_1to2_1' in retrieveGNEConnection()
 Debug: Created connection 'from8_1to3_1' in retrieveGNEConnection()
 Debug: Created connection 'from8_2to3_2' in retrieveGNEConnection()
 Debug: Created connection 'from8_2to1_2' in retrieveGNEConnection()
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
 Debug: Setting new attribute selected '1' into edge '1'
 Debug: Setting new attribute selected '1' into edge '2'
 Debug: Setting new attribute selected '1' into edge '3'
@@ -70,7 +68,7 @@ Debug: Removing busStop 'busStop_3_1_0' in GNEChange_Additional
 Debug: Removing connection '6_2->4_2' from edge '6'
 Debug: Deleting unreferenced connection 'from6_2to4_2' in removeConnection()
 Debug: net has to be saved
-Debug: Current saving Status: net unsaved, additionals unsaved, demand elements saved
+Debug: Current saving Status: net unsaved, additionals unsaved, demand elements saved, data sets saved
 Debug: Removing connection '6_2->1_2' from edge '6'
 Debug: Deleting unreferenced connection 'from6_2to1_2' in removeConnection()
 Debug: Removing connection '6_1->1_1' from edge '6'
@@ -165,8 +163,8 @@ Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into edg
 Debug: invalidating (removing) connections of edge '7' due it were guessed
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
 Debug: Removing edge '5' from net
-Debug: Removing poiLane 'POI_4' from viewNet
 Debug: Removing detExit 'e3Detector_0detExit1' in GNEChange_Additional
+Debug: Removing poiLane 'POI_4' from viewNet
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into junction 'B'
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into edge '6'
 Debug: invalidating (removing) connections of edge '6' due it were guessed
@@ -191,14 +189,12 @@ Debug: invalidating (removing) connections of edge '8' due it were guessed
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
 Debug: Removing edge '8' from net
 Debug: Removing junction 'Center' from net
-Debug: Removing poly 'poly_0' from viewNet
 Debug: Removing poi 'POI_3' from viewNet
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
+Debug: Removing poly 'poly_0' from viewNet
 Debug: Keys Ctrl+Z (Undo) pressed
 Debug: Calling GNEUndoList::undo()
-Debug: Adding poi 'POI_3' into viewNet
 Debug: Adding poly 'poly_0' into viewNet
+Debug: Adding poi 'POI_3' into viewNet
 Debug: Adding junction 'Center' into net
 Debug: Adding edge '8' from net
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
@@ -223,8 +219,8 @@ Debug: invalidating (removing) connections of edge '8' due it were guessed
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into edge '6'
 Debug: invalidating (removing) connections of edge '6' due it were guessed
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into junction 'B'
-Debug: Adding detExit 'e3Detector_0detExit1' in GNEChange_Additional
 Debug: Adding poiLane 'POI_4' into viewNet
+Debug: Adding detExit 'e3Detector_0detExit1' in GNEChange_Additional
 Debug: Adding edge '5' from net
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into edge '7'
@@ -327,8 +323,6 @@ Debug: Adding detExit 'e3Detector_1detExit1' in GNEChange_Additional
 Debug: Adding detEntry 'e3Detector_2detEntry0' in GNEChange_Additional
 Debug: Adding detEntry 'e3Detector_1detEntry0' in GNEChange_Additional
 Debug: Adding detEntry 'e3Detector_0detEntry0' in GNEChange_Additional
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
 Debug: Keys Ctrl+Y (Redo) pressed
 Debug: Calling GNEUndoList::redo()
 Debug: Removing detEntry 'e3Detector_0detEntry0' in GNEChange_Additional
@@ -433,8 +427,8 @@ Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into edg
 Debug: invalidating (removing) connections of edge '7' due it were guessed
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
 Debug: Removing edge '5' from net
-Debug: Removing poiLane 'POI_4' from viewNet
 Debug: Removing detExit 'e3Detector_0detExit1' in GNEChange_Additional
+Debug: Removing poiLane 'POI_4' from viewNet
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into junction 'B'
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into edge '6'
 Debug: invalidating (removing) connections of edge '6' due it were guessed
@@ -459,14 +453,12 @@ Debug: invalidating (removing) connections of edge '8' due it were guessed
 Debug: Setting new attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
 Debug: Removing edge '8' from net
 Debug: Removing junction 'Center' from net
-Debug: Removing poly 'poly_0' from viewNet
 Debug: Removing poi 'POI_3' from viewNet
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
-Debug: ObjectsUnderCursor: GUIGlObjects: 0, AttributeCarriers: 0, NetElements: 0, Additionals: 0, DemandElements: 0, Shapes: 0, Junctions: 0, Edges: 0, Lanes: 0, Crossings: 0, Connections: 0, TAZs: 0, POIs: 0, Polys: 0
+Debug: Removing poly 'poly_0' from viewNet
 Debug: Keys Ctrl+Z (Undo) pressed
 Debug: Calling GNEUndoList::undo()
-Debug: Adding poi 'POI_3' into viewNet
 Debug: Adding poly 'poly_0' into viewNet
+Debug: Adding poi 'POI_3' into viewNet
 Debug: Adding junction 'Center' into net
 Debug: Adding edge '8' from net
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
@@ -491,8 +483,8 @@ Debug: invalidating (removing) connections of edge '8' due it were guessed
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into edge '6'
 Debug: invalidating (removing) connections of edge '6' due it were guessed
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into junction 'B'
-Debug: Adding detExit 'e3Detector_0detExit1' in GNEChange_Additional
 Debug: Adding poiLane 'POI_4' into viewNet
+Debug: Adding detExit 'e3Detector_0detExit1' in GNEChange_Additional
 Debug: Adding edge '5' from net
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into junction 'Center'
 Debug: Setting previous attribute modificationStatusNotForPrinting 'guessed' into edge '7'
@@ -597,6 +589,8 @@ Debug: Adding detEntry 'e3Detector_1detEntry0' in GNEChange_Additional
 Debug: Adding detEntry 'e3Detector_0detEntry0' in GNEChange_Additional
 Debug: Additionals saved
 Debug: Removing poiLane 'POI_5' from net in ~GNEChange_Shape()
+Debug: Additionals has to be saved
+Debug: Current saving Status: net saved, additionals unsaved, demand elements saved, data sets saved
 Debug: delete poiLane 'POI_5' in ~GNEChange_Shape()
 Debug: Removing poiLane 'POI_4' from net in ~GNEChange_Shape()
 Debug: delete poiLane 'POI_4' in ~GNEChange_Shape()
@@ -611,8 +605,6 @@ Debug: delete poi 'POI_0' in ~GNEChange_Shape()
 Debug: Removing poly 'poly_0' from net in ~GNEChange_Shape()
 Debug: delete poly 'poly_0' in ~GNEChange_Shape()
 Debug: Deleting unreferenced detExit 'e3Detector_3detExit1'
-Debug: Additionals has to be saved
-Debug: Current saving Status: net saved, additionals unsaved, demand elements saved
 Debug: Deleting unreferenced detEntry 'e3Detector_3detEntry0'
 Debug: Deleting unreferenced e3Detector 'e3Detector_3'
 Debug: Deleting unreferenced detExit 'e3Detector_2detExit1'
@@ -625,23 +617,23 @@ Debug: Deleting unreferenced detExit 'e3Detector_0detExit1'
 Debug: Deleting unreferenced detEntry 'e3Detector_0detEntry0'
 Debug: Deleting unreferenced e3Detector 'e3Detector_0'
 Debug: Deleting unreferenced busStop 'busStop_3_1_0'
-Debug: Deleting unreferenced edge '1' in GNENet destructor
+Debug: Deleting unreferenced edge '1' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '1_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '1_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '1_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '2' in GNENet destructor
+Debug: Deleting unreferenced edge '2' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '2_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '2_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '2_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '3' in GNENet destructor
+Debug: Deleting unreferenced edge '3' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '3_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '3_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '3_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '4' in GNENet destructor
+Debug: Deleting unreferenced edge '4' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '4_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '4_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '4_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '5' in GNENet destructor
+Debug: Deleting unreferenced edge '5' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '5_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '5_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '5_2' in GNEEdge destructor
@@ -649,7 +641,7 @@ Debug: Deleting unreferenced connection 'from5_1to4_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from5_1to2_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from5_2to2_2' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from5_2to3_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '6' in GNENet destructor
+Debug: Deleting unreferenced edge '6' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '6_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '6_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '6_2' in GNEEdge destructor
@@ -657,7 +649,7 @@ Debug: Deleting unreferenced connection 'from6_1to3_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from6_1to1_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from6_2to1_2' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from6_2to4_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '7' in GNENet destructor
+Debug: Deleting unreferenced edge '7' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '7_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '7_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '7_2' in GNEEdge destructor
@@ -665,7 +657,7 @@ Debug: Deleting unreferenced connection 'from7_1to1_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from7_1to4_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from7_2to4_2' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from7_2to2_2' in GNEEdge destructor
-Debug: Deleting unreferenced edge '8' in GNENet destructor
+Debug: Deleting unreferenced edge '8' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane '8_0' in GNEEdge destructor
 Debug: Deleting unreferenced lane '8_1' in GNEEdge destructor
 Debug: Deleting unreferenced lane '8_2' in GNEEdge destructor
@@ -673,12 +665,12 @@ Debug: Deleting unreferenced connection 'from8_1to2_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from8_1to3_1' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from8_2to3_2' in GNEEdge destructor
 Debug: Deleting unreferenced connection 'from8_2to1_2' in GNEEdge destructor
-Debug: Deleting unreferenced junction 'A' in GNENet destructor
-Debug: Deleting unreferenced junction 'B' in GNENet destructor
-Debug: Deleting unreferenced junction 'C' in GNENet destructor
-Debug: Deleting unreferenced junction 'Center' in GNENet destructor
-Debug: Deleting unreferenced junction 'D' in GNENet destructor
-Debug: Deleting unreferenced vType 'DEFAULT_BIKETYPE' in GNENet destructor
-Debug: Deleting unreferenced vType 'DEFAULT_VEHTYPE' in GNENet destructor
-Debug: Deleting unreferenced pType 'DEFAULT_PEDTYPE' in GNENet destructor
+Debug: Deleting unreferenced junction 'A' in AttributeCarriers destructor
+Debug: Deleting unreferenced junction 'B' in AttributeCarriers destructor
+Debug: Deleting unreferenced junction 'C' in AttributeCarriers destructor
+Debug: Deleting unreferenced junction 'Center' in AttributeCarriers destructor
+Debug: Deleting unreferenced junction 'D' in AttributeCarriers destructor
+Debug: Deleting unreferenced vType 'DEFAULT_BIKETYPE' in AttributeCarriers destructor
+Debug: Deleting unreferenced vType 'DEFAULT_VEHTYPE' in AttributeCarriers destructor
+Debug: Deleting unreferenced pType 'DEFAULT_PEDTYPE' in AttributeCarriers destructor
 Debug: Deleting net builder in GNENet destructor

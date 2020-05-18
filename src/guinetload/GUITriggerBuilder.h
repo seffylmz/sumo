@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2004-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2004-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GUITriggerBuilder.h
 /// @author  Daniel Krajzewicz
@@ -16,13 +20,7 @@
 ///
 // Builds trigger objects for guisim
 /****************************************************************************/
-#ifndef GUITriggerBuilder_h
-#define GUITriggerBuilder_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <string>
@@ -110,7 +108,8 @@ protected:
      * @exception InvalidArgument If the stop can not be added to the net (is duplicate)
      */
     virtual void buildStoppingPlace(MSNet& net, std::string id, std::vector<std::string> lines, MSLane* lane,
-                                    double frompos, double topos, const SumoXMLTag element, std::string string, int personCapacity);
+                                    double frompos, double topos, const SumoXMLTag element, std::string string,
+                                    int personCapacity, double parkingLength);
 
 
     /** @brief Builds a parking area
@@ -170,7 +169,7 @@ protected:
     * @exception InvalidArgument If the overhead wire segment can not be added to the net (is duplicate according to the id)
     */
     virtual void buildOverheadWireSegment(MSNet& net, const std::string& id, MSLane* lane,
-        double frompos, double topos, bool voltageSource);
+                                          double frompos, double topos, bool voltageSource);
 
     /** @brief Builds an overhead wire clamp
     *
@@ -196,9 +195,3 @@ protected:
      */
     virtual void endStoppingPlace();
 };
-
-
-#endif
-
-/****************************************************************************/
-

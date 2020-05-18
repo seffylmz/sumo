@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GUIVisualizationSettings.h
 /// @author  Daniel Krajzewicz
@@ -15,13 +19,7 @@
 ///
 // Stores the information about how to visualize structures
 /****************************************************************************/
-#ifndef GUIVisualizationSettings_h
-#define GUIVisualizationSettings_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <string>
@@ -158,6 +156,9 @@ struct GUIVisualizationColorSettings {
     /// @brief person plan selection color (Rides, Walks, personStops...)
     RGBColor selectedPersonPlanColor;
 
+    /// @brief edge data selection color
+    RGBColor selectedEdgeDataColor;
+
     /// @brief color for highlighthing deadends
     static const RGBColor SUMO_color_DEADEND_SHOW;
 
@@ -190,6 +191,26 @@ struct GUIVisualizationColorSettings {
 
     /// @brief color for rides
     static const RGBColor ride;
+};
+
+
+/// @brief struct for candidate color settings
+struct GUIVisualizationCandidateColorSettings {
+
+    /// @brief color for possible candidate element
+    static const RGBColor possible;
+
+    /// @brief color for selected candidate source
+    static const RGBColor source;
+
+    /// @brief color for selected candidate target
+    static const RGBColor target;
+
+    /// @brief color for selected special candidate element (Usually selected using shift+click)
+    static const RGBColor special;
+
+    /// @brief color for selected conflict candidate element (Usually selected using ctrl+click)
+    static const RGBColor conflict;
 };
 
 
@@ -327,7 +348,7 @@ struct GUIVisualizationStoppingPlaceSettings {
 
 /// @brief struct for dotted contour settings
 struct GUIVisualizationDottedContourSettings {
-    
+
     /// @brief width of dotted contour segments
     static const double segmentWidth;
 
@@ -474,6 +495,9 @@ public:
 
     /// @brief return an angle that is suitable for reading text aligned with the given angle (degrees)
     double getTextAngle(double objectAngle) const;
+
+    /// @brief return wether the text was flipped for reading at the given angle
+    bool flippedTextAngle(double objectAngle) const;
 
     /// @brief check if additionals must be drawn
     bool drawAdditionals(const double exaggeration) const;
@@ -655,7 +679,7 @@ public:
     GUIColorer junctionColorer;
 
     // Setting bundles for optional drawing junction names and indices
-    GUIVisualizationTextSettings drawLinkTLIndex, drawLinkJunctionIndex, junctionName, internalJunctionName, tlsPhaseIndex, tlsPhaseName;
+    GUIVisualizationTextSettings drawLinkTLIndex, drawLinkJunctionIndex, junctionID, junctionName, internalJunctionName, tlsPhaseIndex, tlsPhaseName;
 
     /// @brief Information whether lane-to-lane arrows shall be drawn
     bool showLane2Lane;
@@ -714,8 +738,11 @@ public:
     /// @brief Information whether the size legend shall be drawn
     bool showSizeLegend;
 
-    /// @brief Information whether the colo legend shall be drawn
+    /// @brief Information whether the edge color legend shall be drawn
     bool showColorLegend;
+
+    /// @brief Information whether the vehicle color legend shall be drawn
+    bool showVehicleColorLegend;
 
     /// @brief information about a lane's width (temporary, used for a single view)
     double scale;
@@ -762,8 +789,13 @@ public:
     static const std::string SCHEME_NAME_TYPE;
     static const std::string SCHEME_NAME_PERMISSION_CODE;
 
+    static const double MISSING_DATA;
+
     /// @brief color settings
     GUIVisualizationColorSettings colorSettings;
+
+    /// @brief candidate color settings
+    GUIVisualizationCandidateColorSettings candidateColorSettings;
 
     /// @brief Additional settings
     GUIVisualizationAdditionalSettings additionalSettings;
@@ -783,9 +815,3 @@ public:
     /// @brief detail settings
     GUIVisualizationDetailSettings detailSettings;
 };
-
-
-#endif
-
-/****************************************************************************/
-

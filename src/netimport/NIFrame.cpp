@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NIFrame.cpp
 /// @author  Daniel Krajzewicz
@@ -16,11 +20,6 @@
 ///
 // Sets and checks options for netimport
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <string>
@@ -159,6 +158,9 @@ NIFrame::fillOptions(bool forNetedit) {
     oc.doRegister("flatten", new Option_Bool(false));
     oc.addDescription("flatten", "Processing", "Remove all z-data");
 
+    oc.doRegister("discard-params", new Option_StringVector());
+    oc.addDescription("discard-params", "Formats", "Remove the list of keys from all params");
+
     // register xml options
     oc.doRegister("plain.extend-edge-shape", new Option_Bool(false));
     oc.addSynonyme("plain.extend-edge-shape", "xml.keep-shape", true);
@@ -246,6 +248,14 @@ NIFrame::fillOptions(bool forNetedit) {
     oc.addSynonyme("shapefile.guess-projection", "arcview.guess-projection", true);
     oc.addDescription("shapefile.guess-projection", "Formats", "Guess the proper projection");
 
+    oc.doRegister("shapefile.traditional-axis-mapping", new Option_Bool(false));
+    oc.addDescription("shapefile.traditional-axis-mapping", "Formats", "Use traditional axis order (lon, lat)");
+
+
+    // register dlr-navteq options
+    oc.doRegister("dlr-navteq.tolerant-permissions", new Option_Bool(false));
+    oc.addDescription("dlr-navteq.tolerant-permissions", "Formats", "Allow more vehicle classes by default");
+
 
     // register vissim options
     oc.doRegister("vissim.join-distance", new Option_Float(5.0f));
@@ -292,7 +302,7 @@ NIFrame::fillOptions(bool forNetedit) {
     oc.doRegister("visum.verbose-warnings", new Option_Bool(false));
     oc.addDescription("visum.verbose-warnings", "Formats", "Prints all warnings, some of which are due to VISUM misbehaviour");
 
-    oc.doRegister("visum.lanes-from-capacity.norm", new Option_Float((double) 1800));
+    oc.doRegister("visum.lanes-from-capacity.norm", new Option_Float(1800.));
     oc.addSynonyme("visum.lanes-from-capacity.norm", "capacity-norm", true);
     oc.addSynonyme("visum.lanes-from-capacity.norm", "lanes-from-capacity.norm");
     oc.addDescription("visum.lanes-from-capacity.norm", "Formats", "The factor for flow to no. lanes conversion");
@@ -397,6 +407,4 @@ NIFrame::checkOptions() {
 }
 
 
-
 /****************************************************************************/
-

@@ -1,7 +1,7 @@
 <hTitles >Simulation of Urban MObility<hr style="border: 0.5px solid #338033;"></hTitles>
 
 !!! conference "SUMO User Conference 2020"
-    The [SUMO User Conference 2020](http://sumo.dlr.de/2020/) takes place **May, 11-13, 2020** in Berlin.
+    The [SUMO User Conference 2020](http://sumo.dlr.de/2020/) takes place **October, 26-28, 2020** in Berlin.
 
 <span style="float: right;">![](https://sumo.dlr.de/w/images/thumb/d/de/Eclipse_foundation_logo.jpg/250px-Eclipse_foundation_logo.jpg)</span>
 
@@ -95,6 +95,10 @@ This Documentation is continuously updated and always refers to the latest devel
  - [ocit2SUMO](https://github.com/DLR-TS/sumo-ocit) Generate traffic light signal plans from OCIT® data.
 
 **Commercial Extensions**
+
+- [TETCOS NetSim](https://www.tetcos.com/vanets.html)
+
+    supports VANET simulations by interfacing with SUMO
 
 - [Webots](https://www.cyberbotics.com/automobile/sumo-interface.php)
 

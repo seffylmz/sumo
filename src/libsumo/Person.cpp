@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2017-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2017-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    Person.cpp
 /// @author  Leonhard Luecken
@@ -13,11 +17,6 @@
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <microsim/transportables/MSTransportableControl.h>
@@ -252,6 +251,9 @@ Person::getParameter(const std::string& personID, const std::string& param) {
 }
 
 
+LIBSUMO_GET_PARAMETER_WITH_KEY_IMPLEMENTATION(Person)
+
+
 std::string
 Person::getEmissionClass(const std::string& personID) {
     return PollutantsInterface::getName(getPerson(personID)->getVehicleType().getEmissionClass());
@@ -458,6 +460,19 @@ Person::add(const std::string& personID, const std::string& edgeID, double pos, 
 
 MSStage*
 Person::convertTraCIStage(const TraCIStage& stage, const std::string personID) {
+    MSStoppingPlace* bs = nullptr;
+    if (!stage.destStop.empty()) {
+        bs = MSNet::getInstance()->getStoppingPlace(stage.destStop, SUMO_TAG_BUS_STOP);
+        if (bs == nullptr) {
+            bs = MSNet::getInstance()->getStoppingPlace(stage.destStop, SUMO_TAG_PARKING_AREA);
+            if (bs == nullptr) {
+                throw TraCIException("Invalid stopping place id '" + stage.destStop + "' for person: '" + personID + "'");
+            } else {
+                // parkingArea is not a proper arrival place
+                bs = nullptr;
+            }
+        }
+    }
     switch (stage.type) {
         case STAGE_DRIVING: {
             if (stage.edges.empty()) {
@@ -468,17 +483,10 @@ Person::convertTraCIStage(const TraCIStage& stage, const std::string personID) {
             if (!edge) {
                 throw TraCIException("Invalid edge '" + edgeId + "' for person: '" + personID + "'");
             }
-            MSStoppingPlace* bs = nullptr;
-            if (!stage.destStop.empty()) {
-                bs = MSNet::getInstance()->getStoppingPlace(stage.destStop, SUMO_TAG_BUS_STOP);
-                if (bs == nullptr) {
-                    throw TraCIException("Invalid stopping place id '" + stage.destStop + "' for person: '" + personID + "'");
-                }
-            }
             if (stage.line.empty()) {
                 throw TraCIException("Empty lines parameter for person: '" + personID + "'");
             }
-            return new MSStageDriving(edge, bs, edge->getLength()-NUMERICAL_EPS, StringTokenizer(stage.line).getVector());
+            return new MSStageDriving(edge, bs, edge->getLength() - NUMERICAL_EPS, StringTokenizer(stage.line).getVector());
         }
 
         case STAGE_WALKING: {
@@ -500,13 +508,6 @@ Person::convertTraCIStage(const TraCIStage& stage, const std::string personID) {
                 arrivalPos += edges.back()->getLength();
             }
             double speed = p->getVehicleType().getMaxSpeed();
-            MSStoppingPlace* bs = nullptr;
-            if (!stage.destStop.empty()) {
-                bs = MSNet::getInstance()->getStoppingPlace(stage.destStop, SUMO_TAG_BUS_STOP);
-                if (bs == nullptr) {
-                    throw TraCIException("Invalid stopping place id '" + stage.destStop + "' for person: '" + personID + "'");
-                }
-            }
             return new MSPerson::MSPersonStage_Walking(p->getID(), edges, bs, -1, speed, p->getArrivalPos(), arrivalPos, 0);
         }
 
@@ -514,13 +515,6 @@ Person::convertTraCIStage(const TraCIStage& stage, const std::string personID) {
             MSTransportable* p = getPerson(personID);
             if (stage.travelTime < 0) {
                 throw TraCIException("Duration for person: '" + personID + "' must not be negative");
-            }
-            MSStoppingPlace* bs = nullptr;
-            if (!stage.destStop.empty()) {
-                bs = MSNet::getInstance()->getStoppingPlace(stage.destStop, SUMO_TAG_BUS_STOP);
-                if (bs == nullptr) {
-                    throw TraCIException("Invalid stopping place id '" + stage.destStop + "' for person: '" + personID + "'");
-                }
             }
             return new MSStageWaiting(p->getArrivalEdge(), nullptr, TIME2STEPS(stage.travelTime), 0, p->getArrivalPos(), stage.description, false);
         }
@@ -531,11 +525,12 @@ Person::convertTraCIStage(const TraCIStage& stage, const std::string personID) {
 
 
 void
-Person::appendStage(const TraCIStage& stage, const std::string& personID) {
+Person::appendStage(const std::string& personID, const TraCIStage& stage) {
     MSTransportable* p = getPerson(personID);
     MSStage* personStage = convertTraCIStage(stage, personID);
     p->appendStage(personStage);
 }
+
 
 void
 Person::replaceStage(const std::string& personID, const int stageIndex, const TraCIStage& stage) {
@@ -568,7 +563,7 @@ Person::appendDrivingStage(const std::string& personID, const std::string& toEdg
             throw TraCIException("Invalid stopping place id '" + stopID + "' for person: '" + personID + "'");
         }
     }
-    p->appendStage(new MSStageDriving(edge, bs, edge->getLength()-NUMERICAL_EPS, StringTokenizer(lines).getVector()));
+    p->appendStage(new MSStageDriving(edge, bs, edge->getLength() - NUMERICAL_EPS, StringTokenizer(lines).getVector()));
 }
 
 
@@ -671,7 +666,7 @@ Person::rerouteTraveltime(const std::string& personID) {
     }
     ConstMSEdgeVector oldEdges = p->getEdges(firstIndex);
     assert(!oldEdges.empty());
-    if (oldEdges.front()->getFunction() != EDGEFUNC_NORMAL) {
+    if (oldEdges.front()->getFunction() != SumoXMLEdgeFunc::NORMAL) {
         oldEdges.erase(oldEdges.begin());
     }
     //std::cout << " remainingStages=" << p->getNumRemainingStages() << " oldEdges=" << toString(oldEdges) << " newEdges=" << toString(newEdges) << " firstIndex=" << firstIndex << " nextIndex=" << nextIndex << "\n";
@@ -767,13 +762,13 @@ Person::moveToXY(const std::string& personID, const std::string& edgeID, const d
         //  we additionally assume it is moving forward (SUMO-limit);
         //  note that the route ("edges") is not changed in this case
         found = Helper::moveToXYMap_matchingRoutePosition(pos, edgeID,
-                ev, routeIndex, vClass,
+                ev, routeIndex, vClass, true,
                 bestDistance, &lane, lanePos, routeOffset);
     } else {
         double speed = pos.distanceTo2D(p->getPosition()); // !!!veh->getSpeed();
         found = Helper::moveToXYMap(pos, maxRouteDistance, mayLeaveNetwork, edgeID, angle,
                                     speed, ev, routeIndex, currentLane, p->getEdgePos(), true,
-                                    vClass,
+                                    vClass, true,
                                     bestDistance, &lane, lanePos, routeOffset, edges);
     }
     if ((found && bestDistance <= maxRouteDistance) || mayLeaveNetwork) {
@@ -964,12 +959,7 @@ LIBSUMO_SUBSCRIPTION_IMPLEMENTATION(Person, PERSON)
 
 MSPerson*
 Person::getPerson(const std::string& personID) {
-    MSTransportableControl& c = MSNet::getInstance()->getPersonControl();
-    MSPerson* p = dynamic_cast<MSPerson*>(c.get(personID));
-    if (p == nullptr) {
-        throw TraCIException("Person '" + personID + "' is not known");
-    }
-    return p;
+    return Helper::getPerson(personID);
 }
 
 

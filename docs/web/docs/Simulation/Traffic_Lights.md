@@ -20,6 +20,7 @@ visually in [NETEDIT](../NETEDIT.md#traffic_lights).
 
 - All traffic lights are generated with a fixed cycle and a default
   cycle time of 90s. This can be changed with the option **--tls.cycle.time**.
+- The green time is split equally between the main phases
 - All green phases are followed by a yellow phase. The length of the
   yellow phase is computed from the maximum speed of the incoming
   roads but may be customized with the option **--tls.yellow.time**
@@ -38,6 +39,8 @@ visually in [NETEDIT](../NETEDIT.md#traffic_lights).
   would typically be a left-turning phase). The duration of this phase
   defaults to 6s and can be customized (or disabled) by setting the
   option **--tls.left-green.time**.
+- The generatedd cycle starts at time 0 by default with a green phase for the first main direction 
+  (sorted by road priority, lane count and speed). This can be influnced for a specified list of traffic light ids using the options **--tls.half-offset TLS1,TLS2,..** and **--tls.quarter-offset TLS3,TLS4,...**. (shifting the start of the first phase by the indicated fraction of the cycle time).
 - In reality there are often phases where all streams have red to
   allow clearing an intersection. SUMO does not build these phases by
   default. To have each green phase preceded by an all-red phase, the
@@ -198,7 +201,9 @@ The following signal colors are used:
 
 
 ![traci_tutorial_tls.png](../images/Traci_tutorial_tls.png
-"traci_tutorial_tls.png")Example: traffic light with the current state
+"traci_tutorial_tls.png")
+
+Example: traffic light with the current state
 **"GrGr"**. The leftmost letter "G" encodes the green light for link 0,
 followed by red for link 1, green for link 2 and red for link 3. The
 link numbers are enabled via [SUMO-GUI settings](../SUMO-GUI.md) by
@@ -261,6 +266,7 @@ In the current implementation, detectors for actuation are only used if all conn
 This is done to prevent useless phase extensions when the first vehicle on a given lane is not allowed to drive.
 Sumo will issue a warning a phase or link index does not have usable detectors.
 
+
 #### Example
 
 ```
@@ -287,6 +293,15 @@ parameters **file** and **freq** have the same meaning as for [regular
 induction loop
 detectors](../Simulation/Output/Induction_Loops_Detectors_(E1).md).
 The examples values are the default values for these parameters.
+
+#### Custom Detectors
+To use custom detectors (i.e. for custom placement or output) additional parameters can be defined where KEY is a lane that is incoming to the traffic light and VALUE is a user-defined inductionLoop (that could also lie on another upstream lane).
+```
+   <param key="gneE42_2" value="customDetector1"/>
+```
+
+!!! caution
+    Custom detectors only work when the 'tlLogic' is loaded from an additional file.
 
 #### Dynamic Phase Selection (Phase Skipping)
 When a phase uses attribute 'next' with a list of indices. The next phase is chosen dynamically based on the detector status of all candidate phases according to the following algorithm:
@@ -349,6 +364,15 @@ the allowed maximal velocity. See \[Oertel, Robert, and Peter Wagner.
 "Delay-time actuated traffic signal control for an isolated
 intersection." Transportation Research Board 2011 (90th Annual Meeting).
 2011.\] for details.
+
+#### Custom Detectors
+To use custom detectors (i.e. for custom placement or output) additional parameters can be defined where KEY is a lane that is incoming to the traffic light and VALUE is a user-defined laneAreaDetector.
+```
+   <param key="gneE42_2" value="customDetector1"/>
+```
+!!! caution
+    Custom detectors only work when the 'tlLogic' is loaded from an additional file.
+
 
 ## Interaction between signal plans and right-of-way rules
 

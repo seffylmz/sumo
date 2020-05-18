@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GUILoadThread.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // Class describing the thread that performs the loading of a simulation
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <iostream>
@@ -91,29 +90,24 @@ GUILoadThread::run() {
     // try to load the given configuration
     OptionsCont& oc = OptionsCont::getOptions();
     try {
-        oc.clear();
-        MSFrame::fillOptions();
         if (myFile != "") {
             // triggered by menu option or reload
-            if (myLoadNet) {
-                oc.set("net-file", myFile);
-            } else {
-                oc.set("configuration-file", myFile);
-            }
+            oc.clear();
+            MSFrame::fillOptions();
+            oc.setByRootElement(OptionsIO::getRoot(myFile), myFile);
             oc.resetWritable(); // there may be command line options
             OptionsIO::getOptions();
         } else {
             // triggered at application start
-            OptionsIO::getOptions();
+            OptionsIO::loadConfiguration();
             if (oc.isSet("configuration-file")) {
                 myFile = oc.getString("configuration-file");
             } else if (oc.isSet("net-file")) {
                 myFile = oc.getString("net-file");
-                myLoadNet = true;
             }
             myEventQue.push_back(new GUIEvent_Message("Loading '" + myFile + "'."));
             myEventThrow.signal();
-            myParent->addRecentFile(FXPath::absolute(myFile.c_str()), myLoadNet);
+            myParent->addRecentFile(FXPath::absolute(myFile.c_str()));
         }
         myTitle = myFile;
         // within gui-based applications, nothing is reported to the console
@@ -250,9 +244,8 @@ GUILoadThread::submitEndAndCleanup(GUINet* net,
 
 
 void
-GUILoadThread::loadConfigOrNet(const std::string& file, bool isNet) {
+GUILoadThread::loadConfigOrNet(const std::string& file) {
     myFile = file;
-    myLoadNet = isNet;
     if (myFile != "") {
         OptionsIO::setArgs(0, nullptr);
     }

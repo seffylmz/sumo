@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    RONet.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // The router's network representation
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <algorithm>
@@ -61,18 +60,19 @@ RONet::getInstance(void) {
 }
 
 
-RONet::RONet()
-    : myVehicleTypes(), myDefaultVTypeMayBeDeleted(true),
-      myDefaultPedTypeMayBeDeleted(true), myDefaultBikeTypeMayBeDeleted(true),
-      myHaveActiveFlows(true),
-      myRoutesOutput(nullptr), myRouteAlternativesOutput(nullptr), myTypesOutput(nullptr),
-      myReadRouteNo(0), myDiscardedRouteNo(0), myWrittenRouteNo(0),
-      myHavePermissions(false),
-      myNumInternalEdges(0),
-      myErrorHandler(OptionsCont::getOptions().exists("ignore-errors")
-                     && OptionsCont::getOptions().getBool("ignore-errors") ? MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance()),
-      myKeepVTypeDist(OptionsCont::getOptions().exists("keep-vtype-distributions")
-                      && OptionsCont::getOptions().getBool("keep-vtype-distributions")) {
+RONet::RONet() :
+    myVehicleTypes(), myDefaultVTypeMayBeDeleted(true),
+    myDefaultPedTypeMayBeDeleted(true), myDefaultBikeTypeMayBeDeleted(true),
+    myHaveActiveFlows(true),
+    myRoutesOutput(nullptr), myRouteAlternativesOutput(nullptr), myTypesOutput(nullptr),
+    myReadRouteNo(0), myDiscardedRouteNo(0), myWrittenRouteNo(0),
+    myHavePermissions(false),
+    myNumInternalEdges(0),
+    myErrorHandler(OptionsCont::getOptions().exists("ignore-errors")
+                   && OptionsCont::getOptions().getBool("ignore-errors") ? MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance()),
+    myKeepVTypeDist(OptionsCont::getOptions().exists("keep-vtype-distributions")
+                    && OptionsCont::getOptions().getBool("keep-vtype-distributions")),
+    myHasBidiEdges(false) {
     if (myInstance != nullptr) {
         throw ProcessError("A network was already constructed.");
     }
@@ -164,9 +164,9 @@ RONet::addDistrict(const std::string id, ROEdge* source, ROEdge* sink) {
         delete sink;
         return false;
     }
-    sink->setFunction(EDGEFUNC_CONNECTOR);
+    sink->setFunction(SumoXMLEdgeFunc::CONNECTOR);
     addEdge(sink);
-    source->setFunction(EDGEFUNC_CONNECTOR);
+    source->setFunction(SumoXMLEdgeFunc::CONNECTOR);
     addEdge(source);
     sink->setOtherTazConnector(source);
     source->setOtherTazConnector(sink);
@@ -230,6 +230,17 @@ RONet::addJunctionTaz(ROAbstractEdgeBuilder& eb) {
     }
 }
 
+void
+RONet::setBidiEdges(const std::map<ROEdge*, std::string>& bidiMap) {
+    for (const auto& item : bidiMap) {
+        ROEdge* bidi = myEdges.get(item.second);
+        if (bidi == nullptr) {
+            WRITE_ERROR("The bidi edge '" + item.second + "' is not known.");
+        }
+        item.first->setBidiEdge(bidi);
+        myHasBidiEdges = true;
+    }
+}
 
 void
 RONet::addNode(RONode* node) {
@@ -574,9 +585,9 @@ RONet::createBulkRouteRequests(const RORouterProvider& provider, const SUMOTime 
 #endif
         for (std::vector<RORoutable*>::const_iterator j = i->second.begin(); j != i->second.end(); ++j) {
             (*j)->computeRoute(provider, removeLoops, myErrorHandler);
-            provider.getVehicleRouter().setBulkMode(true);
+            provider.getVehicleRouter((*j)->getVClass()).setBulkMode(true);
         }
-        provider.getVehicleRouter().setBulkMode(false);
+        provider.getVehicleRouter(SVC_IGNORING).setBulkMode(false);
     }
 }
 
@@ -758,6 +769,16 @@ RONet::setPermissionsFound() {
     myHavePermissions = true;
 }
 
+bool
+RONet::hasLoadedEffort() const {
+    for (const auto& item : myEdges) {
+        if (item.second->hasStoredEffort()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const std::string
 RONet::getStoppingPlaceName(const std::string& id) const {
     for (const auto& mapItem : myStoppingPlaces) {
@@ -782,4 +803,3 @@ RONet::RoutingTask::run(FXWorkerThread* context) {
 
 
 /****************************************************************************/
-

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSBaseVehicle.cpp
 /// @author  Michael Behrisch
@@ -15,11 +19,6 @@
 ///
 // A base class for vehicle implementations
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <iostream>
@@ -28,6 +27,8 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
+#include <utils/emissions/PollutantsInterface.h>
+#include <utils/emissions/HelpersHarmonoise.h>
 #include <microsim/transportables/MSPerson.h>
 #include "MSGlobals.h"
 #include "MSVehicleControl.h"
@@ -35,12 +36,16 @@
 #include "MSEdge.h"
 #include "MSLane.h"
 #include "MSMoveReminder.h"
+#include "MSEdgeWeightsStorage.h"
 #include "MSBaseVehicle.h"
 #include "MSNet.h"
 #include "devices/MSDevice.h"
 #include "devices/MSDevice_Routing.h"
 #include "devices/MSDevice_Battery.h"
+#include <microsim/devices/MSRoutingEngine.h>
 #include <microsim/devices/MSDevice_Transportable.h>
+#include <microsim/devices/MSDevice_Battery.h>
+#include <microsim/devices/MSDevice_ElecHybrid.h>
 #include <microsim/devices/MSDevice_Taxi.h>
 #include "MSInsertionControl.h"
 
@@ -58,6 +63,24 @@ std::vector<MSTransportable*> MSBaseVehicle::myEmptyTransportableVector;
 std::set<std::string> MSBaseVehicle::myShallTraceMoveReminders;
 #endif
 SUMOVehicle::NumericalID MSBaseVehicle::myCurrentNumericalIndex = 0;
+
+// ===========================================================================
+// Influencer method definitions
+// ===========================================================================
+
+MSBaseVehicle::BaseInfluencer::BaseInfluencer() :
+    myRoutingMode(0)
+{}
+
+SUMOAbstractRouter<MSEdge, SUMOVehicle>&
+MSBaseVehicle::BaseInfluencer::getRouterTT(const int rngIndex, SUMOVehicleClass svc) const {
+    if (myRoutingMode == 1) {
+        return MSRoutingEngine::getRouterTT(rngIndex, svc);
+    } else {
+        return MSNet::getInstance()->getRouterTT(rngIndex);
+    }
+}
+
 
 
 // ===========================================================================
@@ -86,8 +109,10 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myArrivalPos(-1),
     myArrivalLane(-1),
     myNumberReroutes(0),
+    myStopUntilOffset(0),
     myOdometer(0.),
-    myNumericalID(myCurrentNumericalIndex++)
+    myNumericalID(myCurrentNumericalIndex++),
+    myEdgeWeights(nullptr)
 #ifdef _DEBUG
     , myTraceMoveReminders(myShallTraceMoveReminders.count(pars->id) > 0)
 #endif
@@ -106,24 +131,12 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
             }
         }
     }
-    // init devices
-    try {
-        MSDevice::buildVehicleDevices(*this, myDevices);
-    } catch (ProcessError&) {
-        for (MSVehicleDevice* dev : myDevices) {
-            delete dev;
-        }
-        delete myParameter;
-        throw;
-    }
     myRoute->addReference();
-    for (MSVehicleDevice* dev : myDevices) {
-        myMoveReminders.push_back(std::make_pair(dev, 0.));
-    }
 }
 
 
 MSBaseVehicle::~MSBaseVehicle() {
+    delete myEdgeWeights;
     myRoute->release();
     if (myParameter->repetitionNumber == 0) {
         MSRoute::checkDist(myParameter->routeid);
@@ -132,6 +145,15 @@ MSBaseVehicle::~MSBaseVehicle() {
         delete dev;
     }
     delete myParameter;
+}
+
+
+void
+MSBaseVehicle::initDevices() {
+    MSDevice::buildVehicleDevices(*this, myDevices);
+    for (MSVehicleDevice* dev : myDevices) {
+        myMoveReminders.push_back(std::make_pair(dev, 0.));
+    }
 }
 
 
@@ -204,11 +226,11 @@ MSBaseVehicle::reroute(SUMOTime t, const std::string& info, SUMOAbstractRouter<M
         if (stops.size() > 0) {
             const double sourcePos = onInit ? 0 : getPositionOnLane();
             // avoid superfluous waypoints for first and last edge
-            const bool skipFirst = stops.front() == source && sourcePos < firstPos;
-            const bool skipLast = stops.back() == sink && myArrivalPos > lastPos;
+            const bool skipFirst = stops.front() == source && sourcePos <= firstPos;
+            const bool skipLast = stops.back() == sink && myArrivalPos >= lastPos;
 #ifdef DEBUG_REROUTE
             if (DEBUG_COND) {
-                std::cout << SIMTIME << " reroute " << info << " veh=" << getID() << " lane=" << getLane()->getID()
+                std::cout << SIMTIME << " reroute " << info << " veh=" << getID() << " lane=" << Named::getIDSecure(getLane())
                           << " source=" << source->getID() << " sourcePos=" << sourcePos << " firstPos=" << firstPos << " arrivalPos=" << myArrivalPos << " lastPos=" << lastPos
                           << " route=" << toString(myRoute->getEdges()) << " stopEdges=" << toString(stops) << " skipFirst=" << skipFirst << " skipLast=" << skipLast << "\n";
             }
@@ -603,10 +625,10 @@ MSBaseVehicle::saveState(OutputDevice& out) {
 
 
 void
-MSBaseVehicle::addStops(const bool ignoreStopErrors) {
+MSBaseVehicle::addStops(const bool ignoreStopErrors, MSRouteIterator* searchStart) {
     for (std::vector<SUMOVehicleParameter::Stop>::const_iterator i = myRoute->getStops().begin(); i != myRoute->getStops().end(); ++i) {
         std::string errorMsg;
-        if (!addStop(*i, errorMsg, myParameter->depart) && !ignoreStopErrors) {
+        if (!addStop(*i, errorMsg, myParameter->depart, false, searchStart) && !ignoreStopErrors) {
             throw ProcessError(errorMsg);
         }
         if (errorMsg != "") {
@@ -616,7 +638,7 @@ MSBaseVehicle::addStops(const bool ignoreStopErrors) {
     const SUMOTime untilOffset = myParameter->repetitionOffset > 0 ? myParameter->repetitionsDone * myParameter->repetitionOffset : 0;
     for (std::vector<SUMOVehicleParameter::Stop>::const_iterator i = myParameter->stops.begin(); i != myParameter->stops.end(); ++i) {
         std::string errorMsg;
-        if (!addStop(*i, errorMsg, untilOffset) && !ignoreStopErrors) {
+        if (!addStop(*i, errorMsg, untilOffset, false, searchStart) && !ignoreStopErrors) {
             throw ProcessError(errorMsg);
         }
         if (errorMsg != "") {
@@ -624,6 +646,133 @@ MSBaseVehicle::addStops(const bool ignoreStopErrors) {
         }
     }
 }
+
+
+double
+MSBaseVehicle::getCO2Emissions() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::CO2, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+
+double
+MSBaseVehicle::getCOEmissions() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::CO, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+
+double
+MSBaseVehicle::getHCEmissions() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::HC, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+
+double
+MSBaseVehicle::getNOxEmissions() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::NO_X, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+
+double
+MSBaseVehicle::getPMxEmissions() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::PM_X, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+
+double
+MSBaseVehicle::getFuelConsumption() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::FUEL, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+
+double
+MSBaseVehicle::getElectricityConsumption() const {
+    if (isOnRoad() || isIdling()) {
+        return PollutantsInterface::compute(myType->getEmissionClass(), PollutantsInterface::ELEC, getSpeed(), getAcceleration(), getSlope());
+    } else {
+        return 0.;
+    }
+}
+
+double
+MSBaseVehicle::getStateOfCharge() const {
+    if (static_cast<MSDevice_Battery*>(getDevice(typeid(MSDevice_Battery))) != 0) {
+        MSDevice_Battery* batteryOfVehicle = dynamic_cast<MSDevice_Battery*>(getDevice(typeid(MSDevice_Battery)));
+        return batteryOfVehicle->getActualBatteryCapacity();
+    } else {
+        if (static_cast<MSDevice_ElecHybrid*>(getDevice(typeid(MSDevice_ElecHybrid))) != 0) {
+            MSDevice_ElecHybrid* batteryOfVehicle = dynamic_cast<MSDevice_ElecHybrid*>(getDevice(typeid(MSDevice_ElecHybrid)));
+            return batteryOfVehicle->getActualBatteryCapacity();
+        }
+    }
+
+    return -1;
+}
+
+double
+MSBaseVehicle::getElecHybridCurrent() const {
+    if (static_cast<MSDevice_ElecHybrid*>(getDevice(typeid(MSDevice_ElecHybrid))) != 0) {
+        MSDevice_ElecHybrid* batteryOfVehicle = dynamic_cast<MSDevice_ElecHybrid*>(getDevice(typeid(MSDevice_ElecHybrid)));
+        return batteryOfVehicle->getCurrentFromOverheadWire();
+    }
+
+    return NAN;
+}
+
+double
+MSBaseVehicle::getHarmonoise_NoiseEmissions() const {
+    if (isOnRoad() || isIdling()) {
+        return HelpersHarmonoise::computeNoise(myType->getEmissionClass(), getSpeed(), getAcceleration());
+    } else {
+        return 0.;
+    }
+}
+
+
+const MSEdgeWeightsStorage&
+MSBaseVehicle::getWeightsStorage() const {
+    return _getWeightsStorage();
+}
+
+
+MSEdgeWeightsStorage&
+MSBaseVehicle::getWeightsStorage() {
+    return _getWeightsStorage();
+}
+
+
+MSEdgeWeightsStorage&
+MSBaseVehicle::_getWeightsStorage() const {
+    if (myEdgeWeights == nullptr) {
+        myEdgeWeights = new MSEdgeWeightsStorage();
+    }
+    return *myEdgeWeights;
+}
+
+
 
 
 int
@@ -680,6 +829,25 @@ MSBaseVehicle::getContainers() const {
     }
 }
 
+
+bool
+MSBaseVehicle::isLineStop(double position) const {
+    if (myParameter->line == "") {
+        // not a public transport line
+        return false;
+    }
+    for (const SUMOVehicleParameter::Stop& stop : myParameter->stops) {
+        if (stop.startPos <= position && position <= stop.endPos) {
+            return true;
+        }
+    }
+    for (const SUMOVehicleParameter::Stop& stop : myRoute->getStops()) {
+        if (stop.startPos <= position && position <= stop.endPos) {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 bool
@@ -802,5 +970,5 @@ MSBaseVehicle::traceMoveReminder(const std::string& type, MSMoveReminder* rem, d
 }
 #endif
 
-/****************************************************************************/
 
+/****************************************************************************/

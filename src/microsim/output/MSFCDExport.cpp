@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSFCDExport.cpp
 /// @author  Daniel Krajzewicz
@@ -16,11 +20,6 @@
 ///
 // Realises dumping Floating Car Data (FCD) Data
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <utils/iodevices/OutputDevice.h>
@@ -52,6 +51,7 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep, bool elevation) {
     const bool signals = OptionsCont::getOptions().getBool("fcd-output.signals");
     const bool writeAccel = OptionsCont::getOptions().getBool("fcd-output.acceleration");
     const bool writeDistance = OptionsCont::getOptions().getBool("fcd-output.distance");
+    std::vector<std::string> params = OptionsCont::getOptions().getStringVector("fcd-output.params");
     const SUMOTime period = string2time(OptionsCont::getOptions().getString("device.fcd.period"));
     const SUMOTime begin = string2time(OptionsCont::getOptions().getString("begin"));
     if (period > 0 && (timestep - begin) % period != 0) {
@@ -66,7 +66,7 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep, bool elevation) {
         for (MSVehicleControl::constVehIt it = vc.loadedVehBegin(); it != vc.loadedVehEnd(); ++it) {
             const SUMOVehicle* veh = it->second;
             MSDevice_FCD* fcdDevice = (MSDevice_FCD*)veh->getDevice(typeid(MSDevice_FCD));
-            if (fcdDevice != nullptr 
+            if (fcdDevice != nullptr
                     && (veh->isOnRoad() || veh->isParking() || veh->isRemoteControlled())
                     && (!filter || MSDevice_FCD::getEdgeFilter().count(veh->getEdge()) > 0)) {
                 PositionVector shape;
@@ -83,7 +83,7 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep, bool elevation) {
         const MSVehicle* microVeh = dynamic_cast<const MSVehicle*>(veh);
         if ((veh->isOnRoad() || veh->isParking() || veh->isRemoteControlled())
                 // only filter on normal edges
-                && (!filter || MSDevice_FCD::getEdgeFilter().count(veh->getEdge()) > 0) 
+                && (!filter || MSDevice_FCD::getEdgeFilter().count(veh->getEdge()) > 0)
                 && (veh->getDevice(typeid(MSDevice_FCD)) != nullptr || (radius > 0 && inRadius.count(veh) > 0))) {
             Position pos = veh->getPosition();
             if (useGeo) {
@@ -103,6 +103,8 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep, bool elevation) {
             of.writeAttr(SUMO_ATTR_POSITION, veh->getPositionOnLane());
             if (microVeh != nullptr) {
                 of.writeAttr(SUMO_ATTR_LANE, microVeh->getLane()->getID());
+            } else {
+                of.writeAttr(SUMO_ATTR_EDGE, veh->getEdge()->getID());
             }
             of.writeAttr(SUMO_ATTR_SLOPE, veh->getSlope());
             if (microVeh != nullptr) {
@@ -125,6 +127,12 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep, bool elevation) {
                     }
                     // if the kilometrage runs counter to the edge direction edge->getDistance() is negative
                     of.writeAttr("distance", fabs(distance));
+                }
+                for (const std::string& key : params) {
+                    const std::string value = veh->getParameter().getParameter(key);
+                    if (value != "") {
+                        of.writeAttr(StringUtils::escapeXML(key), StringUtils::escapeXML(value));
+                    }
                 }
             }
             of.closeTag();

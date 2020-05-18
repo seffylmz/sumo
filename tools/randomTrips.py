@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2010-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2010-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    randomTrips.py
 # @author  Daniel Krajzewicz
@@ -72,12 +76,14 @@ def get_options(args=None):
                          "<person> and <walk> are supported.")
     optParser.add_option("--fringe-start-attributes", dest="fringeattrs",
                          default="", help="additional trip attributes when starting on a fringe.")
-    optParser.add_option("-b", "--begin", type="float", default=0, help="begin time")
-    optParser.add_option("-e", "--end", type="float", default=3600, help="end time (default 3600)")
+    optParser.add_option("-b", "--begin", default=0, help="begin time")
+    optParser.add_option("-e", "--end", default=3600, help="end time (default 3600)")
     optParser.add_option(
         "-p", "--period", type="float", default=1, help="Generate vehicles with equidistant departure times and " +
         "period=FLOAT (default 1.0). If option --binomial is used, the expected arrival rate is set to 1/period.")
-    optParser.add_option("-s", "--seed", type="int", help="random seed")
+    optParser.add_option("-s", "--seed", type="int", default=42, help="random seed")
+    optParser.add_option("--random", action="store_true",
+                         default=False, help="use a random seed to initialize the random number generator")
     optParser.add_option("-l", "--length", action="store_true",
                          default=False, help="weight edge probability by length")
     optParser.add_option("-L", "--lanes", action="store_true",
@@ -219,7 +225,7 @@ class RandomTripGenerator:
         self.intermediate = intermediate
         self.pedestrians = pedestrians
 
-    def get_trip(self, min_distance, max_distance, maxtries=100):
+    def get_trip(self, min_distance, max_distance, maxtries=100, junctionTaz=False):
         for _ in range(maxtries):
             source_edge = self.source_generator.get()
             intermediate = [self.via_generator.get()
@@ -235,12 +241,14 @@ class RandomTripGenerator:
                       [destCoord])
             distance = sum([euclidean(p, q)
                             for p, q in zip(coords[:-1], coords[1:])])
-            if distance >= min_distance and (max_distance is None or distance < max_distance):
+            if (distance >= min_distance
+                    and (not junctionTaz or source_edge.getFromNode() != sink_edge.getToNode())
+                    and (max_distance is None or distance < max_distance)):
                 return source_edge, sink_edge, intermediate
         raise Exception("no trip found after %s tries" % maxtries)
 
 
-def get_prob_fun(options, fringe_bonus, fringe_forbidden):
+def get_prob_fun(options, fringe_bonus, fringe_forbidden, max_length):
     # fringe_bonus None generates intermediate way points
     def edge_probability(edge):
         if options.vclass and not edge.allows(options.vclass):
@@ -253,7 +261,11 @@ def get_prob_fun(options, fringe_bonus, fringe_forbidden):
             return 0  # the wrong kind of fringe
         prob = 1
         if options.length:
-            prob *= edge.getLength()
+            if options.fringe_factor != 1.0 and fringe_bonus is not None and edge.is_fringe():
+                # short fringe edges should not suffer a penalty
+                prob *= max_length
+            else:
+                prob *= edge.getLength()
         if options.lanes:
             prob *= edge.getLaneNumber()
         prob *= (edge.getSpeed() ** options.speed_exponent)
@@ -299,12 +311,16 @@ class LoadedProps:
 
 def buildTripGenerator(net, options):
     try:
+        max_length = 0
+        for edge in net.getEdges():
+            if not edge.is_fringe():
+                max_length = max(max_length, edge.getLength())
         forbidden_source_fringe = None if options.allow_fringe else "_outgoing"
         forbidden_sink_fringe = None if options.allow_fringe else "_incoming"
         source_generator = RandomEdgeGenerator(
-            net, get_prob_fun(options, "_incoming", forbidden_source_fringe))
+            net, get_prob_fun(options, "_incoming", forbidden_source_fringe, max_length))
         sink_generator = RandomEdgeGenerator(
-            net, get_prob_fun(options, "_outgoing", forbidden_sink_fringe))
+            net, get_prob_fun(options, "_outgoing", forbidden_sink_fringe, max_length))
         if options.weightsprefix:
             if os.path.isfile(options.weightsprefix + SOURCE_SUFFIX):
                 source_generator = RandomEdgeGenerator(
@@ -319,7 +335,7 @@ def buildTripGenerator(net, options):
 
     try:
         via_generator = RandomEdgeGenerator(
-            net, get_prob_fun(options, None, None))
+            net, get_prob_fun(options, None, None, 1))
         if options.weightsprefix and os.path.isfile(options.weightsprefix + VIA_SUFFIX):
             via_generator = RandomEdgeGenerator(
                 net, LoadedProps(options.weightsprefix + VIA_SUFFIX))
@@ -417,7 +433,7 @@ def prependSpace(s):
 
 
 def main(options):
-    if options.seed:
+    if not options.random:
         random.seed(options.seed)
 
     net = sumolib.net.readNet(options.netfile)
@@ -444,7 +460,8 @@ def main(options):
         label = "%s%s" % (options.tripprefix, idx)
         try:
             source_edge, sink_edge, intermediate = trip_generator.get_trip(
-                options.min_distance, options.max_distance, options.maxtries)
+                options.min_distance, options.max_distance, options.maxtries,
+                options.junctionTaz)
             combined_attrs = options.tripattrs
             if options.fringeattrs and source_edge.is_fringe(source_edge._incoming):
                 combined_attrs += " " + options.fringeattrs
@@ -501,10 +518,11 @@ def main(options):
                             (options.vtypeID, options.vehicle_class, vtypeattrs))
             options.tripattrs += ' type="%s"' % options.vtypeID
             personattrs += ' type="%s"' % options.vtypeID
-        depart = options.begin
+        depart = sumolib.miscutils.parseTime(options.begin)
+        maxTime = sumolib.miscutils.parseTime(options.end)
         if trip_generator:
             if options.flows == 0:
-                while depart < options.end:
+                while depart < maxTime:
                     if options.binomial is None:
                         # generate with constant spacing
                         idx = generate_one(idx)
@@ -552,6 +570,8 @@ def main(options):
         # write to temporary file because the input is read incrementally
         tmpTrips = options.tripfile + ".tmp"
         args2 = args + ['-o', tmpTrips, '--write-trips']
+        if options.junctionTaz:
+            args2 += ['--write-trips.junctions']
         print("calling ", " ".join(args2))
         subprocess.call(args2)
         os.remove(options.tripfile)  # on windows, rename does not overwrite

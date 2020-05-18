@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSMeanData.h
 /// @author  Daniel Krajzewicz
@@ -14,13 +18,7 @@
 ///
 // Data collector for edges/lanes
 /****************************************************************************/
-#ifndef MSMeanData_h
-#define MSMeanData_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -143,7 +141,7 @@ public:
          * @param[in] numLanes The total number of lanes for which the data was collected
          * @exception IOError If an error on writing occurs (!!! not yet implemented)
          */
-        virtual void write(OutputDevice& dev, const SUMOTime period,
+        virtual void write(OutputDevice& dev, long long int attributeMask, const SUMOTime period,
                            const double numLanes, const double defaultTravelTime,
                            const int numVehicles = -1) const = 0;
 
@@ -157,6 +155,14 @@ public:
         */
         double getTravelledDistance() const {
             return travelledDistance;
+        }
+
+        /// @brief write attribute if it passed the attribute mask check
+        template <class T>
+        static void checkWriteAttribute(OutputDevice& dev, long long int attributeMask, const SumoXMLAttr attr, const T& val) {
+            if (attributeMask == 0 || attributeMask & ((long long int)1 << attr)) {
+                dev.writeAttr(attr, val);
+            }
         }
 
     protected:
@@ -245,7 +251,7 @@ public:
          * @param[in] numLanes The total number of lanes for which the data was collected
          * @exception IOError If an error on writing occurs (!!! not yet implemented)
          */
-        void write(OutputDevice& dev, const SUMOTime period,
+        void write(OutputDevice& dev, long long int attributeMask, const SUMOTime period,
                    const double numLanes, const double defaultTravelTime,
                    const int numVehicles = -1) const;
 
@@ -309,7 +315,8 @@ public:
                const bool trackVehicles, const int detectPersons,
                const double minSamples,
                const double maxTravelTime,
-               const std::string& vTypes);
+               const std::string& vTypes,
+               const std::string& writeAttributes);
 
 
     /// @brief Destructor
@@ -432,6 +439,8 @@ protected:
     const bool myDumpEmpty;
 
 private:
+    static long long int initWrittenAttributes(const std::string writeAttributes, const std::string& id);
+
     /// @brief Information whether the output shall be edge-based (not lane-based)
     const bool myAmEdgeBased;
 
@@ -450,6 +459,9 @@ private:
     /// @brief Whether vehicles are tracked
     const bool myTrackVehicles;
 
+    /// @brief bit mask for checking attributes to be written
+    const long long int myWrittenAttributes;
+
     /// @brief The intervals for which output still has to be generated (only in the tracking case)
     std::list< std::pair<SUMOTime, SUMOTime> > myPendingIntervals;
 
@@ -461,9 +473,3 @@ private:
     MSMeanData& operator=(const MSMeanData&);
 
 };
-
-
-#endif
-
-/****************************************************************************/
-

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GNEUndoList.cpp
 /// @author  Jakob Erdmann
@@ -19,13 +23,8 @@
 // GNEUndoList inherits from FXUndoList and patches some methods. these are
 // prefixed with p_
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <utils/common/MsgHandler.h>
+#include <netedit/GNEViewNet.h>
 
 #include "GNEApplicationWindow.h"
 #include "GNEUndoList.h"
@@ -78,14 +77,22 @@ GNEUndoList::p_begin(const std::string& description) {
 void
 GNEUndoList::p_end() {
     myCommandGroups.pop();
+    // check if net has to be updated
+    if (myCommandGroups.empty() && myGNEApplicationWindowParent->getViewNet()) {
+        myGNEApplicationWindowParent->getViewNet()->updateViewNet();
+    }
     end();
 }
 
 
 void
 GNEUndoList::p_clear() {
+    // disable updating of interval bar
+    myGNEApplicationWindowParent->getViewNet()->getIntervalBar().disableIntervalBarUpdate();
     p_abort();
     clear();
+    // enable updating of interval bar again
+    myGNEApplicationWindowParent->getViewNet()->getIntervalBar().enableIntervalBarUpdate();
 }
 
 

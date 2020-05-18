@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    main.py
 # @author  Michael Behrisch
@@ -34,6 +38,10 @@ else:
 import sumolib  # noqa
 from sumolib.miscutils import getFreeSocketPort  # noqa
 
+# must be defined before _vehicle is imported
+def legacyGetLeader():
+    return _legacyGetLeader[0]
+
 from .domain import _defaultDomains  # noqa
 # StepListener needs to be imported for backwards compatibility
 from .connection import Connection, StepListener  # noqa
@@ -41,6 +49,7 @@ from .exceptions import FatalTraCIError, TraCIException  # noqa
 from . import _inductionloop, _lanearea, _multientryexit, _trafficlight  # noqa
 from . import _lane, _person, _route, _vehicle, _vehicletype  # noqa
 from . import _edge, _gui, _junction, _poi, _polygon, _simulation  # noqa
+from . import _calibrator  # noqa
 
 inductionloop = _inductionloop.InductionLoopDomain()
 lanearea = _lanearea.LaneAreaDomain()
@@ -57,10 +66,12 @@ junction = _junction.JunctionDomain()
 poi = _poi.PoiDomain()
 polygon = _polygon.PolygonDomain()
 simulation = _simulation.SimulationDomain()
+calibrator = _calibrator.CalibratorDomain()
 
 _connections = {}
 # cannot use immutable type as global variable
 _currentLabel = [""]
+_legacyGetLeader = [True]
 _connectHook = None
 
 
@@ -114,6 +125,8 @@ def start(cmd, port=None, numRetries=10, label="default", verbose=False):
     Start a sumo server using cmd, establish a connection to it and
     store it under the given label. This method is not thread-safe.
     """
+    if 'TRACI_LEGACY_LEADER' in os.environ:
+        setLegacyGetLeader()
     if label in _connections:
         raise TraCIException("Connection '%s' is already active." % label)
     while numRetries >= 0 and label not in _connections:
@@ -224,3 +237,7 @@ def getConnection(label="default"):
     if label not in _connections:
         raise TraCIException("connection with label '%s' is not known")
     return _connections[label]
+
+def setLegacyGetLeader(enabled):
+    _legacyGetLeader[0] = enabled;
+

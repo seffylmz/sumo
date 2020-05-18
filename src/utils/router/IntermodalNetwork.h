@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    IntermodalNetwork.h
 /// @author  Jakob Erdmann
@@ -15,13 +19,7 @@
 ///
 // The Edge definition for the Intermodal Router
 /****************************************************************************/
-#ifndef IntermodalNetwork_h
-#define IntermodalNetwork_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <string>
@@ -42,6 +40,7 @@
 #include "StopEdge.h"
 
 //#define IntermodalRouter_DEBUG_NETWORK
+//#define IntermodalRouter_DEBUG_ACCESS
 
 
 // ===========================================================================
@@ -405,7 +404,7 @@ public:
 
     void addCarEdges(const std::vector<E*>& edges) {
         for (const E* const edge : edges) {
-            if (edge->getFunction() == EDGEFUNC_NORMAL || edge->getFunction() == EDGEFUNC_INTERNAL) {
+            if (edge->getFunction() == SumoXMLEdgeFunc::NORMAL || edge->getFunction() == SumoXMLEdgeFunc::INTERNAL) {
                 myCarLookup[edge] = new CarEdge<E, L, N, V>(myNumericalID++, edge);
                 addEdge(myCarLookup[edge]);
             }
@@ -496,7 +495,9 @@ public:
         assert(stopEdge != nullptr);
         const bool transferCarWalk = ((category == SUMO_TAG_PARKING_AREA && (myCarWalkTransfer & PARKING_AREAS) != 0) ||
                                       (category == SUMO_TAG_BUS_STOP && (myCarWalkTransfer & PT_STOPS) != 0));
-        //std::cout << "addAccess stopId=" << stopId << " stopEdge=" << stopEdge->getID() << " pos=" << pos << " length=" << length << " cat=" << category << "\n";
+#ifdef IntermodalRouter_DEBUG_ACCESS
+        std::cout << "addAccess stopId=" << stopId << " stopEdge=" << stopEdge->getID() << " pos=" << pos << " length=" << length << " cat=" << category << "\n";
+#endif
         if (myStopConnections.count(stopId) == 0) {
             myStopConnections[stopId] = new StopEdge<E, L, N, V>(stopId, myNumericalID++, stopEdge);
             addEdge(myStopConnections[stopId]);
@@ -584,6 +585,12 @@ public:
             splitList.insert(splitIt - 1, stopConn);
             // correct length of subsequent edge
             last->setLength(last->getLength() - newLength);
+#ifdef IntermodalRouter_DEBUG_ACCESS
+            std::cout << "  splitList:\n";
+            for (auto conEdge : splitList) {
+                std::cout << "    " << conEdge->getID() << " length=" << conEdge->getLength() << "\n";
+            }
+#endif
         }
     }
 
@@ -829,8 +836,3 @@ private:
     IntermodalNetwork& operator=(const IntermodalNetwork& s);
 
 };
-
-
-#endif
-
-/****************************************************************************/

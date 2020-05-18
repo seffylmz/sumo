@@ -105,6 +105,8 @@ git push
 ```
 
 - Send us a [pull request on GitHub](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork)
+- Delete your fork, once the pull request is accepted or declined.
+- (If you wish to keep your fork consider adding a topic branch to your local copy and push it before submitting the pull request.)
 - More info may be found at
   <https://wiki.eclipse.org/Development_Resources/Contributing_via_Git>
 
@@ -293,10 +295,19 @@ client version and SUMO version match.
 
 ### Can SUMO simulate lefthand traffic?
 
-  Yes. It is supported since version 0.24.0. To build a network for
-  lefthand traffic, the option **--lefthand** must be set. Note, that this option
+  Yes. It is supported since version 0.24.0. To create a new network for
+  lefthand traffic, the option **--lefthand** must be set.
   
-  in earlier versions but only works correctly since 0.24.0.
+  To convert an existing network to lefthand driving, there are two options. Abstract networks (no geo-reference, coordinates do not matter much) can be processed with netconvert:
+```
+    netconvert -s righthand.net.xml --flip-y-axis -o lefthand.net.xml
+```
+
+   To convert an existing network and preserve coordinates, the network must first be disaggregated into nodes and edges and then re-assembled:
+```
+    netconvert -s righthand.net.xml --plain-output-prefix righthand
+    netconvert -e righthand.edg.xml -n righthand.nod.xml --lefthand -o lefthand.net.xml
+```
 
 ### Can SUMO generate movement traces?
 
@@ -645,8 +656,8 @@ use the Linux version or download the [nightly-extra version](http://sumo.dlr.de
     rerouters for continuous operation with configurable turning ratios.
   - If the networks is not circular to begin with (i.e a single
     road) you can make the network circular in a non-geometrical way
-    by adding a return edge and declaring it's length to be very
-    short (minimum 0.1m).
+    by adding a return edge that and declaring it's length to be very
+    short (minimum 0.1m). The return edge should have a sensible geometry (i.e. a detour loop) but the length can be made very short so that it does not affect vehicle routes.
 - You can generate long trips going around the network with lots of
   detours. This can be accomplished using
   [randomTrips.py](Tools/Trip.md#randomtripspy) by setting
@@ -830,9 +841,7 @@ Deadlocks in a scenario can have many causes:
     starting on the same edge).
 4.  invalid routing
   - only shortest path were used instead of [a user assignment algorithm](Demand/Dynamic_User_Assignment.md)
-  - to many vehicles start/end their route with a turn-around. This
-    can be avoided by using [TAZ for bidirectional departure](Tools/District.md#generatebididistrictspy)
-    or using [DUAROUTER option **--remove-loops**](DUAROUTER.md).
+  - to many vehicles start/end their route with a [turn-around](Simulation/Turnarounds.md).
 5.  invalid insertion (vehicles being inserted on the wrong lane close
     to the end of an edge where they need to change to another turn
     lane). This can be fixed by setting the vehicle attribute `departLane="best"`
@@ -851,12 +860,13 @@ develops.
 
 ### How do I get high flows/vehicle densities?
 
-The following parameters will allow flows in the range of 2500
-vehicles/hour/lane
+By default, insertion flow is [limited by the time resolution of the simulation](Simulation/VehicleInsertion.md#forcing_insertion_avoiding_depart_delay) (vehicles are only inserted every full second) and by the defaulti insertion speed of 0.
 
-- `<vType speedDev="0.1" .../>` (needed to allow vehicles to catch up with their leader which is
-  impossible if all drive at the same speed)
-- `<vehicle departSpeed="max" departPos="last" departLane="best" ../>`
+The following definition will allow flows in the range of 2500 vehicles/hour/lane:
+
+`<vehicle departSpeed="max" departPos="last" departLane="best" ../>`
+
+Instead of setting `departPos="last"`, the option **--extrapolate-departpos** can also be used.
 
 !!! caution
     When using *departLane* values *best*, *free* or *random_free* high flows on multi-lane roads require insertion edges that are somewhat longer than the braking distance of the fastest vehicles. This is because the lane selection checks vehicles on the insertion edge to determine a suitable insertion lane and short edges give insufficient information.
@@ -865,7 +875,6 @@ To increase flows even further the following settings can be used
 (potentially sacrificing some realism)
 
 - `<vType sigma="0" minGap="1" length="3" .../>`
-- \--step-length 0.5
 - `<vType tau="0.5" .../>` (should not be lower than step-length)
 
 ### How do I insert vehicles with a fixed density?
@@ -924,6 +933,22 @@ density:
 - The maximum length of a simulation scenario is 285 million years (or
   278 thousand years at millisecond time resolution). If you need to
   simulate longer time periods you must [save and reload the simulation state](#how_to_save_a_simulation_state_and_proceed_later_andor_differently)
+
+### How fast can SUMO run?
+
+This really depends on how many vehicles you have in your simulation at any given time (and to some extent on how strongly vehicles interact at intersections and how many lanes each vehicle has to chose during lane-changing). 
+When running in verbose mode, SUMO will tell you the UPS metric. This is vehicle **up**dates **p**er **s**econd. A number of x tells you that you could run x vehicles in real-time at a step length of 1 second. 
+Running time is inversely proportional to step-length (**--step-length 0.1** computes 10 times as many steps compared to the default of 1s and thus takes 10 times as long).
+
+Some examples on an average desktop PC:
+
+- vehicles on a long single lane: 700k UPS
+- vehicles on a long four-lane road: 240k UPS
+- complex grid network: 80k UPS
+
+In a city simulation of one day running with 80k UPS where a vehicle spends on average 30 minutes driving, 3.8 million vehicles can be simulated in 24h wall-clock time. However, the simulation would run slower than real-time whenver there are more than 80k Vehicles in the network at the same time because rush hours and low-traffic times would average out.
+
+Calculated as ` 24 * 3600 * 80000 / 1800 = 3840000 `
 
 ## Visualisation
 

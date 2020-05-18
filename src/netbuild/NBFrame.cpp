@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBFrame.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // Sets and checks options for netbuild
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <string>
@@ -56,6 +55,9 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addSynonyme("default.lanewidth", "lanewidth", true);
     oc.addDescription("default.lanewidth", "Building Defaults", "The default width of lanes");
 
+    oc.doRegister("default.spreadtype", new Option_String("right"));
+    oc.addDescription("default.spreadtype", "Building Defaults", "The default method for computing lane shapes from edge shapes");
+
     oc.doRegister("default.speed", 'S', new Option_Float((double) 13.89));
     oc.addSynonyme("default.speed", "speed", true);
     oc.addDescription("default.speed", "Building Defaults", "The default speed on an edge (in m/s)");
@@ -84,6 +86,9 @@ NBFrame::fillOptions(bool forNetgen) {
 
     oc.doRegister("default.junctions.radius", new Option_Float(4));
     oc.addDescription("default.junctions.radius", "Building Defaults", "The default turning radius of intersections");
+
+    oc.doRegister("default.connection-length", new Option_Float((double) NBEdge::UNSPECIFIED_LOADED_LENGTH));
+    oc.addDescription("default.connection-length", "Building Defaults", "The default length when overriding connection lengths");
 
     oc.doRegister("default.right-of-way", new Option_String("default"));
     oc.addDescription("default.right-of-way", "Building Defaults", "The default algorithm for computing right of way rules ('default', 'edgePriority')");
@@ -128,6 +133,9 @@ NBFrame::fillOptions(bool forNetgen) {
 
     oc.doRegister("no-turnarounds.except-turnlane", new Option_Bool(false));
     oc.addDescription("no-turnarounds.except-turnlane", "Junctions", "Disables building turnarounds except at at junctions with a dedicated turning lane");
+
+    oc.doRegister("no-turnarounds.fringe", new Option_Bool(false));
+    oc.addDescription("no-turnarounds.fringe", "Junctions", "Disables building turnarounds at fringe junctions");
 
     oc.doRegister("no-left-connections", new Option_Bool(false));
     oc.addDescription("no-left-connections", "Junctions", "Disables building connections to left");
@@ -199,11 +207,17 @@ NBFrame::fillOptions(bool forNetgen) {
         oc.doRegister("railway.topology.repair.connect-straight", new Option_Bool(false));
         oc.addDescription("railway.topology.repair.connect-straight", "Railway", "Allow bidiretional rail use wherever rails with opposite directions meet at a straight angle");
 
+        oc.doRegister("railway.topology.repair.stop-turn", new Option_Bool(false));
+        oc.addDescription("railway.topology.repair.stop-turn", "Railway", "Add turn-around connections at all loaded stops.");
+
         oc.doRegister("railway.topology.all-bidi", new Option_Bool(false));
         oc.addDescription("railway.topology.all-bidi", "Railway", "Make all rails usable in both direction");
 
         oc.doRegister("railway.topology.all-bidi.input-file", new Option_FileName());
         oc.addDescription("railway.topology.all-bidi.input-file", "Railway", "Make all rails edge ids from FILE usable in both direction");
+
+        oc.doRegister("railway.topology.direction-priority", new Option_Bool(false));
+        oc.addDescription("railway.topology.direction-priority", "Railway", "Set edge priority values based on estimated main direction");
 
         oc.doRegister("railway.access-distance", new Option_Float(150.f));
         oc.addDescription("railway.access-distance", "Railway", "The search radius for finding suitable road accesses for rail stops");
@@ -256,6 +270,9 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.doRegister("opposites.guess.fix-lengths", new Option_Bool(false));
     oc.addDescription("opposites.guess.fix-lengths", "Processing", "Ensure that opposite edges have the same length");
 
+    oc.doRegister("fringe.guess", new Option_Bool(false));
+    oc.addDescription("fringe.guess", "Processing", "Enable guessing of network fringe nodes");
+
     oc.doRegister("lefthand", new Option_Bool(false));
     oc.addDescription("lefthand", "Processing", "Assumes left-hand traffic on the network");
 
@@ -283,6 +300,10 @@ NBFrame::fillOptions(bool forNetgen) {
 
         oc.doRegister("speed.minimum", new Option_Float(0));
         oc.addDescription("speed.minimum", "Processing", "Modifies all edge speeds to at least FLOAT");
+
+        oc.doRegister("edges.join-tram-dist", new Option_Float(-1));
+        oc.addDescription("edges.join-tram-dist", "Processing",
+                "Joins tram edges into road lanes with similar geometry (within FLOAT distance)");
     }
 
     oc.doRegister("junctions.corner-detail", new Option_Integer(5));
@@ -666,6 +687,13 @@ NBFrame::checkOptions() {
     }
     if (oc.isDefault("railway.topology.all-bidi") && !oc.isDefault("railway.topology.all-bidi.input-file")) {
         oc.set("railway.topology.all-bidi", "true");
+    }
+    if (oc.isDefault("railway.topology.repair.stop-turn") && !oc.isDefault("railway.topology.repair")) {
+        oc.set("railway.topology.repair.stop-turn", "true");
+    }
+    if (!SUMOXMLDefinitions::LaneSpreadFunctions.hasString(oc.getString("default.spreadtype"))) {
+        WRITE_ERROR("Unknown value for default.spreadtype '" + oc.getString("default.spreadtype") + "'.");
+        ok = false;
     }
     return ok;
 }

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2007-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2007-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    SUMOSAXAttributesImpl_Cached.h
 /// @author  Jakob Erdmann
@@ -13,13 +17,7 @@
 ///
 // Encapsulated xml-attributes that use a map from string-attr-names to string-attr-values as backend
 /****************************************************************************/
-#ifndef SUMOSAXAttributesImpl_Cached_h
-#define SUMOSAXAttributesImpl_Cached_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <string>
@@ -49,7 +47,7 @@ public:
      * @param[in] objectType object type in string format
      */
     SUMOSAXAttributesImpl_Cached(const std::map<std::string, std::string>& attrs,
-                                 const std::map<int, std::string>& predefinedTagsMML,
+                                 const std::vector<std::string>& predefinedTagsMML,
                                  const std::string& objectType);
 
     /** @brief Constructor
@@ -59,7 +57,7 @@ public:
      * @param[in] objectType object type in string format
      */
     SUMOSAXAttributesImpl_Cached(const std::map<SumoXMLAttr, std::string>& attrs,
-                                 const std::map<int, std::string>& predefinedTagsMML,
+                                 const std::vector<std::string>& predefinedTagsMML,
                                  const std::string& objectType);
 
     /// @brief Destructor
@@ -285,7 +283,7 @@ private:
     std::map<std::string, std::string> myAttrs;
 
     /// @brief Map of attribute ids to their (readable) string-representation
-    const std::map<int, std::string>& myPredefinedTagsMML;
+    const std::vector<std::string>& myPredefinedTagsMML;
 
 private:
     /// @brief Invalidated copy constructor.
@@ -294,9 +292,3 @@ private:
     /// @brief Invalidated assignment operator.
     SUMOSAXAttributesImpl_Cached& operator=(const SUMOSAXAttributesImpl_Cached& src) = delete;
 };
-
-
-#endif
-
-/****************************************************************************/
-

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    TraCIAPI.h
 /// @author  Daniel Krajzewicz
@@ -15,13 +19,7 @@
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
-#ifndef TraCIAPI_h
-#define TraCIAPI_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <vector>
 #include <limits>
 #include <string>
@@ -120,6 +118,9 @@ public:
 
         /// @brief retrieve generic paramter
         std::string getParameter(const std::string& objectID, const std::string& key) const;
+
+        /// @brief retrieve generic parameter and return (key, value) tuple
+        std::pair<std::string, std::string> getParameterWithKey(const std::string& objectID, const std::string& key) const;
 
         /// @brief set generic paramter
         void setParameter(const std::string& objectID, const std::string& key, const std::string& value) const;
@@ -690,6 +691,9 @@ public:
         double getSpeed(const std::string& vehicleID) const;
         double getLateralSpeed(const std::string& vehicleID) const;
         double getAcceleration(const std::string& vehicleID) const;
+        double getFollowSpeed(const std::string& vehicleID, double speed, double gap, double leaderSpeed, double leaderMaxDecel, const std::string& leaderID = "") const;
+        double getSecureGap(const std::string& vehicleID, double speed, double leaderSpeed, double leaderMaxDecel, const std::string& leaderID = "") const;
+        double getStopSpeed(const std::string& vehicleID, double speed, double gap) const;
         libsumo::TraCIPosition getPosition(const std::string& vehicleID) const;
         libsumo::TraCIPosition getPosition3D(const std::string& vehicleID) const;
         double getAngle(const std::string& vehicleID) const;
@@ -730,6 +734,7 @@ public:
         std::vector<libsumo::TraCIBestLanesData> getBestLanes(const std::string& vehicleID) const;
         std::pair<std::string, double> getLeader(const std::string& vehicleID, double dist) const;
         int getRoutingMode(const std::string& vehicleID) const;
+        double getStopDelay(const std::string& vehicleID) const;
         std::pair<int, int> getLaneChangeState(const std::string& vehicleID, int direction) const;
         /// @}
 
@@ -781,7 +786,7 @@ public:
         void setRouteID(const std::string& vehicleID, const std::string& routeID) const;
         void setRoute(const std::string& vehicleID, const std::vector<std::string>& edge) const;
         void rerouteTraveltime(const std::string& vehicleID, bool currentTravelTimes = true) const;
-        void moveTo(const std::string& vehicleID, const std::string& laneID, double position) const;
+        void moveTo(const std::string& vehicleID, const std::string& laneID, double position, int reason = libsumo::MOVE_TELEPORT) const;
         void moveToXY(const std::string& vehicleID, const std::string& edgeID, const int lane, const double x, const double y, const double angle, const int keepRoute) const;
         void slowDown(const std::string& vehicleID, double speed, double duration) const;
         void openGap(const std::string& vehicleID, double newTau, double duration, double changeRate, double maxDecel) const;
@@ -1063,8 +1068,3 @@ protected:
     /// @brief The reusable input storage
     mutable tcpip::Storage myInput;
 };
-
-
-#endif
-
-/****************************************************************************/

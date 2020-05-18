@@ -1,10 +1,14 @@
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    edge.py
 # @author  Daniel Krajzewicz
@@ -22,7 +26,7 @@ class Edge:
 
     """ Edges from a sumo network """
 
-    def __init__(self, id, fromN, toN, prio, function, name):
+    def __init__(self, id, fromN, toN, prio, function, name, edgeType=''):
         self._id = id
         self._from = fromN
         self._to = toN
@@ -46,7 +50,9 @@ class Edge:
         self._function = function
         self._tls = None
         self._name = name
+        self._type = edgeType
         self._params = {}
+        self._bidi = None
 
     def getName(self):
         return self._name
@@ -64,6 +70,9 @@ class Edge:
 
     def getPriority(self):
         return self._priority
+
+    def getType(self):
+        return self._type
 
     def getTLS(self):
         return self._tls
@@ -231,6 +240,9 @@ class Edge:
 
     def getToNode(self):
         return self._to
+
+    def getBidi(self):
+        return self._bidi
 
     def is_fringe(self, connections=None):
         """true if this edge has no incoming or no outgoing connections (except turnarounds)

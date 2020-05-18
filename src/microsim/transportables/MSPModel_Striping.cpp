@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2014-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2014-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSPModel_Striping.cpp
 /// @author  Jakob Erdmann
@@ -14,10 +18,6 @@
 ///
 // The pedestrian following model (prototype)
 /****************************************************************************/
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <cmath>
@@ -173,6 +173,7 @@ MSPModel_Striping::remove(MSTransportableStateAdapter* state) {
     for (Pedestrians::iterator it = pedestrians.begin(); it != pedestrians.end(); ++it) {
         if (*it == state) {
             pedestrians.erase(it);
+            myNumActivePedestrians--;
             return;
         }
     }
@@ -381,7 +382,7 @@ MSPModel_Striping::initWalkingAreaPaths(const MSNet*) {
                             shape = shape.reverse();
                         }
                         WalkingAreaPath wap = WalkingAreaPath(from, walkingArea, to, shape, fromDir);
-                        myWalkingAreaPaths[std::make_pair(from, to)] = wap;
+                        myWalkingAreaPaths.insert(std::make_pair(std::make_pair(from, to), wap));
                         myMinNextLengths[walkingArea] = MIN2(myMinNextLengths[walkingArea], wap.length);
                     }
                 }
@@ -391,22 +392,20 @@ MSPModel_Striping::initWalkingAreaPaths(const MSNet*) {
 }
 
 
-MSPModel_Striping::WalkingAreaPath*
+const MSPModel_Striping::WalkingAreaPath*
 MSPModel_Striping::getArbitraryPath(const MSEdge* walkingArea) {
     assert(walkingArea->isWalkingArea());
     std::vector<const MSLane*> lanes;
-    const MSEdgeVector& incoming = walkingArea->getPredecessors();
-    for (int j = 0; j < (int)incoming.size(); ++j) {
-        lanes.push_back(getSidewalk<MSEdge, MSLane>(incoming[j]));
+    for (const MSEdge* const pred : walkingArea->getPredecessors()) {
+        lanes.push_back(getSidewalk<MSEdge, MSLane>(pred));
     }
-    const MSEdgeVector& outgoing = walkingArea->getSuccessors();
-    for (int j = 0; j < (int)outgoing.size(); ++j) {
-        lanes.push_back(getSidewalk<MSEdge, MSLane>(outgoing[j]));
+    for (const MSEdge* const succ : walkingArea->getSuccessors()) {
+        lanes.push_back(getSidewalk<MSEdge, MSLane>(succ));
     }
     if (lanes.size() < 1) {
         throw ProcessError("Invalid walkingarea '" + walkingArea->getID() + "' does not allow continuation.");
     }
-    return &myWalkingAreaPaths[std::make_pair(lanes.front(), lanes.back())];
+    return &myWalkingAreaPaths.find(std::make_pair(lanes.front(), lanes.back()))->second;
 }
 
 
@@ -628,8 +627,8 @@ MSPModel_Striping::getNeighboringObstacles(const Pedestrians& pedestrians, int e
     for (int index = egoIndex + 1; index < (int)pedestrians.size(); index++) {
         const PState& p = *pedestrians[index];
         if DEBUGCOND(ego) {
-            std::cout << SIMTIME << " ped=" << ego.getID() << " cur=" << egoStripe << " checking neighbor " << p.getID() 
-                << " nCur=" << p.stripe() << " nOth=" << p.otherStripe();
+            std::cout << SIMTIME << " ped=" << ego.getID() << " cur=" << egoStripe << " checking neighbor " << p.getID()
+                      << " nCur=" << p.stripe() << " nOth=" << p.otherStripe();
         }
         if (!p.myWaitingToEnter && !p.myAmJammed) {
             const Obstacle o(p);
@@ -852,13 +851,13 @@ MSPModel_Striping::moveInDirection(SUMOTime currentTime, std::set<MSPerson*>& ch
                     if (p->myWalkingAreaPath == path) {
                         transformedPeds.push_back(p);
                         if (path == debugPath) std::cout << "  ped=" << p->myPerson->getID() << "  relX=" << p->myRelX << " relY=" << p->myRelY << " (untransformed), vecCoord="
-                            << path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1)) << "\n";
+                                                             << path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1)) << "\n";
                     } else if (p->myWalkingAreaPath->from == path->to && p->myWalkingAreaPath->to == path->from) {
                         if (p->myWalkingAreaPath->dir != path->dir) {
                             // opposite direction is already in the correct coordinate system
                             transformedPeds.push_back(p);
                             if (path == debugPath) std::cout << "  ped=" << p->myPerson->getID() << "  relX=" << p->myRelX << " relY=" << p->myRelY << " (untransformed), vecCoord="
-                                << path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1)) << "\n";
+                                                                 << path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1)) << "\n";
                         } else {
                             // x position must be reversed
                             PState* tp = new PState(*p);
@@ -869,7 +868,7 @@ MSPModel_Striping::moveInDirection(SUMOTime currentTime, std::set<MSPerson*>& ch
                             toDelete.push_back(tp);
                             transformedPeds.push_back(tp);
                             if (path == debugPath) std::cout << "  ped=" << p->myPerson->getID() << "  relX=" << p->myRelX << " relY=" << p->myRelY << " (semi-transformed), vecCoord="
-                                << path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1)) << "\n";
+                                                                 << path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1)) << "\n";
                         }
                     } else {
                         const Position relPos = path->shape.transformToVectorCoordinates(p->getPosition(*p->myStage, -1));
@@ -1321,7 +1320,7 @@ MSPModel_Striping::PState::PState(MSPerson* person, MSStageMoving* stage, const 
     if (route.size() == 1) {
         // only a single edge, move towards end pos
         myDir = (myRelX <= myStage->getArrivalPos()) ? FORWARD : BACKWARD;
-    } else if (route.front()->getFunction() != EDGEFUNC_NORMAL) {
+    } else if (route.front()->getFunction() != SumoXMLEdgeFunc::NORMAL) {
         // start on an intersection
         myDir = FORWARD;
         if (route.front()->isWalkingArea()) {
@@ -1479,7 +1478,7 @@ MSPModel_Striping::PState::moveToNextLane(SUMOTime currentTime) {
         const MSLane* oldLane = myLane;
         myLane = myNLI.lane;
         myDir = myNLI.dir;
-        const bool normalLane = (myLane == nullptr || myLane->getEdge().getFunction() == EDGEFUNC_NORMAL || &myLane->getEdge() == myStage->getNextRouteEdge());
+        const bool normalLane = (myLane == nullptr || myLane->getEdge().getFunction() == SumoXMLEdgeFunc::NORMAL || &myLane->getEdge() == myStage->getNextRouteEdge());
         if DEBUGCOND(*this) {
             std::cout << SIMTIME
                       << " ped=" << myPerson->getID()
@@ -1509,9 +1508,16 @@ MSPModel_Striping::PState::moveToNextLane(SUMOTime currentTime) {
             }
             if (myLane->getEdge().isWalkingArea()) {
                 if (myNLI.dir != UNDEFINED_DIRECTION) {
-                    myWalkingAreaPath = &myWalkingAreaPaths[std::make_pair(oldLane, myNLI.lane)];
-                    assert(myWalkingAreaPath->from != 0);
-                    assert(myWalkingAreaPath->to != 0);
+                    const auto pathIt = myWalkingAreaPaths.find(std::make_pair(oldLane, myNLI.lane));
+                    if (pathIt != myWalkingAreaPaths.end()) {
+                        myWalkingAreaPath = &pathIt->second;
+                    } else {
+                        // this can happen in case of moveToXY where oldLane can point anywhere
+                        const MSEdge* const pred = myLane->getEdge().getPredecessors().front();
+                        const auto pathIt2 = myWalkingAreaPaths.find(std::make_pair(getSidewalk<MSEdge, MSLane>(pred), myNLI.lane));
+                        assert(pathIt2 != myWalkingAreaPaths.end());
+                        myWalkingAreaPath = &pathIt2->second;
+                    }
                     assert(myWalkingAreaPath->shape.size() >= 2);
                     if DEBUGCOND(*this) {
                         std::cout << "  mWAPath shape=" << myWalkingAreaPath->shape << " length=" << myWalkingAreaPath->length << "\n";
@@ -1532,7 +1538,7 @@ MSPModel_Striping::PState::moveToNextLane(SUMOTime currentTime) {
                         myStage->moveToNextEdge(myPerson, currentTime, nullptr);
                         myLane = myNLI.lane;
                         assert(myLane != 0);
-                        assert(myLane->getEdge().getFunction() == EDGEFUNC_NORMAL);
+                        assert(myLane->getEdge().getFunction() == SumoXMLEdgeFunc::NORMAL);
                         myNLI = getNextLane(*this, myLane, oldLane);
                         myWalkingAreaPath = nullptr;
                     } else {

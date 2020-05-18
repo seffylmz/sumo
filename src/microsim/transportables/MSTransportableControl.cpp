@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSTransportableControl.cpp
 /// @author  Daniel Krajzewicz
@@ -16,11 +20,6 @@
 ///
 // Stores all persons in the net and handles their waiting for cars.
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <vector>
@@ -45,7 +44,11 @@ MSTransportableControl::MSTransportableControl(const bool isPerson):
     myLoadedNumber(0),
     myRunningNumber(0),
     myJammedNumber(0),
+    myWaitingForDepartureNumber(0),
     myWaitingForVehicleNumber(0),
+    myWaitingUntilNumber(0),
+    myEndedNumber(0),
+    myArrivedNumber(0),
     myHaveNewWaiting(false) {
     const OptionsCont& oc = OptionsCont::getOptions();
     MSNet* const net = MSNet::getInstance();
@@ -86,6 +89,7 @@ MSTransportableControl::add(MSTransportable* transportable) {
         const SUMOTime step = param.depart % DELTA_T == 0 ? param.depart : (param.depart / DELTA_T + 1) * DELTA_T;
         myWaiting4Departure[step].push_back(transportable);
         myLoadedNumber++;
+        myWaitingForDepartureNumber++;
         return true;
     }
     return false;
@@ -117,6 +121,7 @@ MSTransportableControl::erase(MSTransportable* transportable) {
     const std::map<std::string, MSTransportable*>::iterator i = myTransportables.find(transportable->getID());
     if (i != myTransportables.end()) {
         myRunningNumber--;
+        myEndedNumber++;
         delete i->second;
         myTransportables.erase(i);
     }
@@ -130,6 +135,7 @@ MSTransportableControl::setWaitEnd(const SUMOTime time, MSTransportable* transpo
     const TransportableVector& transportables = myWaiting4Departure[step];
     if (std::find(transportables.begin(), transportables.end(), transportable) == transportables.end()) {
         myWaitingUntil[step].push_back(transportable);
+        myWaitingUntilNumber++;
     }
 }
 
@@ -141,6 +147,7 @@ MSTransportableControl::checkWaiting(MSNet* net, const SUMOTime time) {
         const TransportableVector& transportables = myWaiting4Departure[time];
         // we cannot use an iterator here because there might be additions to the vector while proceeding
         for (int i = 0; i < (int)transportables.size(); ++i) {
+            myWaitingForDepartureNumber--;
             if (transportables[i]->proceed(net, time)) {
                 myRunningNumber++;
             } else {
@@ -153,6 +160,7 @@ MSTransportableControl::checkWaiting(MSNet* net, const SUMOTime time) {
         const TransportableVector& transportables = myWaitingUntil[time];
         // we cannot use an iterator here because there might be additions to the vector while proceeding
         for (int i = 0; i < (int)transportables.size(); ++i) {
+            myWaitingUntilNumber--;
             if (!transportables[i]->proceed(net, time)) {
                 erase(transportables[i]);
             }
@@ -179,18 +187,13 @@ MSTransportableControl::boardAnyWaiting(MSEdge* edge, SUMOVehicle* vehicle, cons
         for (TransportableVector::iterator i = wait.begin(); i != wait.end();) {
             if ((*i)->isWaitingFor(vehicle)
                     && vehicle->allowsBoarding(*i)
-                    && timeToBoardNextPerson <= currentTime
+                    && timeToBoardNextPerson - DELTA_T <= currentTime
                     && stop.startPos <= (*i)->getEdgePos()
                     && (*i)->getEdgePos() <= stop.endPos) {
                 edge->removePerson(*i);
                 vehicle->addTransportable(*i);
                 if (timeToBoardNextPerson >= 0) { // meso does not have boarding times
-                    //if the time a person needs to enter the vehicle extends the duration of the stop of the vehicle extend
-                    //the duration by setting it to the boarding duration of the person
                     const SUMOTime boardingDuration = vehicle->getVehicleType().getBoardingDuration();
-                    if (boardingDuration >= stopDuration) {
-                        stopDuration = boardingDuration;
-                    }
                     //update the time point at which the next person can board the vehicle
                     if (timeToBoardNextPerson > currentTime - DELTA_T) {
                         timeToBoardNextPerson += boardingDuration;
@@ -210,6 +213,12 @@ MSTransportableControl::boardAnyWaiting(MSEdge* edge, SUMOVehicle* vehicle, cons
         if (wait.size() == 0) {
             myWaiting4Vehicle.erase(myWaiting4Vehicle.find(edge));
         }
+        if (ret && timeToBoardNextPerson >= 0) {
+            //if the time a person needs to enter the vehicle extends the duration of the stop of the vehicle extend
+            //the duration by setting it to the boarding duration of the person
+            stopDuration = MAX2(stopDuration, timeToBoardNextPerson - currentTime);
+            timeToBoardNextPerson -= DELTA_T;
+        }
     }
     return ret;
 }
@@ -219,24 +228,27 @@ bool
 MSTransportableControl::loadAnyWaiting(MSEdge* edge, SUMOVehicle* vehicle, const SUMOVehicleParameter::Stop& stop, SUMOTime& timeToLoadNextContainer, SUMOTime& stopDuration) {
     bool ret = false;
     if (myWaiting4Vehicle.find(edge) != myWaiting4Vehicle.end()) {
+        SUMOTime currentTime = MSNet::getInstance()->getCurrentTimeStep();
         TransportableVector& waitContainers = myWaiting4Vehicle[edge];
         for (TransportableVector::iterator i = waitContainers.begin(); i != waitContainers.end();) {
-            SUMOTime currentTime = MSNet::getInstance()->getCurrentTimeStep();
             if ((*i)->isWaitingFor(vehicle)
                     && vehicle->getVehicleType().getContainerCapacity() > vehicle->getContainerNumber()
-                    && timeToLoadNextContainer <= currentTime
+                    && timeToLoadNextContainer - DELTA_T <= currentTime
                     && stop.startPos <= (*i)->getEdgePos()
                     && (*i)->getEdgePos() <= stop.endPos) {
                 edge->removeContainer(*i);
                 vehicle->addTransportable(*i);
-                //if the time a container needs to get loaded on the vehicle extends the duration of the stop of the vehicle extend
-                //the duration by setting it to the loading duration of the container
-                const SUMOTime loadingDuration = vehicle->getVehicleType().getLoadingDuration();
-                if (loadingDuration >= stopDuration) {
-                    stopDuration = loadingDuration;
+                if (timeToLoadNextContainer >= 0) { // meso does not have loading times
+                    //if the time a person needs to enter the vehicle extends the duration of the stop of the vehicle extend
+                    //the duration by setting it to the boarding duration of the person
+                    const SUMOTime loadingDuration = vehicle->getVehicleType().getLoadingDuration();
+                    //update the time point at which the next container can be loaded on the vehicle
+                    if (timeToLoadNextContainer > currentTime - DELTA_T) {
+                        timeToLoadNextContainer += loadingDuration;
+                    } else {
+                        timeToLoadNextContainer = currentTime + loadingDuration;
+                    }
                 }
-                //update the time point at which the next container can be loaded on the vehicle
-                timeToLoadNextContainer = currentTime + loadingDuration;
 
                 static_cast<MSStageDriving*>((*i)->getCurrentStage())->setVehicle(vehicle);
                 i = waitContainers.erase(i);
@@ -248,6 +260,12 @@ MSTransportableControl::loadAnyWaiting(MSEdge* edge, SUMOVehicle* vehicle, const
         }
         if (waitContainers.size() == 0) {
             myWaiting4Vehicle.erase(myWaiting4Vehicle.find(edge));
+        }
+        if (ret && timeToLoadNextContainer >= 0) {
+            //if the time a container needs to get loaded on the vehicle extends the duration of the stop of the vehicle extend
+            //the duration by setting it to the loading duration of the container
+            stopDuration = MAX2(stopDuration, timeToLoadNextContainer - currentTime);
+            timeToLoadNextContainer -= DELTA_T;
         }
     }
     return ret;
@@ -271,6 +289,21 @@ MSTransportableControl::getActiveCount() {
     return (int)myWaiting4Departure.size() + myRunningNumber - myWaitingForVehicleNumber;
 }
 
+int
+MSTransportableControl::getMovingNumber() const {
+    return myMovementModel->getActiveNumber();
+}
+
+
+int
+MSTransportableControl::getRidingNumber() const {
+    return myRunningNumber - myWaitingUntilNumber - myWaitingForVehicleNumber - getMovingNumber();
+}
+
+int
+MSTransportableControl::getDepartedNumber() const {
+    return myLoadedNumber - myWaitingForDepartureNumber;
+}
 
 void
 MSTransportableControl::abortAnyWaitingForVehicle() {

@@ -461,6 +461,11 @@ slightly different.
 circles are drawn instead of detailed junction shapes which can improve
 visibility.
 
+#### Changing Elevation #####
+When checking the 'Elevation' checkbox, elevation of junctions and existing geometry points can be modified by dragging the with the mouse (with their x,y coordinates remaining unchanged). 
+At the same time, the numerical elevation value will be displayed for every junction and geometry point. 
+It is useful to combine this with [elevation or sloope coloring](Networks/Elevation.md#visualizing_elevation_data).
+
 #### Moving Object Selections
 
 - When selecting neighboring edges and dragging one of them, the
@@ -1317,7 +1322,7 @@ A restricted lane can be transformed in a normal lane with the option
 restricted lane*
 
 ## Junction
-
+- *Split Junction*: Undo a prior join (i.e. one that was computed with option **--junctions.join**)
 - *Set custom shape*: Allows drawing a custom junction shape via a
   [\#Modifiable Poly](#modifiable_poly) (see below). The
   junction shape determines where the incoming edges end and the

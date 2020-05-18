@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GLHelper.h
 /// @author  Daniel Krajzewicz
@@ -15,13 +19,7 @@
 ///
 // Some methods which help to draw certain geometrical objects in openGL
 /****************************************************************************/
-#ifndef GLHelper_h
-#define GLHelper_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <vector>
@@ -291,9 +289,11 @@ public:
     */
     static void drawText(const std::string& text, const Position& pos,
                          const double layer, const double size,
-                         const RGBColor& col = RGBColor::BLACK, const double angle = 0,
-                         int align = 0,
-                         double width = -1);
+                         const RGBColor& col = RGBColor::BLACK,
+                         const double angle = 0,
+                         const int align = 0,
+                         double width = -1,
+                         const bool mirrorText = false);
 
     static void drawTextSettings(
         const GUIVisualizationTextSettings& settings,
@@ -314,7 +314,7 @@ public:
 
     /// @brief draw text and the end of shape
     static void drawTextAtEnd(const std::string& text, const PositionVector& shape, double x,
-            const GUIVisualizationTextSettings& settings, const double scale);
+                              const GUIVisualizationTextSettings& settings, const double scale);
 
     /// @brief draw crossties for railroads or pedestrian crossings
     static void drawCrossTies(const PositionVector& geom,
@@ -361,9 +361,3 @@ private:
     /// @brief static vector with a list of alternated black/white colors (used for contourns)
     static std::vector<RGBColor> myDottedcontourColors;
 };
-
-
-#endif
-
-/****************************************************************************/
-

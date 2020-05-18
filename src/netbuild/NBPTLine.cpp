@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBPTLine.cpp
 /// @author  Gregor Laemmel
@@ -213,5 +217,49 @@ NBPTLine::replaceStop(NBPTStop* oldStop, NBPTStop* newStop) {
         if (myPTStops[i] == oldStop) {
             myPTStops[i] = newStop;
         }
+    }
+}
+
+void
+NBPTLine::replaceEdge(const std::string& edgeID, const EdgeVector& replacement) {
+    EdgeVector oldRoute = myRoute;
+    int stopIndex = 0;
+    myRoute.clear();
+    std::vector<NBPTStop*> unassigned;
+    for (NBEdge* e : oldRoute) {
+        if (e->getID() == edgeID) {
+            myRoute.insert(myRoute.end(), replacement.begin(), replacement.end());
+        } else {
+            myRoute.push_back(e);
+        }
+        while (stopIndex < (int)myPTStops.size() && myPTStops[stopIndex]->getEdgeId() == e->getID()) {
+            if (e->getID() == edgeID) {
+                NBPTStop* stop = myPTStops[stopIndex];
+                // find best edge among replacement edges
+                double bestDist = std::numeric_limits<double>::max();
+                NBEdge* bestEdge = nullptr;
+                for (NBEdge* cand : replacement) {
+                    double dist = cand->getGeometry().distance2D(stop->getPosition());
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestEdge = cand;
+                    }
+                }
+                if (bestDist != std::numeric_limits<double>::max()) {
+                    stop->findLaneAndComputeBusStopExtent(bestEdge);
+                    if ((bestEdge->getPermissions() & SVC_PEDESTRIAN) != 0) {
+                        // no need for access
+                        stop->clearAccess();
+                    }
+                } else {
+                    WRITE_WARNING("Could not re-assign ptstop '" + stop->getID() + "' after replacing edge '" + edgeID + "'");
+                    unassigned.push_back(stop);
+                }
+            }
+            stopIndex++;
+        }
+    }
+    for (NBPTStop* stop: unassigned) {
+        myPTStops.erase(std::find(myPTStops.begin(), myPTStops.end(), stop));
     }
 }

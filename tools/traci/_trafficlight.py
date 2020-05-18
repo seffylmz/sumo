@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    _trafficlight.py
 # @author  Michael Behrisch
@@ -215,6 +219,42 @@ class TrafficLightDomain(Domain):
         result = self._connection._checkResult(
             self._cmdGetID, tc.VAR_PERSON_NUMBER, tlsID)
         return result.readInt()
+
+    def getBlockingVehicles(self, tlsID, linkIndex):
+        """getBlockingVehicles(string, int) -> int
+        Returns the list of vehicles that are blocking the subsequent block for
+        the given tls-linkIndex
+        """
+        self._connection._beginMessage(
+            self._cmdGetID, tc.TL_BLOCKING_VEHICLES, tlsID, 1 + 4)
+        self._connection._string += struct.pack("!Bi", tc.TYPE_INTEGER, linkIndex)
+        result = self._connection._checkResult(
+            self._cmdGetID, tc.TL_BLOCKING_VEHICLES, tlsID)
+        return result.readStringList()
+
+    def getRivalVehicles(self, tlsID, linkIndex):
+        """getRivalVehicles(string, int) -> int
+        Returns the list of vehicles that also wish to enter the subsequent block for
+        the given tls-linkIndex (regardless of priority)
+        """
+        self._connection._beginMessage(
+            self._cmdGetID, tc.TL_RIVAL_VEHICLES, tlsID, 1 + 4)
+        self._connection._string += struct.pack("!Bi", tc.TYPE_INTEGER, linkIndex)
+        result = self._connection._checkResult(
+            self._cmdGetID, tc.TL_RIVAL_VEHICLES, tlsID)
+        return result.readStringList()
+
+    def getPriorityVehicles(self, tlsID, linkIndex):
+        """getPriorityVehicles(string, int) -> int
+        Returns the list of vehicles that also wish to enter the subsequent block for
+        the given tls-linkIndex (only those with higher priority)
+        """
+        self._connection._beginMessage(
+            self._cmdGetID, tc.TL_PRIORITY_VEHICLES, tlsID, 1 + 4)
+        self._connection._string += struct.pack("!Bi", tc.TYPE_INTEGER, linkIndex)
+        result = self._connection._checkResult(
+            self._cmdGetID, tc.TL_PRIORITY_VEHICLES, tlsID)
+        return result.readStringList()
 
     def setRedYellowGreenState(self, tlsID, state):
         """setRedYellowGreenState(string, string) -> None

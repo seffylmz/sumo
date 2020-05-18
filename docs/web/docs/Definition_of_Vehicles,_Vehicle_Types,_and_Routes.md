@@ -76,7 +76,7 @@ A vehicle may be defined using the following attributes:
 | color           | [color](#colors)                                                   | This vehicle's color       |
 | **depart**      | float (s) or one of *triggered*, *containerTriggered*                         | The time step at which the vehicle shall enter the network; see [\#depart](#depart). Alternatively the vehicle departs once a [person enters](Specification/Persons.md#rides) or a [container is loaded](Specification/Containers.md) |
 | departLane      | int/string (≥0, "random", "free", "allowed", "best", "first")                 | The lane on which the vehicle shall be inserted; see [\#departLane](#departlane). *default: "first"*                                                                                                                                                  |
-| departPos       | float(m)/string ("random", "free", "random_free", "base", "last")            | The position at which the vehicle shall enter the net; see [\#departPos](#departpos). *default: "base"*                                                                                                                                               |
+| departPos       | float(m)/string ("random", "free", "random_free", "base", "last", "stop")            | The position at which the vehicle shall enter the net; see [\#departPos](#departpos). *default: "base"*                                                                                                                                               |
 | departSpeed     | float(m/s)/string (≥0, "random", "max", "desired", "speedLimit")              | The speed with which the vehicle shall enter the network; see [\#departSpeed](#departspeed). *default: 0*                                                                                                                                             |
 | arrivalLane     | int/string (≥0,"current")                                                     | The lane at which the vehicle shall leave the network; see [\#arrivalLane](#arrivallane). *default: "current"*                                                                                                                                        |
 | arrivalPos      | float(m)/string (≥0<sup>(1)</sup>, "random", "max")                           | The position at which the vehicle shall leave the network; see [\#arrivalPos](#arrivalpos). *default: "max"*                                                                                                                                          |
@@ -126,7 +126,9 @@ are:
 | -------------- | --------------------------- | ----------------------------------------------------------------------------------- |
 | **id**         | id (string)                 | The name of the route                                                               |
 | **edges**      | id list                     | The edges the vehicle shall drive along, given as their ids, separated using spaces |
-| color          | [color](#colors) | This route's color                                                                  |
+| color          | [color](#colors) | This route's color                 |
+| repeat         | int | The number of times that the edges of this route shall be repeated (default 0)  |
+| period         | time (s) | When defining a repeating route with stops and those stops use the `until` attribute, the times will be shifted forward by 'period' on each repeat |
 
 There are a few important things to consider when building your own
 routes:
@@ -155,6 +157,13 @@ using [{{SUMO}}/tools/route/sort_routes.py]({{Source}}tools/route/sort_routes.py
 
 !!! caution
     sumo may enter an infinite loop when given an unsorted route file with person definitions.
+    
+### Repeated Routes
+When using attribute 'repeat' to repeat a route. The number of edges will be repeated the given number of times *after* driving them for the first time. 
+If route is defined as stand-alone route (defined with it's own id outside a vehicl definition), any stops defined within the route will be repeated as well. If the stops use attribute 'until', they will be shifted by attribute 'period' in each iteration.
+
+!!! caution
+    When defining a route as child element of a vehicle, any defined stops will belong to the vehicle rather than the route and will not be repeated.
 
 ## Incomplete Routes (trips and flows)
 
@@ -192,7 +201,7 @@ empty-network travel times as default). When loading trips into
 used as determined by the [rerouting
 device](Demand/Automatic_Routing.md).
 
-```
+```xml
 <routes>
   <trip id="t" depart="0" fromTaz="taz1" toTaz="taz2"/>
 </routes>
@@ -273,6 +282,7 @@ vehicle if the first try fails
 back be at the beginning of the lane (vehicle's front
 position=vehicle length)
 - `"last"`: the vehicle is inserted with the given speed as close as possible
+- `"stop"`: if the vehicle has a stop defined, it will depart at the endPos of the stop. If no stop is defined, the behavior defaults to `"base"`
 behind the last vehicle on the lane. If the lane is empty it is
 inserted at the end of the lane instead. When departSpeed="max" is set, vehicle speed will not be adapted.
 
@@ -327,7 +337,7 @@ Determines the speed at which the vehicle should end its route;
 
 A vehicle is defined using the `vType`-element as shown below:
 
-```
+```xml
 <routes>
     <vType id="type1" accel="2.6" decel="4.5" sigma="0.5" length="5" maxSpeed="70"/>
 </routes>
@@ -337,7 +347,7 @@ Having defined this, one can build vehicles of type "type1". The values
 used above are the ones most of the examples use. They resemble a
 standard vehicle as used within the Stefan Krauß' thesis.
 
-```
+```xml
 <routes>
     <vType id="type1" accel="2.6" decel="4.5" sigma="0.5" length="5" maxSpeed="70"/>
     <vehicle id="veh1" type="type1" depart="0">
@@ -688,20 +698,20 @@ lists which parameter are used by which model(s). [Details on car-following mode
 | adaptTime                    | 600                                                   | >= 0     | the time interval (in s) for relaxing past level of service                                               | IDMM      |
 | security                     |                                                       |          | desire for security                                                                                       | Wiedemann |
 | estimation                   |                                                       |          | accuracy of situation estimation                                                                          | Wiedemann |
-| speedControlGain             |                                                       |          | The control gain determining the rate of speed deviation (Speed control mode)                             | ACC       |
-| gapClosingControlGainSpeed   |                                                       |          | The control gain determining the rate of speed deviation (Gap closing control mode)                       | ACC       |
-| gapClosingControlGainSpace   |                                                       |          | The control gain determining the rate of positioning deviation (Gap closing control mode)                 | ACC       |
-| gapControlGainSpeed          |                                                       |          | The control gain determining the rate of speed deviation (Gap control mode)                               | ACC       |
-| gapControlGainSpace          |                                                       |          | The control gain determining the rate of positioning deviation (Gap control mode)                         | ACC       |
-| collisionAvoidanceGainSpeed  |                                                       |          | The control gain determining the rate of speed deviation (Collision avoidance mode)                       | ACC       |
-| collisionAvoidanceGainSpace  |                                                       |          | The control gain determining the rate of positioning deviation (Collision avoidance mode)                 | ACC       |
-| speedControlGainCACC         |                                                       |          | The control gain determining the rate of speed deviation (Speed control mode)                             | CACC      |
-| gapClosingControlGainGap     |                                                       |          | The control gain determining the rate of positioning deviation (Gap closing control mode)                 | CACC      |
-| gapClosingControlGainGapDot  |                                                       |          | The control gain determining the rate of the positioning deviation derivative (Gap closing control mode)  | CACC      |
-| gapControlGainGap            |                                                       |          | The control gain determining the rate of positioning deviation (Gap control mode)                         | CACC      |
-| gapControlGainGapDot         |                                                       |          | The control gain determining the rate of the positioning deviation derivative (Gap control mode)          | CACC      |
-| collisionAvoidanceGainGap    |                                                       |          | The control gain determining the rate of positioning deviation (Collision avoidance mode)                 | CACC      |
-| collisionAvoidanceGainGapDot |                                                       |          | The control gain determining the rate of the positioning deviation derivative (Collision avoidance mode)  | CACC      |
+| speedControlGain             | -0.4                                                    |          | The control gain determining the rate of speed deviation (Speed control mode)                             | ACC       |
+| gapClosingControlGainSpeed   | 0.8                                                     |          | The control gain determining the rate of speed deviation (Gap closing control mode)                       | ACC       |
+| gapClosingControlGainSpace   | 0.04                                                    |          | The control gain determining the rate of positioning deviation (Gap closing control mode)                 | ACC       |
+| gapControlGainSpeed          | 0.07                                                    |          | The control gain determining the rate of speed deviation (Gap control mode)                               | ACC       |
+| gapControlGainSpace          | 0.23                                                    |          | The control gain determining the rate of positioning deviation (Gap control mode)                         | ACC       |
+| collisionAvoidanceGainSpace  | 0.8                                                     |          | The control gain determining the rate of positioning deviation (Collision avoidance mode)                 | ACC       |
+| collisionAvoidanceGainSpeed  | 0.23                                                    |          | The control gain determining the rate of speed deviation (Collision avoidance mode)                       | ACC       |
+| speedControlGainCACC         | -0.4                                                    |          | The control gain determining the rate of speed deviation (Speed control mode)                             | CACC      |
+| gapClosingControlGainGap     | 0.005                                                   |          | The control gain determining the rate of positioning deviation (Gap closing control mode)                 | CACC      |
+| gapClosingControlGainGapDot  | 0.05                                                    |          | The control gain determining the rate of the positioning deviation derivative (Gap closing control mode)  | CACC      |
+| gapControlGainGap            | 0.45                                                    |          | The control gain determining the rate of positioning deviation (Gap control mode)                         | CACC      |
+| gapControlGainGapDot         | 0.0125                                                  |          | The control gain determining the rate of the positioning deviation derivative (Gap control mode)          | CACC      |
+| collisionAvoidanceGainGap    | 0.45                                                    |          | The control gain determining the rate of positioning deviation (Collision avoidance mode)                 | CACC      |
+| collisionAvoidanceGainGapDot | 0.05                                                    |          | The control gain determining the rate of the positioning deviation derivative (Collision avoidance mode)  | CACC      |
 | CC1                          |                                                       |          | Spacing Time - s                                                                                          | W99       |
 | CC2                          |                                                       |          | Following Variation - m                                                                                   | W99       |
 | CC3                          |                                                       |          | Threshold for Entering "Following" - s                                                                    | W99       |
@@ -1022,6 +1032,7 @@ placeholder `<DEVICENAME>` below
 - [toc](ToC_Device.md)
 - [driverstate](Driver_State.md)
 - [fcd](Simulation/Output/FCDOutput.md)
+- [tripinfo](Simulation/Output/TripInfo.md)
 - [Demand Responsive Transport (Taxis)](Simulation/Taxi.md)
 - [example](Developer/How_To/Device.md)
 

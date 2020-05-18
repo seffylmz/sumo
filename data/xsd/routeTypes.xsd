@@ -457,6 +457,9 @@
         <xsd:attribute name="from" type="xsd:string"/>
         <xsd:attribute name="to" type="xsd:string"/>
         <xsd:attribute name="via" type="xsd:string"/>
+        <xsd:attribute name="fromJunction" type="xsd:string"/>
+        <xsd:attribute name="toJunction" type="xsd:string"/>
+        <xsd:attribute name="viaJunctions" type="xsd:string"/>
         <xsd:attribute name="type" type="xsd:string"/>
         <xsd:attribute name="begin" type="timeType"/>
         <xsd:attribute name="end" type="timeType"/>
@@ -674,6 +677,8 @@
         <xsd:attribute name="exitTimes" type="xsd:string"/>
         <xsd:attribute name="cost" type="xsd:float"/>
         <xsd:attribute name="savings" type="xsd:float"/>
+        <xsd:attribute name="repeat" type="xsd:nonNegativeInteger"/>
+        <xsd:attribute name="period" type="timeType"/>
     </xsd:complexType>
 
     <xsd:complexType name="routeDistRouteType">
@@ -702,6 +707,7 @@
         <xsd:attribute name="startPos" type="xsd:float"/>
         <xsd:attribute name="endPos" type="xsd:float"/>
         <xsd:attribute name="friendlyPos" type="boolType"/>
+        <xsd:attribute name="arrival" type="timeType"/>
         <xsd:attribute name="duration" type="timeType"/>
         <xsd:attribute name="until" type="timeType"/>
         <xsd:attribute name="extension" type="timeType"/>
@@ -717,6 +723,7 @@
         <xsd:attribute name="join" type="xsd:string"/>
         <xsd:attribute name="line" type="xsd:string"/>
         <xsd:attribute name="speed" type="nonNegativeFloatType"/>
+        <xsd:attribute name="priorEdges" type="xsd:string"/>
     </xsd:complexType>
 
     <xsd:complexType name="vTypeDistributionType">

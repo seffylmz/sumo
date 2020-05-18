@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBContHelper.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // Some methods for traversing lists of edges
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <vector>
@@ -135,11 +134,9 @@ NBContHelper::edge_with_destination_finder::operator()(NBEdge* e) const {
 /* -------------------------------------------------------------------------
  * methods from relative_outgoing_edge_sorter
  * ----------------------------------------------------------------------- */
-int
+bool
 NBContHelper::relative_outgoing_edge_sorter::operator()(const NBEdge* e1, const NBEdge* e2) const {
-    if (e1 == nullptr || e2 == nullptr) {
-        return -1;
-    }
+    assert(e1 != nullptr && e2 != nullptr);
     double relAngle1 = NBHelpers::normRelAngle(myAngle, e1->getStartAngle());
     double relAngle2 = NBHelpers::normRelAngle(myAngle, e2->getStartAngle());
     const double length1 = e1->getGeometry().length();
@@ -161,6 +158,10 @@ NBContHelper::relative_outgoing_edge_sorter::operator()(const NBEdge* e1, const 
         }
         lookAhead *= 2;
     }
+    if (fabs(relAngle1 - relAngle2) < NUMERICAL_EPS) {
+        // need to break ties for windows debug version, numerical id may be -1 for both
+        return e1->getID() > e2->getID();
+    }
     return relAngle1 > relAngle2;
 }
 
@@ -168,13 +169,11 @@ NBContHelper::relative_outgoing_edge_sorter::operator()(const NBEdge* e1, const 
 /* -------------------------------------------------------------------------
  * methods from relative_incoming_edge_sorter
  * ----------------------------------------------------------------------- */
-int
+bool
 NBContHelper::relative_incoming_edge_sorter::operator()(const NBEdge* e1, const NBEdge* e2) const {
-    if (e1 == nullptr || e2 == nullptr) {
-        return -1;
-    }
-    double relAngle1 = NBHelpers::normRelAngle( myAngle, e1->getEndAngle());
-    double relAngle2 = NBHelpers::normRelAngle( myAngle, e2->getEndAngle());
+    assert(e1 != nullptr && e2 != nullptr);
+    double relAngle1 = NBHelpers::normRelAngle(myAngle, e1->getEndAngle());
+    double relAngle2 = NBHelpers::normRelAngle(myAngle, e2->getEndAngle());
     const double length1 = e1->getGeometry().length();
     const double length2 = e2->getGeometry().length();
 
@@ -193,6 +192,10 @@ NBContHelper::relative_incoming_edge_sorter::operator()(const NBEdge* e1, const 
             break;
         }
         lookAhead *= 2;
+    }
+    if (fabs(relAngle1 - relAngle2) < NUMERICAL_EPS) {
+        // need to break ties for windows debug version, numerical id may be -1 for both
+        return e1->getID() > e2->getID();
     }
     return relAngle1 > relAngle2;
 }
@@ -240,7 +243,7 @@ NBContHelper::getMinSpeed(const EdgeVector& edges) {
 }
 
 
-int
+bool
 NBContHelper::edge_by_angle_to_nodeShapeCentroid_sorter::operator()(const NBEdge* e1, const NBEdge* e2) const {
     assert(e1->getFromNode() == myNode || e1->getToNode() == myNode);
     assert(e2->getFromNode() == myNode || e2->getToNode() == myNode);
@@ -270,13 +273,8 @@ NBContHelper::edge_by_angle_to_nodeShapeCentroid_sorter::operator()(const NBEdge
                 }
             }
             // break ties to ensure strictly weak ordering
-            if (e1->getFromNode() == myNode) {
-                return relative_outgoing_edge_sorter(angle1)(e1, e2);
-            } else {
-                // @note relative_incoming_edge_sorter sorts connections in ccw order but we need cw ordering here
-                return !(bool)relative_incoming_edge_sorter(angle1)(e1, e2);
-            }
-       } else {
+            return e1->getID() < e2->getID();
+        } else {
             // sort incoming before outgoing, no need to break ties here
             return e1->getToNode() == myNode;
         }
@@ -284,5 +282,5 @@ NBContHelper::edge_by_angle_to_nodeShapeCentroid_sorter::operator()(const NBEdge
     return angle1 < angle2;
 }
 
-/****************************************************************************/
 
+/****************************************************************************/

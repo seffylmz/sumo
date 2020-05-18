@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2014-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2014-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSPModel_NonInteracting.h
 /// @author  Jakob Erdmann
@@ -13,12 +17,7 @@
 ///
 // The pedestrian following model (prototype)
 /****************************************************************************/
-#ifndef MSPModel_NonInteracting_h
-#define MSPModel_NonInteracting_h
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <string>
@@ -64,11 +63,21 @@ public:
         return false;
     }
 
+    /// @brief return the number of active objects
+    int getActiveNumber() {
+        return myNumActivePedestrians;
+    }
+
+    void registerArrived() {
+        myNumActivePedestrians--;
+    }
+
 private:
     class MoveToNextEdge : public Command {
     public:
-        MoveToNextEdge(MSTransportable* transportable, MSStageMoving& walk) : myParent(walk), myTransportable(transportable) {}
-        ~MoveToNextEdge() {}
+        MoveToNextEdge(MSTransportable* transportable, MSStageMoving& walk, MSPModel_NonInteracting* model) :
+            myParent(walk), myTransportable(transportable), myModel(model) {}
+        virtual ~MoveToNextEdge(); 
         SUMOTime execute(SUMOTime currentTime);
         void abortWalk() {
             myTransportable = nullptr;
@@ -80,6 +89,8 @@ private:
     private:
         MSStageMoving& myParent;
         MSTransportable* myTransportable;
+        MSPModel_NonInteracting* myModel;
+
     private:
         /// @brief Invalidated assignment operator.
         MoveToNextEdge& operator=(const MoveToNextEdge&);
@@ -140,8 +151,10 @@ private:
     /// @brief the net to which to issue moveToNextEdge commands
     MSNet* myNet;
 
+    /// @brief the total number of active pedestrians
+    int myNumActivePedestrians;
+
 };
 
 
-#endif /* MSPModel_NonInteracting_h */
 

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSLane.h
 /// @author  Christian Roessel
@@ -20,13 +24,7 @@
 ///
 // Representation of a lane in the micro simulation
 /****************************************************************************/
-#ifndef MSLane_h
-#define MSLane_h
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
+#pragma once
 #include <config.h>
 
 #include <memory>
@@ -228,6 +226,12 @@ public:
     static int getNumRNGs() {
         return (int)myRNGs.size();
     }
+
+    /// @brief save random number generator states to the given output device
+    static void saveRNGStates(OutputDevice& out);
+
+    /// @brief load random number generator state for the given rng index
+    static void loadRNGState(int index, const std::string& state);
 
     /// @name Additional initialisation
     /// @{
@@ -984,6 +988,9 @@ public:
      */
     double getMeanSpeed() const;
 
+    /// @brief get the mean speed of all bicycles on this lane
+    double getMeanSpeedBike() const;
+
     /** @brief Returns the overall waiting time on this lane
     * @return The sum of the waiting time of all vehicles during the last step;
     */
@@ -1169,6 +1176,9 @@ public:
      * @todo What about throwing an IOError?
      */
     void saveState(OutputDevice& out);
+
+    /** @brief Remove all vehicles before quick-loading state */
+    void clearState();
 
     /** @brief Loads the state of this segment with the given parameters
      *
@@ -1437,6 +1447,7 @@ private:
     static bool myCheckJunctionCollisions;
     static SUMOTime myCollisionStopTime;
     static double myCollisionMinGapFactor;
+    static bool myExtrapolateSubstepDepart;
 
     /**
      * @class vehicle_position_sorter
@@ -1608,9 +1619,3 @@ private:
 
 
 };
-
-
-#endif
-
-/****************************************************************************/
-

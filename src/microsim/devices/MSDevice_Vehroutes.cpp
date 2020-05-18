@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2009-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2009-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSDevice_Vehroutes.cpp
 /// @author  Daniel Krajzewicz
@@ -16,10 +20,6 @@
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <microsim/MSGlobals.h>
@@ -49,6 +49,7 @@ bool MSDevice_Vehroutes::myIntendedDepart = false;
 bool MSDevice_Vehroutes::myRouteLength = false;
 bool MSDevice_Vehroutes::mySkipPTLines = false;
 bool MSDevice_Vehroutes::myIncludeIncomplete = false;
+bool MSDevice_Vehroutes::myWriteStopPriorEdges = false;
 MSDevice_Vehroutes::StateListener MSDevice_Vehroutes::myStateListener;
 std::map<const SUMOTime, int> MSDevice_Vehroutes::myDepartureCounts;
 std::map<const SUMOTime, std::map<const std::string, std::string> > MSDevice_Vehroutes::myRouteInfos;
@@ -74,6 +75,7 @@ MSDevice_Vehroutes::init() {
         myRouteLength = oc.getBool("vehroute-output.route-length");
         mySkipPTLines = oc.getBool("vehroute-output.skip-ptlines");
         myIncludeIncomplete = oc.getBool("vehroute-output.incomplete");
+        myWriteStopPriorEdges = oc.getBool("vehroute-output.stop-edges");
         MSNet::getInstance()->addVehicleStateListener(&myStateListener);
     }
 }
@@ -119,7 +121,7 @@ MSDevice_Vehroutes::MSDevice_Vehroutes(SUMOVehicle& holder, const std::string& i
     myDepartPos(-1),
     myDepartSpeed(-1),
     myDepartPosLat(0),
-    myStopOut(false, 2) {
+    myStopOut(2) {
     myCurrentRoute->addReference();
 }
 
@@ -134,21 +136,24 @@ MSDevice_Vehroutes::~MSDevice_Vehroutes() {
 
 
 bool
-MSDevice_Vehroutes::notifyEnter(SUMOTrafficObject& veh, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
-    MSVehicle& vehicle = static_cast<MSVehicle&>(veh);
+MSDevice_Vehroutes::notifyEnter(SUMOTrafficObject& veh, MSMoveReminder::Notification reason, const MSLane* enteredLane) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
-        if (mySorted && myStateListener.myDevices[&vehicle] == this) {
+        if (mySorted && myStateListener.myDevices[static_cast<SUMOVehicle*>(&veh)] == this) {
             const SUMOTime departure = myIntendedDepart ? myHolder.getParameter().depart : MSNet::getInstance()->getCurrentTimeStep();
             myDepartureCounts[departure]++;
         }
         if (!MSGlobals::gUseMesoSim) {
+            const MSVehicle& vehicle = static_cast<MSVehicle&>(veh);
             myDepartLane = vehicle.getLane()->getIndex();
             myDepartPosLat = vehicle.getLateralPositionOnLane();
         }
         myDepartSpeed = veh.getSpeed();
         myDepartPos = veh.getPositionOnLane();
     }
-    return mySaveExits;
+    if (myWriteStopPriorEdges) {
+        myPriorEdges.push_back(&enteredLane->getEdge());
+    }
+    return mySaveExits || myWriteStopPriorEdges;
 }
 
 
@@ -162,13 +167,18 @@ MSDevice_Vehroutes::notifyLeave(SUMOTrafficObject& veh, double /*lastPos*/, MSMo
             myLastSavedAt = veh.getEdge();
         }
     }
-    return mySaveExits;
+    return mySaveExits || myWriteStopPriorEdges;
 }
 
 
 void
 MSDevice_Vehroutes::stopEnded(const SUMOVehicleParameter::Stop& stop) {
-    stop.write(myStopOut);
+    stop.write(myStopOut, !myWriteStopPriorEdges);
+    if (myWriteStopPriorEdges) {
+        myStopOut.writeAttr("priorEdges", myPriorEdges);
+        myPriorEdges.clear();
+        myStopOut.closeTag();
+    }
 }
 
 
@@ -210,6 +220,7 @@ MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
             lastEdge = myReplacedRoutes[i].edge;
         }
         myReplacedRoutes[index].route->writeEdgeIDs(os, lastEdge);
+        os << "\"";
     } else {
         if (myDUAStyle || myWriteCosts) {
             os.writeAttr(SUMO_ATTR_COST, myHolder.getRoute().getCosts());
@@ -231,27 +242,27 @@ MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
                 lastEdge = myReplacedRoutes[i].edge;
             }
         }
-        const MSEdge* upTo = nullptr;
+        myCurrentRoute->writeEdgeIDs(os, lastEdge, nullptr);
+        os << "\"";
+
         if (mySaveExits) {
+            int missingExitTimes = 0;
             int remainingWithExitTime = (int)myExits.size() - numWritten;
             assert(remainingWithExitTime >= 0);
             assert(remainingWithExitTime <= (int)myCurrentRoute->size());
             if (remainingWithExitTime < (int)myCurrentRoute->size()) {
-                upTo = *(myCurrentRoute->begin() + remainingWithExitTime);
+                missingExitTimes = myCurrentRoute->size() - remainingWithExitTime;
             }
-        }
-        myCurrentRoute->writeEdgeIDs(os, lastEdge, upTo);
-        if (mySaveExits) {
-            os << "\" exitTimes=\"";
-            for (std::vector<SUMOTime>::const_iterator it = myExits.begin(); it != myExits.end(); ++it) {
-                if (it != myExits.begin()) {
-                    os << " ";
-                }
-                os << time2string(*it);
+            std::vector<std::string> exits;
+            for (SUMOTime t : myExits) {
+                exits.push_back(time2string(t));
             }
+            std::vector<std::string> missing(missingExitTimes, "-1");
+            exits.insert(exits.end(), missing.begin(), missing.end());
+            os.writeAttr("exitTimes", exits);
         }
     }
-    (os << "\"").closeTag();
+    os.closeTag();
 }
 
 
@@ -267,7 +278,7 @@ MSDevice_Vehroutes::writeOutput(const bool hasArrived) const {
         return;
     }
     OutputDevice& routeOut = OutputDevice::getDeviceByOption("vehroute-output");
-    OutputDevice_String od(routeOut.isBinary(), 1);
+    OutputDevice_String od(1);
     SUMOVehicleParameter tmp = myHolder.getParameter();
     tmp.depart = myIntendedDepart ? myHolder.getParameter().depart : myHolder.getDeparture();
     if (!MSGlobals::gUseMesoSim) {

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2007-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2007-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    plot_trajectories.py
 # @author  Jakob Erdmann
@@ -29,11 +33,11 @@ import matplotlib
 if 'matplotlib.backends' not in sys.modules:
     if 'TEXTTEST_SANDBOX' in os.environ or (os.name == 'posix' and 'DISPLAY' not in os.environ):
         matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import math
+import matplotlib.pyplot as plt  # noqa
+import math  # noqa
 
-from sumolib.xml import parse_fast_nested
-from sumolib.miscutils import uMin, uMax
+from sumolib.xml import parse_fast_nested  # noqa
+from sumolib.miscutils import uMin, uMax, parseTime  # noqa
 
 
 def getOptions(args=None):
@@ -42,6 +46,7 @@ def getOptions(args=None):
                          help="select two letters from [t, s, d, a, i, x, y] to plot"
                          + " Time, Speed, Distance, Acceleration, Angle, x-Position, y-Position."
                          + " Default 'ds' plots Distance vs. Speed")
+    optParser.add_option("--persons", action="store_true", default=False, help="plot person trajectories")
     optParser.add_option("-s", "--show", action="store_true", default=False, help="show plot directly")
     optParser.add_option("-o", "--output", help="outputfile for saving plots", default="plot.png")
     optParser.add_option("--csv-output", dest="csv_output", help="write plot as csv", metavar="FILE")
@@ -49,6 +54,10 @@ def getOptions(args=None):
                          help="perform ballistic integration of distance")
     optParser.add_option("--filter-route", dest="filterRoute",
                          help="only export trajectories that pass the given list of edges (regardless of gaps)")
+    optParser.add_option("--filter-edges", dest="filterEdges",
+                         help="only consider data for the given list of edges")
+    optParser.add_option("--filter-ids", dest="filterIDs",
+                         help="only consider data for the given list of vehicle (or person) ids")
     optParser.add_option("-p", "--pick-distance", dest="pickDist", type="float", default=1,
                          help="pick lines within the given distance in interactive plot mode")
     optParser.add_option("-i", "--invert-distance-angle", dest="invertDistanceAngle", type="float",
@@ -66,6 +75,10 @@ def getOptions(args=None):
 
     if options.filterRoute is not None:
         options.filterRoute = options.filterRoute.split(',')
+    if options.filterEdges is not None:
+        options.filterEdges = set(options.filterEdges.split(','))
+    if options.filterIDs is not None:
+        options.filterIDs = set(options.filterIDs.split(','))
     return options
 
 
@@ -77,9 +90,10 @@ def write_csv(data, fname):
                 f.write(" ".join(map(str, x)) + "\n")
             f.write('\n')
 
+
 def short_names(filenames):
     if len(filenames) == 1:
-        return filenames[0]
+        return filenames
     reversedNames = [''.join(reversed(f)) for f in filenames]
     prefixLen = len(os.path.commonprefix(filenames))
     suffixLen = len(os.path.commonprefix(reversedNames))
@@ -119,18 +133,34 @@ def main(options):
     else:
         sys.exit("unsupported plot type '%s'" % options.ttype)
 
+    element = 'vehicle'
+    location = 'lane'
+    if options.persons:
+        element = 'person'
+        location = 'edge'
+
     routes = defaultdict(list)  # vehID -> recorded edges
     # vehID -> (times, speeds, distances, accelerations, angles, xPositions, yPositions)
     data = defaultdict(lambda: ([], [], [], [], [], [], []))
     for fileIndex, fcdfile in enumerate(options.fcdfiles):
         for timestep, vehicle in parse_fast_nested(fcdfile, 'timestep', ['time'],
-                'vehicle', ['id', 'x', 'y', 'angle', 'speed', 'lane']):
+                                                   element, ['id', 'x', 'y', 'angle', 'speed', location]):
             vehID = vehicle.id
+            if options.filterIDs and vehID not in options.filterIDs:
+                continue
             if len(options.fcdfiles) > 1:
                 suffix = shortFileNames[fileIndex]
                 if len(suffix) > 0:
                     vehID += "#" + suffix
-            time = float(timestep.time)
+            if options.persons:
+                edge = vehicle.edge
+            else:
+                edge = vehicle.lane[0:vehicle.lane.rfind('_')]
+            if len(routes[vehID]) == 0 or routes[vehID][-1] != edge:
+                routes[vehID].append(edge)
+            if options.filterEdges and edge not in options.filterEdges:
+                continue
+            time = parseTime(timestep.time)
             speed = float(vehicle.speed)
             prevTime = time
             prevSpeed = speed
@@ -154,9 +184,6 @@ def main(options):
             else:
                 avgSpeed = speed
             data[vehID][2].append(prevDist + (time - prevTime) * avgSpeed)
-            edge = vehicle.lane[0:vehicle.lane.rfind('_')]
-            if len(routes[vehID]) == 0 or routes[vehID][-1] != edge:
-                routes[vehID].append(edge)
 
     def line_picker(line, mouseevent):
         if mouseevent.xdata is None:
@@ -209,7 +236,6 @@ def main(options):
 
     if options.legend > 0:
         plt.legend()
-
 
     plt.savefig(options.output)
     if options.csv_output is not None:

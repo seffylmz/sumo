@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GNEGeometry.cpp
 /// @author  Pablo Alvarez Lopez
@@ -13,16 +17,10 @@
 ///
 // File for geometry classes and functions
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
-
-#include <netedit/netelements/GNEEdge.h>
-#include <netedit/netelements/GNEJunction.h>
-#include <netedit/netelements/GNELane.h>
-#include <netedit/additionals/GNEAdditional.h>
+#include <netedit/elements/network/GNEEdge.h>
+#include <netedit/elements/network/GNEJunction.h>
+#include <netedit/elements/network/GNELane.h>
+#include <netedit/elements/additional/GNEAdditional.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
@@ -52,16 +50,16 @@ GNEGeometry::Geometry::Geometry() :
 
 GNEGeometry::Geometry::Geometry(const PositionVector& shape, const std::vector<double>& shapeRotations, const std::vector<double>& shapeLengths) :
     myPosition(Position::INVALID),
-    myRotation(0), 
+    myRotation(0),
     myShape(shape),
-    myShapeRotations(shapeRotations), 
+    myShapeRotations(shapeRotations),
     myShapeLengths(shapeLengths) {
 }
 
 
 void
 GNEGeometry::Geometry::updateGeometry(const PositionVector& shape, double startPos, double endPos,
-        const Position& extraFirstPosition, const Position& extraLastPosition) {
+                                      const Position& extraFirstPosition, const Position& extraLastPosition) {
     // set new shape
     myShape = shape;
     // check if we have to split the lane
@@ -112,7 +110,7 @@ GNEGeometry::Geometry::updateGeometry(const PositionVector& shape, double startP
 
 
 void
-GNEGeometry::Geometry::updateGeometry(const Position &position, const double rotation) {
+GNEGeometry::Geometry::updateGeometry(const Position& position, const double rotation) {
     myPosition = position;
     myRotation = rotation;
 }
@@ -230,7 +228,7 @@ GNEGeometry::DottedGeometry::updateDottedGeometry(const GUIVisualizationSettings
     // iterate over shapeColors
     for (int i = 0; i < (int)myShapeColors.size(); i++) {
         // set first or second contour color
-        if (i%2 == 0) {
+        if (i % 2 == 0) {
             myShapeColors.at(i) = s.dottedContourSettings.firstColor;
         } else {
             myShapeColors.at(i) = s.dottedContourSettings.secondColor;
@@ -243,7 +241,7 @@ GNEGeometry::DottedGeometry::updateDottedGeometry(const GUIVisualizationSettings
 }
 
 
-void 
+void
 GNEGeometry::DottedGeometry::updateDottedGeometry(const GUIVisualizationSettings& s, const PositionVector& lineShape, const double width) {
     if (width > 0) {
         // build contour using line shape
@@ -287,13 +285,13 @@ void GNEGeometry::DottedGeometry::updateDottedGeometry(const GUIVisualizationSet
 }
 
 
-void 
+void
 GNEGeometry::DottedGeometry::markDottedGeometryDeprecated() {
     myDottedGeometryDeprecated = true;
 }
 
 
-bool 
+bool
 GNEGeometry::DottedGeometry::isGeometryDeprecated() const {
     return myDottedGeometryDeprecated;
 }
@@ -305,7 +303,7 @@ GNEGeometry::DottedGeometry::getCentroid() const {
 }
 
 
-double 
+double
 GNEGeometry::DottedGeometry::getRotation() const {
     return myRotation;
 }
@@ -329,7 +327,7 @@ GNEGeometry::DottedGeometry::getShapeLengths() const {
 }
 
 
-const std::vector<RGBColor>& 
+const std::vector<RGBColor>&
 GNEGeometry::DottedGeometry::getShapeColors() const {
     return myShapeColors;
 }
@@ -385,12 +383,12 @@ GNEGeometry::SegmentGeometry::Segment::Segment(const GNEAttributeCarrier* _AC, c
     AC(_AC),
     edge(nullptr),
     lane(nextLane),
-    junction(currentLane->getParentEdge()->getGNEJunctionDestiny()),
+    junction(currentLane->getParentEdge()->getSecondParentJunction()),
     valid(_valid),
     myUseLaneShape(false),
     mySegmentGeometry(currentLane->getLane2laneConnections().connectionsMap.at(nextLane).getShape(),
-        currentLane->getLane2laneConnections().connectionsMap.at(nextLane).getShapeRotations(),
-        currentLane->getLane2laneConnections().connectionsMap.at(nextLane).getShapeLengths()) {
+                      currentLane->getLane2laneConnections().connectionsMap.at(nextLane).getShapeRotations(),
+                      currentLane->getLane2laneConnections().connectionsMap.at(nextLane).getShapeLengths()) {
 }
 
 
@@ -569,7 +567,7 @@ GNEGeometry::Lane2laneConnection::updateLane2laneConnection() {
     // clear connectionsMap
     connectionsMap.clear();
     // iterate over outgoingEdge's lanes
-    for (const auto& outgoingEdge : myOriginLane->getParentEdge()->getGNEJunctionDestiny()->getGNEOutgoingEdges()) {
+    for (const auto& outgoingEdge : myOriginLane->getParentEdge()->getSecondParentJunction()->getGNEOutgoingEdges()) {
         for (const auto& outgoingLane : outgoingEdge->getLanes()) {
             // get NBEdges from and to
             const NBEdge* NBEdgeFrom = myOriginLane->getParentEdge()->getNBEdge();
@@ -1040,13 +1038,13 @@ GNEGeometry::drawSegmentGeometry(const GNEViewNet* viewNet, const SegmentGeometr
 
 
 void
-GNEGeometry::drawShapeDottedContour(const GUIVisualizationSettings& s, const int type, const double exaggeration, const DottedGeometry& dottedGeometry) {
+GNEGeometry::drawShapeDottedContour(const GUIVisualizationSettings& s, const double typeLayer, const double exaggeration, const DottedGeometry& dottedGeometry) {
     // first check that given shape isn't empty
     if (!s.drawForRectangleSelection && !s.drawForPositionSelection && (dottedGeometry.getShape().size() > 0)) {
         // push matrix
         glPushMatrix();
         // Move to Centroid
-        glTranslated(dottedGeometry.getCentroid().x(), dottedGeometry.getCentroid().y(), type + 2);
+        glTranslated(dottedGeometry.getCentroid().x(), dottedGeometry.getCentroid().y(), typeLayer + 2);
         // scale matrix depending of the exaggeration
         if (exaggeration != 1) {
             glScaled(exaggeration, exaggeration, 1);
@@ -1056,10 +1054,10 @@ GNEGeometry::drawShapeDottedContour(const GUIVisualizationSettings& s, const int
             glRotated(dottedGeometry.getRotation(), 0, 0, 1);
         }
         // draw box lines
-        GLHelper::drawBoxLines(dottedGeometry.getShape(), 
-                               dottedGeometry.getShapeRotations(), 
-                               dottedGeometry.getShapeLengths(), 
-                               dottedGeometry.getShapeColors(), 
+        GLHelper::drawBoxLines(dottedGeometry.getShape(),
+                               dottedGeometry.getShapeRotations(),
+                               dottedGeometry.getShapeLengths(),
+                               dottedGeometry.getShapeColors(),
                                s.dottedContourSettings.segmentWidth);
         // pop matrix
         glPopMatrix();
@@ -1068,7 +1066,7 @@ GNEGeometry::drawShapeDottedContour(const GUIVisualizationSettings& s, const int
 
 
 PositionVector
-GNEGeometry::getVertexCircleAroundPosition(const Position &pos, const double width, const int steps) {
+GNEGeometry::getVertexCircleAroundPosition(const Position& pos, const double width, const int steps) {
     // first check if we have to fill myCircleCoords (only once)
     if (myCircleCoords.size() == 0) {
         for (int i = 0; i <= (int)(360 * CIRCLE_RESOLUTION); ++i) {
@@ -1100,5 +1098,6 @@ GNEGeometry::angleLookup(const double angleDeg) {
     assert(index >= 0);
     return (int)index;
 }
+
 
 /****************************************************************************/

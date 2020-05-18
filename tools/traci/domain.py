@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    domain.py
 # @author  Michael Behrisch
@@ -26,6 +30,14 @@ from .storage import Storage
 from .exceptions import FatalTraCIError
 
 _defaultDomains = []
+
+
+def _readParameterWithKey(result):
+    result.read("!iB")
+    key = result.readString()
+    result.read("!B")
+    val = result.readString()
+    return key, val
 
 
 class SubscriptionResults:
@@ -86,7 +98,8 @@ class Domain:
         self._contextID = contextID
         self._contextResponseID = contextResponseID
         self._retValFunc = {tc.TRACI_ID_LIST: Storage.readStringList,
-                            tc.ID_COUNT: Storage.readInt}
+                            tc.ID_COUNT: Storage.readInt,
+                            tc.VAR_PARAMETER_WITH_KEY: _readParameterWithKey}
         self._retValFunc.update(retValFunc)
         self._deprecatedFor = deprecatedFor
         self._connection = None
@@ -202,6 +215,22 @@ class Domain:
         result = self._connection._checkResult(
             self._cmdGetID, tc.VAR_PARAMETER, objID)
         return result.readString()
+
+    def getParameterWithKey(self, objID, param):
+        """getParameterWithKey(string, string) -> (string, string)
+
+        Returns the (key, value) tuple of the given parameter for the given objID
+        """
+        self._connection._beginMessage(self._cmdGetID, tc.VAR_PARAMETER_WITH_KEY, objID, 1 + 4 + len(param))
+        self._connection._packString(param)
+        return _readParameterWithKey(self._connection._checkResult(self._cmdGetID, tc.VAR_PARAMETER_WITH_KEY, objID))
+
+    def subscribeParameterWithKey(self, objID, key, begin=tc.INVALID_DOUBLE_VALUE, end=tc.INVALID_DOUBLE_VALUE):
+        """subscribeParameterWithKey(string, string) -> None
+
+        Subscribe for a generic parameter with the given key.
+        """
+        self._connection._subscribe(self._subscribeID, begin, end, objID, (tc.VAR_PARAMETER_WITH_KEY,), {tc.VAR_PARAMETER_WITH_KEY: struct.pack("!Bi", tc.TYPE_STRING, len(key)) + key.encode("latin1")})
 
     def setParameter(self, objID, param, value):
         """setParameter(string, string, string) -> None

@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    NBNodeShapeComputer.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // This class computes shapes of junctions
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <algorithm>
@@ -302,9 +301,9 @@ NBNodeShapeComputer::computeNodeShapeDefault(bool simpleContinuation) {
             if (DEBUGCOND) {
                 std::cout << " i=" << (*i)->getID() << " neigh=" << (*ccwi)->getID() << " neigh2=" << (*cwi)->getID() << "\n";
                 std::cout << "    ccwCloser=" << ccwCloser
-                    << "\n      currGeom=" << currGeom << " neighGeom=" << neighGeom
-                    << "\n      currGeom2=" << currGeom2 << " neighGeom2=" << neighGeom2
-                    << "\n";
+                          << "\n      currGeom=" << currGeom << " neighGeom=" << neighGeom
+                          << "\n      currGeom2=" << currGeom2 << " neighGeom2=" << neighGeom2
+                          << "\n";
             }
 #endif
             if (!simpleContinuation) {
@@ -469,7 +468,9 @@ NBNodeShapeComputer::computeNodeShapeDefault(bool simpleContinuation) {
     // final curve segment
     ret.append(getSmoothCorner(geomsCW[*(newAll.end() - 1)], geomsCCW[*newAll.begin()], ret[-1], ret[0], cornerDetail));
 #ifdef DEBUG_NODE_SHAPE
-        if (DEBUGCOND) std::cout << " final shape=" << ret << "\n";
+    if (DEBUGCOND) {
+        std::cout << " final shape=" << ret << "\n";
+    }
 #endif
     return ret;
 }
@@ -679,10 +680,10 @@ NBNodeShapeComputer::badIntersection(const NBEdge* e1, const NBEdge* e2, double 
     PositionVector geom1 = e1->getGeometry();
     PositionVector geom2 = e2->getGeometry();
     // shift to make geom the centerline of the edge regardless of spreadtype
-    if (e1->getLaneSpreadFunction() == LANESPREAD_RIGHT) {
+    if (e1->getLaneSpreadFunction() == LaneSpreadFunction::RIGHT) {
         geom1.move2side(e1->getTotalWidth() / 2);
     }
-    if (e2->getLaneSpreadFunction() == LANESPREAD_RIGHT) {
+    if (e2->getLaneSpreadFunction() == LaneSpreadFunction::RIGHT) {
         geom2.move2side(e2->getTotalWidth() / 2);
     }
     // always let geometry start at myNode
@@ -697,8 +698,8 @@ NBNodeShapeComputer::badIntersection(const NBEdge* e1, const NBEdge* e2, double 
     double endAngleDiff = 0;
     if (geom1.size() >= 2 && geom2.size() >= 2) {
         endAngleDiff = fabs(RAD2DEG(GeomHelper::angleDiff(
-                    geom1.angleAt2D(geom1.size() - 2),
-                    geom2.angleAt2D(geom2.size() - 2))));
+                                        geom1.angleAt2D((int)geom1.size() - 2),
+                                        geom2.angleAt2D((int)geom2.size() - 2))));
     }
     const double minDistanceThreshold = (e1->getTotalWidth() + e2->getTotalWidth()) / 2 + POSITION_EPS;
     std::vector<double> distances = geom1.distances(geom2, true);
@@ -900,7 +901,7 @@ NBNodeShapeComputer::getDefaultRadius(const OptionsCont& oc) {
         }
         for (NBEdge* out : myNode.getOutgoingEdges()) {
             if ((in->getPermissions() & out->getPermissions() & large) != 0) {
-                if (myNode.getDirection(in, out) == LINKDIR_TURN) {
+                if (myNode.getDirection(in, out) == LinkDirection::TURN) {
                     continue;
                 };
                 const double angle = GeomHelper::angleDiff(
@@ -982,4 +983,6 @@ NBNodeShapeComputer::getExtraWidth(const NBEdge* e, SVCPermissions exclude) {
     }
     return result;
 }
+
+
 /****************************************************************************/

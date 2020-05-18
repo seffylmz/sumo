@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    GUIVehicle.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <cmath>
@@ -134,6 +133,8 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<GUIVehicle, double>(this, &GUIVehicle::getLastLaneChangeOffset));
     ret->mkItem("desired depart [s]", false, time2string(getParameter().depart));
     ret->mkItem("depart delay [s]", false, time2string(getDepartDelay()));
+    ret->mkItem("odometer [m]", true,
+                new FunctionBinding<GUIVehicle, double>(this, &MSBaseVehicle::getOdometer));
     if (getParameter().repetitionNumber < std::numeric_limits<int>::max()) {
         ret->mkItem("remaining [#]", false, (int) getParameter().repetitionNumber - getParameter().repetitionsDone);
     }
@@ -178,9 +179,9 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
     }
     if (isElecHybrid) {
         ret->mkItem("actual state of charge [Wh]", true,
-            new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getStateOfCharge));
+                    new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getStateOfCharge));
         ret->mkItem("actual electric current [A]", true,
-            new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getElecHybridCurrent));
+                    new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getElecHybridCurrent));
     }
     ret->closeBuilding(&getParameter());
     return ret;
@@ -280,7 +281,9 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
     double upscaleLength = exaggeration;
     if (exaggeration > 1 && totalLength > 5) {
         // reduce the length/width ratio because this is not usefull at high zoom
-        upscaleLength = MAX2(1.0, upscaleLength * (5 + sqrt(totalLength - 5)) / totalLength);
+        const double widthLengthFactor = totalLength / getVType().getWidth();
+        const double shrinkFactor = MIN2(widthLengthFactor, sqrt(upscaleLength));
+        upscaleLength /= shrinkFactor;
     }
     const double locomotiveLength = getVehicleType().getParameter().locomotiveLength * upscaleLength;
     if (exaggeration == 0) {
@@ -539,9 +542,6 @@ GUIVehicle::getColorValue(const GUIVisualizationSettings& s, int activeScheme) c
         case 20:
             return getHarmonoise_NoiseEmissions();
         case 21:
-            if (getNumberReroutes() == 0) {
-                return -1;
-            }
             return getNumberReroutes();
         case 22:
             return gSelected.isSelected(GLO_VEHICLE, getGlID());
@@ -558,6 +558,8 @@ GUIVehicle::getColorValue(const GUIVisualizationSettings& s, int activeScheme) c
         case 28:
             return getTimeLossSeconds();
         case 29:
+            return getStopDelay();
+        case 30:
             return getLaneChangeModel().getSpeedLat();
         case 31: // by numerical param value
             try {
@@ -611,13 +613,18 @@ GUIVehicle::drawBestLanes() const {
 
 
 void
-GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r, bool future, const RGBColor& col) const {
+GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r, bool future, bool noLoop, const RGBColor& col) const {
     const double exaggeration = s.vehicleSize.getExaggeration(s, this) * (s.gaming ? 0.5 : 1);
-    MSRouteIterator i = future ? myCurrEdge : r.begin();
+    MSRouteIterator start = future ? myCurrEdge : r.begin();
+    MSRouteIterator i = start;
     const std::vector<MSLane*>& bestLaneConts = getBestLanesContinuation();
     // draw continuation lanes when drawing the current route where available
     int bestLaneIndex = (&r == myRoute ? 0 : (int)bestLaneConts.size());
     std::map<const MSLane*, int> repeatLane; // count repeated occurrences of the same edge
+    const double textSize = s.vehicleName.size / s.scale;
+    const GUILane* prevLane = nullptr;
+    int reversalIndex = 0;
+    const int indexDigits = (int)toString(r.size()).size();
     for (; i != r.end(); ++i) {
         const GUILane* lane;
         if (bestLaneIndex < (int)bestLaneConts.size() && bestLaneConts[bestLaneIndex] != 0 && (*i) == &(bestLaneConts[bestLaneIndex]->getEdge())) {
@@ -631,15 +638,26 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
                 lane = static_cast<GUILane*>((*i)->getLanes()[0]);
             }
         }
+        GLHelper::setColor(col);
         GLHelper::drawBoxLines(lane->getShape(), lane->getShapeRotations(), lane->getShapeLengths(), exaggeration);
+        if (prevLane != nullptr && lane->getBidiLane() == prevLane) {
+            // indicate train reversal
+            std::string label = "reverse:" + toString(reversalIndex++);
+            Position pos = lane->geometryPositionAtOffset(lane->getLength() / 2) - Position(0, textSize * repeatLane[lane]);
+            GLHelper::drawTextSettings(s.vehicleValue, label, pos, s.scale, s.angle, 1.0);
+        }
         if (s.showRouteIndex) {
             std::string label = toString((int)(i - myCurrEdge));
-            const double textSize = s.vehicleName.size / s.scale;
-            Position pos = lane->getShape().front() - Position(0, textSize * repeatLane[lane]);
+            const double laneAngle = lane->getShape().angleAt2D(0);
+            Position pos = lane->getShape().front() - Position(0, textSize * repeatLane[lane]) + Position(
+                               (laneAngle >= -0.25 * M_PI && laneAngle < 0.75 * M_PI ? 1 : -1) * 0.4 * indexDigits * textSize, 0);
             //GLHelper::drawText(label, pos, 1.0, textSize, s.vehicleName.color);
             GLHelper::drawTextSettings(s.vehicleName, label, pos, s.scale, s.angle, 1.0);
-            repeatLane[lane]++;
-            GLHelper::setColor(col);
+        }
+        repeatLane[lane]++;
+        prevLane = lane;
+        if (noLoop && i != start && (*i) == (*start)) {
+            break;
         }
     }
     // draw stop labels
@@ -651,9 +669,10 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
         if (stop.pars.speed > 0) {
             stopLanePos = stop.reached ? stop.pars.endPos : stop.pars.startPos;
         } else {
-            stopLanePos = stop.reached ? getPositionOnLane() : stop.getEndPos(*this);
+            stopLanePos = stop.reached ? getPositionOnLane() : MAX2(0.0, stop.getEndPos(*this));
         }
         Position pos = stop.lane->geometryPositionAtOffset(stopLanePos);
+        GLHelper::setColor(col);
         GLHelper::drawBoxLines(stop.lane->getShape().getOrthogonal(pos, 10, true, stop.lane->getWidth()), 0.1);
         std::string label = stop.reached ? "stopped" : "stop " + toString(stopIndex);
 #ifdef _DEBUG
@@ -690,9 +709,13 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
                 label += " duration:" + time2string(stop.duration);
             }
         }
-        std::pair<const MSLane*, double> stopPos = std::make_pair(stop.lane, stop.getEndPos(*this));
+        std::pair<const MSLane*, double> stopPos = std::make_pair(stop.lane, stopLanePos);
         const double textSize = s.vehicleName.size / s.scale;
-        GLHelper::drawText(label, pos - Position(0, textSize * repeat[stopPos]), 1.0, textSize, s.vehicleName.color, s.angle);
+        Position pos2 = pos - Position(0, textSize * repeat[stopPos]);
+        if (noLoop && repeat[stopPos] > 0) {
+            break;
+        }
+        GLHelper::drawTextSettings(s.vehicleText, label, pos2, s.scale, s.angle, 1.0);
         repeat[stopPos]++;
         stopIndex++;
     }
@@ -1005,7 +1028,7 @@ GUIVehicle::rerouteDRTStop(MSStoppingPlace* busStop) {
     }
     const bool hasReroutingDevice = getDevice(typeid(MSDevice_Routing)) != nullptr;
     SUMOAbstractRouter<MSEdge, SUMOVehicle>& router = hasReroutingDevice
-            ? MSRoutingEngine::getRouterTT(getRNGIndex())
+            ? MSRoutingEngine::getRouterTT(getRNGIndex(), getVClass())
             : MSNet::getInstance()->getRouterTT(getRNGIndex());
     // reroute to ensure the new stop is reached
     reroute(MSNet::getInstance()->getCurrentTimeStep(), "DRT", router);

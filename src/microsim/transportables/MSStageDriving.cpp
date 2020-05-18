@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSStageDriving.cpp
 /// @author  Melanie Weber
@@ -15,11 +19,6 @@
 ///
 // The common superclass for modelling transportable objects like persons and containers
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <utils/common/StringTokenizer.h>
@@ -54,6 +53,7 @@ MSStageDriving::MSStageDriving(const MSEdge* destination,
     myVehicleID("NULL"),
     myVehicleVClass(SVC_IGNORING),
     myVehicleDistance(-1.),
+    myTimeLoss(-1),
     myWaitingSince(-1),
     myWaitingEdge(nullptr),
     myStopWaitPos(Position::INVALID),
@@ -219,6 +219,7 @@ MSStageDriving::tripInfoOutput(OutputDevice& os, const MSTransportable* const tr
     os.writeAttr("duration", myArrived >= 0 ? time2string(duration) :
                  (myDeparted >= 0 ? time2string(now - myDeparted) : "-1"));
     os.writeAttr("routeLength", myVehicleDistance);
+    os.writeAttr("timeLoss", myArrived >= 0 ? time2string(myTimeLoss) : "-1");
     os.closeTag();
 }
 
@@ -297,11 +298,13 @@ MSStageDriving::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime 
         myVehicleDistance = myVehicle->getRoute().getDistanceBetween(
                                 myVehicle->getDepartPos(), myVehicle->getPositionOnLane(),
                                 myVehicle->getRoute().begin(),  myVehicle->getCurrentRouteEdge()) - myVehicleDistance;
+        myTimeLoss = myVehicle->getTimeLoss() - myTimeLoss;
         if (myVehicle->isStopped()) {
             myArrivalPos = myVehicle->getPositionOnLane();
         }
     } else {
         myVehicleDistance = -1.;
+        myTimeLoss = -1;
     }
     return "";
 }
@@ -310,12 +313,15 @@ MSStageDriving::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime 
 void
 MSStageDriving::setVehicle(SUMOVehicle* v) {
     myVehicle = v;
-    myVehicleID = v->getID();
-    myVehicleLine = v->getParameter().line;
-    myVehicleVClass = v->getVClass();
-    myVehicleDistance = myVehicle->getRoute().getDistanceBetween(
-                            myVehicle->getDepartPos(), myVehicle->getPositionOnLane(),
-                            myVehicle->getRoute().begin(),  myVehicle->getCurrentRouteEdge());
+    if (myVehicle != nullptr) {
+        myVehicleID = v->getID();
+        myVehicleLine = v->getParameter().line;
+        myVehicleVClass = v->getVClass();
+        myVehicleDistance = myVehicle->getRoute().getDistanceBetween(
+                                myVehicle->getDepartPos(), myVehicle->getPositionOnLane(),
+                                myVehicle->getRoute().begin(),  myVehicle->getCurrentRouteEdge());
+        myTimeLoss = myVehicle->getTimeLoss();
+    }
 }
 
 void

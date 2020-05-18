@@ -1,6 +1,9 @@
 # tests effects of lcTurnAlignmentDistance
 turnAlignment
 
+# tests related to bicycle simulation
+bicycle_box
+
 # a lane has two follower lanes on the next edge and vehicle paths might cross
 lane_split_conflict
 
@@ -19,6 +22,9 @@ junction_leader_sibling_block2
 
 # handling of sibling internal lanes with different widths
 junction_leader_sibling_diffWidth
+
+# interaction on overlapping internal lanes from the same source lane targeting different edges
+overlapping_internal
 
 # a wide lane splits into three turning lanes
 wide_lane_split

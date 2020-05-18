@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    duarouter_main.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // Main for DUAROUTER
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #ifdef HAVE_VERSION_H
@@ -98,9 +97,10 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
     SUMOAbstractRouter<ROEdge, ROVehicle>* router;
     const std::string measure = oc.getString("weight-attribute");
     const std::string routingAlgorithm = oc.getString("routing-algorithm");
+    const double priorityFactor = oc.getFloat("weights.priority-factor");
     const SUMOTime begin = string2time(oc.getString("begin"));
     const SUMOTime end = string2time(oc.getString("end"));
-    if (measure == "traveltime") {
+    if (measure == "traveltime" && priorityFactor == 0) {
         if (routingAlgorithm == "dijkstra") {
             router = new DijkstraRouter<ROEdge, ROVehicle>(ROEdge::getAllEdges(), oc.getBool("ignore-errors"), ttFunction, nullptr, false, nullptr, net.hasPermissions(), oc.isSet("restriction-params"));
         } else if (routingAlgorithm == "astar") {
@@ -144,7 +144,13 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
         }
     } else {
         DijkstraRouter<ROEdge, ROVehicle>::Operation op;
-        if (measure == "CO") {
+        if (measure == "traveltime") {
+            if (ROEdge::initPriorityFactor(priorityFactor)) {
+                op = &ROEdge::getTravelTimeStaticPriorityFactor;
+            } else {
+                op = &ROEdge::getTravelTimeStatic;
+            }
+        } else if (measure == "CO") {
             op = &ROEdge::getEmissionEffort<PollutantsInterface::CO>;
         } else if (measure == "CO2") {
             op = &ROEdge::getEmissionEffort<PollutantsInterface::CO2>;
@@ -161,7 +167,10 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
         } else if (measure == "noise") {
             op = &ROEdge::getNoiseEffort;
         } else {
-            throw ProcessError("Unknown measure (weight attribute '" + measure + "')!");
+            op = &ROEdge::getStoredEffort;
+        }
+        if (measure != "traveltime" && !net.hasLoadedEffort()) {
+            WRITE_WARNING("No weight data was loaded for attribute '" + measure + "'.");
         }
         router = new DijkstraRouter<ROEdge, ROVehicle>(
             ROEdge::getAllEdges(), oc.getBool("ignore-errors"), op, ttFunction, false, nullptr, net.hasPermissions(), oc.isSet("restriction-params"));
@@ -178,8 +187,13 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
             carWalk |= ROIntermodalRouter::Network::ALL_JUNCTIONS_TAXI;
         }
     }
+    RailwayRouter<ROEdge, ROVehicle>* railRouter = nullptr;
+    if (net.hasBidiEdges()) {
+        railRouter = new RailwayRouter<ROEdge, ROVehicle>(ROEdge::getAllEdges(), true, ttFunction, nullptr, false, net.hasPermissions(), oc.isSet("restriction-params"));
+    }
     RORouterProvider provider(router, new PedestrianRouter<ROEdge, ROLane, RONode, ROVehicle>(),
-                              new ROIntermodalRouter(RONet::adaptIntermodalRouter, carWalk, routingAlgorithm));
+                              new ROIntermodalRouter(RONet::adaptIntermodalRouter, carWalk, routingAlgorithm),
+                              railRouter);
     // process route definitions
     try {
         net.openOutput(oc);
@@ -270,6 +284,4 @@ main(int argc, char** argv) {
 }
 
 
-
 /****************************************************************************/
-

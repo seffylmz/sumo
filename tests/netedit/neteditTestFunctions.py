@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2009-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2009-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    neteditTestFunctions.py
 # @author  Pablo Alvarez Lopez
@@ -266,6 +270,11 @@ def Popen(extraParameters, debugInformation):
         neteditCall += ['-r',
                         os.path.join(_TEXTTEST_SANDBOX, "input_routes.rou.xml")]
 
+    # Check if datas must be loaded
+    if os.path.exists(os.path.join(_TEXTTEST_SANDBOX, "input_datas.rou.xml")):
+        neteditCall += ['-d',
+                        os.path.join(_TEXTTEST_SANDBOX, "input_datas.rou.xml")]
+
     # check if a gui settings file has to be load
     if os.path.exists(os.path.join(_TEXTTEST_SANDBOX, "gui-settings.xml")):
         neteditCall += ['--gui-settings-file',
@@ -282,6 +291,10 @@ def Popen(extraParameters, debugInformation):
     # set output for routes
     neteditCall += ['--demandelements-output',
                     os.path.join(_TEXTTEST_SANDBOX, "routes.xml")]
+
+    # set output for datas
+    neteditCall += ['--dataelements-output',
+                    os.path.join(_TEXTTEST_SANDBOX, "datas.xml")]
 
     # set output for gui
     neteditCall += ['--gui-testing.setting-output',
@@ -343,14 +356,23 @@ def setupAndStart(testRoot, extraParameters=[], debugInformation=True, waitTime=
 
 def supermodeNetwork():
     """
-    @brief select Network Supermode
+    @brief select supermode Network
     """
-    typeKey('F3')
+    typeKey('F2')
 
 
 def supermodeDemand():
     """
-    @brief select Demand Supermode
+    @brief select supermode Demand
+    """
+    typeKey('F3')
+    # wait for output
+    time.sleep(DELAY_RECOMPUTE)
+
+
+def supermodeData():
+    """
+    @brief select supermode Data
     """
     typeKey('F4')
     # wait for output
@@ -398,7 +420,7 @@ def focusOnFrame():
     """
     @brief select focus on upper element of current frame
     """
-    typeKey('F12')
+    typeTwoKeys('shift', 'F12')
 
 
 def undo(referencePosition, number):
@@ -637,6 +659,18 @@ def saveRoutes(referencePosition, clickOverReference=True):
     typeThreeKeys('ctrl', 'shift', 'd')
 
 
+def saveDatas(referencePosition, clickOverReference=True):
+    """
+    @brief save datas
+    """
+    # check if clickOverReference is enabled
+    if clickOverReference:
+        # click over reference (to avoid problem with undo-redo)
+        leftClick(referencePosition, 0, 0)
+    # save datas using hotkey
+    typeThreeKeys('ctrl', 'shift', 'b')
+
+
 def fixDemandElements(solution):
     """
     @brief fix stoppingPlaces
@@ -677,8 +711,8 @@ def openAboutDialog(waitingTime=DELAY_QUESTION):
     """
     @brief open and close about dialog
     """
-    # type F2 to open about dialog
-    typeKey('F2')
+    # type F12 to open about dialog
+    typeKey('F12')
     # wait before closing
     time.sleep(waitingTime)
     # press enter to close dialog (Ok must be focused)
@@ -1328,14 +1362,53 @@ def deleteUsingSuprKey():
     time.sleep(DELAY_REMOVESELECTION)
 
 
+def changeRemoveOnlyGeometryPoint(referencePosition):
+    """
+    @brief Enable or disable 'Remove only geometry point'
+    """
+    # select delete mode again to set mode
+    deleteMode()
+    # jump to checkbox
+    typeTab()
+    # type SPACE to change value
+    typeSpace()
+
+
 def changeAutomaticallyDeleteAdditionals(referencePosition):
     """
     @brief Enable or disable 'automatically delete Additionals'
     """
     # select delete mode again to set mode
     deleteMode()
-    # use TAB to go to check box
-    typeTab()
+    # jump to checkbox
+    for _ in range(2):
+        typeTab()
+    # type SPACE to change value
+    typeSpace()
+
+
+def changeProtectTAZElements(referencePosition):
+    """
+    @brief Enable or disable 'protect TAZ elements'
+    """
+    # select delete mode again to set mode
+    deleteMode()
+    # jump to checkbox
+    for _ in range(3):
+        typeTab()
+    # type SPACE to change value
+    typeSpace()
+
+
+def changeProtectShapeElements(referencePosition):
+    """
+    @brief Enable or disable 'protect shape elements'
+    """
+    # select delete mode again to set mode
+    deleteMode()
+    # jump to checkbox
+    for _ in range(4):
+        typeTab()
     # type SPACE to change value
     typeSpace()
 
@@ -1347,7 +1420,20 @@ def changeProtectDemandElements(referencePosition):
     # select delete mode again to set mode
     deleteMode()
     # jump to checkbox
-    for _ in range(3):
+    for _ in range(5):
+        typeTab()
+    # type SPACE to change value
+    typeSpace()
+
+
+def changeProtectDataElements(referencePosition):
+    """
+    @brief Enable or disable 'protect data elements'
+    """
+    # select delete mode again to set mode
+    deleteMode()
+    # jump to checkbox
+    for _ in range(6):
         typeTab()
     # type SPACE to change value
     typeSpace()
@@ -1556,7 +1642,7 @@ def selectionRectangle(referencePosition, startX, startY, endX, endY):
     time.sleep(DELAY_SELECT)
 
 
-def selectionClear(previouslyInserted=False):
+def selectionClear():
     """
     @brief clear selection
     """
@@ -1584,13 +1670,27 @@ def selectionInvert():
     time.sleep(DELAY_SELECT)
 
 
+def selectionClearDemand():
+    """
+    @brief clear selection
+    """
+    # focus current frame
+    focusOnFrame()
+    for _ in range(25):
+        typeTab()
+    # type space to select clear option
+    typeSpace()
+    # wait for gl debug
+    time.sleep(DELAY_SELECT)
+
+
 def selectionInvertDemand():
     """
     @brief invert selection (demand mode)
     """
     # focus current frame
     focusOnFrame()
-    for _ in range(28):
+    for _ in range(26):
         typeTab()
     # type space to select invert operation
     typeSpace()

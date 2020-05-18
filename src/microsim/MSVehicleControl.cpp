@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSVehicleControl.cpp
 /// @author  Daniel Krajzewicz
@@ -15,11 +19,6 @@
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
-
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include "MSVehicleControl.h"
@@ -33,7 +32,6 @@
 #include <utils/common/Named.h>
 #include <utils/common/RGBColor.h>
 #include <utils/vehicle/SUMOVTypeParameter.h>
-#include <utils/iodevices/BinaryInputDevice.h>
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/router/IntermodalRouter.h>
@@ -55,6 +53,7 @@ MSVehicleControl::MSVehicleControl() :
     myTeleportsYield(0),
     myTeleportsWrongLane(0),
     myEmergencyStops(0),
+    myStoppedVehicles(0),
     myTotalDepartureDelay(0),
     myTotalTravelTime(0),
     myDefaultVTypeMayBeDeleted(true),
@@ -65,8 +64,7 @@ MSVehicleControl::MSVehicleControl() :
     myWaitingForContainer(0),
     myMaxSpeedFactor(1),
     myMinDeceleration(SUMOVTypeParameter::getDefaultDecel(SVC_IGNORING)),
-    myPendingRemovals(MSGlobals::gNumSimThreads > 1) 
-{
+    myPendingRemovals(MSGlobals::gNumSimThreads > 1) {
     SUMOVTypeParameter defType(DEFAULT_VTYPE_ID, SVC_PASSENGER);
     myVTypeDict[DEFAULT_VTYPE_ID] = MSVehicleType::build(defType);
 
@@ -91,21 +89,7 @@ MSVehicleControl::MSVehicleControl() :
 
 
 MSVehicleControl::~MSVehicleControl() {
-    // delete vehicles
-    for (VehicleDictType::iterator i = myVehicleDict.begin(); i != myVehicleDict.end(); ++i) {
-        delete (*i).second;
-    }
-    myVehicleDict.clear();
-    // delete vehicle type distributions
-    for (VTypeDistDictType::iterator i = myVTypeDistDict.begin(); i != myVTypeDistDict.end(); ++i) {
-        delete (*i).second;
-    }
-    myVTypeDistDict.clear();
-    // delete vehicle types
-    for (VTypeDictType::iterator i = myVTypeDict.begin(); i != myVTypeDict.end(); ++i) {
-        delete (*i).second;
-    }
-    myVTypeDict.clear();
+    clearState();
 }
 
 
@@ -113,16 +97,23 @@ SUMOVehicle*
 MSVehicleControl::buildVehicle(SUMOVehicleParameter* defs,
                                const MSRoute* route, MSVehicleType* type,
                                const bool ignoreStopErrors, const bool fromRouteFile) {
-    myLoadedVehNo++;
     MSVehicle* built = new MSVehicle(defs, route, type, type->computeChosenSpeedDeviation(fromRouteFile ? MSRouteHandler::getParsingRNG() : nullptr));
+    initVehicle(built, ignoreStopErrors);
+    return built;
+}
+
+
+void
+MSVehicleControl::initVehicle(MSBaseVehicle* built, const bool ignoreStopErrors) {
+    myLoadedVehNo++;
     try {
+        built->initDevices();
         built->addStops(ignoreStopErrors);
     } catch (ProcessError&) {
         delete built;
         throw;
     }
     MSNet::getInstance()->informVehicleStateListener(built, MSNet::VEHICLE_STATE_BUILT);
-    return built;
 }
 
 
@@ -221,6 +212,29 @@ MSVehicleControl::saveState(OutputDevice& out) {
     for (VehicleDictType::iterator it = myVehicleDict.begin(); it != myVehicleDict.end(); ++it) {
         (*it).second->saveState(out);
     }
+}
+
+
+void
+MSVehicleControl::clearState() {
+    for (VehicleDictType::iterator i = myVehicleDict.begin(); i != myVehicleDict.end(); ++i) {
+        delete (*i).second;
+    }
+    myVehicleDict.clear();
+    // delete vehicle type distributions
+    for (VTypeDistDictType::iterator i = myVTypeDistDict.begin(); i != myVTypeDistDict.end(); ++i) {
+        delete (*i).second;
+    }
+    myVTypeDistDict.clear();
+    // delete vehicle types
+    for (VTypeDictType::iterator i = myVTypeDict.begin(); i != myVTypeDict.end(); ++i) {
+        delete (*i).second;
+    }
+    myVTypeDict.clear();
+    myDefaultVTypeMayBeDeleted = true;
+    myDefaultPedTypeMayBeDeleted = true;
+    myDefaultContainerTypeMayBeDeleted = true;
+    myDefaultBikeTypeMayBeDeleted = true;
 }
 
 
@@ -423,8 +437,8 @@ MSVehicleControl::getVTypeDistribution(const std::string& typeDistID) const {
 void
 MSVehicleControl::abortWaiting() {
     for (VehicleDictType::iterator i = myVehicleDict.begin(); i != myVehicleDict.end(); ++i) {
-        WRITE_WARNINGF("Vehicle '%' aborted waiting for a % that will never come.", i->first, 
-                i->second->getParameter().departProcedure == DEPART_SPLIT ? "split" : "person or container")
+        WRITE_WARNINGF("Vehicle '%' aborted waiting for a % that will never come.", i->first,
+                       i->second->getParameter().departProcedure == DEPART_SPLIT ? "split" : "person or container")
     }
 }
 

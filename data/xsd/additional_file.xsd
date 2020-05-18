@@ -161,13 +161,12 @@
 
     <xsd:complexType name="e3DetectorType">
         <xsd:sequence>
-            <xsd:element name="detEntry" type="detEntryExitType" minOccurs="1" maxOccurs="unbounded"/>
-            <xsd:element name="detExit" type="detEntryExitType" minOccurs="1" maxOccurs="unbounded"/>
-            <xsd:choice minOccurs="0" maxOccurs="unbounded">
-                <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
-                <xsd:element name="detEntry" type="detEntryExitType" minOccurs="0" maxOccurs="unbounded"/>
-                <xsd:element name="detExit" type="detEntryExitType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:choice minOccurs="2" maxOccurs="unbounded">
+                <xsd:element name="detEntry" type="detEntryExitType" minOccurs="1" maxOccurs="unbounded"/>
+                <xsd:element name="detExit" type="detEntryExitType" minOccurs="1" maxOccurs="unbounded"/>
             </xsd:choice>
+            <xsd:element name="param" type="paramType" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="id" type="detectorIdType" use="required"/>
         <xsd:attribute name="freq" type="positiveFloatType" use="required"/>
@@ -222,6 +221,7 @@
         <xsd:attribute name="trackVehicles" type="boolType" use="optional"/>
         <xsd:attribute name="detectPersons" type="xsd:string" use="optional"/>
         <xsd:attribute name="vTypes" type="xsd:string" use="optional"/>
+        <xsd:attribute name="writeAttributes" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="timedEventType">
@@ -371,6 +371,7 @@
         <xsd:attribute name="friendlyPos" type="boolType" use="optional"/>
         <xsd:attribute name="lines" type="xsd:string" use="optional"/>
         <xsd:attribute name="personCapacity" type="nonNegativeIntType" use="optional"/>
+        <xsd:attribute name="parkingLength" type="nonNegativeFloatType" use="optional"/>
     </xsd:complexType>
     
     <xsd:complexType name="containerStopType">

@@ -81,7 +81,13 @@ node_radius_default
 
 # import edge distance from plain xml
 distance
+
+# import junction name from plain xml
+junction_name
 connection_guessing
+
+# test load public transport related files
+public_transport
 
 # import params from plain xml
 params

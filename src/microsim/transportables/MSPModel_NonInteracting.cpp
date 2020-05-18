@@ -1,11 +1,15 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2014-2019 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v2.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v20.html
-// SPDX-License-Identifier: EPL-2.0
+// Copyright (C) 2014-2020 German Aerospace Center (DLR) and others.
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// https://www.eclipse.org/legal/epl-2.0/
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License 2.0 are satisfied: GNU General Public License, version 2
+// or later which is available at
+// https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSPModel_NonInteracting.cpp
 /// @author  Jakob Erdmann
@@ -13,10 +17,6 @@
 ///
 // The pedestrian following model (prototype)
 /****************************************************************************/
-
-// ===========================================================================
-// included modules
-// ===========================================================================
 #include <config.h>
 
 #include <cmath>
@@ -51,7 +51,8 @@ const double MSPModel_NonInteracting::CState::LATERAL_OFFSET(0);
 // MSPModel_NonInteracting method definitions
 // ===========================================================================
 MSPModel_NonInteracting::MSPModel_NonInteracting(const OptionsCont& oc, MSNet* net) :
-    myNet(net) {
+    myNet(net),
+    myNumActivePedestrians(0) {
     assert(myNet != 0);
     UNUSED_PARAMETER(oc);
 }
@@ -63,7 +64,8 @@ MSPModel_NonInteracting::~MSPModel_NonInteracting() {
 
 MSTransportableStateAdapter*
 MSPModel_NonInteracting::add(MSTransportable* transportable, MSStageMoving* stage, SUMOTime now) {
-    MoveToNextEdge* cmd = new MoveToNextEdge(transportable, *stage);
+    myNumActivePedestrians++;
+    MoveToNextEdge* cmd = new MoveToNextEdge(transportable, *stage, this);
     if (transportable->isPerson()) {
         PState* state = new PState(cmd);
         const SUMOTime firstEdgeDuration = state->computeWalkingTime(nullptr, *stage, now);
@@ -81,9 +83,13 @@ MSPModel_NonInteracting::add(MSTransportable* transportable, MSStageMoving* stag
 
 void
 MSPModel_NonInteracting::remove(MSTransportableStateAdapter* state) {
+    myNumActivePedestrians--;
     dynamic_cast<PState*>(state)->getCommand()->abortWalk();
 }
 
+MSPModel_NonInteracting::MoveToNextEdge::~MoveToNextEdge() { 
+    myModel->registerArrived();
+}
 
 SUMOTime
 MSPModel_NonInteracting::MoveToNextEdge::execute(SUMOTime currentTime) {
@@ -93,7 +99,6 @@ MSPModel_NonInteracting::MoveToNextEdge::execute(SUMOTime currentTime) {
     const MSEdge* old = myParent.getEdge();
     const bool arrived = myParent.moveToNextEdge(myTransportable, currentTime);
     if (arrived) {
-        // movement finished
         return 0;
     }
     if (myTransportable->isPerson()) {

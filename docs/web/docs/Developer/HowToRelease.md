@@ -50,11 +50,9 @@ software (Veins, VSimRTI, flow etc.) at this stage.
 - check the documentation
   - update the [ChangeLog](../ChangeLog.md)
   - generate options documentation from configuration templates
-    using configTemplateToWiki.py (for instance
-    `tools/build/configTemplateToWiki.py activitygen | xclip` which
-    copies it directly to the clipboard)
+    using `tools/build/configTemplateToWiki.py`
   - recheck/rebuild the configuration schemata (if options were
-    added) using tools/xml/rebuildSchemata.py (use the internal
+    added) using `tools/xml/rebuildSchemata.py` (use the internal
     build to include all options)
 - check the internal tests (same procedure as above), especially the
   (to be) published scenarios
@@ -95,6 +93,12 @@ and committing the changes after careful inspection
 - create a new Eclipse release at https://projects.eclipse.org/projects/technology.sumo (after login there should be a "Create Release" button)
   - add an IP Log to the release
   - send an email to the PMC at technology-pmc@eclipse.org asking for review (include links to the release and the IP log)
+- add a new version tag
+```
+> git tag -a v0_13_7 -m "tagging release 0.13.7, refs #563"
+> git push --tags
+```
+- create new OSX application bundles with the new version number (`build/osx/...`) - can only be done on OSX with platypus installed (see `build/osx/README.txt`)
 
 ### Release day
 
@@ -125,9 +129,11 @@ If everything is fine:
     service](https://build.opensuse.org/package/show?package=sumo&project=home%3Abehrisch)
 - update the ubuntu ppa (see
 <https://askubuntu.com/questions/642632/how-to-bump-the-version-of-a-package-available-in-another-users-ppa>)
+  - this assumes you have the devscripts package as well as all sumo dependencies installed
+  - if you try this on Windows Linux Subsystem you will also need to do `sudo update-alternatives --set fakeroot /usr/bin/fakeroot-tcp`
   - download the source release and rename it to `sumo_{{Version}}+dfsg1.orig.tar.gz`
   - unzip the source release
-  - move the debian dir one level up
+  - copy the debian dir one level up
   - modify the changelog, using `dch` (enter an email address which has write access to the ppa and a valid gpg key)
   - run `dpkg-buildpackage -S` in the sumo dir and `dput -f ppa:sumo/stable sumo_{{Version}}+dfsg1_source.changes` one level up
 - scenarios (optional)
@@ -136,24 +142,20 @@ If everything is fine:
 - inform the users about the new release
   - post information about the release to sumo-user@eclipse.org and
     sumo-announce@eclipse.org
-  - tweet and post on facebook
+  - submit news about the release on the Eclipse Newsroom <https://newsroom.eclipse.org/node/add/news>
+  - tweet about it, post on Facebook and Instagram stories
   - trigger update of main website at <https://sumo.dlr.de>
-- add a new version tag
-
-```
-> git tag -a v0_13_7 -m "tagging release 0.13.7, refs #563"
-> git push --tags
-```
-
 - close [the milestone](https://github.com/eclipse/sumo/milestones)
   (retargeting open tickets needs to be done manually for now)
+- create a [release on github](https://github.com/eclipse/sumo/releases) to trigger the build of the release python wheels
+- publish the wheels on PyPI
 
 ### After-release cleanup
 
 The trunk is now open for changes again.
 
 - reenable HAVE_VERSION_H in src/config.h.cmake
-- rename version to "git" in configure.ac and CMakeLists.txt
+- rename version to "git" in CMakeLists.txt
 - insert a new empty "Git master" section at the top of the [ChangeLog](../ChangeLog.md)
 - commit changes
 - drink your favorite beverage

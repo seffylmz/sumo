@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    netdiff.py
 # @author  Daniel Krajzewicz
@@ -66,6 +70,7 @@ PLAIN_TYPES = [
 #     (all attributes defined for the edge type are applied. This must be avoided)
 # CAVEAT8 - TAG_TLL must always be written before TAG_CONNECTION
 # CAVEAT9 - when TAG_NEIGH is removed, <neigh lane=""/> must written into the diff to indicate removal
+# CAVEAT10 - when a connection element is written without 'to' it describes an edge without connections. This must be omitted from 'deleted elements'
 
 TAG_TLL = 'tlLogic'
 TAG_CONNECTION = 'connection'
@@ -342,6 +347,11 @@ class AttributeStore:
             if tag == TAG_NEIGH:
                 delete_element = tag
                 additional = ' lane=""'
+
+            if self.type == TYPE_CONNECTIONS and tag == TAG_CONNECTION and len(id) == 1:
+                # see CAVEAT10
+                comment_start, comment_end = (
+                    "<!-- disconnected edge implicitly loses connections when deleted: ", " -->")
 
             self.write(file, '%s<%s %s%s/>%s\n' % (
                 comment_start,

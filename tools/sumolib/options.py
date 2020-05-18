@@ -1,10 +1,14 @@
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2012-2019 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v2.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v20.html
-# SPDX-License-Identifier: EPL-2.0
+# Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# https://www.eclipse.org/legal/epl-2.0/
+# This Source Code may also be made available under the following Secondary
+# Licenses when the conditions for such availability set forth in the Eclipse
+# Public License 2.0 are satisfied: GNU General Public License, version 2
+# or later which is available at
+# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
+# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 
 # @file    options.py
 # @author  Jakob Erdmann
@@ -14,7 +18,6 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
-import os
 import sys
 import subprocess
 from collections import namedtuple
@@ -22,16 +25,18 @@ import re
 from xml.sax import parse, handler
 import argparse
 
+_OPTIONS = [None]
+
 
 def get_long_option_names(application):
     # @todo using option "--save-template stdout" and parsing xml would be prettier
-    output = subprocess.check_output([application, '--help'])
+    output = subprocess.check_output([application, '--help'], universal_newlines=True)
     reprog = re.compile(r'(--\S*)\s')
     result = []
     for line in output.splitlines():
         m = reprog.search(line)
         if m:
-            result.append(m.group(1).decode('utf-8'))
+            result.append(m.group(1))
     return result
 
 
@@ -56,11 +61,17 @@ def readOptions(filename):
     return optionReader.opts
 
 
+def getOptions():
+    # return global option value (after parse_args was called)
+    return _OPTIONS[0]
+
+
 class ArgumentParser(argparse.ArgumentParser):
     """Drop-in replacement for argparse.ArgumentParser that adds support for
     sumo-style config files.
     Inspired by https://github.com/bw2/ConfigArgParse
     """
+
     def __init__(self, *args, **kwargs):
         argparse.ArgumentParser.__init__(self, *args, **kwargs)
         self.add_argument('-c', '--configuration-file', help='read configuration from FILE', metavar="FILE")
@@ -105,9 +116,12 @@ class ArgumentParser(argparse.ArgumentParser):
         args, argv = self.parse_known_args(args, namespace)
         if argv:
             self.error('unrecognized arguments: %s' % ' '.join(argv))
+        if _OPTIONS[0] is None:
+            # only save the "outermost" option instance
+            _OPTIONS[0] = args
         return args
 
-    def parse_known_args(self, args = None, namespace = None):
+    def parse_known_args(self, args=None, namespace=None):
         if args is None:
             args = sys.argv[1:]
         elif isinstance(args, str):
@@ -127,14 +141,18 @@ class ArgumentParser(argparse.ArgumentParser):
                 for s in a.option_strings:
                     if s.startswith("--"):
                         act_map[s[2:]] = a.option_strings
-            for option in readOptions(args[idx]):
-                is_set = False
-                for s in act_map.get(option.name, []):
-                    if s in args:
-                        is_set = True
-                        break
-                if not is_set:
-                    config_args += ["--" + option.name, option.value]
+            for cfg_file in args[idx].split(","):
+                for option in readOptions(cfg_file):
+                    is_set = False
+                    for s in act_map.get(option.name, []):
+                        if s in args:
+                            is_set = True
+                            break
+                    if not is_set:
+                        if option.value == "True":
+                            config_args += ["--" + option.name, option.value]
+                        elif option.value != "False":
+                            config_args += ["--" + option.name, option.value]
         namespace, unknown_args = argparse.ArgumentParser.parse_known_args(
             self, args=args+config_args, namespace=namespace)
         self.write_config_file(namespace)
