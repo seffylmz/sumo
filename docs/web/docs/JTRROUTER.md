@@ -17,10 +17,10 @@ junction turning percentages
     A) a road network as generated via
     [NETCONVERT](NETCONVERT.md) or
     [NETGENERATE](NETGENERATE.md), see [Building
-    Networks](SUMO_User_Documentation.md#network_building)
+    Networks](index.md#network_building)
 
     B) a demand definition, see [Demand
-    Modelling](SUMO_User_Documentation.md#demand_modelling)
+    Modelling](index.md#demand_modelling)
 
     C) Junction turning definitions
 
@@ -164,5 +164,3 @@ Options](Basics/Using_the_Command_Line_Applications.md#random_number_options).
 |--------|-------------|
 | **--random** {{DT_BOOL}} | Initialises the random number generator with the current system time; *default:* **false** |
 | **--seed** {{DT_INT}} | Initialises the random number generator with the given value; *default:* **23423** |
-
-

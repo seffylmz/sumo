@@ -3,7 +3,7 @@ title: Tools/Misc
 permalink: /Tools/Misc/
 ---
 
-# createVehTypeDistributions.py
+# createVehTypeDistribution.py
 
 Creates a vehicle type distribution by sampling from configurable value
 distributions for the [desired `vType`-parameters](../Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md#vehicle_types).
@@ -11,7 +11,7 @@ distributions for the [desired `vType`-parameters](../Definition_of_Vehicles,_Ve
 Example use
 
 ```
-<SUMO_HOME>/tools/createVehTypeDistributions.py config.txt
+<SUMO_HOME>/tools/createVehTypeDistribution.py config.txt
 ```
 
 The only required parameter is the configuration file in the format
@@ -165,4 +165,3 @@ Retrieving satellite data from Google or MapQuest (Requires obtaining an API-key
 python <SUMO_HOME>/tools/tileGet.py -n test.net.xml -t 10 --url maps.googleapis.com/maps/api/staticmap --key YOURKEY
 python <SUMO_HOME>/tools/tileGet.py -n test.net.xml -t 10 --url open.mapquestapi.com/staticmap/v4/getmap --key YOURKEY
 ```
-

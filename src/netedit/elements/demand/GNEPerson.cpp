@@ -24,8 +24,6 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_EnableAttribute.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 #include <utils/gui/windows/GUIAppEnum.h>
@@ -259,18 +257,6 @@ GNEPerson::fixDemandElementProblem() {
 }
 
 
-GNEEdge*
-GNEPerson::getFromEdge() const {
-    return getChildDemandElements().front()->getFromEdge();
-}
-
-
-GNEEdge*
-GNEPerson::getToEdge() const {
-    return getChildDemandElements().front()->getToEdge();
-}
-
-
 SUMOVehicleClass
 GNEPerson::getVClass() const {
     return getParentDemandElements().front()->getVClass();
@@ -319,16 +305,6 @@ void
 GNEPerson::updateDottedContour() {
     //
 }
-
-
-void
-GNEPerson::updatePartialGeometry(const GNEEdge* edge) {
-    // only update partial geometry of childrens
-    for (const auto& i : getChildDemandElements()) {
-        i->updatePartialGeometry(edge);
-    }
-}
-
 
 void
 GNEPerson::computePath() {
@@ -480,6 +456,18 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
 }
 
 
+void 
+GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/) const {
+    // Stops don't use drawPartialGL
+}
+
+
+void 
+GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/) const {
+    // Stops don't use drawPartialGL
+}
+
+
 std::string
 GNEPerson::getAttribute(SumoXMLAttr key) const {
     // declare string error
@@ -532,7 +520,7 @@ double
 GNEPerson::getAttributeDouble(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_DEPARTPOS:
-            if (departPosProcedure == DEPART_POS_GIVEN) {
+            if (departPosProcedure == DepartPosDefinition::GIVEN) {
                 return departPos;
             } else {
                 return 0;

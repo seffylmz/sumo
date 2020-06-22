@@ -31,36 +31,6 @@
 class GNEPersonFrame : public GNEFrame {
 
 public:
-    // ===========================================================================
-    // class HelpCreation
-    // ===========================================================================
-
-    class HelpCreation : protected FXGroupBox {
-
-    public:
-        /// @brief constructor
-        HelpCreation(GNEPersonFrame* vehicleFrameParent);
-
-        /// @brief destructor
-        ~HelpCreation();
-
-        /// @brief show HelpCreation
-        void showHelpCreation();
-
-        /// @brief hide HelpCreation
-        void hideHelpCreation();
-
-        /// @brief update HelpCreation
-        void updateHelpCreation();
-
-    private:
-        /// @brief pointer to Person Frame Parent
-        GNEPersonFrame* myPersonFrameParent;
-
-        /// @brief Label with creation information
-        FXLabel* myInformationLabel;
-    };
-
     /**@brief Constructor
      * @brief parent FXHorizontalFrame in which this GNEFrame is placed
      * @brief viewNet viewNet that uses this GNEFrame
@@ -73,14 +43,17 @@ public:
     /// @brief show Frame
     void show();
 
+    /// @brief hide Frame
+    void hide();
+
     /**@brief add vehicle element
      * @param objectsUnderCursor collection of objects under cursor after click over view
      * @return true if vehicle was sucesfully added
      */
-    bool addPerson(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor);
+    bool addPerson(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed);
 
-    /// @brief get EdgePathCreator modul
-    GNEFrameModuls::EdgePathCreator* getEdgePathCreator() const;
+    /// @brief get PathCreator modul
+    GNEFrameModuls::PathCreator* getPathCreator() const;
 
 protected:
     /// @brief Tag selected in TagSelector
@@ -89,8 +62,8 @@ protected:
     /// @brief selected demand element in DemandElementSelector
     void demandElementSelected();
 
-    /// @brief finish edge path creation
-    void edgePathCreated();
+    /// @brief create path
+    void createPath();
 
 private:
     /// @brief person tag selector (used to select diffent kind of persons)
@@ -112,16 +85,7 @@ private:
     GNEFrameAttributesModuls::NeteditAttributes* myNeteditAttributes;
 
     /// @brief edge path creator (used for Walks, rides and trips)
-    GNEFrameModuls::EdgePathCreator* myEdgePathCreator;
-
-    /// @brief Help creation
-    HelpCreation* myHelpCreation;
-
-    /// @brief build person over route
-    bool buildPersonOverRoute(GNEDemandElement* route);
-
-    /// @brief build person over stop
-    bool buildPersonOverStop(GNELane* lane, GNEAdditional* busStop);
+    GNEFrameModuls::PathCreator* myPathCreator;
 
     /// @brief build person and return it (note: function includes a call to p_begin(...), but NOT a call to p_end(...))
     GNEDemandElement* buildPerson();

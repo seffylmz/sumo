@@ -313,6 +313,9 @@ GNEHierarchicalParentElements::getNewListOfParents(const GNENetworkElement* curr
             }
         }
     }
+    // remove consecutive (adjacent) duplicates
+    solution.erase(std::unique(solution.begin(), solution.end()), solution.end());
+    // return solution
     return toString(solution);
 }
 
@@ -361,9 +364,9 @@ std::vector<GNEEdge*>
 GNEHierarchicalParentElements::getMiddleParentEdges() const {
     std::vector<GNEEdge*> middleEdges;
     // there are only middle edges if there is more than two edges
-    if (middleEdges.size() > 2) {
-        // resize middleEdges
-        middleEdges.resize(myParentEdges.size() - 2);
+    if (myParentEdges.size() > 2) {
+        // reserve middleEdges
+        middleEdges.reserve(myParentEdges.size() - 2);
         // iterate over second and previous last parent edge
         for (auto i = (myParentEdges.begin() + 1); i != (myParentEdges.end() - 1); i++) {
             middleEdges.push_back(*i);
@@ -479,7 +482,7 @@ GNEHierarchicalParentElements::replaceParentEdges(GNEGenericData* elementChild, 
 void
 GNEHierarchicalParentElements::replaceFirstParentEdge(GNEDemandElement* elementChild, GNEEdge* newFirstEdge) {
     // first check that at least there is two edges
-    if (myParentEdges.size() < 2) {
+    if (myParentEdges.size() < 1) {
         throw InvalidArgument("Invalid minimum number of edges");
     } else {
         // remove demandElement of parent edges
@@ -495,7 +498,7 @@ GNEHierarchicalParentElements::replaceFirstParentEdge(GNEDemandElement* elementC
 void
 GNEHierarchicalParentElements::replaceFirstParentEdge(GNEGenericData* elementChild, GNEEdge* newFirstEdge) {
     // first check that at least there is two edges
-    if (myParentEdges.size() < 2) {
+    if (myParentEdges.size() < 1) {
         throw InvalidArgument("Invalid minimum number of edges");
     } else {
         // remove generic data of parent edges

@@ -199,6 +199,15 @@ public:
 
     static int getPersonsAbreast(double length);
 
+    /// @brief get list of vehicles waiting at this stop
+    std::vector<const SUMOVehicle*> getStoppedVehicles() const;
+
+    /// @brief get list of persons waiting at this stop
+    std::vector<MSTransportable*> getWaitingPersons() const;
+
+    /** @brief Remove all vehicles before quick-loading state */
+    void clearState();
+
 protected:
     /** @brief Computes the last free position on this stop
      *
@@ -215,7 +224,7 @@ protected:
     std::vector<std::string> myLines;
 
     /// @brief A map from objects (vehicles) to the areas they acquire after entering the stop
-    std::map<const SUMOVehicle*, std::pair<double, double> > myEndPositions;
+    std::map<const SUMOVehicle*, std::pair<double, double>, ComparatorNumericalIdLess> myEndPositions;
 
     /// @brief The lane this bus stop is located at
     const MSLane& myLane;

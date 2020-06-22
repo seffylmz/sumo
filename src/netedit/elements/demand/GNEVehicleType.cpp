@@ -92,18 +92,6 @@ GNEVehicleType::writeDemandElement(OutputDevice& device) const {
 }
 
 
-GNEEdge*
-GNEVehicleType::getFromEdge() const {
-    return nullptr;
-}
-
-
-GNEEdge*
-GNEVehicleType::getToEdge() const {
-    return nullptr;
-}
-
-
 SUMOVehicleClass
 GNEVehicleType::getVClass() const {
     return vehicleClass;
@@ -156,15 +144,6 @@ GNEVehicleType::updateDottedContour() {
 
 
 void
-GNEVehicleType::updatePartialGeometry(const GNEEdge* edge) {
-    // update geometry of all childrens
-    for (const auto& i : getChildDemandElements()) {
-        i->updatePartialGeometry(edge);
-    }
-}
-
-
-void
 GNEVehicleType::computePath() {
     // nothing to compute
 }
@@ -204,6 +183,18 @@ GNEVehicleType::splitEdgeGeometry(const double /*splitPosition*/, const GNENetwo
 void
 GNEVehicleType::drawGL(const GUIVisualizationSettings&) const {
     // Vehicle Types aren't draw
+}
+
+
+void 
+GNEVehicleType::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/) const {
+    // vehicleTypes don't use drawPartialGL
+}
+
+
+void
+GNEVehicleType::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /* fromLane */, const GNELane* /* toLane */) const {
+    // vehicleTypes don't use drawPartialGL
 }
 
 

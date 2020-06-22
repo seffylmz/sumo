@@ -176,10 +176,6 @@ GNENetHelper::AttributeCarriers::registerJunction(GNEJunction* junction) {
     myNet->addGLObjectIntoGrid(junction);
     // update geometry
     junction->updateGeometry();
-    // check if junction is selected
-    if (junction->isAttributeCarrierSelected()) {
-        junction->selectAttributeCarrier(false);
-    }
     // add z in net boundary
     myNet->addZValueInBoundary(junction->getNBNode()->getPosition().z());
     return junction;
@@ -215,10 +211,6 @@ GNENetHelper::AttributeCarriers::registerEdge(GNEEdge* edge) {
     myNet->expandBoundary(edge->getCenteringBoundary());
     // add edge into grid
     myNet->addGLObjectIntoGrid(edge);
-    // check if edge is selected
-    if (edge->isAttributeCarrierSelected()) {
-        edge->selectAttributeCarrier(false);
-    }
     // Add references into GNEJunctions
     edge->getFirstParentJunction()->addOutgoingGNEEdge(edge);
     edge->getSecondParentJunction()->addIncomingGNEEdge(edge);
@@ -495,10 +487,6 @@ GNENetHelper::AttributeCarriers::deleteSingleJunction(GNEJunction* junction) {
     myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(junction);
     // Remove from grid and container
     myNet->removeGLObjectFromGrid(junction);
-    // check if junction is selected
-    if (junction->isAttributeCarrierSelected()) {
-        junction->unselectAttributeCarrier(false);
-    }
     myJunctions.erase(junction->getMicrosimID());
     myNet->getNetBuilder()->getNodeCont().extract(junction->getNBNode());
     junction->decRef("GNENet::deleteSingleJunction");
@@ -549,10 +537,6 @@ GNENetHelper::AttributeCarriers::deleteSingleEdge(GNEEdge* edge) {
     myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(edge);
     // remove edge from visual grid and container
     myNet->removeGLObjectFromGrid(edge);
-    // check if junction is selected
-    if (edge->isAttributeCarrierSelected()) {
-        edge->unselectAttributeCarrier(false);
-    }
     myEdges.erase(edge->getMicrosimID());
     // extract edge of district container
     myNet->getNetBuilder()->getEdgeCont().extract(myNet->getNetBuilder()->getDistrictCont(), edge->getNBEdge());
@@ -610,10 +594,6 @@ GNENetHelper::AttributeCarriers::insertAdditional(GNEAdditional* additional) {
         myAdditionals.at(additional->getTagProperty().getTag()).insert(std::make_pair(additional->getID(), additional));
         // add element in grid
         myNet->addGLObjectIntoGrid(additional);
-        // check if additional is selected
-        if (additional->isAttributeCarrierSelected()) {
-            additional->selectAttributeCarrier(false);
-        }
         // update geometry after insertion of additionals if myUpdateGeometryEnabled is enabled
         if (myNet->isUpdateGeometryEnabled()) {
             additional->updateGeometry();
@@ -638,10 +618,6 @@ GNENetHelper::AttributeCarriers::deleteAdditional(GNEAdditional* additional) {
         myAdditionals.at(additional->getTagProperty().getTag()).erase(it);
         // remove element from grid
         myNet->removeGLObjectFromGrid(additional);
-        // check if additional is selected
-        if (additional->isAttributeCarrierSelected()) {
-            additional->unselectAttributeCarrier(false);
-        }
         // additionals has to be saved
         myNet->requireSaveAdditionals(true);
         // additional removed, then return true
@@ -692,10 +668,6 @@ GNENetHelper::AttributeCarriers::insertShape(GNEShape* shape) {
         myShapes.at(shape->getTagProperty().getTag()).insert(std::make_pair(shape->getID(), shape));
         // add element in grid
         myNet->addGLObjectIntoGrid(shape);
-        // check if shape is selected
-        if (shape->isAttributeCarrierSelected()) {
-            shape->selectAttributeCarrier(false);
-        }
         // update geometry after insertion of shapes if myUpdateGeometryEnabled is enabled
         if (myNet->isUpdateGeometryEnabled()) {
             shape->updateGeometry();
@@ -720,10 +692,6 @@ GNENetHelper::AttributeCarriers::deleteShape(GNEShape* shape) {
         myShapes.at(shape->getTagProperty().getTag()).erase(it);
         // remove element from grid
         myNet->removeGLObjectFromGrid(shape);
-        // check if shape is selected
-        if (shape->isAttributeCarrierSelected()) {
-            shape->unselectAttributeCarrier(false);
-        }
         // shapes has to be saved
         myNet->requireSaveAdditionals(true);
         // shape removed, then return true
@@ -774,10 +742,6 @@ GNENetHelper::AttributeCarriers::insertTAZElement(GNETAZElement* TAZElement) {
         myTAZElements.at(TAZElement->getTagProperty().getTag()).insert(std::make_pair(TAZElement->getID(), TAZElement));
         // add element in grid
         myNet->addGLObjectIntoGrid(TAZElement);
-        // check if TAZElement is selected
-        if (TAZElement->isAttributeCarrierSelected()) {
-            TAZElement->selectAttributeCarrier(false);
-        }
         // update geometry after insertion of TAZElements if myUpdateGeometryEnabled is enabled
         if (myNet->isUpdateGeometryEnabled()) {
             TAZElement->updateGeometry();
@@ -802,10 +766,6 @@ GNENetHelper::AttributeCarriers::deleteTAZElement(GNETAZElement* TAZElement) {
         myTAZElements.at(TAZElement->getTagProperty().getTag()).erase(it);
         // remove element from grid
         myNet->removeGLObjectFromGrid(TAZElement);
-        // check if TAZElement is selected
-        if (TAZElement->isAttributeCarrierSelected()) {
-            TAZElement->unselectAttributeCarrier(false);
-        }
         // TAZElements has to be saved
         myNet->requireSaveAdditionals(true);
         // TAZElement removed, then return true
@@ -865,10 +825,6 @@ GNENetHelper::AttributeCarriers::insertDemandElement(GNEDemandElement* demandEle
         }
         // add element in grid
         myNet->addGLObjectIntoGrid(demandElement);
-        // check if demandElement is selected
-        if (demandElement->isAttributeCarrierSelected()) {
-            demandElement->selectAttributeCarrier(false);
-        }
         // update geometry after insertion of demandElements if myUpdateGeometryEnabled is enabled
         if (myNet->isUpdateGeometryEnabled()) {
             demandElement->updateGeometry();
@@ -901,10 +857,6 @@ GNENetHelper::AttributeCarriers::deleteDemandElement(GNEDemandElement* demandEle
         }
         // remove element from grid
         myNet->removeGLObjectFromGrid(demandElement);
-        // check if demandElement is selected
-        if (demandElement->isAttributeCarrierSelected()) {
-            demandElement->unselectAttributeCarrier(false);
-        }
         // demandElements has to be saved
         myNet->requireSaveDemandElements(true);
         // demandElement removed, then return true
@@ -924,8 +876,17 @@ GNENetHelper::AttributeCarriers::updateDemandElementID(GNEAttributeCarrier* AC, 
     } else {
         // retrieve demand element
         GNEDemandElement* demandElement = myDemandElements.at(AC->getTagProperty().getTag()).at(AC->getID());
-        // remove demand from container
+        // get embebbed route
+        GNEDemandElement *embebbedRoute = nullptr;
+        if (demandElement->getTagProperty().embebbedRoute()) {
+            embebbedRoute = demandElement->getChildDemandElements().back();
+        }
+        // remove demand element from container
         myDemandElements.at(demandElement->getTagProperty().getTag()).erase(demandElement->getID());
+        // remove embebbed route from container
+        if (embebbedRoute) {
+            myDemandElements.at(GNE_TAG_ROUTE_EMBEDDED).erase(embebbedRoute->getID());
+        }
         // if is vehicle, remove it from vehicleDepartures
         if (demandElement->getTagProperty().isVehicle()) {
             if (myVehicleDepartures.count(demandElement->getBegin() + "_" + demandElement->getID()) == 0) {
@@ -938,6 +899,12 @@ GNENetHelper::AttributeCarriers::updateDemandElementID(GNEAttributeCarrier* AC, 
         demandElement->setMicrosimID(newID);
         // insert demand again in container
         myDemandElements.at(demandElement->getTagProperty().getTag()).insert(std::make_pair(demandElement->getID(), demandElement));
+        // insert emebbed route again in container
+        if (embebbedRoute) {
+            // set new microsim ID
+            embebbedRoute->setMicrosimID(embebbedRoute->getID());
+            myDemandElements.at(GNE_TAG_ROUTE_EMBEDDED).insert(std::make_pair(embebbedRoute->getID(), embebbedRoute));
+        }
         // if is vehicle, add it into vehicleDepartures
         if (demandElement->getTagProperty().isVehicle()) {
             myVehicleDepartures.insert(std::make_pair(demandElement->getBegin() + "_" + demandElement->getID(), demandElement));
@@ -1054,7 +1021,10 @@ GNENetHelper::PathCalculator::calculatePath(const SUMOVehicleClass vClass, const
     // declare a solution vector
     std::vector<GNEEdge*> solution;
     // calculate route depending of number of partial myEdges
-    if (partialEdges.size() == 1) {
+    if (partialEdges.size() == 0) {
+        // partial edges empty, then return a empty vector
+        return solution;
+    } if (partialEdges.size() == 1) {
         // if there is only one partialEdges, route has only one edge
         solution.push_back(partialEdges.front());
     } else {
@@ -1089,42 +1059,6 @@ GNENetHelper::PathCalculator::calculatePath(const SUMOVehicleClass vClass, const
         }
     }
     return solution;
-}
-
-
-bool
-GNENetHelper::PathCalculator::consecutiveEdgesConnected(const SUMOVehicleClass vClass, const GNEEdge* from, const GNEEdge* to) const {
-    // check conditions
-    if ((from == nullptr) || (to == nullptr)) {
-        // myEdges cannot be null
-        return false;
-    } else if (from == to) {
-        // the same edge cannot be consecutive of itself
-        return false;
-    } else if (vClass == SVC_PEDESTRIAN) {
-        // for pedestrians consecutive myEdges are always connected
-        return true;
-    } else {
-        // iterate over connections of from edge
-        for (const auto &fromLane : from->getLanes()) {
-            for (const auto& fromConnection : from->getGNEConnections()) {
-                // within from loop, iterate ove to lanes
-                for (const auto& toLane : to->getLanes()) {
-                    if (fromConnection->getLaneTo() == toLane) {
-                        // get lane structs for both lanes
-                        const NBEdge::Lane NBFromLane = from->getNBEdge()->getLaneStruct(fromLane->getIndex());
-                        const NBEdge::Lane NBToLane = to->getNBEdge()->getLaneStruct(toLane->getIndex());
-                        // check vClass
-                        if (((NBFromLane.permissions & vClass) == vClass) && 
-                            ((NBToLane.permissions & vClass) == vClass)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
 }
 
 
@@ -1177,12 +1111,83 @@ GNENetHelper::PathCalculator::calculateReachability(const SUMOVehicleClass vClas
     }
 }
 
+
+bool
+GNENetHelper::PathCalculator::consecutiveEdgesConnected(const SUMOVehicleClass vClass, const GNEEdge* from, const GNEEdge* to) const {
+    // check conditions
+    if ((from == nullptr) || (to == nullptr)) {
+        // myEdges cannot be null
+        return false;
+    } else if (from == to) {
+        // the same edge cannot be consecutive of itself
+        return false;
+    } else if (vClass == SVC_PEDESTRIAN) {
+        // for pedestrians consecutive myEdges are always connected
+        return true;
+    } else {
+        // iterate over connections of from edge
+        for (const auto &fromLane : from->getLanes()) {
+            for (const auto& fromConnection : from->getGNEConnections()) {
+                // within from loop, iterate ove to lanes
+                for (const auto& toLane : to->getLanes()) {
+                    if (fromConnection->getLaneTo() == toLane) {
+                        // get lane structs for both lanes
+                        const NBEdge::Lane NBFromLane = from->getNBEdge()->getLaneStruct(fromLane->getIndex());
+                        const NBEdge::Lane NBToLane = to->getNBEdge()->getLaneStruct(toLane->getIndex());
+                        // check vClass
+                        if (((NBFromLane.permissions & vClass) == vClass) && 
+                            ((NBToLane.permissions & vClass) == vClass)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+}
+
+
+bool 
+GNENetHelper::PathCalculator::busStopConnected(const GNEAdditional* busStop, const GNEEdge* edge) const {
+    if (busStop->getTagProperty().getTag() != SUMO_TAG_BUS_STOP) {
+        return false;
+    }
+    // check if busstop is placed over a pedestrian lane
+    if ((busStop->getParentLanes().front()->getParentEdge() == edge) &&
+        (edge->getNBEdge()->getLaneStruct(busStop->getParentLanes().front()->getIndex()).permissions & SVC_PEDESTRIAN) != 0) {
+        // busStop is placed over an lane that supports pedestrians, then return true 
+        return true;
+    }
+    // obtain a list with all edge lanes that supports pedestrians
+    std::vector<GNELane*> pedestrianLanes;
+    for (int laneIndex = 0; laneIndex < (int)edge->getLanes().size(); laneIndex++) {
+        if ((edge->getNBEdge()->getLaneStruct(laneIndex).permissions & SVC_PEDESTRIAN) != 0) {
+            pedestrianLanes.push_back(edge->getLanes().at(laneIndex));
+        }
+    }
+    // check if exist an access between busStop and pedestrian lanes
+    for (const auto &access : busStop->getChildAdditionals()) {
+        // check that child is an access
+        if (access->getTagProperty().getTag() == SUMO_TAG_ACCESS) {
+            for (const auto &lane : pedestrianLanes) {
+                if (access->getParentLanes().front() == lane) {
+                    // found, then return true
+                    return true;
+                }
+            }
+        }
+    }
+    // There isn't a valid access, then return false
+    return false;
+}
+
 // ---------------------------------------------------------------------------
 // GNENetHelper::GNEChange_ReplaceEdgeInTLS - methods
 // ---------------------------------------------------------------------------
 
 GNENetHelper::GNEChange_ReplaceEdgeInTLS::GNEChange_ReplaceEdgeInTLS(NBTrafficLightLogicCont& tllcont, NBEdge* replaced, NBEdge* by) :
-    GNEChange(true),
+    GNEChange(true, false),
     myTllcont(tllcont),
     myReplaced(replaced),
     myBy(by) {

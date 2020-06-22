@@ -435,13 +435,19 @@ Simulation::findRoute(const std::string& from, const std::string& to, const std:
         throw TraCIException("The vehicle type '" + typeID + "' is not known.");
     }
     SUMOVehicleParameter* pars = new SUMOVehicleParameter();
+    pars->id = "simulation.findRoute";
     try {
         const MSRoute* const routeDummy = new MSRoute("", ConstMSEdgeVector({ fromEdge }), false, nullptr, std::vector<SUMOVehicleParameter::Stop>());
         vehicle = MSNet::getInstance()->getVehicleControl().buildVehicle(pars, routeDummy, type, false);
+        std::string msg;
+        if (!vehicle->hasValidRouteStart(msg)) {
+            MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
+            throw TraCIException("Invalid departure edge for vehicle type '" + type->getID() + "' (" + msg + ")");
+        }
         // we need to fix the speed factor here for deterministic results
         vehicle->setChosenSpeedFactor(type->getSpeedFactor().getParameter()[0]);
     } catch (ProcessError& e) {
-        throw TraCIException("Invalid departure edge for vehicle type '" + typeID + "' (" + e.what() + ")");
+        throw TraCIException("Invalid departure edge for vehicle type '" + type->getID() + "' (" + e.what() + ")");
     }
     ConstMSEdgeVector edges;
     const SUMOTime dep = depart < 0 ? MSNet::getInstance()->getCurrentTimeStep() : TIME2STEPS(depart);
@@ -675,35 +681,21 @@ Simulation::saveState(const std::string& fileName) {
 double
 Simulation::loadState(const std::string& fileName) {
     long before = PROGRESS_BEGIN_TIME_MESSAGE("Loading state from '" + fileName + "'");
+    // XXX reset transportable state
+    // load time only
+    MSStateHandler hTime(fileName, 0, true);
+    XMLSubSys::runParser(hTime, fileName);
+    const SUMOTime newTime = hTime.getTime();
     // clean up state
-    MSNet::getInstance()->getInsertionControl().clearState();
-    MSNet::getInstance()->getVehicleControl().clearState();
-    MSVehicleTransfer::getInstance()->clearState();
-    MSRoute::dict_clearState(); // delete all routes after vehicles are deleted
-    if (MSGlobals::gUseMesoSim) {
-        MSGlobals::gMesoNet->clearState();
-        for (int i = 0; i < MSEdge::dictSize(); i++) {
-            for (MESegment* s = MSGlobals::gMesoNet->getSegmentForEdge(*MSEdge::getAllEdges()[i]); s != nullptr; s = s->getNextSegment()) {
-                s->clearState();
-            }
-        }
-    } else {
-        for (int i = 0; i < MSEdge::dictSize(); i++) {
-            const std::vector<MSLane*>& lanes = MSEdge::getAllEdges()[i]->getLanes();
-            for (std::vector<MSLane*>::const_iterator it = lanes.begin(); it != lanes.end(); ++it) {
-                (*it)->clearState();
-            }
-        }
-    }
+    MSNet::getInstance()->clearState(newTime);
     // load state
     MSStateHandler h(fileName, 0);
     XMLSubSys::runParser(h, fileName);
     if (MsgHandler::getErrorInstance()->wasInformed()) {
         throw TraCIException("Loading state from '" + fileName + "' failed.");
     }
-    MSNet::getInstance()->clearState(h.getTime());
     PROGRESS_TIME_MESSAGE(before);
-    return STEPS2TIME(h.getTime());
+    return STEPS2TIME(newTime);
 }
 
 void

@@ -78,12 +78,6 @@ GNELane::GNELane() :
 
 GNELane::~GNELane() {}
 
-std::string
-GNELane::generateChildID(SumoXMLTag /*childTag*/) {
-    // currently unused
-    return "";
-}
-
 
 const PositionVector&
 GNELane::getLaneShape() const {
@@ -115,30 +109,30 @@ GNELane::updateGeometry() {
     // update connections
     myLane2laneConnections.updateLane2laneConnection();
     // update shapes parents associated with this lane
-    for (auto i : getParentShapes()) {
-        i->updateGeometry();
+    for (const auto &shape : getParentShapes()) {
+        shape->updateGeometry();
     }
     // update child shapes associated with this lane
-    for (auto i : getChildShapes()) {
-        i->updateGeometry();
+    for (const auto &shape : getChildShapes()) {
+        shape->updateGeometry();
     }
     // update additionals children associated with this lane
-    for (auto i : getParentAdditionals()) {
-        i->updateGeometry();
+    for (const auto &additional : getParentAdditionals()) {
+        additional->updateGeometry();
     }
     // update additionals parents associated with this lane
-    for (auto i : getChildAdditionals()) {
-        i->updateGeometry();
+    for (const auto &additional : getChildAdditionals()) {
+        additional->updateGeometry();
     }
-    // partial update demand elements parents associated with this lane
-    for (auto i : getParentDemandElements()) {
-        i->updatePartialGeometry(myParentEdge);
+    // update partial demand elements parents associated with this lane
+    for (const auto &demandElement : getParentDemandElements()) {
+        demandElement->updatePartialGeometry(this);
     }
-    // partial update demand elements children associated with this lane
-    for (auto i : getChildDemandElements()) {
-        i->updatePartialGeometry(myParentEdge);
+    // update partial demand elements children associated with this lane and invalidate path
+    for (const auto &demandElement : getChildDemandElements()) {
+        demandElement->updatePartialGeometry(this);
     }
-    // In Move mode, connections aren't updated
+    // in Move mode, connections aren't updated
     if (myNet->getViewNet() && myNet->getViewNet()->getEditModes().networkEditMode != NetworkEditMode::NETWORK_MOVE) {
         // Update incoming connections of this lane
         auto incomingConnections = getGNEIncomingConnections();
@@ -151,7 +145,7 @@ GNELane::updateGeometry() {
             i->updateGeometry();
         }
     }
-    // If lane has enought length for show textures of restricted lanes
+    // if lane has enought length for show textures of restricted lanes
     if ((getLaneShapeLength() > 4)) {
         // if lane is restricted
         if (isRestricted(SVC_PEDESTRIAN) || isRestricted(SVC_BICYCLE) || isRestricted(SVC_BUS)) {
@@ -577,6 +571,10 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
                 demandElement->drawGL(s);
             }
         }
+        // draw child path elements
+        for (const auto &demandElement : myPathDemandElements) {
+            demandElement->drawLanePathChildren(s, this);
+        }
     }
 }
 
@@ -849,6 +847,60 @@ GNELane::isAttributeEnabled(SumoXMLAttr key) const {
 
 
 void
+GNELane::addPathAdditionalElement(GNEAdditional* additionalElement) {
+    // avoid insert duplicated path element childs
+    if (std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement) == myPathAdditionalElements.end()) {
+        myPathAdditionalElements.push_back(additionalElement);
+    }
+}
+
+
+void
+GNELane::removePathAdditionalElement(GNEAdditional* additionalElement) {
+    // search and remove pathElementChild
+    auto it = std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement);
+    if (it != myPathAdditionalElements.end()) {
+        myPathAdditionalElements.erase(it);
+    }
+}
+
+
+void
+GNELane::addPathDemandElement(GNEDemandElement* demandElement) {
+    // avoid insert duplicated path element childs
+    if (std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement) == myPathDemandElements.end()) {
+        myPathDemandElements.push_back(demandElement);
+    }
+}
+
+
+void
+GNELane::removePathDemandElement(GNEDemandElement* demandElement) {
+    // search and remove pathElementChild
+    auto it = std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement);
+    if (it != myPathDemandElements.end()) {
+        myPathDemandElements.erase(it);
+    }
+}
+
+
+void
+GNELane::invalidatePathElements() {
+    // make a copy of myPathAdditionalElements
+    auto copyOfPathAdditionalElements = myPathAdditionalElements;
+    for (const auto& additionalElement : copyOfPathAdditionalElements) {
+        // note: Additional elements use update geometry
+        additionalElement->updateGeometry();
+    }
+    // make a copy of myPathDemandElements
+    auto copyOfPathDemandElements = myPathDemandElements;
+    for (const auto& demandElement : copyOfPathDemandElements) {
+        demandElement->invalidatePath();
+    }
+}
+
+
+void
 GNELane::setSpecialColor(const RGBColor* color, double colorValue) {
     mySpecialColor = color;
     mySpecialColorValue = colorValue;
@@ -879,7 +931,7 @@ GNELane::drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEA
             // iterate over segments
             for (const auto& segment : E2Detector->getAdditionalSegmentGeometry()) {
                 // draw partial segment
-                if ((segment.junction == junction) && (segment.AC == E2Detector)) {
+                if (segment.getJunction() == junction) {
                     // Set E2Detector color (needed due drawShapeDottedContour)
                     GLHelper::setColor(E2DetectorColor);
                     // draw box lines
@@ -894,7 +946,7 @@ GNELane::drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEA
             // iterate over segments
             for (const auto& segment : E2Detector->getAdditionalSegmentGeometry()) {
                 // draw partial segment
-                if ((segment.lane == this) && (segment.AC == E2Detector)) {
+                if (segment.getLane() == this) {
                     // Set E2Detector color (needed due drawShapeDottedContour)
                     GLHelper::setColor(E2DetectorColor);
                     // draw box lines
@@ -981,10 +1033,11 @@ RGBColor
 GNELane::setLaneColor(const GUIVisualizationSettings& s) const {
     // declare a RGBColor variable
     RGBColor color;
+    // get inspected AC
+    const GNEAttributeCarrier *inspectedAC = myNet->getViewNet()->getDottedAC();
     // we need to draw lanes with a special color if we're inspecting a Trip or Flow and this lane belongs to a via's edge.
-    if (myNet->getViewNet()->getDottedAC() && (myNet->getViewNet()->getDottedAC()->isAttributeCarrierSelected() == false) &&
-            ((myNet->getViewNet()->getDottedAC()->getTagProperty().getTag() == SUMO_TAG_TRIP) ||
-             (myNet->getViewNet()->getDottedAC()->getTagProperty().getTag() == SUMO_TAG_FLOW))) {
+    if (inspectedAC && (inspectedAC->isAttributeCarrierSelected() == false) &&
+        ((inspectedAC->getTagProperty().getTag() == SUMO_TAG_TRIP) || (inspectedAC->getTagProperty().getTag() == SUMO_TAG_FLOW))) {
         // obtain attribute "via"
         std::vector<std::string> viaEdges = parse<std::vector<std::string> >(myNet->getViewNet()->getDottedAC()->getAttribute(SUMO_ATTR_VIA));
         // iterate over viaEdges
@@ -1014,16 +1067,7 @@ GNELane::setLaneColor(const GUIVisualizationSettings& s) const {
     }
     // check if we're in data mode
     if (myNet->getViewNet()->getEditModes().isCurrentSupermodeData() && s.laneColorer.getActive() != 16) {
-        color = s.laneColorer.getSchemes()[0].getColor(11);
-        // check if we have to change color if parent edge has generic data elements
-        GNEGenericData* data = myParentEdge->getCurrentGenericDataElement();
-        if (data && data->isGenericDataVisible()) {
-            if (data->isAttributeCarrierSelected()) {
-                color = s.colorSettings.selectedEdgeDataColor;
-            } else {
-                color = data->getColor();
-            }
-        }
+        color = myParentEdge->getGenericDataColor(s);
     }
     // special color for conflicted candidate edges
     if (myParentEdge->isConflictedCandidate()) {
@@ -1205,15 +1249,6 @@ GNELane::getColorValue(const GUIVisualizationSettings& s, int activeScheme) cons
         }
         case 15: {
             return fabs(myParentEdge->getNBEdge()->getDistance());
-        }
-        case 16: {
-            // by edge data value
-            GNEGenericData* data = myParentEdge->getCurrentGenericDataElement();
-            if (data == nullptr) {
-                return GUIVisualizationSettings::MISSING_DATA;
-            } else {
-                return data->getDouble(s.edgeData, GUIVisualizationSettings::MISSING_DATA);
-            }
         }
     }
     return 0;

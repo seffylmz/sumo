@@ -92,6 +92,8 @@ extrapolated based on edge-lengths and maximum speeds multiplied with --speed-fa
                          help="enable, if you use mixed style (external and internal routes) in the same file")
     optParser.add_option("--missing-edges", type='int', metavar="N",
                          default=0, help="print N most missing edges")
+    optParser.add_option("--discard-exit-times", action="store_true",
+                         default=False, help="do not use exit times")
     # optParser.add_option("--orig-weights",
     # help="weight file for the original network for extrapolating new departure times")
     options, args = optParser.parse_args(args=args)
@@ -100,10 +102,8 @@ extrapolated based on edge-lengths and maximum speeds multiplied with --speed-fa
         options.routeFiles = args[1:]
     except Exception:
         sys.exit(USAGE.replace('%prog', os.path.basename(__file__)))
-    if ((options.trips_output is None and options.routes_output is None) or
-            (options.trips_output is not None and options.routes_output is not None)):
-        sys.exit(
-            "Exactly one of the options --trips-output or --routes-output must be given")
+    if options.trips_output is not None and options.routes_output is not None:
+        sys.exit("Only one of the options --trips-output or --routes-output can be given")
     else:
         if options.trips_output:
             options.output = options.trips_output
@@ -167,7 +167,7 @@ def _cutEdgeList(areaEdges, oldDepart, exitTimes, edges, orig_net, options, stat
     return result
 
 
-def cut_routes(aEdges, orig_net, options, busStopEdges=None, finalEdgeMap=None):
+def cut_routes(aEdges, orig_net, options, busStopEdges=None, startEndEdgeMap=None):
     areaEdges = set(aEdges)
     stats = Statistics()
     standaloneRoutes = {}  # routeID -> routeObject
@@ -210,9 +210,14 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, finalEdgeMap=None):
                     elif planItem.name == "ride":
                         keep = True
                         if busStopEdges.get(planItem.busStop) not in areaEdges:
-                            if planItem.lines in finalEdgeMap:
+                            if planItem.lines in startEndEdgeMap:
                                 planItem.busStop = None
-                                planItem.setAttribute("to", finalEdgeMap[planItem.lines])
+                                planItem.setAttribute("to", startEndEdgeMap[planItem.lines][1])
+                            else:
+                                keep = False
+                        if planItem.attr_from and planItem.attr_from not in areaEdges:
+                            if planItem.lines in startEndEdgeMap:
+                                planItem.attr_from = startEndEdgeMap[planItem.lines][0]
                             else:
                                 keep = False
                         if newDepart is None:
@@ -237,7 +242,11 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, finalEdgeMap=None):
                 else:
                     stats.num_flows += 1
                     oldDepart = moving.begin
-                if isinstance(moving.route, list):
+                if moving.routeDistribution is not None:
+                    old_route = moving.addChild("route", {"edges": moving.routeDistribution[0].route[-1].edges})
+                    moving.removeChild(moving.routeDistribution[0])
+                    routeRef = None
+                elif isinstance(moving.route, list):
                     old_route = moving.route[0]
                     routeRef = None
                 else:
@@ -258,6 +267,8 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, finalEdgeMap=None):
                         continue
                     else:
                         old_route = routeRef = standaloneRoutes[moving.route]
+                if options.discard_exit_times:
+                    old_route.exitTimes = None
                 routeParts = _cutEdgeList(areaEdges, oldDepart, old_route.exitTimes,
                                           old_route.edges.split(), orig_net, options,
                                           stats, options.disconnected_action)
@@ -465,37 +476,39 @@ def main(options):
         else:
             print("Wrote nothing")
 
-    finalEdgeMap = None
+    startEndEdgeMap = {}
     if options.pt_input:
         allRouteFiles = options.routeFiles
         options.routeFiles = [options.pt_input]
-        finalRouteEdge = {}
-        finalEdgeMap = {}
+        startEndRouteEdge = {}
         with io.open(options.pt_output if options.pt_output else options.pt_input + ".cut", 'w', encoding="utf8") as f:
             writeHeader(f, os.path.basename(__file__), 'routes')
             for _, v in cut_routes(edges, orig_net, options, busStopEdges):
                 f.write(v.toXML(u'    '))
                 if v.name == "route":
-                    finalRouteEdge[v.id] = v.edges.split()[-1]
+                    routeEdges = v.edges.split()
+                    startEndRouteEdge[v.id] = (routeEdges[0], routeEdges[-1])
                 elif isinstance(v.route, list):
-                    finalEdgeMap[v.line] = v.route[0].edges.split()[-1]
+                    routeEdges = v.route[0].edges.split()
+                    startEndEdgeMap[v.line] = (routeEdges[0], routeEdges[-1])
                 elif v.route is not None:
-                    finalEdgeMap[v.line] = finalRouteEdge[v.route]
+                    startEndEdgeMap[v.line] = startEndRouteEdge[v.route]
             f.write(u'</routes>\n')
         options.routeFiles = allRouteFiles
 
-    if options.big:
-        # write output unsorted
-        tmpname = options.output + ".unsorted"
-        with io.open(tmpname, 'w', encoding="utf8") as f:
-            write_to_file(cut_routes(edges, orig_net, options, busStopEdges, finalEdgeMap), f)
-        # sort out of memory
-        sort_routes.main([tmpname, '--big', '--outfile', options.output])
-    else:
-        routes = list(cut_routes(edges, orig_net, options, busStopEdges, finalEdgeMap))
-        routes.sort(key=lambda v: v[0])
-        with io.open(options.output, 'w', encoding="utf8") as f:
-            write_to_file(routes, f)
+    if options.output:
+        if options.big:
+            # write output unsorted
+            tmpname = options.output + ".unsorted"
+            with io.open(tmpname, 'w', encoding="utf8") as f:
+                write_to_file(cut_routes(edges, orig_net, options, busStopEdges, startEndEdgeMap), f)
+            # sort out of memory
+            sort_routes.main([tmpname, '--big', '--outfile', options.output])
+        else:
+            routes = list(cut_routes(edges, orig_net, options, busStopEdges, startEndEdgeMap))
+            routes.sort(key=lambda v: v[0])
+            with io.open(options.output, 'w', encoding="utf8") as f:
+                write_to_file(routes, f)
 
 
 if __name__ == "__main__":

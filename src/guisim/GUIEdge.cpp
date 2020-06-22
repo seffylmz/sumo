@@ -56,6 +56,8 @@
 #include <mesosim/MESegment.h>
 #include <mesosim/MELoop.h>
 #include <mesosim/MEVehicle.h>
+
+
 GUIEdge::GUIEdge(const std::string& id, int numericalID,
                  const SumoXMLEdgeFunc function,
                  const std::string& streetName, const std::string& edgeType, int priority,
@@ -271,7 +273,7 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
             }
             if (drawEdgeValue) {
                 const int activeScheme = s.getLaneEdgeMode();
-                std::string value;
+                std::string value = "";
                 if (activeScheme == 31) {
                     // edge param, could be non-numerical
                     value = getParameter(s.edgeParam, "");
@@ -284,7 +286,11 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
                                                 ? getColorValue(s, activeScheme)
                                                 : lane2->getColorValue(s, activeScheme));
                     const RGBColor color = (MSGlobals::gUseMesoSim ? s.edgeColorer : s.laneColorer).getScheme().getColor(doubleValue);
-                    value = doubleValue == s.MISSING_DATA || color.alpha() == 0 ? "" : toString(doubleValue);
+                    if (doubleValue != s.MISSING_DATA
+                            && color.alpha() != 0
+                            && (!s.edgeValueHideCheck || doubleValue > s.edgeValueHideThreshold)) {
+                        value = toString(doubleValue);
+                    }
                 }
                 if (value != "") {
                     GLHelper::drawTextSettings(s.edgeValue, value, p, s.scale, angle);
@@ -319,7 +325,6 @@ GUIEdge::drawMesoVehicles(const GUIVisualizationSettings& s) const {
         vehicleControl->secureVehicles();
         FXMutexLock locker(myLock);
         int laneIndex = 0;
-        MESegment::Queue queue;
         for (std::vector<MSLane*>::const_iterator msl = myLanes->begin(); msl != myLanes->end(); ++msl, ++laneIndex) {
             GUILane* l = static_cast<GUILane*>(*msl);
             // go through the vehicles
@@ -329,7 +334,7 @@ GUIEdge::drawMesoVehicles(const GUIVisualizationSettings& s) const {
                 const double length = segment->getLength();
                 if (laneIndex < segment->numQueues()) {
                     // make a copy so we don't have to worry about synchronization
-                    queue = segment->getQueue(laneIndex);
+                    std::vector<MEVehicle*> queue = segment->getQueue(laneIndex);
                     const int queueSize = (int)queue.size();
                     double vehiclePosition = segmentOffset + length;
                     // draw vehicles beginning with the leader at the end of the segment
@@ -419,7 +424,7 @@ GUIEdge::setMultiColor(const GUIColorer& c) const {
         case 11: // by segment jammed state
             for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
                     segment != nullptr; segment = segment->getNextSegment()) {
-                mySegmentColors.push_back(c.getScheme().getColor(segment->free() ? 0 : 1));
+                mySegmentColors.push_back(c.getScheme().getColor(segment->getRelativeOccupancy() <= segment->getRelativeJamThreshold() ? 0 : 1));
             }
             return true;
         case 12: // by segment occupancy

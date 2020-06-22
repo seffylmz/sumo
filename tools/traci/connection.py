@@ -66,11 +66,6 @@ class Connection:
         for s in l:
             self._string += struct.pack("!i", len(s)) + s.encode("latin1")
 
-    def _packDoubleList(self, l):
-        self._string += struct.pack("!Bi", tc.TYPE_DOUBLELIST, len(l))
-        for x in l:
-            self._string += struct.pack("!d", x)
-
     def _recvExact(self):
         try:
             result = bytes()
@@ -125,45 +120,61 @@ class Connection:
             self._string += struct.pack("!BiB", 0, length + 4, cmdID)
         self._packString(objID, varID)
 
-    def _sendReadOneStringCmd(self, cmdID, varID, objID):
-        self._beginMessage(cmdID, varID, objID)
-        return self._checkResult(cmdID, varID, objID)
-
-    def _sendIntCmd(self, cmdID, varID, objID, value):
-        self._beginMessage(cmdID, varID, objID, 1 + 4)
-        self._string += struct.pack("!Bi", tc.TYPE_INTEGER, value)
-        self._sendExact()
+    def _sendCmd(self, cmdID, varID, objID, format="", *values):
+        packed = bytes()
+        for f, v in zip(format, values):
+            if f == "i":
+                packed += struct.pack("!Bi", tc.TYPE_INTEGER, int(v))
+            elif f == "d":
+                packed += struct.pack("!Bd", tc.TYPE_DOUBLE, v)
+            elif f == "b":
+                packed += struct.pack("!Bb", tc.TYPE_BYTE, int(v))
+            elif f == "B":
+                packed += struct.pack("!BB", tc.TYPE_UBYTE, int(v))
+            elif f == "u":  # raw unsigned byte needed for distance command
+                packed += struct.pack("!B", int(v))
+            elif f == "s":
+                packed += struct.pack("!Bi", tc.TYPE_STRING, len(v)) + v.encode("latin1")
+            elif f == "p":  # polygon
+                if len(v) <= 255:
+                    packed += struct.pack("!BB", tc.TYPE_POLYGON, len(v))
+                else:
+                    packed += struct.pack("!BBi", tc.TYPE_POLYGON, 0, len(v))
+                for p in v:
+                    packed += struct.pack("!dd", *p)
+            elif f == "t":  # tuple aka compound
+                packed += struct.pack("!Bi", tc.TYPE_COMPOUND, v)
+            elif f == "c":  # color
+                packed += struct.pack("!BBBBB", tc.TYPE_COLOR, int(v[0]), int(v[1]), int(v[2]),
+                                                int(v[3]) if len(v) > 3 else 255)
+            elif f == "l":  # string list
+                packed += struct.pack("!Bi", tc.TYPE_STRINGLIST, len(v))
+                for s in v:
+                    packed += struct.pack("!i", len(s)) + s.encode("latin1")
+            elif f == "f":  # float list
+                packed += struct.pack("!Bi", tc.TYPE_DOUBLELIST, len(v))
+                for x in v:
+                    packed += struct.pack("!d", x)
+            elif f == "o":
+                packed += struct.pack("!Bdd", tc.POSITION_2D, *v)
+            elif f == "O":
+                packed += struct.pack("!Bddd", tc.POSITION_3D, *v)
+            elif f == "g":
+                packed += struct.pack("!Bdd", tc.POSITION_LON_LAT, *v)
+            elif f == "G":
+                packed += struct.pack("!Bddd", tc.POSITION_LON_LAT_ALT, *v)
+            elif f == "r":
+                packed += struct.pack("!Bi", tc.POSITION_ROADMAP, len(v[0])) + v[0].encode("latin1")
+                packed += struct.pack("!dB", v[1], v[2])
+        self._beginMessage(cmdID, varID, objID, len(packed))
+        self._string += packed
+        return self._sendExact()
 
     def _sendDoubleCmd(self, cmdID, varID, objID, value):
-        self._beginMessage(cmdID, varID, objID, 1 + 8)
-        self._string += struct.pack("!Bd", tc.TYPE_DOUBLE, value)
-        self._sendExact()
-
-    def _sendByteCmd(self, cmdID, varID, objID, value):
-        self._beginMessage(cmdID, varID, objID, 1 + 1)
-        self._string += struct.pack("!BB", tc.TYPE_BYTE, value)
-        self._sendExact()
-
-    def _sendUByteCmd(self, cmdID, varID, objID, value):
-        self._beginMessage(cmdID, varID, objID, 1 + 1)
-        self._string += struct.pack("!BB", tc.TYPE_UBYTE, value)
-        self._sendExact()
+        self._sendCmd(cmdID, varID, objID, "d", value)
 
     def _sendStringCmd(self, cmdID, varID, objID, value):
-        self._beginMessage(cmdID, varID, objID, 1 + 4 + len(value))
-        self._packString(value)
-        self._sendExact()
-
-    def _checkResult(self, cmdID, varID, objID):
-        result = self._sendExact()
-        result.readLength()
-        response, retVarID = result.read("!BB")
-        objectID = result.readString()
-        if response - cmdID != 16 or retVarID != varID or objectID != objID:
-            raise FatalTraCIError("Received answer %s,%s,%s for command %s,%s,%s."
-                                  % (response, retVarID, objectID, cmdID, varID, objID))
-        result.read("!B")     # Return type of the variable
-        return result
+        self._sendCmd(cmdID, varID, objID, "s", value)
 
     def _readSubscription(self, result):
         # to enable this you also need to set _DEBUG to True in storage.py
@@ -178,10 +189,9 @@ class Connection:
         numVars = result.read("!B")[0]
         if isVariableSubscription:
             while numVars > 0:
-                varID = result.read("!B")[0]
-                status, _ = result.read("!BB")
+                varID, status = result.read("!BB")
                 if status:
-                    print("Error!", result.readString())
+                    print("Error!", result.readTypedString())
                 elif response in self._subscriptionMapping:
                     self._subscriptionMapping[response].add(objectID, varID, result)
                 else:
@@ -196,10 +206,9 @@ class Connection:
                     self._subscriptionMapping[response].addContext(
                         objectID, self._subscriptionMapping[domain], oid)
                 for __ in range(numVars):
-                    varID = result.read("!B")[0]
-                    status, ___ = result.read("!BB")
+                    varID, status = result.read("!BB")
                     if status:
-                        print("Error!", result.readString())
+                        print("Error!", result.readTypedString())
                     elif response in self._subscriptionMapping:
                         self._subscriptionMapping[response].addContext(
                             objectID, self._subscriptionMapping[domain], oid, varID, result)

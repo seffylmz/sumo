@@ -233,14 +233,17 @@ public:
     /// @brief getattribute selector modul
     const AttributeSelector* getAttributeSelector() const;
 
-    /// @brief get EdgePathCreator modul
-    GNEFrameModuls::EdgePathCreator* getEdgePathCreator() const;
+    /// @brief get PathCreator modul
+    GNEFrameModuls::PathCreator* getPathCreator() const;
 
     /// @bried get element type of this data frame
     SumoXMLTag getTag() const;
 
     /// @brief show Frame
     void show();
+
+    /// @brief hide Frame
+    void hide();
 
 protected:
     /**@brief Constructor (protected due GNEGenericDataFrame is abtract)
@@ -257,8 +260,8 @@ protected:
     /// @brief interval selected
     void intervalSelected();
 
-    /// @brief finish edge path creation
-    virtual void edgePathCreated();
+    /// @brief create path
+    virtual void createPath();
 
     /// @brief dataSet selector modul
     DataSetSelector* myDataSetSelector;
@@ -273,7 +276,7 @@ protected:
     GNEFrameAttributesModuls::ParametersEditor* myParametersEditor;
 
     /// @brief edge path creator (used for Walks, rides and trips)
-    GNEFrameModuls::EdgePathCreator* myEdgePathCreator;
+    GNEFrameModuls::PathCreator* myPathCreator;
 
     /// @brief generic data tag
     SumoXMLTag myGenericDataTag;

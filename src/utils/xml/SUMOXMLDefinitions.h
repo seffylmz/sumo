@@ -129,8 +129,6 @@ enum SumoXMLTag {
     SUMO_TAG_PTYPE,
     /// @brief begin/end of the description of a route
     SUMO_TAG_ROUTE,
-    /// @brief begin/end of the description of a embedded route (used in NETEDIT)
-    SUMO_TAG_EMBEDDEDROUTE,
     /// @brief description of a logic request within the junction
     SUMO_TAG_REQUEST,
     /// @brief a source
@@ -153,8 +151,6 @@ enum SumoXMLTag {
     SUMO_TAG_TRIP_TAZ,
     /// @brief a flow definitio nusing a from-to edges instead of a route (used by router)
     SUMO_TAG_FLOW,
-    /// @brief a flow definition nusing a route instead of a from-to edges route (used in NETEDIT)
-    SUMO_TAG_ROUTEFLOW,
     /// @brief a flow definition within in Calibrator (used in NETEDIT)
     SUMO_TAG_FLOW_CALIBRATOR,
     /// @brief a flow state definition (used when saving and loading simulatino state)
@@ -309,20 +305,6 @@ enum SumoXMLTag {
     SUMO_TAG_PERSONFLOW,
     /// @}
 
-    /// @name Persons (used by Netedit)
-    /// @{
-    SUMO_TAG_PERSONTRIP_FROMTO,
-    SUMO_TAG_PERSONTRIP_BUSSTOP,
-    SUMO_TAG_WALK_EDGES,
-    SUMO_TAG_WALK_FROMTO,
-    SUMO_TAG_WALK_BUSSTOP,
-    SUMO_TAG_WALK_ROUTE,
-    SUMO_TAG_RIDE_FROMTO,
-    SUMO_TAG_RIDE_BUSSTOP,
-    SUMO_TAG_PERSONSTOP_BUSSTOP,
-    SUMO_TAG_PERSONSTOP_LANE,
-    /// @}
-
     /// @name Data elements (used by Netedit)
     /// @{
     SUMO_TAG_DATASET,
@@ -375,7 +357,41 @@ enum SumoXMLTag {
     /// @brief alternative definition for city entrances
     AGEN_TAG_ENTRANCE,
     /// @brief parameters
-    AGEN_TAG_PARAM
+    AGEN_TAG_PARAM,
+
+    /// @name Persons plans (used by Netedit)
+    /// @{
+    /// @brief description of a vehicle with an embedded route (used in NETEDIT)
+    GNE_TAG_VEHICLE_WITHROUTE,
+    /// @brief embedded route (used in NETEDIT)
+    GNE_TAG_ROUTE_EMBEDDED,
+    /// @brief a flow definition using a route instead of a from-to edges route (used in NETEDIT)
+    GNE_TAG_FLOW_ROUTE,
+    /// @brief description of a vehicle with an embedded route (used in NETEDIT)
+    GNE_TAG_FLOW_WITHROUTE,
+    // person trips
+    GNE_TAG_PERSONTRIP_EDGE_EDGE,
+    GNE_TAG_PERSONTRIP_EDGE_BUSSTOP,
+    GNE_TAG_PERSONTRIP_BUSSTOP_EDGE,
+    GNE_TAG_PERSONTRIP_BUSSTOP_BUSSTOP,
+    // walks
+    GNE_TAG_WALK_EDGE_EDGE,
+    GNE_TAG_WALK_BUSSTOP_EDGE,
+    GNE_TAG_WALK_BUSSTOP_BUSSTOP,
+    GNE_TAG_WALK_EDGE_BUSSTOP,
+    GNE_TAG_WALK_EDGES,
+    GNE_TAG_WALK_ROUTE,
+    // rides
+    GNE_TAG_RIDE_EDGE_EDGE,
+    GNE_TAG_RIDE_EDGE_BUSSTOP,
+    GNE_TAG_RIDE_BUSSTOP_EDGE,
+    GNE_TAG_RIDE_BUSSTOP_BUSSTOP,
+    // person stops
+    GNE_TAG_PERSONSTOP_BUSSTOP,
+    GNE_TAG_PERSONSTOP_EDGE,
+    /// @brief description of a person with an embedded route (used in NETEDIT)
+    GNE_TAG_PERSON_EMBEDDED
+    /// @}
 };
 
 
@@ -759,6 +775,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_TOJUNCTION,
     SUMO_ATTR_PERIOD,
     SUMO_ATTR_REPEAT,
+    SUMO_ATTR_CYCLETIME,
     SUMO_ATTR_FROM_TAZ,
     SUMO_ATTR_TO_TAZ,
     SUMO_ATTR_REROUTE,
@@ -800,6 +817,8 @@ enum SumoXMLAttr {
     SUMO_ATTR_TLID,
     /// @brief node: the type of traffic light
     SUMO_ATTR_TLTYPE,
+    /// @brief node: the layout of the traffic light program
+    SUMO_ATTR_TLLAYOUT,
     /// @brief link: the index of the link within the traffic light
     SUMO_ATTR_TLLINKINDEX,
     /// @brief link: the index of the opposite direction link of a pedestrian crossing
@@ -1005,7 +1024,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_CHECKLANEFOES_ALL,
     SUMO_ATTR_CHECKLANEFOES_ROUNDABOUT,
     SUMO_ATTR_TLS_IGNORE_INTERNAL_JUNCTION_JAM,
-    SUMO_ATTR_AVOID_OVELAP,
+    SUMO_ATTR_AVOID_OVERLAP,
     SUMO_ATTR_COMMAND,
 
     SUMO_ATTR_ACTORCONFIG,
@@ -1132,6 +1151,11 @@ enum SumoXMLAttr {
     GNE_ATTR_DEFAULT_VTYPE_MODIFIED,
     /// @brief flag to center camera after element creation
     GNE_ATTR_CENTER_AFTER_CREATION,
+    /// @brief from busStop (used by personPlans)
+    GNE_ATTR_FROM_BUSSTOP,
+    /// @brief to busStop (used by personPlans)
+    GNE_ATTR_TO_BUSSTOP,
+
     // @}
 
     /// @name train parameters
@@ -1338,6 +1362,14 @@ enum class TrafficLightType {
     INVALID //< must be the last one
 };
 
+/// @enum TrafficLightLayout
+enum class TrafficLightLayout {
+    OPPOSITES,
+    INCOMING,
+    ALTERNATE_ONEWAY,
+    INVALID //< must be the last one
+};
+
 
 /** @enum LaneChangeAction
  * @brief The state of a vehicle's lane-change behavior
@@ -1518,6 +1550,9 @@ public:
     /// @brief traffic light types
     static StringBijection<TrafficLightType> TrafficLightTypes;
 
+    /// @brief traffic light layouts
+    static StringBijection<TrafficLightLayout> TrafficLightLayouts;
+
     /// @brief lane change models
     static StringBijection<LaneChangeModel> LaneChangeModels;
 
@@ -1612,6 +1647,9 @@ private:
 
     /// @brief traffic light types values
     static StringBijection<TrafficLightType>::Entry trafficLightTypesValues[];
+
+    /// @brief traffic light layout values
+    static StringBijection<TrafficLightLayout>::Entry trafficLightLayoutValues[];
 
     /// @brief lane change model values
     static StringBijection<LaneChangeModel>::Entry laneChangeModelValues[];

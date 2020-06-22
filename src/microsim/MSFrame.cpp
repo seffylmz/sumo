@@ -342,7 +342,7 @@ MSFrame::fillOptions() {
     oc.addDescription("time-to-teleport", "Processing", "Specify how long a vehicle may wait until being teleported, defaults to 300, non-positive values disable teleporting");
 
     oc.doRegister("time-to-teleport.highways", new Option_String("0", "TIME"));
-    oc.addDescription("time-to-teleport.highways", "Processing", "The waiting time after which vehicles on a fast road (speed > 69m/s) are teleported if they are on a non-continuing lane");
+    oc.addDescription("time-to-teleport.highways", "Processing", "The waiting time after which vehicles on a fast road (speed > 69km/h) are teleported if they are on a non-continuing lane");
 
     oc.doRegister("waiting-time-memory", new Option_String("100", "TIME"));
     oc.addDescription("waiting-time-memory", "Processing", "Length of time interval, over which accumulated waiting time is taken into account (default is 100s.)");
@@ -501,6 +501,8 @@ MSFrame::fillOptions() {
                       "Minimum percentage of occupied space to consider a segment jammed. A negative argument causes thresholds to be computed based on edge speed and tauff (default)");
     oc.doRegister("meso-multi-queue", new Option_Bool(true));
     oc.addDescription("meso-multi-queue", "Mesoscopic", "Enable multiple queues at edge ends");
+    oc.doRegister("meso-lane-queue", new Option_Bool(false));
+    oc.addDescription("meso-lane-queue", "Mesoscopic", "Enable separate queues for every lane");
     oc.doRegister("meso-junction-control", new Option_Bool(false));
     oc.addDescription("meso-junction-control", "Mesoscopic", "Enable mesoscopic traffic light and priority junction handling");
     oc.doRegister("meso-junction-control.limited", new Option_Bool(false));

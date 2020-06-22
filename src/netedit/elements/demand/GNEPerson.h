@@ -52,8 +52,7 @@ public:
         long onCmdTransform(FXObject* obj, FXSelector, void*);
 
     protected:
-        /// @brief default constructor needed by FOX
-        GNEPersonPopupMenu() { }
+        FOX_CONSTRUCTOR(GNEPersonPopupMenu)
 
     private:
         /// @brief current person
@@ -86,8 +85,7 @@ public:
         long onCmdTransform(FXObject* obj, FXSelector, void*);
 
     protected:
-        /// @brief default constructor needed by FOX
-        GNESelectedPersonsPopupMenu() { }
+        FOX_CONSTRUCTOR(GNESelectedPersonsPopupMenu)
 
     private:
         /// @brief tag of clicked person
@@ -131,12 +129,6 @@ public:
 
     /// @name members and functions relative to elements common to all demand elements
     /// @{
-    /// @brief obtain from edge of this demand element
-    GNEEdge* getFromEdge() const;
-
-    /// @brief obtain to edge of this demand element
-    GNEEdge* getToEdge() const;
-
     /// @brief obtain VClass related with this demand element
     SUMOVehicleClass getVClass() const;
 
@@ -168,9 +160,6 @@ public:
 
     /// @brief update dotted contour
     void updateDottedContour();
-
-    /// @brief partial update pre-computed geometry information
-    void updatePartialGeometry(const GNEEdge* edge);
 
     /// @brief compute path
     void computePath();
@@ -211,6 +200,19 @@ public:
      * @see GUIGlObject::drawGL
      */
     void drawGL(const GUIVisualizationSettings& s) const;
+
+    /**@brief Draws partial object
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] lane lane in which draw partial
+    */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const;
+
+    /**@brief Draws partial object (junction)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] fromLane from GNELane
+     * @param[in] toLane to GNELane
+     */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const;
     /// @}
 
     /// @brief inherited from GNEAttributeCarrier

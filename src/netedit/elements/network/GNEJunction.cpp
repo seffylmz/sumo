@@ -91,16 +91,6 @@ GNEJunction::~GNEJunction() {
 }
 
 
-std::string
-GNEJunction::generateChildID(SumoXMLTag childTag) {
-    int counter = 0;
-    while (myNet->retrieveJunction(getID() + toString(childTag) + toString(counter), false) != nullptr) {
-        counter++;
-    }
-    return (getID() + toString(childTag) + toString(counter));
-}
-
-
 const PositionVector&
 GNEJunction::getJunctionShape() const {
     return myNBNode->getShape();
@@ -415,6 +405,10 @@ GNEJunction::drawGL(const GUIVisualizationSettings& s) const {
             }
             // draw Junction childs
             drawJunctionChilds(s);
+            // draw child path elements
+            for (const auto &demandElement : myPathDemandElements) {
+                demandElement->drawJunctionPathChildren(s, this);
+            }
         }
     }
 }
@@ -965,6 +959,60 @@ GNEJunction::markConnectionsDeprecated(bool includingNeighbours) {
 }
 
 
+void
+GNEJunction::addPathAdditionalElement(GNEAdditional* additionalElement) {
+    // avoid insert duplicated path element childs
+    if (std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement) == myPathAdditionalElements.end()) {
+        myPathAdditionalElements.push_back(additionalElement);
+    }
+}
+
+
+void
+GNEJunction::removePathAdditionalElement(GNEAdditional* additionalElement) {
+    // search and remove pathElementChild
+    auto it = std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement);
+    if (it != myPathAdditionalElements.end()) {
+        myPathAdditionalElements.erase(it);
+    }
+}
+
+
+void
+GNEJunction::addPathDemandElement(GNEDemandElement* demandElement) {
+    // avoid insert duplicated path element childs
+    if (std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement) == myPathDemandElements.end()) {
+        myPathDemandElements.push_back(demandElement);
+    }
+}
+
+
+void
+GNEJunction::removePathDemandElement(GNEDemandElement* demandElement) {
+    // search and remove pathElementChild
+    auto it = std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement);
+    if (it != myPathDemandElements.end()) {
+        myPathDemandElements.erase(it);
+    }
+}
+
+
+void
+GNEJunction::invalidatePathElements() {
+    // make a copy of myPathAdditionalElements
+    auto copyOfPathAdditionalElements = myPathAdditionalElements;
+    for (const auto& additionalElement : copyOfPathAdditionalElements) {
+        // note: currently additional elements don't use compute/invalidate paths
+        additionalElement->updateGeometry();
+    }
+    // make a copy of myPathDemandElements
+    auto copyOfPathDemandElements = myPathDemandElements;
+    for (const auto& demandElement : copyOfPathDemandElements) {
+        demandElement->invalidatePath();
+    }
+}
+
+
 std::string
 GNEJunction::getAttribute(SumoXMLAttr key) const {
     switch (key) {
@@ -1097,7 +1145,7 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList
                     for (const auto& node : nodes) {
                         GNEJunction* junction = myNet->retrieveJunction(node->getID());
                         undoList->add(new GNEChange_TLS(junction, TLS, false), true);
-                        undoList->add(new GNEChange_TLS(junction, TLS, true), true);
+                        undoList->add(new GNEChange_TLS(junction, newDef, true), true);
                     }
                 }
             }
@@ -1271,129 +1319,6 @@ GNEJunction::drawJunctionChilds(const GUIVisualizationSettings& s) const {
                     lane->drawPartialE2DetectorPlan(s, additional, this);
                 }
             }
-        }
-        // first check if Demand elements can be shown
-        if (myNet->getViewNet()->getNetworkViewOptions().showDemandElements() &&
-                myNet->getViewNet()->getDataViewOptions().showDemandElements()) {
-            // draw demand elements
-            drawDemandElements(s, incomingEdge);
-        }
-    }
-}
-
-
-void
-GNEJunction::drawDemandElements(const GUIVisualizationSettings& s, const GNEEdge* edge) const {
-    // certain demand elements children can contain loops (for example, routes) and it causes overlapping problems. It's needed to filter it before drawing
-    if (s.drawForPositionSelection) {
-        for (const auto& route : edge->getChildDemandElementsByType(SUMO_TAG_ROUTE)) {
-            // first check if route can be drawn
-            if (myNet->getViewNet()->getDemandViewOptions().showNonInspectedDemandElements(route)) {
-                // draw partial route
-                edge->drawPartialRoute(s, route, this);
-            }
-        }
-        for (const auto& embeddedRoute : edge->getChildDemandElementsByType(SUMO_TAG_EMBEDDEDROUTE)) {
-            // first check if embedded route can be drawn
-            if (myNet->getViewNet()->getDemandViewOptions().showNonInspectedDemandElements(embeddedRoute)) {
-                // draw partial route
-                edge->drawPartialRoute(s, embeddedRoute, this);
-            }
-        }
-    } else {
-        // if drawForPositionSelection is disabled, only draw the first element
-        if (edge->getChildDemandElementsByType(SUMO_TAG_ROUTE).size() > 0) {
-            const auto& route = edge->getChildDemandElementsByType(SUMO_TAG_ROUTE).front();
-            if (myNet->getViewNet()->getDemandViewOptions().showNonInspectedDemandElements(route)) {
-                edge->drawPartialRoute(s, route, this);
-            }
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_EMBEDDEDROUTE).size() > 0) {
-            const auto& embeddedRoute = edge->getChildDemandElementsByType(SUMO_TAG_EMBEDDEDROUTE).front();
-            if (myNet->getViewNet()->getDemandViewOptions().showNonInspectedDemandElements(embeddedRoute)) {
-                edge->drawPartialRoute(s, embeddedRoute, this);
-            }
-        }
-    }
-    for (const auto& trip : edge->getChildDemandElementsByType(SUMO_TAG_TRIP)) {
-        // Start drawing adding an gl identificator
-        glPushName(trip->getGlID());
-        // draw partial trip only if is being inspected or selected
-        if ((myNet->getViewNet()->getDottedAC() == trip) || trip->isAttributeCarrierSelected()) {
-            edge->drawPartialTripFromTo(s, trip, this);
-        }
-        // only draw trip in the first edge
-        if (trip->getAttribute(SUMO_ATTR_FROM) == getID()) {
-            trip->drawGL(s);
-        }
-        // Pop name
-        glPopName();
-    }
-    for (const auto& flow : edge->getChildDemandElementsByType(SUMO_TAG_FLOW)) {
-        // Start drawing adding an gl identificator
-        glPushName(flow->getGlID());
-        // draw partial trip only if is being inspected or selected
-        if ((myNet->getViewNet()->getDottedAC() == flow) || flow->isAttributeCarrierSelected()) {
-            edge->drawPartialTripFromTo(s, flow, this);
-        }
-        // only draw flow in the first edge
-        if (flow->getAttribute(SUMO_ATTR_FROM) == getID()) {
-            flow->drawGL(s);
-        }
-        // Pop name
-        glPopName();
-    }
-    // draw partial person plan elements
-    if (s.drawForPositionSelection) {
-        for (const auto& personTripFromTo : edge->getChildDemandElementsByType(SUMO_TAG_PERSONTRIP_FROMTO)) {
-            edge->drawPartialPersonPlan(s, personTripFromTo, this);
-        }
-        for (const auto& personTripBusStop : edge->getChildDemandElementsByType(SUMO_TAG_PERSONTRIP_BUSSTOP)) {
-            edge->drawPartialPersonPlan(s, personTripBusStop, this);
-        }
-        for (const auto& walkEdges : edge->getChildDemandElementsByType(SUMO_TAG_WALK_EDGES)) {
-            edge->drawPartialPersonPlan(s, walkEdges, this);
-        }
-        for (const auto& walkFromTo : edge->getChildDemandElementsByType(SUMO_TAG_WALK_FROMTO)) {
-            edge->drawPartialPersonPlan(s, walkFromTo, this);
-        }
-        for (const auto& walkBusStop : edge->getChildDemandElementsByType(SUMO_TAG_WALK_BUSSTOP)) {
-            edge->drawPartialPersonPlan(s, walkBusStop, this);
-        }
-        for (const auto& walkRoute : edge->getChildDemandElementsByType(SUMO_TAG_WALK_ROUTE)) {
-            edge->drawPartialPersonPlan(s, walkRoute, this);
-        }
-        for (const auto& rideFromTo : edge->getChildDemandElementsByType(SUMO_TAG_RIDE_FROMTO)) {
-            edge->drawPartialPersonPlan(s, rideFromTo, this);
-        }
-        for (const auto& rideBusStop : edge->getChildDemandElementsByType(SUMO_TAG_RIDE_BUSSTOP)) {
-            edge->drawPartialPersonPlan(s, rideBusStop, this);
-        }
-    } else {
-        // if drawForPositionSelection is disabled, only draw the first element
-        if (edge->getChildDemandElementsByType(SUMO_TAG_PERSONTRIP_FROMTO).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_PERSONTRIP_FROMTO).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_PERSONTRIP_BUSSTOP).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_PERSONTRIP_BUSSTOP).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_WALK_EDGES).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_WALK_EDGES).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_WALK_FROMTO).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_WALK_FROMTO).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_WALK_BUSSTOP).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_WALK_BUSSTOP).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_WALK_ROUTE).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_WALK_ROUTE).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_RIDE_FROMTO).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_RIDE_FROMTO).front(), nullptr);
-        }
-        if (edge->getChildDemandElementsByType(SUMO_TAG_RIDE_BUSSTOP).size() > 0) {
-            edge->drawPartialPersonPlan(s, edge->getChildDemandElementsByType(SUMO_TAG_RIDE_BUSSTOP).front(), nullptr);
         }
     }
 }

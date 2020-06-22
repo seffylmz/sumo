@@ -354,21 +354,19 @@ Vehicle::getBestLanes(const std::string& vehicleID) {
     std::vector<TraCIBestLanesData> result;
     MSVehicle* veh = dynamic_cast<MSVehicle*>(Helper::getVehicle(vehicleID));
     if (veh != nullptr && veh->isOnRoad()) {
-        const std::vector<MSVehicle::LaneQ>& bestLanes = veh->getBestLanes();
-        for (std::vector<MSVehicle::LaneQ>::const_iterator i = bestLanes.begin(); i != bestLanes.end(); ++i) {
+        for (const MSVehicle::LaneQ& lq : veh->getBestLanes()) {
             TraCIBestLanesData bld;
-            const MSVehicle::LaneQ& lq = *i;
             bld.laneID = lq.lane->getID();
             bld.length = lq.length;
             bld.occupation = lq.nextOccupation;
             bld.bestLaneOffset = lq.bestLaneOffset;
             bld.allowsContinuation = lq.allowsContinuation;
-            for (std::vector<MSLane*>::const_iterator j = lq.bestContinuations.begin(); j != lq.bestContinuations.end(); ++j) {
-                if ((*j) != nullptr) {
-                    bld.continuationLanes.push_back((*j)->getID());
+            for (const MSLane* const lane : lq.bestContinuations) {
+                if (lane != nullptr) {
+                    bld.continuationLanes.push_back(lane->getID());
                 }
             }
-            result.push_back(bld);
+            result.emplace_back(bld);
         }
     }
     return result;
@@ -441,7 +439,7 @@ Vehicle::getNextTLS(const std::string& vehicleID) {
 
 
 std::vector<TraCINextStopData>
-Vehicle::getNextStops(const std::string& vehicleID) {
+Vehicle::getNextStops(const std::string& vehicleID, int limit) {
     std::vector<TraCINextStopData> result;
     MSBaseVehicle* vehicle = Helper::getVehicle(vehicleID);
     MSVehicle* veh = dynamic_cast<MSVehicle*>(vehicle);
@@ -453,7 +451,7 @@ Vehicle::getNextStops(const std::string& vehicleID) {
         if (!stop.collision) {
             TraCINextStopData nsd;
             nsd.lane = stop.lane->getID();
-            nsd.endPos = stop.getEndPos(*veh);
+            nsd.endPos = stop.pars.endPos;
             // all optionals, only one can be set
             if (stop.busstop != nullptr) {
                 nsd.stoppingPlaceID = stop.busstop->getID();
@@ -478,6 +476,9 @@ Vehicle::getNextStops(const std::string& vehicleID) {
             nsd.duration = STEPS2TIME(stop.reached ? stop.duration : stop.pars.duration);
             nsd.until = STEPS2TIME(stop.pars.until);
             result.push_back(nsd);
+            if (limit > 0 && (int)result.size() >= limit) {
+                break;
+            }
         }
     }
     return result;
@@ -1183,6 +1184,11 @@ Vehicle::add(const std::string& vehicleID,
         if (fromTaz == "" && !route->getEdges().front()->validateDepartSpeed(*vehicle)) {
             MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
             throw TraCIException("Departure speed for vehicle '" + vehicleID + "' is too high for the departure edge '" + route->getEdges().front()->getID() + "'.");
+        }
+        std::string msg;
+        if (vehicle->getRouteValidity(true, true) != MSBaseVehicle::ROUTE_VALID) {
+            MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
+            throw TraCIException("Vehicle '" + vehicleID + "' has no valid route. ");
         }
         MSNet::getInstance()->getVehicleControl().addVehicle(vehicleParams.id, vehicle);
         if (vehicleParams.departProcedure != DEPART_TRIGGERED && vehicleParams.departProcedure != DEPART_CONTAINER_TRIGGERED) {
@@ -2221,7 +2227,7 @@ Vehicle::handleVariable(const std::string& objID, const int variable, VariableWr
             return wrapper->wrapRoadPosition(objID, variable, rp);
         }
         default:
-            return false;
+            return VehicleType::handleVariableWithID(objID, getTypeID(objID), variable, wrapper);
     }
 }
 

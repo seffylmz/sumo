@@ -74,14 +74,18 @@ public:
     /// @brief show Frame
     void show();
 
+    /// @brief hide Frame
+    void hide();
+
     /**@brief add vehicle element
      * @param objectsUnderCursor collection of objects under cursor after click over view
-     * @return true if vehicle was sucesfully added
+     * @param keyPressed key pressed during click
+     * @return true if element was sucesfully added
      */
-    bool addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor);
+    bool addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed);
 
-    /// @brief get EdgePathCreator modul
-    GNEFrameModuls::EdgePathCreator* getEdgePathCreator() const;
+    /// @brief get PathCreator modul
+    GNEFrameModuls::PathCreator* getPathCreator() const;
 
 protected:
     /// @brief Tag selected in TagSelector
@@ -90,8 +94,8 @@ protected:
     /// @brief selected vehicle type in DemandElementSelector
     void demandElementSelected();
 
-    /// @brief finish edge path creation
-    void edgePathCreated();
+    /// @brief create path
+    void createPath();
 
 private:
     /// @brief vehicle tag selector (used to select diffent kind of vehicles)
@@ -104,7 +108,7 @@ private:
     GNEFrameAttributesModuls::AttributesCreator* myVehicleAttributes;
 
     /// @brief edge path creator (used for trips and flows)
-    GNEFrameModuls::EdgePathCreator* myEdgePathCreator;
+    GNEFrameModuls::PathCreator* myPathCreator;
 
     /// @brief Help creation
     HelpCreation* myHelpCreation;

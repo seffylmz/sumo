@@ -22,6 +22,7 @@
 
 #include <netedit/elements/GNEHierarchicalParentElements.h>
 #include <netedit/elements/GNEHierarchicalChildElements.h>
+#include <netedit/elements/GNEPathElements.h>
 #include <netedit/GNEGeometry.h>
 #include <utils/common/Parameterised.h>
 #include <utils/geom/PositionVector.h>
@@ -43,7 +44,7 @@ class GUIGLObjectPopupMenu;
  * @class GNEAdditional
  * @brief An Element which don't belongs to GNENet but has influency in the simulation
  */
-class GNEAdditional : public GUIGlObject, public GNEAttributeCarrier, public Parameterised, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements  {
+class GNEAdditional : public GUIGlObject, public GNEAttributeCarrier, public Parameterised, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements, public GNEPathElements  {
 
 public:
     /**@brief Constructor
@@ -139,8 +140,8 @@ public:
     /// @brief get GUIGlObject associated with this AttributeCarrier
     GUIGlObject* getGUIGlObject();
 
-    /// @brief gererate a new ID for an element child
-    std::string generateChildID(SumoXMLTag childTag);
+    /// @brief generate a new ID for an element child
+    std::string generateAdditionalChildID(SumoXMLTag childTag);
 
     /// @brief obtain additional geometry
     const GNEGeometry::Geometry& getAdditionalGeometry() const;

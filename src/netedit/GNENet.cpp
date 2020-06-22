@@ -284,39 +284,35 @@ GNENet::deleteJunction(GNEJunction* junction, GNEUndoList* undoList) {
     // all deletions must be undone/redone together so we start a new command group
     // @todo if any of those edges are dead-ends should we remove their orphan junctions as well?
     undoList->p_begin("delete " + toString(SUMO_TAG_JUNCTION));
-
+    // invalidate path elements
+    junction->invalidatePathElements();
     // delete all crossings vinculated with junction
     while (junction->getGNECrossings().size() > 0) {
         deleteCrossing(junction->getGNECrossings().front(), undoList);
     }
-
     // find all crossings of neightbour junctions that shares an edge of this junction
     std::vector<GNECrossing*> crossingsToRemove;
     std::vector<GNEJunction*> junctionNeighbours = junction->getJunctionNeighbours();
-    for (auto i : junctionNeighbours) {
+    for (const auto &junction : junctionNeighbours) {
         // iterate over crossing of neighbour juntion
-        for (auto j : i->getGNECrossings()) {
+        for (const auto &crossing : junction->getGNECrossings()) {
             // if at least one of the edges of junction to remove belongs to a crossing of the neighbour junction, delete it
-            if (j->checkEdgeBelong(junction->getGNEEdges())) {
-                crossingsToRemove.push_back(j);
+            if (crossing->checkEdgeBelong(junction->getGNEEdges())) {
+                crossingsToRemove.push_back(crossing);
             }
         }
     }
-
     // delete crossings top remove
-    for (auto i : crossingsToRemove) {
-        deleteCrossing(i, undoList);
+    for (const auto &crossing : crossingsToRemove) {
+        deleteCrossing(crossing, undoList);
     }
-
     // deleting edges changes in the underlying EdgeVector so we have to make a copy
-    const EdgeVector incident = junction->getNBNode()->getEdges();
-    for (auto it : incident) {
-        deleteEdge(myAttributeCarriers->getEdges().at(it->getID()), undoList, true);
+    const EdgeVector incidentEdges = junction->getNBNode()->getEdges();
+    for (const auto &edge : incidentEdges) {
+        deleteEdge(myAttributeCarriers->getEdges().at(edge->getID()), undoList, true);
     }
-
     // remove any traffic lights from the traffic light container (avoids lots of warnings)
     junction->setAttribute(SUMO_ATTR_TYPE, toString(SumoXMLNodeType::PRIORITY), undoList);
-
     // delete edge
     undoList->add(new GNEChange_Junction(junction, false), true);
     undoList->p_end();
@@ -328,6 +324,8 @@ GNENet::deleteEdge(GNEEdge* edge, GNEUndoList* undoList, bool recomputeConnectio
     undoList->p_begin("delete " + toString(SUMO_TAG_EDGE));
     // iterate over lanes
     for (const auto& lane : edge->getLanes()) {
+        // invalidate path elements
+        lane->invalidatePathElements();
         // delete lane additionals
         while (lane->getChildAdditionals().size() > 0) {
             deleteAdditional(lane->getChildAdditionals().front(), undoList);
@@ -361,8 +359,6 @@ GNENet::deleteEdge(GNEEdge* edge, GNEUndoList* undoList, bool recomputeConnectio
     while (edge->getChildGenericDataElements().size() > 0) {
         deleteGenericData(edge->getChildGenericDataElements().front(), undoList);
     }
-    // invalidate path element childrens
-    edge->invalidatePathChildElements();
     // remove edge from crossings related with this edge
     edge->getFirstParentJunction()->removeEdgeFromCrossings(edge, undoList);
     edge->getSecondParentJunction()->removeEdgeFromCrossings(edge, undoList);
@@ -465,6 +461,8 @@ GNENet::deleteLane(GNELane* lane, GNEUndoList* undoList, bool recomputeConnectio
         deleteEdge(edge, undoList, recomputeConnections);
     } else {
         undoList->p_begin("delete " + toString(SUMO_TAG_LANE));
+        // invalidate path elements
+        lane->invalidatePathElements();
         // delete lane additional children
         while (lane->getChildAdditionals().size() > 0) {
             deleteAdditional(lane->getChildAdditionals().front(), undoList);
@@ -589,6 +587,10 @@ GNENet::deleteDemandElement(GNEDemandElement* demandElement, GNEUndoList* undoLi
     if ((demandElement->getTagProperty().getTag() == SUMO_TAG_VTYPE) && (GNEAttributeCarrier::parse<bool>(demandElement->getAttribute(GNE_ATTR_DEFAULT_VTYPE)))) {
         throw ProcessError("Trying to delete a default Vehicle Type");
     } else {
+        // check if currently is being inspected
+        if (myViewNet->getDottedAC() == demandElement) {
+            myViewNet->getViewParent()->getInspectorFrame()->clearInspectedAC();
+        }
         undoList->p_begin("delete " + demandElement->getTagStr());
         // remove all child demand elements of this demandElement calling this function recursively
         while (demandElement->getChildDemandElements().size() > 0) {
@@ -686,7 +688,7 @@ GNENet::restrictLane(SUMOVehicleClass vclass, GNELane* lane, GNEUndoList* undoLi
                 addRestriction = false;
             } else {
                 // ensure that the sidewalk is used exclusively
-                const SVCPermissions allOldWithoutPeds = edge->getNBEdge()->getPermissions(lane->getIndex()) & ~SVC_PEDESTRIAN;
+                const SVCPermissions allOldWithoutPeds = edge->getNBEdge()->getPermissions(edgeLane->getIndex()) & ~SVC_PEDESTRIAN;
                 edgeLane->setAttribute(SUMO_ATTR_ALLOW, getVehicleClassNames(allOldWithoutPeds), undoList);
             }
         }
@@ -1565,6 +1567,10 @@ GNENet::computeNetwork(GNEApplicationWindow* window, bool force, bool volatileOp
 void
 GNENet::computeDemandElements(GNEApplicationWindow* window) {
     window->setStatusBarText("Computing demand elements ...");
+    // if we aren't in Demand mode, update path calculator
+    if (!myViewNet->getEditModes().isCurrentSupermodeDemand())  {
+        myPathCalculator->updatePathCalculator();
+    }
     // iterate over all demand elements and compute
     for (const auto& i : myAttributeCarriers->getDemandElements()) {
         for (const auto& j : i.second) {
@@ -2432,28 +2438,53 @@ GNENet::isDemandElementsSaved() const {
 
 
 std::string
-GNENet::generateDemandElementID(const std::string& prefix, SumoXMLTag type) const {
+GNENet::generateDemandElementID(SumoXMLTag tag) const {
+    // get references to vehicle maps
+    const std::map<std::string, GNEDemandElement*> &vehicles = myAttributeCarriers->getDemandElements().at(SUMO_TAG_VEHICLE);
+    const std::map<std::string, GNEDemandElement*> &trips = myAttributeCarriers->getDemandElements().at(SUMO_TAG_TRIP);
+    const std::map<std::string, GNEDemandElement*> &vehiclesEmbebbed = myAttributeCarriers->getDemandElements().at(GNE_TAG_VEHICLE_WITHROUTE);
+    const std::map<std::string, GNEDemandElement*> &routeFlows = myAttributeCarriers->getDemandElements().at(GNE_TAG_FLOW_ROUTE);
+    const std::map<std::string, GNEDemandElement*> &flows = myAttributeCarriers->getDemandElements().at(SUMO_TAG_FLOW);
+    const std::map<std::string, GNEDemandElement*> &flowsEmbebbed = myAttributeCarriers->getDemandElements().at(GNE_TAG_FLOW_WITHROUTE);
+    // get references to persons maps
+    const std::map<std::string, GNEDemandElement*> &persons = myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSON);
+    const std::map<std::string, GNEDemandElement*> &personFlows = myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSONFLOW);
+    // declare flags
+    const bool isVehicle = ((tag == SUMO_TAG_VEHICLE) || (tag == SUMO_TAG_TRIP) || (tag == GNE_TAG_VEHICLE_WITHROUTE));
+    const bool isFlow = ((tag == GNE_TAG_FLOW_ROUTE) || (tag == SUMO_TAG_FLOW) || (tag == GNE_TAG_FLOW_WITHROUTE));
+    const bool isPerson = ((tag == SUMO_TAG_PERSON) || (tag == SUMO_TAG_PERSONFLOW));
+    // declare counter
     int counter = 0;
-    if ((type == SUMO_TAG_VEHICLE) || (type == SUMO_TAG_TRIP) || (type == SUMO_TAG_ROUTEFLOW) || (type == SUMO_TAG_FLOW)) {
+    if (isVehicle || isFlow) {
+        // declare tag
+        const std::string tagStr = isVehicle? toString(SUMO_TAG_VEHICLE) : toString(SUMO_TAG_FLOW);
         // special case for vehicles (Vehicles, Flows, Trips and routeFlows share nameSpaces)
-        while ((myAttributeCarriers->getDemandElements().at(SUMO_TAG_VEHICLE).count(prefix + toString(type) + "_" + toString(counter)) != 0) ||
-                (myAttributeCarriers->getDemandElements().at(SUMO_TAG_TRIP).count(prefix + toString(type) + "_" + toString(counter)) != 0) ||
-                (myAttributeCarriers->getDemandElements().at(SUMO_TAG_ROUTEFLOW).count(prefix + toString(type) + "_" + toString(counter)) != 0) ||
-                (myAttributeCarriers->getDemandElements().at(SUMO_TAG_FLOW).count(prefix + toString(type) + "_" + toString(counter)) != 0)) {
+        while ((vehicles.count(tagStr + "_" + toString(counter)) != 0) ||
+               (trips.count(tagStr + "_" + toString(counter)) != 0) ||
+               (vehiclesEmbebbed.count(tagStr + "_" + toString(counter)) != 0) ||
+               (routeFlows.count(tagStr + "_" + toString(counter)) != 0) ||
+               (flows.count(tagStr + "_" + toString(counter)) != 0) ||
+               (flowsEmbebbed.count(tagStr + "_" + toString(counter)) != 0) ||
+               (vehicles.count(tagStr + "_" + toString(counter)) != 0)) {
             counter++;
         }
-    } else if ((type == SUMO_TAG_PERSON) || (type == SUMO_TAG_PERSONFLOW)) {
+        // return new vehicle ID
+        return (tagStr + "_" + toString(counter));
+    } else if (isPerson) {
         // special case for persons (person and personFlows share nameSpaces)
-        while ((myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSON).count(prefix + toString(type) + "_" + toString(counter)) != 0) ||
-                (myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSONFLOW).count(prefix + toString(type) + "_" + toString(counter)) != 0)) {
+        while ((persons.count(toString(tag) + "_" + toString(counter)) != 0) || 
+               (personFlows.count(toString(tag) + "_" + toString(counter)) != 0)) {
             counter++;
         }
+        // return new person ID
+        return (toString(tag) + "_" + toString(counter));
     } else {
-        while (myAttributeCarriers->getDemandElements().at(type).count(prefix + toString(type) + "_" + toString(counter)) != 0) {
+        while (myAttributeCarriers->getDemandElements().at(tag).count(toString(tag) + "_" + toString(counter)) != 0) {
             counter++;
         }
+        // return new element ID
+        return (toString(tag) + "_" + toString(counter));
     }
-    return (prefix + toString(type) + "_" + toString(counter));
 }
 
 

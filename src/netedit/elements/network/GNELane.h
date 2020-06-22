@@ -20,8 +20,9 @@
 #pragma once
 #include <config.h>
 
-#include "GNENetworkElement.h"
 #include <netedit/elements/GNECandidateElement.h>
+
+#include "GNENetworkElement.h"
 
 // ===========================================================================
 // class declarations
@@ -55,9 +56,6 @@ public:
 
     /// @brief Destructor
     ~GNELane();
-
-    /// @brief gererate a new ID for an element child
-    std::string generateChildID(SumoXMLTag childTag);
 
     /// @name Functions related with geometry of element
     /// @{
@@ -187,6 +185,21 @@ public:
     bool isAttributeEnabled(SumoXMLAttr key) const;
     /// @}
 
+    /// @brief add path additional element (used by GNEPathElement)
+    void addPathAdditionalElement(GNEAdditional* additionalElement);
+
+    /// @brief remove path additional element (used by GNEPathElement)
+    void removePathAdditionalElement(GNEAdditional* additionalElement);
+
+    /// @brief add path demand element (used by GNEPathElement)
+    void addPathDemandElement(GNEDemandElement* demandElement);
+
+    /// @brief remove path demand element (used by GNEPathElement)
+    void removePathDemandElement(GNEDemandElement* demandElement);
+
+    /// @brief invalidate path element childs
+    void invalidatePathElements();
+
     /* @brief method for setting the special color of the lane
      * @param[in] color Pointer to new special color
      */
@@ -205,6 +218,7 @@ protected:
     /// @brief FOX needs this
     GNELane();
 
+private:
     /// @brief The Edge that to which this lane belongs
     GNEEdge* myParentEdge;
 
@@ -236,7 +250,12 @@ protected:
     /// @brief lane2lane connections
     GNEGeometry::Lane2laneConnection myLane2laneConnections;
 
-private:
+    /// @brief vector with references to path additional elements
+    std::vector<GNEAdditional*> myPathAdditionalElements;
+
+    /// @brief vector with references to path demand elements
+    std::vector<GNEDemandElement*> myPathDemandElements;
+
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
 

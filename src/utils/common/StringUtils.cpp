@@ -296,7 +296,7 @@ StringUtils::toLong(const std::string& sData) {
     }
     char* end;
     errno = 0;
-#ifdef _MSC_VER
+#ifdef WIN32
     long long int ret = _strtoi64(data, &end, 10);
 #else
     long long int ret = strtoll(data, &end, 10);
@@ -406,6 +406,26 @@ StringUtils::transcode(const XMLCh* const data, int length) {
         return "?";
     }
 #endif
+}
+
+
+std::string
+StringUtils::trim_left(const std::string s, const std::string& t) {
+    std::string result = s;
+    result.erase(0, s.find_first_not_of(t));
+    return result;
+}
+
+std::string
+StringUtils::trim_right(const std::string s, const std::string& t) {
+    std::string result = s;
+    result.erase(s.find_last_not_of(t) + 1);
+    return result;
+}
+
+std::string
+StringUtils::trim(const std::string s, const std::string& t) {
+    return trim_right(trim_left(s, t), t);
 }
 
 

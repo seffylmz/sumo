@@ -85,9 +85,6 @@ public:
     // Draw connections between parent and children
     void drawChildConnections(const GUIVisualizationSettings& s, const GUIGlObjectType GLTypeParent) const;
 
-    /// @brief gererate a new ID for an element child
-    virtual std::string generateChildID(SumoXMLTag childTag) = 0;
-
     /// @name Functions related with geometry of element
     /// @{
     /// @brief update pre-computed geometry information
@@ -150,14 +147,6 @@ public:
     /// @brief get next child demand element to the given demand element
     GNEDemandElement* getNextChildDemandElement(const GNEDemandElement* demandElement) const;
 
-    /// @}
-
-    /// @name members and functions related to child generic data elements
-    /// @{
-
-
-    /// @brief return data element for the current dataset and interval or nullptr
-    GNEGenericData* getCurrentGenericDataElement() const;
     /// @}
 
     /// @brief update parent after add or remove a child (can be reimplemented, for example used for statistics)

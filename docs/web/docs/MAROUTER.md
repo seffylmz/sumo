@@ -16,7 +16,7 @@ assignment](Demand/Dynamic_User_Assignment.md#introduction)
   - A) a road network as generated via
       [NETCONVERT](NETCONVERT.md) or
       [NETGENERATE](NETGENERATE.md), see [Building
-      Networks](SUMO_User_Documentation.md#network_building)
+      Networks](index.md#network_building)
   - B) O/D matrix
 - **Output:** [Definition of Vehicles, Vehicle Types, and
   Routes](Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md)
@@ -192,5 +192,3 @@ configuration:
 |--------|-------------|
 | **--random** {{DT_BOOL}} | Initialises the random number generator with the current system time; *default:* **false** |
 | **--seed** {{DT_INT}} | Initialises the random number generator with the given value; *default:* **23423** |
-
-

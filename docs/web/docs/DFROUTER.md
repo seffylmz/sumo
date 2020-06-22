@@ -12,7 +12,7 @@ may be used by [SUMO](SUMO.md).
 - **System:** portable (Linux/Windows is tested); runs on command line
 - **Input (mandatory):**
 
-  A) a road network as generated via [NETCONVERT](NETCONVERT.md) or [NETGENERATE](NETGENERATE.md), see [Building Networks](SUMO_User_Documentation.md#network_building)
+  A) a road network as generated via [NETCONVERT](NETCONVERT.md) or [NETGENERATE](NETGENERATE.md), see [Building Networks](index.md#network_building)
   
   B) induction loop definitions
 
@@ -161,5 +161,3 @@ Options](Basics/Using_the_Command_Line_Applications.md#random_number_options).
 |--------|-------------|
 | **--random** {{DT_BOOL}} | Initialises the random number generator with the current system time; *default:* **false** |
 | **--seed** {{DT_INT}} | Initialises the random number generator with the given value; *default:* **23423** |
-
-

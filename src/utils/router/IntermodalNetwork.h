@@ -317,8 +317,8 @@ public:
         if (it == myDepartLookup.end()) {
             throw ProcessError("Depart edge '" + e->getID() + "' not found in intermodal network.");
         }
-        if (isRailway(e->getPermissions())) {
-            // use closest split (best trainStop)
+        if ((e->getPermissions() & SVC_PEDESTRIAN) == 0) {
+            // use closest split (best trainStop, quay etc)
             double totalLength = 0.;
             double bestDist = std::numeric_limits<double>::max();
             const _IntermodalEdge* best = nullptr;
@@ -619,7 +619,9 @@ public:
                 validStops.push_back(stop);
                 lastUntil = stop.until;
             } else {
-                WRITE_WARNING("Ignoring stop at '" + stop.busstop + "' until " + time2string(stop.until) + "  for vehicle '" + pars.id + "'.");
+                if (stop.busstop != "" && stop.until >= 0) {
+                    WRITE_WARNING("Ignoring stop at '" + stop.busstop + "' until " + time2string(stop.until) + "  for vehicle '" + pars.id + "'.");
+                }
             }
         }
         if (validStops.size() < 2) {

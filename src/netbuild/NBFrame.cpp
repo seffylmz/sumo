@@ -406,6 +406,9 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.doRegister("walkingareas", new Option_Bool(false));
     oc.addDescription("walkingareas", "Pedestrian", "Always build walking areas even if there are no crossings");
 
+    oc.doRegister("walkingareas.join-dist", new Option_Float(15));
+    oc.addDescription("walkingareas.join-dist", "Pedestrian", "Do not create a walkingarea between sidewalks that are connected by a pedestrian junction within FLOAT");
+
     // tls setting options
     // explicit tls
     oc.doRegister("tls.set", new Option_StringVector());
@@ -670,8 +673,12 @@ NBFrame::checkOptions() {
         oc.set("no-internal-links", "false");
     }
     if (oc.getFloat("junctions.small-radius") > oc.getFloat("default.junctions.radius") && oc.getFloat("default.junctions.radius") >= 0) {
-        WRITE_ERROR("option 'default.junctions.radius' cannot be smaller than option 'junctions.small-radius'");
-        ok = false;
+        if (!oc.isDefault("junctions.small-radius")) {
+            WRITE_ERROR("option 'default.junctions.radius' cannot be smaller than option 'junctions.small-radius'");
+            ok = false;
+        } else {
+            oc.set("junctions.small-radius", oc.getValueString("default.junctions.radius"));
+        }
     }
     if (oc.getString("tls.layout") != "opposites" && oc.getString("tls.layout") != "incoming") {
         WRITE_ERROR("tls.layout must be 'opposites' or 'incoming'");

@@ -119,7 +119,7 @@ SUMORouteHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             // check if myVehicleParameter was sucesfully created
             if (myVehicleParameter) {
                 // check tag
-                if ((myVehicleParameter->routeid.empty()) || (myVehicleParameter->tag == SUMO_TAG_ROUTEFLOW)) {
+                if ((myVehicleParameter->routeid.empty()) || (myVehicleParameter->tag == GNE_TAG_FLOW_ROUTE)) {
                     // open a route flow
                     openRouteFlow(attrs);
                 } else {
@@ -174,12 +174,10 @@ SUMORouteHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             break;
         }
         case SUMO_TAG_PERSONTRIP:
+            addPersonTrip(attrs);
+            break;
         case SUMO_TAG_WALK:
-            if (attrs.hasAttribute(SUMO_ATTR_EDGES) || attrs.hasAttribute(SUMO_ATTR_ROUTE)) {
-                addWalk(attrs);
-            } else {
-                addPersonTrip(attrs);
-            }
+            addWalk(attrs);
             break;
         case SUMO_TAG_INTERVAL: {
             bool ok;

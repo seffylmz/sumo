@@ -526,9 +526,9 @@ GNEGenericDataFrame::getAttributeSelector() const {
 }
 
 
-GNEFrameModuls::EdgePathCreator*
-GNEGenericDataFrame::getEdgePathCreator() const {
-    return myEdgePathCreator;
+GNEFrameModuls::PathCreator*
+GNEGenericDataFrame::getPathCreator() const {
+    return myPathCreator;
 }
 
 
@@ -543,11 +543,24 @@ GNEGenericDataFrame::show() {
     // first refresh data set selector
     myDataSetSelector->refreshDataSetSelector(nullptr);
     // check if there is an edge path creator
-    if (myEdgePathCreator) {
-        myEdgePathCreator->showEdgePathCreator();
+    if (myPathCreator) {
+        myPathCreator->showPathCreatorModul(myGenericDataTag, false, false);
     }
     // show frame
     GNEFrame::show();
+}
+
+
+void
+GNEGenericDataFrame::hide() {
+    if (myPathCreator) {
+        // reset candidate edges
+        for (const auto& edge : myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+            edge.second->resetCandidateFlags();
+        }
+    }
+    // hide frame
+    GNEFrame::hide();
 }
 
 
@@ -557,7 +570,7 @@ GNEGenericDataFrame::GNEGenericDataFrame(FXHorizontalFrame* horizontalFrameParen
     myIntervalSelector(nullptr),
     myAttributeSelector(nullptr),
     myParametersEditor(nullptr),
-    myEdgePathCreator(nullptr),
+    myPathCreator(nullptr),
     myGenericDataTag(tag) {
     // create DataSetSelector
     myDataSetSelector = new DataSetSelector(this);
@@ -567,9 +580,9 @@ GNEGenericDataFrame::GNEGenericDataFrame(FXHorizontalFrame* horizontalFrameParen
     myAttributeSelector = new AttributeSelector(this, tag);
     // create parameter editor modul
     myParametersEditor = new GNEFrameAttributesModuls::ParametersEditor(this, "Attributes");
-    // create EdgePathCreator modul
+    // create PathCreator modul
     if (pathCreator) {
-        myEdgePathCreator = new GNEFrameModuls::EdgePathCreator(this, GNEFrameModuls::EdgePathCreator::Modes::FROM_TO_VIA);
+        myPathCreator = new GNEFrameModuls::PathCreator(this);
     }
 }
 
@@ -584,8 +597,8 @@ GNEGenericDataFrame::intervalSelected() {
 
 
 void
-GNEGenericDataFrame::edgePathCreated() {
-    // this function has to be reimplemente in all child frames that uses a EdgePathCreator
+GNEGenericDataFrame::createPath() {
+    // this function has to be reimplemente in all child frames that uses a PathCreator
 }
 
 /****************************************************************************/

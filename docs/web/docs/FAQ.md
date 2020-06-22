@@ -34,7 +34,7 @@ permalink: /FAQ/
 
   The main page for getting an overview over the various topics is the
   outline
-  [SUMO_User_Documentation](SUMO_User_Documentation.md). If
+  [SUMO_User_Documentation](index.md). If
   you do not find the topic of interest listed there use the site search.
   Alterantively, use a general purpose search engine as this will also include the mailing list archives.
 
@@ -280,7 +280,7 @@ gdb --args sumoD -c debug.sumocfg
 ### Error: tcpip::Storage::readIsSafe: want to read 8 bytes from Storage, but only 4 remaining
 
 The TraCI protocal changed in version 1.0.0. Please make sure that TraCI
-client version and SUMO version match.
+client version and SUMO version match. When using SUMO version 1.0.0 or larger you cannot use traci version 17 or lower (check by calling `traci.getVersion()`)
 
 ## Features
 
@@ -860,7 +860,7 @@ develops.
 
 ### How do I get high flows/vehicle densities?
 
-By default, insertion flow is [limited by the time resolution of the simulation](Simulation/VehicleInsertion.md#forcing_insertion_avoiding_depart_delay) (vehicles are only inserted every full second) and by the defaulti insertion speed of 0.
+By default, insertion flow is [limited by the time resolution of the simulation](Simulation/VehicleInsertion.md#forcing_insertion_avoiding_depart_delay) (vehicles are only inserted every full second) and by the default insertion speed of 0.
 
 The following definition will allow flows in the range of 2500 vehicles/hour/lane:
 
@@ -885,7 +885,7 @@ of a 1km highway, do the following:
 - create an edge that is 1km long
 - compute the space for each vehicle: 1000m / 65 = 15.385m
 - subtract the minimum space requirement (5m vehicle length + 2.5m
-  minimumg gap by default)
+  minimum gap by default)
 - this gives you 7.885m as remaining space between vehicles.
 - at a default value of tau=1 (desired time headway excluding minGap)
   this means vehicles will be in a stationary state at 7.885m/s
@@ -901,7 +901,7 @@ density:
 
 - compute the time period between successive vehicles using the
   equilibrium speed from above: 15.385m / 7.885m/s = 1.951s
-- uese the equilibrium speed as departSpeed
+- use the equilibrium speed as departSpeed
 
 ```
 <flow id="lane0" from="startEdge" to="destEdge" begin="0" end="3600" period="1.951" departPos="base" departSpeed="7.885" departLane="0"/>
@@ -1112,6 +1112,17 @@ This can happen with an outdated version of python 2.7. Updating to
 ### How do I combine SUMO with a network simulator?
 
   Check out [veins](http://veins.car2x.org/).
+  
+## Validity
+### What are publications on SUMO's validity?
+- https://elib.dlr.de/120856/
+- https://elib.dlr.de/112657/
+- https://elib.dlr.de/6657/
+- https://elib.dlr.de/121278/
+- https://elib.dlr.de/97240/
+- https://elib.dlr.de/115720/
+- https://elib.dlr.de/116607/
+- https://ieeexplore.ieee.org/abstract/document/7906642
 
 ## Outdated (Questions for very old versions of SUMO)
 

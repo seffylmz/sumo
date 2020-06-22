@@ -52,13 +52,15 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-MSStateHandler::MSStateHandler(const std::string& file, const SUMOTime offset) :
+MSStateHandler::MSStateHandler(const std::string& file, const SUMOTime offset, bool onlyReadTime) :
     MSRouteHandler(file, true),
     myOffset(offset),
     mySegment(nullptr),
     myCurrentLane(nullptr),
     myAttrs(nullptr),
-    myLastParameterised(nullptr) {
+    myLastParameterised(nullptr),
+    myOnlyReadTime(onlyReadTime)
+{
     myAmLoadingState = true;
     const std::vector<std::string> vehIDs = OptionsCont::getOptions().getStringVector("load-state.remove-vehicles");
     myVehiclesToRemove.insert(vehIDs.begin(), vehIDs.end());
@@ -107,6 +109,9 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
     switch (element) {
         case SUMO_TAG_SNAPSHOT: {
             myTime = string2time(attrs.getString(SUMO_ATTR_TIME));
+            if (myOnlyReadTime) {
+                throw AbortParsing("Abort state parsing after reading time");
+            }
             const std::string& version = attrs.getString(SUMO_ATTR_VERSION);
             if (version != VERSION_STRING) {
                 WRITE_WARNING("State was written with sumo version " + version + " (present: " + VERSION_STRING + ")!");
@@ -250,6 +255,9 @@ MSStateHandler::closeVehicle() {
         // reset depart
         vc.discountStateLoaded();
         SUMOVehicle* v = vc.getVehicle(vehID);
+        if (v == nullptr) {
+            throw ProcessError("Could not load vehicle '" + vehID + "' from state");
+        }
         v->setChosenSpeedFactor(myAttrs->getFloat(SUMO_ATTR_SPEEDFACTOR));
         v->loadState(*myAttrs, myOffset);
         if (v->hasDeparted()) {

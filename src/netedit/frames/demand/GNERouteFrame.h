@@ -98,27 +98,6 @@ public:
         std::vector<std::pair<RouteMode, std::string> > myRouteModesStrings;
     };
 
-    // ===========================================================================
-    // class Legend
-    // ===========================================================================
-
-    class Legend : protected FXGroupBox {
-
-    public:
-        /// @brief constructor
-        Legend(GNERouteFrame* routeFrameParent);
-
-        /// @brief destructor
-        ~Legend();
-
-        /// @brief show Legend modul
-        void showLegendModul();
-
-        /// @brief hide Legend modul
-        void hideLegendModul();
-
-    };
-
     /**@brief Constructor
      * @brief parent FXHorizontalFrame in which this GNEFrame is placed
      * @brief viewNet viewNet that uses this GNEFrame
@@ -134,20 +113,12 @@ public:
     /// @brief hide delete frame
     void hide();
 
-    /// @brief handle edge click
-    void handleEdgeClick(GNEEdge* clickedEdge, const bool shiftKeyPressed, const bool controlKeyPressed);
-
-    /// @brief function called when user press ENTER key
-    void hotkeyEnter();
-
-    /// @brief function called when user press BACKSPACE key
-    void hotkeyBackSpace();
-
-    /// @brief function called when user press ESC key
-    void hotkeyEsc();
-
-    /// @brief draw temporal route
-    void drawTemporalRoute(const GUIVisualizationSettings* s) const;
+    /**@brief add route edge
+    * @param edge edge to be added
+    * @param keyPressed key pressed during click
+    * @return true if element was sucesfully added
+    */
+    bool addEdgeRoute(GNEEdge* clickedEdge, const GNEViewNetHelper::KeyPressed &keyPressed);
 
     /// @brief get path creator modul
     GNEFrameModuls::PathCreator* getPathCreator() const;
@@ -166,6 +137,6 @@ private:
     /// @brief path creator modul
     GNEFrameModuls::PathCreator* myPathCreator;
 
-    /// @brief legend modul
-    Legend* myLegend;
+    /// @brief path legend modul
+    GNEFrameModuls::PathLegend* myPathLegend;
 };

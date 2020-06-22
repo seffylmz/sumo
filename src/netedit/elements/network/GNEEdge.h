@@ -68,9 +68,6 @@ public:
     /// @brief Destructor.
     ~GNEEdge();
 
-    /// @brief gererate a new ID for an element child
-    std::string generateChildID(SumoXMLTag childTag);
-
     /// @name Functions related with geometry of element
     /// @{
     /// @brief update pre-computed geometry information
@@ -292,24 +289,6 @@ public:
     /// @brief return the first lane that disallow a vehicle of type vClass (or the first lane, if none was found)
     GNELane* getLaneByDisallowedVClass(const SUMOVehicleClass vClass) const;
 
-    /// @brief draw partial route
-    void drawPartialRoute(const GUIVisualizationSettings& s, const GNEDemandElement* route, const GNEJunction* junction) const;
-
-    /// @brief draw partial trip and Flow
-    void drawPartialTripFromTo(const GUIVisualizationSettings& s, const GNEDemandElement* tripOrFromTo, const GNEJunction* junction) const;
-
-    /// @brief draw partial person plan
-    void drawPartialPersonPlan(const GUIVisualizationSettings& s, const GNEDemandElement* personPlan, const GNEJunction* junction) const;
-
-    /// @brief add path element (Only used by GNEHierarchicalParentElements::changeRouteEdges)
-    void addPathElement(GNEDemandElement* pathElementChild);
-
-    /// @brief remove path element (Only used by GNEHierarchicalParentElements::changeRouteEdges)
-    void removePathElement(GNEDemandElement* pathElementChild);
-
-    /// @brief invalidate path element childs
-    void invalidatePathChildElements();
-
     // @brief update vehicle spread geometries
     void updateVehicleSpreadGeometries();
 
@@ -318,6 +297,9 @@ public:
 
     /// @brief update dotted contour (public due Generic datas)
     void updateDottedContour();
+
+    /// @brief get generic data color
+    RGBColor getGenericDataColor(const GUIVisualizationSettings& s) const;
 
 protected:
     /// @brief the underlying NBEdge
@@ -340,9 +322,6 @@ protected:
 
     /// @brief modification status of the connections
     std::string myConnectionStatus;
-
-    /// @brief vector with references to path element childs
-    std::vector<GNEDemandElement*> myPathDemandElementsElementChilds;
 
 private:
     /// @brief Stack position (used to stack demand elements over edges)
@@ -422,9 +401,6 @@ private:
 
     /// @brief draw Rerouter symbols
     void drawRerouterSymbol(const GUIVisualizationSettings& s, GNEAdditional* rerouter) const;
-
-    /// @brief draw demand elements
-    void drawDemandElements(const GUIVisualizationSettings& s) const;
 
     /// @brief check if given stacked positions are overlapped
     bool areStackPositionOverlapped(const GNEEdge::StackPosition& vehicleA, const GNEEdge::StackPosition& vehicleB) const;

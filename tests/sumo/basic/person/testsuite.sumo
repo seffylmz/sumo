@@ -1,3 +1,6 @@
+# test option --scale
+scale
+
 # person walking between two unconnected edges
 walk_unconnected
 
@@ -23,6 +26,9 @@ ride_ignore_line
 
 # person rides and then stops
 ride_and_stop
+
+# person ride triggers a vehicle scaled with 3
+ride_triggered_scale
 
 # busses have a large boarding duration such that the stop duration will be extended by the boarding of the passengers
 boarding_duration_extension
@@ -50,6 +56,7 @@ walk_0
 
 # random depart and arrival positions
 walk_random_pos
+walk_start_crossing
 
 # person with a public transport ride
 public

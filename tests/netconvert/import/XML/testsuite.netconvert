@@ -9,6 +9,7 @@ node_types
 
 # test loading of different traffic light types
 tl_types
+tl_layouts
 
 # tests for using the speed_in_kmh option
 speed_in_kmh
@@ -72,12 +73,6 @@ junctionLogic
 
 # tests for roundabouts specified via xml
 roundabout
-
-# set a non-default node-radius
-node_radius
-
-# set a non-default node-radius
-node_radius_default
 
 # import edge distance from plain xml
 distance

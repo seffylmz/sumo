@@ -131,18 +131,16 @@ public:
      * @return Whether the vehicle's current route is valid
      */
     virtual bool hasValidRoute(std::string& msg, const MSRoute* route = 0) const = 0;
+    /// @brief checks wether the vehicle can depart on the first edge
+    virtual bool hasValidRouteStart(std::string& msg) = 0;
 
+    /// @brief computes validity attributes for the current route
+    virtual int getRouteValidity(bool update = true, bool silent = false) = 0;
 
     /** @brief Returns an iterator pointing to the current edge in this vehicles route
      * @return The current route pointer
      */
     virtual const ConstMSEdgeVector::const_iterator& getCurrentRouteEdge() const = 0;
-
-    /** @brief Returns the vehicle's parameter (including departure definition)
-     *
-     * @return The vehicle's parameter
-     */
-    virtual const SUMOVehicleParameter& getParameter() const = 0;
 
     /** @brief Returns the vehicle's emission model parameter
      *
@@ -331,11 +329,6 @@ public:
 
     /// @brief @return The index of the vehicle's associated RNG
     virtual int getRNGIndex() const = 0;
-
-    /** @brief Returns the associated RNG for this vehicle
-    * @return The vehicle's associated RNG
-    */
-    virtual std::mt19937* getRNG() const = 0;
 
     /// @brief return the numerical ID which is only for internal usage
     //  (especially fast comparison in maps which need vehicles as keys)

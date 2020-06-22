@@ -201,14 +201,15 @@ class RandomEdgeGenerator:
         index = bisect.bisect(self.cumulative_weights, r)
         return self.net._edges[index]
 
-    def write_weights(self, fname):
+    def write_weights(self, fname, interval_id, begin, end):
         # normalize to [0,100]
         normalizer = 100.0 / max(1, max(map(self.weight_fun, self.net._edges)))
         weights = [(self.weight_fun(e) * normalizer, e.getID()) for e in self.net.getEdges()]
         weights.sort(reverse=True)
         with open(fname, 'w+') as f:
             f.write('<edgedata>\n')
-            f.write('    <interval begin="0" end="10">\n')
+            f.write('    <interval id="%s" begin="%s" end="%s">\n' % (
+                interval_id, begin, end))
             for weight, edgeID in weights:
                 f.write('        <edge id="%s" value="%0.2f"/>\n' %
                         (edgeID, weight))
@@ -514,8 +515,21 @@ def main(options):
     with open(options.tripfile, 'w') as fouttrips:
         sumolib.writeXMLHeader(fouttrips, "$Id$", "routes")  # noqa
         if options.vehicle_class:
-            fouttrips.write('    <vType id="%s" vClass="%s"%s/>\n' %
-                            (options.vtypeID, options.vehicle_class, vtypeattrs))
+            vTypeDef = '    <vType id="%s" vClass="%s"%s/>\n' % (
+                options.vtypeID, options.vehicle_class, vtypeattrs)
+            if options.vtypeout:
+                # ensure that trip output does not contain types, file may be
+                # overwritten by later call to duarouter
+                if options.additional is None:
+                    options.additional = options.vtypeout
+                else:
+                    options.additional += ",options.vtypeout"
+                with open(options.vtypeout, 'w') as fouttype:
+                    sumolib.writeXMLHeader(fouttype, "$Id$", "additional")  # noqa
+                    fouttype.write(vTypeDef)
+                    fouttype.write("</additional>\n")
+            else:
+                fouttrips.write(vTypeDef)
             options.tripattrs += ' type="%s"' % options.vtypeID
             personattrs += ' type="%s"' % options.vtypeID
         depart = sumolib.miscutils.parseTime(options.begin)
@@ -563,8 +577,10 @@ def main(options):
 
     if options.routefile:
         args2 = args + ['-o', options.routefile]
-        print("calling ", " ".join(args2))
+        print("calling", " ".join(args2))
+        sys.stdout.flush()
         subprocess.call(args2)
+        sys.stdout.flush()
 
     if options.validate:
         # write to temporary file because the input is read incrementally
@@ -572,19 +588,27 @@ def main(options):
         args2 = args + ['-o', tmpTrips, '--write-trips']
         if options.junctionTaz:
             args2 += ['--write-trips.junctions']
-        print("calling ", " ".join(args2))
+        print("calling", " ".join(args2))
+        sys.stdout.flush()
         subprocess.call(args2)
+        sys.stdout.flush()
         os.remove(options.tripfile)  # on windows, rename does not overwrite
         os.rename(tmpTrips, options.tripfile)
 
     if options.weights_outprefix:
+        idPrefix = ""
+        if options.tripprefix:
+            idPrefix = options.tripprefix + "."
         trip_generator.source_generator.write_weights(
-            options.weights_outprefix + SOURCE_SUFFIX)
+            options.weights_outprefix + SOURCE_SUFFIX,
+            idPrefix + "src", options.begin, options.end)
         trip_generator.sink_generator.write_weights(
-            options.weights_outprefix + SINK_SUFFIX)
+            options.weights_outprefix + SINK_SUFFIX,
+            idPrefix + "dst", options.begin, options.end)
         if trip_generator.via_generator:
             trip_generator.via_generator.write_weights(
-                options.weights_outprefix + VIA_SUFFIX)
+                options.weights_outprefix + VIA_SUFFIX,
+                idPrefix + "via", options.begin, options.end)
 
     # return wether trips could be generated as requested
     return trip_generator is not None

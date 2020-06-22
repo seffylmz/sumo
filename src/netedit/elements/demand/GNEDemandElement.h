@@ -156,11 +156,6 @@ public:
     /// @brief get GUIGlObject associated with this AttributeCarrier
     GUIGlObject* getGUIGlObject();
 
-    /// @brief gererate a new ID for an element child
-    std::string generateChildID(SumoXMLTag childTag);
-
-    /// @name members and functions relative to demand element (stacked) geometries
-    /// @{
     /// @brief get demand element geometry (stacked)
     const GNEGeometry::Geometry& getDemandElementGeometry();
 
@@ -172,25 +167,22 @@ public:
 
     /// @brief update stack label
     void updateDemandElementStackLabel(const int stack);
-    /// @}
-
-    /// @name members and functions relative to demand element spread geometries
-    /// @{
-    /// @brief get demand element segment spread geometry
-    const GNEGeometry::SegmentGeometry& getDemandElementSegmentSpreadGeometry() const;
 
     /// @brief update element spread geometry
     void updateDemandElementSpreadGeometry(const GNELane* lane, const double posOverLane);
-    /// @}
+
+    /// @brief partial update pre-computed geometry information
+    void updatePartialGeometry(const GNELane* lane);
 
     /// @name members and functions relative to elements common to all demand elements
     /// @{
+/*
     /// @brief obtain from edge of this demand element
     virtual GNEEdge* getFromEdge() const = 0;
 
     /// @brief obtain to edge of this demand element
     virtual GNEEdge* getToEdge() const = 0;
-
+*/
     /// @brief obtain VClass related with this demand element
     virtual SUMOVehicleClass getVClass() const = 0;
 
@@ -251,9 +243,6 @@ public:
     /// @brief update dotted contour
     virtual void updateDottedContour() = 0;
 
-    /// @brief partial update pre-computed geometry information
-    virtual void updatePartialGeometry(const GNEEdge* edge) = 0;
-
     /// @brief compute path
     virtual void computePath() = 0;
 
@@ -298,6 +287,19 @@ public:
      * @see GUIGlObject::drawGL
      */
     virtual void drawGL(const GUIVisualizationSettings& s) const = 0;
+
+    /**@brief Draws partial object (lane)
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] lane GNELane in which draw partial
+    */
+    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const = 0;
+
+    /**@brief Draws partial object (junction)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] fromLane from GNELane
+     * @param[in] toLane to GNELane
+     */
+    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const = 0;
     /// @}
 
     /// @name inherited from GNEAttributeCarrier
@@ -370,25 +372,33 @@ protected:
     /// @brief demand element spread geometry (Only used by vehicles and pedestrians)
     GNEGeometry::Geometry mySpreadGeometry;
 
-    /// @brief demand element spread segment geometry (Only used by vehicles and pedestrians)
-    GNEGeometry::SegmentGeometry mySpreadSegmentGeometry;
-
     /// @brief stacked label number
     int myStackedLabelNumber;
-
-    /// @name Functions relative to change values in setAttribute(...)
-    /// @{
 
     /// @brief check if a new demand element ID is valid
     bool isValidDemandElementID(const std::string& newID) const;
 
+    /// @brief get first person plan edge
+    const GNEEdge *getFirstPersonPlanEdge() const;
+
+    /// @name Only for person plans
+    /// @{
+
+    /// @brief calculate extreme geometry
+    GNEGeometry::ExtremeGeometry calculatePersonPlanLaneStartEndPos() const;
+
+    /// @brief draw person plan partial lane
+    void drawPersonPlanPartialLane(const GUIVisualizationSettings& s, const GNELane* lane, 
+        const double personPlanWidth, const RGBColor &personPlanColor) const;
+
+    /// @brief draw person plan partial junction
+    void drawPersonPlanPartialJunction(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, 
+        const double personPlanWidth, const RGBColor &personPlanColor) const;
+
+    /// @brief person plans arrival position radius
+    static const double myPersonPlanArrivalPositionDiameter;
+
     /// @}
-
-    /// @brief calculate personPlan start and end positions over lanes
-    void calculatePersonPlanLaneStartEndPos(double& startPos, double& endPos) const;
-
-    /// @brief calculate personPlan start and end positions
-    void calculatePersonPlanPositionStartEndPos(Position& startPos, Position& endPos) const;
 
 private:
     /**@brief check restriction with the number of children

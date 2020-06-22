@@ -3,75 +3,116 @@ title: Installing/MacOS Build
 permalink: /Installing/MacOS_Build/
 ---
 
-# Using Homebrew
+This document describes how to install and build SUMO on MacOS from its source code. If you don't want to **extend** SUMO, but just **use** it, you may want to simply follow the [installation instructions for MacOS](../Installing.md#macos) instead.
 
-If you come from a previous macports installation you need to uninstall
-sumo and fox toolkit first:
+You may use one of two ways to build and install SUMO on MacOS: **Homebrew** (recommended) and **MacPorts**.
 
-```
-sudo port uninstall sumo
-sudo port uninstall fox
-```
+# The Homebrew Approach
 
-If you did not already install [homebrew](http://brew.sh), do so by
-invoking
+## Prerequisites
 
+The installation requires [Homebrew](http://brew.sh). If you did not already install homebrew, do so by invoking
 ```
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
-
-make sure your homebrew db is up-to-date
-
+and make sure your homebrew db is up-to-date.
 ```
 brew update
 ```
 
-Install SUMO stable via the SUMO Brew Formula:
-
+In order to compile the C++ source code files of SUMO, a C++ compiler is needed. On MacOS the default C/C++ compiler is Clang. If you want to install the Clang compilers, please use the following command:
 ```
-brew tap dlr-ts/sumo
-brew install sumo
+xcode-select --install
 ```
-
-Set the **SUMO_HOME** environment variable. To do so, open .bash_profile in TextEdit: 
-
+After the successful installation, you can test Clang with the following command:
 ```
-touch ~/.bash_profile; open ~/.bash_profile
-```
-Just insert the following new line at the end: `export SUMO_HOME=/your/path/to/sumo`, where `/your/path/to/sumo` is the path stated in the caveats section of the `brew install sumo` command.
-
-Restart the Terminal and test the newly added variable:
-```
-echo $SUMO_HOME
+clang --version
 ```
 
-After the installation you need to log out/in in order to let X11 start
-automatically, when calling a gui-based application like "sumo-gui".
-(Alternatively, you may start X11 manually by pressing *cmd-space* and
-entering "XQuartz").
+SUMO uses [CMake](https://cmake.org/) to manage the software compilation process. You can install CMake with homebrew easily.
+```
+brew install cmake
+```
 
-SUMO provides native OSX application bundles for its graphical applications, so they can be added to the OSX dock or moved to the `Applications` folder. The brew installation will try to copy these bundles to `Applications` as part of the installation process. This can also be manually achieved by copying these application bundles from `$SUMO_HOME/build/osx/sumo-gui`, `$SUMO_HOME/build/osx/netedit` and `$SUMO_HOME/build/osx/osm-web-wizard` to the `Applications` folder. 
+## Dependencies
+In order to compile and execute SUMO, there are several libraries that need to be installed. You can install these dependencies with homebrew with the following commands:
+```
+brew cask install xquartz
+brew install xerces-c fox proj gdal gl2ps
+```
+Depending on the SUMO features you want to enable during compilation, you may want to additional libraries. Most libraries are available in homebrew and should be recognized with CMake.
 
-These application bundles will try to determine the location of your SUMO installation by evaluating your `$SUMO_HOME` variable setting and start the binaries accordingly. Multiple SUMO installations may be used by changing the `$SUMO_HOME` variable.
+## Git Cloning and Building
+The source code of SUMO can be cloned with the following command to the directory `./sumo`. The environment variable `SUMO_HOME` should also be set to this directory.
+```
+git clone --recursive https://github.com/eclipse/sumo
+export SUMO_HOME="$PWD/sumo"
+```
+SUMO is usually build as an out-of-source build. You need to create a directory for your build and invoke CMake to trigger the configuration from there. 
+```
+cd $SUMO_HOME
+mkdir build/cmake-build
+cd build/cmake-build
+cmake ../..
+```
+The output of the CMake configuration process will show you which libraries have been found on your system and which SUMO features have been enabled accordingly.
+The build process can now be triggered with the following command
+```
+cd $SUMO_HOME/build/cmake-build
+cmake --build . --parallel
+```
+## Optional Steps
 
-# Using Macports (legacy)
+### TraCI as a Service (TraaS) 
+TraaS is a java library for working with TraCI. Building TraaS can be triggered with the following commands.
+```
+cd $SUMO_HOME/build/cmake-build
+cmake --build . --target traas --parallel
+```
+
+### Examples and Unit Tests
+SUMO provides unit tests to be used with Google's Testing and Mocking Framework - Googletest. In order to execute these tests you need to install Googletest first.
+```
+git clone https://github.com/google/googletest
+cd googletest
+git checkout release-1.10.0
+mkdir build
+cd build
+cmake ..
+make
+make install
+```
+
+The creation of the examples and the execution of the tests can be triggered as follows
+```
+cd $SUMO_HOME/build/cmake-build
+make CTEST_OUTPUT_ON_FAILURE=1 examples test
+```
+
+More information is provided [here](../Developer/Unit_Tests.md).
+
+### Integration Tests with TextTest
+SUMO uses an application called TextTest to manage and execute and extensive set of integration tests. If you plan to extend SUMO with new features, we would like to encourage you to also add tests for your code to the SUMO testsuite and to make sure that existing functionality is not affected. 
+
+The installation of TextTest on MacOS is documented [here](../Developer/Tests.md).
+
+### Code Editor
+Finally, you may also want to use a code editor or integrated development environment. There is a great variety of suitable tools available. If you are unsure which tool to pick, we would suggest to have a look at [Visual Studio Code](https://code.visualstudio.com/) for MacOS. The configuration of Visual Studio Code for the CMake setup is documented [here](../Developer/VisualStudioCode.md).
+
+# The Macports Approach (legacy)
 
 !!! note
-    This uses a packaged version of sumo which is convenient but may lag behind the latest official release of SUMO.
+    This uses a pre-packaged version of sumo which is convenient but may lag behind the latest official release of SUMO.
 
-You should start by [installing
-Macports](https://www.macports.org/install.php). Afterwards start a
-terminal session and run
+You should start by [installing Macports](https://www.macports.org/install.php). Afterwards start a terminal session and run
 
 ```
 sudo port install sumo
 ```
 
-While this will install a SUMO version you maybe do not want to use, it
-will pull in all dependencies you need.
+While this will install a SUMO version you maybe do not want to use, it will pull in all dependencies you need.
 
-If you want to build from a repository checkout you should additionally
-do
+If you want to build from a repository checkout you should additionally do
 
 ```
 sudo port install automake autoconf
@@ -86,5 +127,3 @@ If you wish to use clang rather than gcc for compilation do:
 ```
 ./configure CXX=clang++ CXXFLAGS="-stdlib=libstdc++"
 ```
-
-Thanks to all MacOS builders for sharing their insights.

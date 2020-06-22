@@ -57,6 +57,7 @@ GNEAdditional::GNEAdditional(const std::string& id, GNENet* net, GUIGlObjectType
     GNEAttributeCarrier(tag, net),
     GNEHierarchicalParentElements(this, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
     GNEHierarchicalChildElements(this, junctionChildren, edgeChildren, laneChildren, additionalChildren, shapeChildren, TAZElementChildren, demandElementChildren, genericDataChildren),
+    GNEPathElements(this),
     myAdditionalName(additionalName),
     myBlockMovement(blockMovement),
     myBlockIcon(this),
@@ -81,10 +82,11 @@ GNEAdditional::GNEAdditional(GNEAdditional* additionalParent, GNENet* net, GUIGl
         const std::vector<GNETAZElement*>& TAZElementChildren,
         const std::vector<GNEDemandElement*>& demandElementChildren,
         const std::vector<GNEGenericData*>& genericDataChildren) :
-    GUIGlObject(type, additionalParent->generateChildID(tag)),
+    GUIGlObject(type, additionalParent->generateAdditionalChildID(tag)),
     GNEAttributeCarrier(tag, net),
     GNEHierarchicalParentElements(this, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
     GNEHierarchicalChildElements(this, junctionChildren, edgeChildren, laneChildren, additionalChildren, shapeChildren, TAZElementChildren, demandElementChildren, genericDataChildren),
+    GNEPathElements(this),
     myAdditionalName(additionalName),
     myBlockMovement(blockMovement),
     myBlockIcon(this),
@@ -108,7 +110,7 @@ GNEAdditional::getGUIGlObject() {
 
 
 std::string
-GNEAdditional::generateChildID(SumoXMLTag childTag) {
+GNEAdditional::generateAdditionalChildID(SumoXMLTag childTag) {
     int counter = (int)getChildAdditionals().size();
     while (myNet->retrieveAdditional(childTag, getID() + toString(childTag) + toString(counter), false) != nullptr) {
         counter++;

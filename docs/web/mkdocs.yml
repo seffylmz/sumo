@@ -11,15 +11,15 @@ dev_addr: 127.0.0.1:8000
 copyright: "Copyright &copy; 2001 - 2020 German Aerospace Center (DLR) and others."
 
 nav:
-  - Home: index.md
-  - Documentation: SUMO_User_Documentation.md
-  - Downloads: Downloads.md
+  - Documentation: index.md
+  - Tutorials: Tutorials.md
   - FAQ: FAQ.md
-  - Contact: Contact.md
+  - Downloads: Downloads.md
   - Publications: Publications.md
-  - ChangeLog: ChangeLog.md
   - Developer: Developer/Main.md
+  - ChangeLog: ChangeLog.md
   - Recent Changes: https://github.com/eclipse/sumo/commits/master/docs/web
+  - Contact: https://eclipse.org/sumo/contact/
 
 theme:
   name: mkdocs

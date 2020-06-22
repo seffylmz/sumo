@@ -20,12 +20,17 @@
 #pragma once
 #include <config.h>
 
-#include <netedit/GNEGeometry.h>
 #include <utils/gui/globjects/GUIGlObjectTypes.h>
-#include <utils/geom/Position.h>
 
-#include "GNEAttributeCarrier.h"
+// ===========================================================================
+// class declaration
+// ===========================================================================
 
+class GNEEdge;
+class GNELane;
+class GNEJunction;
+class GNEAdditional;
+class GNEDemandElement;
 
 // ===========================================================================
 // class definitions
@@ -39,22 +44,80 @@ class GNEPathElements {
 
 public:
 
-    /// @brief Constructor
-    GNEPathElements();
+    /// @brief path element
+    class PathElement {
+
+    public:
+        /// @brief constructor for lanes
+        PathElement(GNELane* lane);
+
+        /// @brief get junction
+        GNEJunction* getJunction() const;
+
+        /// @brief get lane
+        GNELane* getLane() const;
+
+    protected:
+        /// @brief lane
+        GNELane* myLane;
+
+    private:
+        /// @brief default constructor
+        PathElement();
+    };
+
+    /// @brief Constructor for additional elements
+    GNEPathElements(GNEAdditional* additionalElement);
+
+    /// @brief Constructor for demand elements
+    GNEPathElements(GNEDemandElement* demandElement);
 
     /// @brief Destructor
     ~GNEPathElements();
 
     /// @brief get path edges
-    const std::vector<GNEEdge*>& getPathEdges() const;
+    const std::vector<GNEPathElements::PathElement>& getPath() const;
+
+    /// @brief draw lane path child
+    void drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane) const;
+
+    /// @brief draw junction path child
+    void drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction) const;
 
 protected:
-    /// @brief replace edge route Parents
-    void replacePathEdges(GNEDemandElement* elementChild, const std::vector<GNEEdge*>& routeEdges);
+    /// @brief calculate path lanes (Dijkstra)
+    void calculatePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
+
+    /// @brief calculate consecutive path lanes (used by routes)
+    void calculateConsecutivePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, const std::vector<GNEEdge*> &edges);
+
+    /// @brief calculate consecutive path lanes (used by E2Detectors)
+    void calculateConsecutivePathLanes(const std::vector<GNELane*> &lanes);
+
+    /// @brief reset path lanes
+    void resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
 
 private:
+    /// @brief pointer to additional element
+    GNEAdditional* myAdditionalElement;
+
+    /// @brief pointer to demand element
+    GNEDemandElement* myDemandElement;
+
     /// @brief vector of edges used in paths
-    std::vector<GNEEdge*> myRouteEdges;
+    std::vector<PathElement> myPathElements;
+
+    /// @brief add elements
+    void addElements();
+
+    /// @brief remove elements
+    void removeElements();
+
+    /// @brief calculate from-via-to edges
+    const std::vector<GNEEdge*> calculateFromViaToEdges(GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
+
+    /// @brief default constructor
+    GNEPathElements();
 
     /// @brief Invalidated copy constructor.
     GNEPathElements(const GNEPathElements&) = delete;

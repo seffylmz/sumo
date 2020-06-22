@@ -166,9 +166,9 @@ GNEStopFrame::show() {
 
 
 bool
-GNEStopFrame::addStop(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, bool shiftPressed) {
+GNEStopFrame::addStop(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed) {
     // check if we're selecting a new stop parent
-    if (shiftPressed) {
+    if (keyPressed.shiftKeyPressed()) {
         if (objectsUnderCursor.getDemandElementFront() &&
                 (objectsUnderCursor.getDemandElementFront()->getTagProperty().isVehicle() || objectsUnderCursor.getDemandElementFront()->getTagProperty().getTag() == SUMO_TAG_ROUTE)) {
             myStopParentSelector->setDemandElement(objectsUnderCursor.getDemandElementFront());
@@ -210,16 +210,23 @@ GNEStopFrame::getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTa
     if (stopTag == SUMO_TAG_NOTHING) {
         WRITE_WARNING("Current selected Stop type isn't valid.");
         return false;
-    } else if ((stopTag == SUMO_TAG_STOP_LANE) || (stopTag == SUMO_TAG_PERSONSTOP_LANE)) {
+    } else if (stopTag == SUMO_TAG_STOP_LANE) {
         if (lane) {
             stop.lane = lane->getID();
         } else {
             WRITE_WARNING("Click over a " + toString(SUMO_TAG_LANE) + " to create a stop placed in a " + toString(SUMO_TAG_LANE));
             return false;
         }
+    } else if (stopTag == GNE_TAG_PERSONSTOP_EDGE) {
+        if (lane) {
+            stop.edge = lane->getParentEdge()->getID();
+        } else {
+            WRITE_WARNING("Click over a " + toString(SUMO_TAG_EDGE) + " to create a stop placed in a " + toString(SUMO_TAG_EDGE));
+            return false;
+        }
     } else if (stoppingPlace) {
         if (stoppingPlace->getTagProperty().getTag() == SUMO_TAG_BUS_STOP) {
-            if ((stopTag != SUMO_TAG_STOP_BUSSTOP) && (stopTag != SUMO_TAG_PERSONSTOP_BUSSTOP)) {
+            if ((stopTag != SUMO_TAG_STOP_BUSSTOP) && (stopTag != GNE_TAG_PERSONSTOP_BUSSTOP)) {
                 WRITE_WARNING("Invalid clicked stopping place to create a stop placed in a " + stoppingPlace->getTagProperty().getTagStr());
                 return false;
             } else {
@@ -264,7 +271,7 @@ GNEStopFrame::getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTa
             WRITE_WARNING("Click over a " + toString(SUMO_TAG_CHARGING_STATION) + " to create a stop placed in a " + toString(SUMO_TAG_CHARGING_STATION));
         } else if (stopTag == SUMO_TAG_STOP_PARKINGAREA) {
             WRITE_WARNING("Click over a " + toString(SUMO_TAG_PARKING_AREA) + " to create a stop placed in a " + toString(SUMO_TAG_PARKING_AREA));
-        } else if (stopTag == SUMO_TAG_PERSONTRIP_BUSSTOP) {
+        } else if (stopTag == GNE_TAG_PERSONTRIP_EDGE_BUSSTOP) {
             WRITE_WARNING("Click over a " + toString(SUMO_TAG_STOP_BUSSTOP) + " to create a person stop placed in a " + toString(SUMO_TAG_STOP_BUSSTOP));
         }
         return false;
@@ -277,7 +284,7 @@ GNEStopFrame::getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTa
     // declare map to keep attributes from Frames from Frame
     std::map<SumoXMLAttr, std::string> valuesMap = stopAttributes->getAttributesAndValues(false);
     // generate ID
-    valuesMap[SUMO_ATTR_ID] = viewNet->getNet()->generateDemandElementID("", stopTag);
+    valuesMap[SUMO_ATTR_ID] = viewNet->getNet()->generateDemandElementID(stopTag);
     // add netedit values
     if (!stop.lane.empty()) {
         myNeteditAttributes->getNeteditAttributesAndValues(valuesMap, lane);

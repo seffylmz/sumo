@@ -60,8 +60,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
     const std::string id = inputStorage.readString();
     server.initWrapper(libsumo::RESPONSE_GET_VEHICLE_VARIABLE, variable, id);
     try {
-        if (!libsumo::Vehicle::handleVariable(id, variable, &server) &&
-                !libsumo::VehicleType::handleVariable(libsumo::Vehicle::getTypeID(id), variable, &server)) {
+        if (!libsumo::Vehicle::handleVariable(id, variable, &server)) {
             switch (variable) {
                 case libsumo::VAR_LEADER: {
                     double dist = 0;
@@ -170,27 +169,17 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                     }
                     break;
                 }
-                case libsumo::VAR_NEXT_STOPS: {
-                    std::vector<libsumo::TraCINextStopData> nextStops = libsumo::Vehicle::getNextStops(id);
-                    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_COMPOUND);
-                    const int cnt = 1 + (int)nextStops.size() * 4;
-                    server.getWrapperStorage().writeInt(cnt);
-                    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_INTEGER);
-                    server.getWrapperStorage().writeInt((int)nextStops.size());
-                    for (std::vector<libsumo::TraCINextStopData>::iterator it = nextStops.begin(); it != nextStops.end(); ++it) {
-                        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
-                        server.getWrapperStorage().writeString(it->lane);
-                        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_DOUBLE);
-                        server.getWrapperStorage().writeDouble(it->endPos);
-                        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
-                        server.getWrapperStorage().writeString(it->stoppingPlaceID);
-                        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_INTEGER);
-                        server.getWrapperStorage().writeInt(it->stopFlags);
-                        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_DOUBLE);
-                        server.getWrapperStorage().writeDouble(it->duration);
-                        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_DOUBLE);
-                        server.getWrapperStorage().writeDouble(it->until);
+                case libsumo::VAR_NEXT_STOPS2: {
+                    // deliberate fallThrough!
+                    int limit = 0;
+                    if (!server.readTypeCheckingInt(inputStorage, limit)) {
+                        return server.writeErrorStatusCmd(libsumo::CMD_GET_VEHICLE_VARIABLE, "Stop retrieval uses an optional integer.", outputStorage);
                     }
+                    writeNextStops(server, id, limit);
+                    break;
+                }
+                case libsumo::VAR_NEXT_STOPS: {
+                    writeNextStops(server, id, 0);
                     break;
                 }
                 case libsumo::DISTANCE_REQUEST: {
@@ -908,17 +897,17 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                     return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "Fourth parameter (position) requires a double.", outputStorage);
                 }
                 std::string departPos = toString(departPosCode);
-                if (-departPosCode == DEPART_POS_RANDOM) {
+                if (-departPosCode == (int)DepartPosDefinition::RANDOM) {
                     departPos = "random";
-                } else if (-departPosCode == DEPART_POS_RANDOM_FREE) {
+                } else if (-departPosCode == (int)DepartPosDefinition::RANDOM_FREE) {
                     departPos = "random_free";
-                } else if (-departPosCode == DEPART_POS_FREE) {
+                } else if (-departPosCode == (int)DepartPosDefinition::FREE) {
                     departPos = "free";
-                } else if (-departPosCode == DEPART_POS_BASE) {
+                } else if (-departPosCode == (int)DepartPosDefinition::BASE) {
                     departPos = "base";
-                } else if (-departPosCode == DEPART_POS_LAST) {
+                } else if (-departPosCode == (int)DepartPosDefinition::LAST) {
                     departPos = "last";
-                } else if (-departPosCode == DEPART_POS_GIVEN) {
+                } else if (-departPosCode == (int)DepartPosDefinition::GIVEN) {
                     return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "Invalid departure position.", outputStorage);
                 }
 
@@ -927,13 +916,13 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                     return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "Fifth parameter (speed) requires a double.", outputStorage);
                 }
                 std::string departSpeed = toString(departSpeedCode);
-                if (-departSpeedCode == DEPART_SPEED_RANDOM) {
+                if (-departSpeedCode == (int)DepartSpeedDefinition::RANDOM) {
                     departSpeed = "random";
-                } else if (-departSpeedCode == DEPART_SPEED_MAX) {
+                } else if (-departSpeedCode == (int)DepartSpeedDefinition::MAX) {
                     departSpeed = "max";
-                } else if (-departSpeedCode == DEPART_SPEED_DESIRED) {
+                } else if (-departSpeedCode == (int)DepartSpeedDefinition::DESIRED) {
                     departSpeed = "desired";
-                } else if (-departSpeedCode == DEPART_SPEED_LIMIT) {
+                } else if (-departSpeedCode == (int)DepartSpeedDefinition::LIMIT) {
                     departSpeed = "speedLimit";
                 }
 
@@ -942,15 +931,15 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                     return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "Sixth parameter (lane) requires a byte.", outputStorage);
                 }
                 std::string departLane = toString(departLaneCode);
-                if (-departLaneCode == DEPART_LANE_RANDOM) {
+                if (-departLaneCode == (int)DepartLaneDefinition::RANDOM) {
                     departLane = "random";
-                } else if (-departLaneCode == DEPART_LANE_FREE) {
+                } else if (-departLaneCode == (int)DepartLaneDefinition::FREE) {
                     departLane = "free";
-                } else if (-departLaneCode == DEPART_LANE_ALLOWED_FREE) {
+                } else if (-departLaneCode == (int)DepartLaneDefinition::ALLOWED_FREE) {
                     departLane = "allowed";
-                } else if (-departLaneCode == DEPART_LANE_BEST_FREE) {
+                } else if (-departLaneCode == (int)DepartLaneDefinition::BEST_FREE) {
                     departLane = "best";
-                } else if (-departLaneCode == DEPART_LANE_FIRST_ALLOWED) {
+                } else if (-departLaneCode == (int)DepartLaneDefinition::FIRST_ALLOWED) {
                     departLane = "first";
                 }
                 libsumo::Vehicle::add(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
@@ -1198,5 +1187,28 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     return true;
 }
 
+void
+TraCIServerAPI_Vehicle::writeNextStops(TraCIServer& server, const std::string& id, int limit) {
+    std::vector<libsumo::TraCINextStopData> nextStops = libsumo::Vehicle::getNextStops(id, limit);
+    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_COMPOUND);
+    const int cnt = 1 + (int)nextStops.size() * 4;
+    server.getWrapperStorage().writeInt(cnt);
+    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_INTEGER);
+    server.getWrapperStorage().writeInt((int)nextStops.size());
+    for (std::vector<libsumo::TraCINextStopData>::iterator it = nextStops.begin(); it != nextStops.end(); ++it) {
+        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
+        server.getWrapperStorage().writeString(it->lane);
+        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_DOUBLE);
+        server.getWrapperStorage().writeDouble(it->endPos);
+        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
+        server.getWrapperStorage().writeString(it->stoppingPlaceID);
+        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_INTEGER);
+        server.getWrapperStorage().writeInt(it->stopFlags);
+        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_DOUBLE);
+        server.getWrapperStorage().writeDouble(it->duration);
+        server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_DOUBLE);
+        server.getWrapperStorage().writeDouble(it->until);
+    }
+}
 
 /****************************************************************************/

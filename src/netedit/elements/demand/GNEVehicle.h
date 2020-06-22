@@ -184,12 +184,6 @@ public:
 
     /// @name members and functions relative to elements common to all demand elements
     /// @{
-    /// @brief obtain from edge of this demand element
-    GNEEdge* getFromEdge() const;
-
-    /// @brief obtain to edge of this demand element
-    GNEEdge* getToEdge() const;
-
     /// @brief obtain VClass related with this demand element
     SUMOVehicleClass getVClass() const;
 
@@ -221,9 +215,6 @@ public:
 
     /// @brief update dotted contour
     void updateDottedContour();
-
-    /// @brief partial update pre-computed geometry information
-    void updatePartialGeometry(const GNEEdge* edge);
 
     /// @brief compute path
     void computePath();
@@ -264,6 +255,19 @@ public:
      * @see GUIGlObject::drawGL
      */
     void drawGL(const GUIVisualizationSettings& s) const;
+
+    /**@brief Draws partial object
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] lane lane in which draw partial
+    */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const;
+
+    /**@brief Draws partial object (junction)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] fromLane from GNELane
+     * @param[in] toLane to GNELane
+     */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const;
     /// @}
 
     /// @brief inherited from GNEAttributeCarrier
@@ -331,18 +335,6 @@ private:
 
     /// @brief method for enabling the attribute and nothing else (used in GNEChange_EnableAttribute)
     void setEnabledAttribute(const int enabledAttributes);
-
-    /// @brief update spread geometry
-    void updateSpreadGeometry();
-
-    /// @brief partial update pre-computed spread geometry information
-    void updatePartialSpreadGeometry(const GNEEdge* edge);
-
-    /// @brief update stacked geometry
-    void updateStackedGeometry();
-
-    /// @brief partial update pre-computed departPosgeometry information
-    void updatePartialStackedGeometry(const GNEEdge* edge);
 
     /// @brief draw stack label
     void drawStackLabel(const Position& vehiclePosition, const double vehicleRotation, const double width, const double length) const;

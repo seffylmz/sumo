@@ -78,7 +78,7 @@ GNEVehicleFrame::HelpCreation::updateHelpCreation() {
                     << "- Select two edges to\n"
                     << "  create a Trip.";
             break;
-        case SUMO_TAG_ROUTEFLOW:
+        case GNE_TAG_FLOW_ROUTE:
             information
                     << "- Click over a route to\n"
                     << "  create a routeFlow.";
@@ -111,8 +111,8 @@ GNEVehicleFrame::GNEVehicleFrame(FXHorizontalFrame* horizontalFrameParent, GNEVi
     // Create vehicle parameters
     myVehicleAttributes = new GNEFrameAttributesModuls::AttributesCreator(this);
 
-    // create EdgePathCreator Modul
-    myEdgePathCreator = new GNEFrameModuls::EdgePathCreator(this, GNEFrameModuls::EdgePathCreator::Modes::FROM_TO_VIA);
+    // create PathCreator Modul
+    myPathCreator = new GNEFrameModuls::PathCreator(this);
 
     // Create Help Creation Modul
     myHelpCreation = new HelpCreation(this);
@@ -134,10 +134,22 @@ GNEVehicleFrame::show() {
 }
 
 
+void
+GNEVehicleFrame::hide() {
+    // reset candidate edges
+    for (const auto& edge : myViewNet->getNet()->getAttributeCarriers()->getEdges()) {
+        edge.second->resetCandidateFlags();
+    }
+    // hide frame
+    GNEFrame::hide();
+}
+
+
 bool
-GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor) {
+GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed) {
     // obtain tag (only for improve code legibility)
     SumoXMLTag vehicleTag = myVehicleTagSelector->getCurrentTagProperties().getTag();
+    const bool addEdge = ((vehicleTag == SUMO_TAG_TRIP) || (vehicleTag == GNE_TAG_VEHICLE_WITHROUTE) || (vehicleTag == SUMO_TAG_FLOW) || (vehicleTag == GNE_TAG_FLOW_WITHROUTE));
     // first check that current selected vehicle is valid
     if (vehicleTag == SUMO_TAG_NOTHING) {
         myViewNet->setStatusBarText("Current selected vehicle isn't valid.");
@@ -157,12 +169,12 @@ GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsU
     std::map<SumoXMLAttr, std::string> valuesMap = myVehicleAttributes->getAttributesAndValues(false);
     // Check if ID has to be generated
     if (valuesMap.count(SUMO_ATTR_ID) == 0) {
-        valuesMap[SUMO_ATTR_ID] = myViewNet->getNet()->generateDemandElementID("", vehicleTag);
+        valuesMap[SUMO_ATTR_ID] = myViewNet->getNet()->generateDemandElementID(vehicleTag);
     }
     // add VType
     valuesMap[SUMO_ATTR_TYPE] = myVTypeSelector->getCurrentDemandElement()->getID();
     // set route or edges depending of vehicle type
-    if ((vehicleTag == SUMO_TAG_VEHICLE) || (vehicleTag == SUMO_TAG_ROUTEFLOW)) {
+    if ((vehicleTag == SUMO_TAG_VEHICLE) || (vehicleTag == GNE_TAG_FLOW_ROUTE)) {
         if (objectsUnderCursor.getDemandElementFront() && (objectsUnderCursor.getDemandElementFront()->getTagProperty().isRoute())) {
             // obtain route
             valuesMap[SUMO_ATTR_ROUTE] = (objectsUnderCursor.getDemandElementFront()->getTagProperty().getTag() == SUMO_TAG_ROUTE) ? objectsUnderCursor.getDemandElementFront()->getID() : "embedded";
@@ -198,8 +210,6 @@ GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsU
                     // check if we're creating a vehicle over a existent route or over a embedded route
                     if (objectsUnderCursor.getDemandElementFront()->getTagProperty().getTag() == SUMO_TAG_ROUTE) {
                         GNERouteHandler::buildVehicleOverRoute(myViewNet->getNet(), true, *vehicleParameters);
-                    } else {
-                        GNERouteHandler::buildVehicleWithEmbeddedRoute(myViewNet->getNet(), true, *vehicleParameters, objectsUnderCursor.getDemandElementFront());
                     }
                     // delete vehicleParameters
                     delete vehicleParameters;
@@ -221,8 +231,6 @@ GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsU
                     // check if we're creating a vehicle over a existent route or over a embedded route
                     if (objectsUnderCursor.getDemandElementFront()->getTagProperty().getTag() == SUMO_TAG_ROUTE) {
                         GNERouteHandler::buildFlowOverRoute(myViewNet->getNet(), true, *routeFlowParameters);
-                    } else {
-                        GNERouteHandler::buildFlowWithEmbeddedRoute(myViewNet->getNet(), true, *routeFlowParameters, objectsUnderCursor.getDemandElementFront());
                     }
                     // delete routeFlowParameters
                     delete routeFlowParameters;
@@ -236,18 +244,18 @@ GNEVehicleFrame::addVehicle(const GNEViewNetHelper::ObjectsUnderCursor& objectsU
             myViewNet->setStatusBarText(toString(vehicleTag) + " has to be placed within a route.");
             return false;
         }
-    } else if (((vehicleTag == SUMO_TAG_TRIP) || (vehicleTag == SUMO_TAG_FLOW)) && objectsUnderCursor.getEdgeFront()) {
-        // add clicked edge in EdgePathCreator
-        return myEdgePathCreator->addPathEdge(objectsUnderCursor.getEdgeFront());
+    } else if (addEdge && objectsUnderCursor.getEdgeFront()) {
+        // add clicked edge in PathCreator
+        return myPathCreator->addEdge(objectsUnderCursor.getEdgeFront(), keyPressed.shiftKeyPressed(), keyPressed.controlKeyPressed());
     } else {
         return false;
     }
 }
 
 
-GNEFrameModuls::EdgePathCreator*
-GNEVehicleFrame::getEdgePathCreator() const {
-    return myEdgePathCreator;
+GNEFrameModuls::PathCreator*
+GNEVehicleFrame::getPathCreator() const {
+    return myPathCreator;
 }
 
 // ===========================================================================
@@ -259,13 +267,8 @@ GNEVehicleFrame::tagSelected() {
     if (myVehicleTagSelector->getCurrentTagProperties().getTag() != SUMO_TAG_NOTHING) {
         // show vehicle type selector modul
         myVTypeSelector->showDemandElementSelector();
-        // show AutoRute creator if we're editing a trip
-        if ((myVehicleTagSelector->getCurrentTagProperties().getTag() == SUMO_TAG_TRIP) ||
-                (myVehicleTagSelector->getCurrentTagProperties().getTag() == SUMO_TAG_FLOW)) {
-            myEdgePathCreator->showEdgePathCreator();
-        } else {
-            myEdgePathCreator->hideEdgePathCreator();
-        }
+        // show path creator modul
+        myPathCreator->showPathCreatorModul(myVehicleTagSelector->getCurrentTagProperties().getTag(), false, false);
     } else {
         // hide all moduls if vehicle isn't valid
         myVTypeSelector->hideDemandElementSelector();
@@ -281,7 +284,7 @@ GNEVehicleFrame::demandElementSelected() {
         // show vehicle attributes modul
         myVehicleAttributes->showAttributesCreatorModul(myVehicleTagSelector->getCurrentTagProperties(), {});
         // set current VTypeClass in TripCreator
-        myEdgePathCreator->setVClass(myVTypeSelector->getCurrentDemandElement()->getVClass());
+        myPathCreator->setVClass(myVTypeSelector->getCurrentDemandElement()->getVClass());
         // show help creation
         myHelpCreation->showHelpCreation();
     } else {
@@ -295,25 +298,26 @@ GNEVehicleFrame::demandElementSelected() {
 
 
 void
-GNEVehicleFrame::edgePathCreated() {
-    // first check that we have at least two edges
-    if (myEdgePathCreator->getClickedEdges().size() > 1) {
-        // obtain tag (only for improve code legibility)
-        SumoXMLTag vehicleTag = myVehicleTagSelector->getCurrentTagProperties().getTag();
+GNEVehicleFrame::createPath() {
+    // obtain tag (only for improve code legibility)
+    SumoXMLTag vehicleTag = myVehicleTagSelector->getCurrentTagProperties().getTag();
+    const bool embebbedRoute = ((vehicleTag == GNE_TAG_VEHICLE_WITHROUTE) || (vehicleTag == GNE_TAG_FLOW_WITHROUTE));
+    // check number of edges
+    if ((myPathCreator->getSelectedEdges().size() > 1) || (myPathCreator->getSelectedEdges().size() > 0 && embebbedRoute)) {
         // Declare map to keep attributes from Frames from Frame
         std::map<SumoXMLAttr, std::string> valuesMap = myVehicleAttributes->getAttributesAndValues(false);
         // Check if ID has to be generated
         if (valuesMap.count(SUMO_ATTR_ID) == 0) {
-            valuesMap[SUMO_ATTR_ID] = myViewNet->getNet()->generateDemandElementID("", vehicleTag);
+            valuesMap[SUMO_ATTR_ID] = myViewNet->getNet()->generateDemandElementID(vehicleTag);
         }
         // add VType
         valuesMap[SUMO_ATTR_TYPE] = myVTypeSelector->getCurrentDemandElement()->getID();
         // extract via attribute
         std::vector<GNEEdge*> viaEdges;
-        for (int i = 1; i < ((int)myEdgePathCreator->getClickedEdges().size() - 1); i++) {
-            viaEdges.push_back(myEdgePathCreator->getClickedEdges().at(i));
+        for (int i = 1; i < ((int)myPathCreator->getSelectedEdges().size() - 1); i++) {
+            viaEdges.push_back(myPathCreator->getSelectedEdges().at(i));
         }
-        // check if we're creating a trip or flow
+        // continue depending of tag
         if (vehicleTag == SUMO_TAG_TRIP) {
             // Add parameter departure
             if (valuesMap[SUMO_ATTR_DEPART].empty()) {
@@ -324,10 +328,30 @@ GNEVehicleFrame::edgePathCreated() {
             // obtain trip parameters
             SUMOVehicleParameter* tripParameters = SUMOVehicleParserHelper::parseVehicleAttributes(vehicleTag, SUMOSAXAttrs, false);
             // build trip in GNERouteHandler
-            GNERouteHandler::buildTrip(myViewNet->getNet(), true, *tripParameters, myEdgePathCreator->getClickedEdges().front(), myEdgePathCreator->getClickedEdges().back(), viaEdges);
+            GNERouteHandler::buildTrip(myViewNet->getNet(), true, *tripParameters, myPathCreator->getSelectedEdges().front(), myPathCreator->getSelectedEdges().back(), viaEdges);
             // delete tripParameters
             delete tripParameters;
-        } else {
+        } else if (vehicleTag == GNE_TAG_VEHICLE_WITHROUTE) {
+            // Add parameter departure
+            if (valuesMap[SUMO_ATTR_DEPART].empty()) {
+                valuesMap[SUMO_ATTR_DEPART] = "0";
+            }
+            // get route edges
+            std::vector<GNEEdge*> routeEdges;
+            for (const auto &subPath : myPathCreator->getPath()) {
+                for (const auto &edge : subPath.getSubPath()) {
+                    routeEdges.push_back(edge);
+                }
+            }
+            // declare SUMOSAXAttributesImpl_Cached to convert valuesMap into SUMOSAXAttributes
+            SUMOSAXAttributesImpl_Cached SUMOSAXAttrs(valuesMap, getPredefinedTagsMML(), toString(vehicleTag));
+            // obtain vehicle parameters
+            SUMOVehicleParameter* vehicleParamters = SUMOVehicleParserHelper::parseVehicleAttributes(vehicleTag, SUMOSAXAttrs, false);
+            // build vehicle with embebbed route in GNERouteHandler
+            GNERouteHandler::buildVehicleEmbeddedRoute(myViewNet->getNet(), true, *vehicleParamters, routeEdges);
+            // delete vehicleParamters
+            delete vehicleParamters;
+        } else if (vehicleTag == GNE_TAG_FLOW_ROUTE) {
             // set begin and end attributes
             if (valuesMap[SUMO_ATTR_BEGIN].empty()) {
                 valuesMap[SUMO_ATTR_BEGIN] = "0";
@@ -337,10 +361,32 @@ GNEVehicleFrame::edgePathCreated() {
             // obtain flow parameters
             SUMOVehicleParameter* flowParameters = SUMOVehicleParserHelper::parseFlowAttributes(SUMOSAXAttrs, false, 0, SUMOTime_MAX);
             // build flow in GNERouteHandler
-            GNERouteHandler::buildFlow(myViewNet->getNet(), true, *flowParameters, myEdgePathCreator->getClickedEdges().front(), myEdgePathCreator->getClickedEdges().back(), viaEdges);
+            GNERouteHandler::buildFlow(myViewNet->getNet(), true, *flowParameters, myPathCreator->getSelectedEdges().front(), myPathCreator->getSelectedEdges().back(), viaEdges);
+            // delete flowParameters
+            delete flowParameters;
+        } else if (vehicleTag == GNE_TAG_FLOW_WITHROUTE) {
+            // set begin and end attributes
+            if (valuesMap[SUMO_ATTR_BEGIN].empty()) {
+                valuesMap[SUMO_ATTR_BEGIN] = "0";
+            }
+            // get route edges
+            std::vector<GNEEdge*> routeEdges;
+            for (const auto &subPath : myPathCreator->getPath()) {
+                for (const auto &edge : subPath.getSubPath()) {
+                    routeEdges.push_back(edge);
+                }
+            }
+            // declare SUMOSAXAttributesImpl_Cached to convert valuesMap into SUMOSAXAttributes
+            SUMOSAXAttributesImpl_Cached SUMOSAXAttrs(valuesMap, getPredefinedTagsMML(), toString(vehicleTag));
+            // obtain flow parameters
+            SUMOVehicleParameter* flowParameters = SUMOVehicleParserHelper::parseFlowAttributes(SUMOSAXAttrs, false, 0, SUMOTime_MAX);
+            // build flow with embebbed route in GNERouteHandler
+            GNERouteHandler::buildFlowEmbeddedRoute(myViewNet->getNet(), true, *flowParameters, routeEdges);
             // delete flowParameters
             delete flowParameters;
         }
+        // abort path creation
+        myPathCreator->abortPathCreation();
         // refresh myVehicleAttributes
         myVehicleAttributes->refreshRows();
     }

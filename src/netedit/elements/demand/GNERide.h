@@ -35,23 +35,53 @@ class GNEVehicle;
 class GNERide : public GNEDemandElement, public Parameterised {
 
 public:
-    /**@brief parameter constructor for rideEdges
-     * @param[in] viewNet view in which this Ride is placed
-     * @param[in] personParent person parent
-     * @param[in] edges list of consecutive edges of this ride
-     * @param[in] arrivalPosition arrival position on the destination edge
-     */
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Ride is placed
+    * @param[in] personParent person parent
+    * @param[in] fromEdge from edge
+    * @param[in] toEdge to edge
+    * @param[in] arrivalPosition arrival position on the destination edge
+    * @param[in] types list of possible vehicle types to take
+    * @param[in] modes list of possible traffic modes
+    */
     GNERide(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge,
-            const std::vector<GNEEdge*>& via, double arrivalPosition, const std::vector<std::string>& lines);
+        double arrivalPosition, const std::vector<std::string>& lines);
 
-    /**@brief parameter constructor for rideBusStop
-     * @param[in] viewNet view in which this Ride is placed
-     * @param[in] personParent person parent
-     * @param[in] edges list of consecutive edges of this ride
-     * @param[in] busStop destination busStop
-     */
-    GNERide(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* busStop,
-            const std::vector<GNEEdge*>& via, const std::vector<std::string>& lines);
+    /**@brief parameter constructor for person edge->busStop
+    * @param[in] viewNet view in which this Ride is placed
+    * @param[in] personParent person parent
+    * @param[in] fromEdge from edge
+    * @param[in] toBusStop to busStop
+    * @param[in] arrivalPosition arrival position on the destination edge
+    * @param[in] types list of possible vehicle types to take
+    * @param[in] modes list of possible traffic modes
+    */
+    GNERide(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* toBusStop,
+        double arrivalPosition, const std::vector<std::string>& lines);
+
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Ride is placed
+    * @param[in] personParent person parent
+    * @param[in] fromBusStop from busStop
+    * @param[in] toEdge to edge
+    * @param[in] arrivalPosition arrival position on the destination edge
+    * @param[in] types list of possible vehicle types to take
+    * @param[in] modes list of possible traffic modes
+    */
+    GNERide(GNENet* net, GNEDemandElement* personParent, GNEAdditional* fromBusStop, GNEEdge* toEdge,
+        double arrivalPosition, const std::vector<std::string>& lines);
+
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Ride is placed
+    * @param[in] personParent person parent
+    * @param[in] fromBusStop from busStop
+    * @param[in] toBusStop to busStop
+    * @param[in] arrivalPosition arrival position on the destination edge
+    * @param[in] types list of possible vehicle types to take
+    * @param[in] modes list of possible traffic modes
+    */
+    GNERide(GNENet* net, GNEDemandElement* personParent, GNEAdditional* fromBusStop, GNEAdditional* toBusStop,
+        double arrivalPosition, const std::vector<std::string>& lines);
 
     /// @brief destructor
     ~GNERide();
@@ -72,12 +102,6 @@ public:
 
     /// @name members and functions relative to elements common to all demand elements
     /// @{
-    /// @brief obtain from edge of this demand element
-    GNEEdge* getFromEdge() const;
-
-    /// @brief obtain to edge of this demand element
-    GNEEdge* getToEdge() const;
-
     /// @brief obtain VClass related with this demand element
     SUMOVehicleClass getVClass() const;
 
@@ -109,9 +133,6 @@ public:
 
     /// @brief update dotted contour
     void updateDottedContour();
-
-    /// @brief partial update pre-computed geometry information
-    void updatePartialGeometry(const GNEEdge* edge);
 
     /// @brief compute path
     void computePath();
@@ -153,6 +174,19 @@ public:
      * @see GUIGlObject::drawGL
      */
     void drawGL(const GUIVisualizationSettings& s) const;
+
+    /**@brief Draws partial object
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] lane lane in which draw partial
+    */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const;
+
+    /**@brief Draws partial object (junction)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] fromLane from GNELane
+     * @param[in] toLane to GNELane
+     */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const;
     /// @}
 
     /// @brief inherited from GNEAttributeCarrier

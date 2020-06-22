@@ -24,6 +24,7 @@ from __future__ import absolute_import
 import copy
 import struct
 import warnings
+from functools import wraps
 
 from . import constants as tc
 from .storage import Storage
@@ -33,11 +34,40 @@ _defaultDomains = []
 
 
 def _readParameterWithKey(result):
-    result.read("!iB")
-    key = result.readString()
-    result.read("!B")
-    val = result.readString()
+    assert result.read("!i")[0] == 2  # compound size
+    key = result.readTypedString()
+    val = result.readTypedString()
     return key, val
+
+
+def _parse(valueFunc, varID, data):
+    varType = data.read("!B")[0]
+    if varID in valueFunc:
+        return valueFunc[varID](data)
+    if varType in (tc.POSITION_2D, tc.POSITION_LON_LAT):
+        return data.read("!dd")
+    if varType in (tc.POSITION_3D, tc.POSITION_LON_LAT_ALT):
+        return data.read("!ddd")
+    if varType == tc.TYPE_POLYGON:
+        return data.readShape()
+    if varType == tc.TYPE_UBYTE:
+        return data.read("!B")[0]
+    if varType == tc.TYPE_BYTE:
+        return data.read("!b")[0]
+    if varType == tc.TYPE_INTEGER:
+        return data.readInt()
+    if varType == tc.TYPE_DOUBLE:
+        return data.readDouble()
+    if varType == tc.TYPE_STRING:
+        return data.readString()
+    if varType == tc.TYPE_STRINGLIST:
+        return data.readStringList()
+    if varType == tc.TYPE_DOUBLELIST:
+        n = data.read("!i")[0]
+        return tuple([data.readDouble() for i in range(n)])
+    if varType == tc.TYPE_COLOR:
+        return data.read("!BBBB")
+    raise FatalTraCIError("Unknown variable %02x or invalid type %02x." % (varID, varType))
 
 
 class SubscriptionResults:
@@ -47,11 +77,6 @@ class SubscriptionResults:
         self._contextResults = {}
         self._valueFunc = valueFunc
 
-    def _parse(self, varID, data):
-        if varID not in self._valueFunc:
-            raise FatalTraCIError("Unknown variable %02x." % varID)
-        return self._valueFunc[varID](data)
-
     def reset(self):
         self._results.clear()
         self._contextResults.clear()
@@ -59,12 +84,12 @@ class SubscriptionResults:
     def add(self, refID, varID, data):
         if refID not in self._results:
             self._results[refID] = {}
-        self._results[refID][varID] = self._parse(varID, data)
+        self._results[refID][varID] = _parse(self._valueFunc, varID, data)
 
     def get(self, refID=None):
         if refID is None:
             return self._results
-        return self._results.get(refID, None)
+        return self._results.get(refID, {})
 
     def addContext(self, refID, domain, objID, varID=None, data=None):
         if refID not in self._contextResults:
@@ -72,13 +97,12 @@ class SubscriptionResults:
         if objID not in self._contextResults[refID]:
             self._contextResults[refID][objID] = {}
         if varID is not None and data is not None:
-            self._contextResults[refID][objID][
-                varID] = domain._parse(varID, data)
+            self._contextResults[refID][objID][varID] = _parse(self._valueFunc, varID, data)
 
     def getContext(self, refID=None):
         if refID is None:
             return self._contextResults
-        return self._contextResults.get(refID, None)
+        return self._contextResults.get(refID, {})
 
     def __repr__(self):
         return "<%s, %s>" % (self._results, self._contextResults)
@@ -89,7 +113,8 @@ class Domain:
     def __init__(self, name, cmdGetID, cmdSetID,
                  subscribeID, subscribeResponseID,
                  contextID, contextResponseID,
-                 retValFunc, deprecatedFor=None):
+                 retValFunc=None, deprecatedFor=None,
+                 subscriptionDefault=(tc.TRACI_ID_LIST,)):
         self._name = name
         self._cmdGetID = cmdGetID
         self._cmdSetID = cmdSetID
@@ -97,12 +122,13 @@ class Domain:
         self._subscribeResponseID = subscribeResponseID
         self._contextID = contextID
         self._contextResponseID = contextResponseID
-        self._retValFunc = {tc.TRACI_ID_LIST: Storage.readStringList,
-                            tc.ID_COUNT: Storage.readInt,
-                            tc.VAR_PARAMETER_WITH_KEY: _readParameterWithKey}
-        self._retValFunc.update(retValFunc)
+        self._retValFunc = {tc.VAR_PARAMETER_WITH_KEY: _readParameterWithKey}
+        if retValFunc is not None:
+            self._retValFunc.update(retValFunc)
         self._deprecatedFor = deprecatedFor
+        self._subscriptionDefault = subscriptionDefault
         self._connection = None
+        self._traceFile = None
         _defaultDomains.append(self)
 
     def _register(self, connection, mapping):
@@ -117,14 +143,47 @@ class Domain:
     def _setConnection(self, connection):
         self._connection = connection
 
-    def _getUniversal(self, varID, objectID=""):
+    def _setTraceFile(self, traceFile):
+        if self._traceFile is None:
+            # decorate all methods
+            for attrName in dir(self):
+                if not attrName.startswith("_"):
+                    attr = getattr(self, attrName)
+                    if callable(attr):
+                        setattr(self, attrName, self._addTracing(attr))
+        self._traceFile = traceFile
+
+    def _addTracing(self, method):
+        @wraps(method)
+        def tracingWrapper(*args, **kwargs):
+            self._traceFile.write("traci.%s.%s(%s)\n" % (
+                self._name,
+                method.__name__,
+                ', '.join(list(map(repr, args)) + ["%s=%s" % (n, repr(v)) for n, v in kwargs.items()])))
+            return method(*args, **kwargs)
+        return tracingWrapper
+
+    def _getUniversal(self, varID, objectID="", format="", *values):
         if self._deprecatedFor:
-            warnings.warn("The domain %s is deprecated, use %s instead." % (
-                self._name, self._deprecatedFor))
+            warnings.warn("The domain %s is deprecated, use %s instead." % (self._name, self._deprecatedFor))
+        return _parse(self._retValFunc, varID, self._getCmd(varID, objectID, format, *values))
+
+    def _getCmd(self, varID, objID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        result = self._connection._sendReadOneStringCmd(self._cmdGetID, varID, objectID)
-        return self._retValFunc[varID](result)
+        r = self._connection._sendCmd(self._cmdGetID, varID, objID, format, *values)
+        r.readLength()
+        response, retVarID = r.read("!BB")
+        objectID = r.readString()
+        if response - self._cmdGetID != 16 or retVarID != varID or objectID != objID:
+            raise FatalTraCIError("Received answer %s,%s,%s for command %s,%s,%s."
+                                  % (response, retVarID, objectID, self._cmdGetID, varID, objID))
+        return r
+
+    def _setCmd(self, varID, objectID, format="", *values):
+        if self._connection is None:
+            raise FatalTraCIError("Not connected.")
+        self._connection._sendCmd(self._cmdSetID, varID, objectID, format, *values)
 
     def getIDList(self):
         """getIDList() -> list(string)
@@ -146,10 +205,7 @@ class Domain:
         Subscribe to one or more object values for the given interval.
         """
         if varIDs is None:
-            if tc.LAST_STEP_VEHICLE_NUMBER in self._retValFunc:
-                varIDs = (tc.LAST_STEP_VEHICLE_NUMBER,)
-            else:
-                varIDs = (tc.TRACI_ID_LIST,)
+            varIDs = self._subscriptionDefault
         self._connection._subscribe(self._subscribeID, begin, end, objectID, varIDs)
 
     def unsubscribe(self, objectID):
@@ -188,10 +244,7 @@ class Domain:
         which are closer than dist to the object specified by objectID.
         """
         if varIDs is None:
-            if tc.LAST_STEP_VEHICLE_NUMBER in self._retValFunc:
-                varIDs = (tc.LAST_STEP_VEHICLE_NUMBER,)
-            else:
-                varIDs = (tc.TRACI_ID_LIST,)
+            varIDs = self._subscriptionDefault
         self._connection._subscribeContext(
             self._contextID, begin, end, objectID, domain, dist, varIDs)
 
@@ -209,28 +262,23 @@ class Domain:
 
         Returns the value of the given parameter for the given objID
         """
-        self._connection._beginMessage(
-            self._cmdGetID, tc.VAR_PARAMETER, objID, 1 + 4 + len(param))
-        self._connection._packString(param)
-        result = self._connection._checkResult(
-            self._cmdGetID, tc.VAR_PARAMETER, objID)
-        return result.readString()
+        return self._getUniversal(tc.VAR_PARAMETER, objID, "s", param)
 
     def getParameterWithKey(self, objID, param):
         """getParameterWithKey(string, string) -> (string, string)
 
         Returns the (key, value) tuple of the given parameter for the given objID
         """
-        self._connection._beginMessage(self._cmdGetID, tc.VAR_PARAMETER_WITH_KEY, objID, 1 + 4 + len(param))
-        self._connection._packString(param)
-        return _readParameterWithKey(self._connection._checkResult(self._cmdGetID, tc.VAR_PARAMETER_WITH_KEY, objID))
+        return self._getUniversal(tc.VAR_PARAMETER_WITH_KEY, objID, "s", param)
 
     def subscribeParameterWithKey(self, objID, key, begin=tc.INVALID_DOUBLE_VALUE, end=tc.INVALID_DOUBLE_VALUE):
         """subscribeParameterWithKey(string, string) -> None
 
         Subscribe for a generic parameter with the given key.
         """
-        self._connection._subscribe(self._subscribeID, begin, end, objID, (tc.VAR_PARAMETER_WITH_KEY,), {tc.VAR_PARAMETER_WITH_KEY: struct.pack("!Bi", tc.TYPE_STRING, len(key)) + key.encode("latin1")})
+        key = struct.pack("!Bi", tc.TYPE_STRING, len(key)) + key.encode("latin1")
+        self._connection._subscribe(self._subscribeID, begin, end, objID, (tc.VAR_PARAMETER_WITH_KEY,),
+                                    {tc.VAR_PARAMETER_WITH_KEY: key})
 
     def setParameter(self, objID, param, value):
         """setParameter(string, string, string) -> None

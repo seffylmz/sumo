@@ -10,7 +10,7 @@ permalink: /Definition_of_Vehicles,_Vehicle_Types,_and_Routes/
 | SUMO specific?     | Yes                                 |
 | XML Schema         | [routes_file.xsd](http://sumo.dlr.de/xsd/routes_file.xsd) |
 
-There are [various applications](SUMO_User_Documentation.md#data_sources_for_demand_generation)
+There are [various applications](index.md#data_sources_for_demand_generation)
 that can be used to define vehicular demand for SUMO. Of course it is
 also possible to define the demand file manually or to edit generated
 files with a text editor. Before starting, it is important to know that
@@ -128,7 +128,7 @@ are:
 | **edges**      | id list                     | The edges the vehicle shall drive along, given as their ids, separated using spaces |
 | color          | [color](#colors) | This route's color                 |
 | repeat         | int | The number of times that the edges of this route shall be repeated (default 0)  |
-| period         | time (s) | When defining a repeating route with stops and those stops use the `until` attribute, the times will be shifted forward by 'period' on each repeat |
+| cycleTime      | time (s) | When defining a repeating route with stops and those stops use the `until` attribute, the times will be shifted forward by 'cycleTime' on each repeat |
 
 There are a few important things to consider when building your own
 routes:
@@ -160,7 +160,7 @@ using [{{SUMO}}/tools/route/sort_routes.py]({{Source}}tools/route/sort_routes.py
     
 ### Repeated Routes
 When using attribute 'repeat' to repeat a route. The number of edges will be repeated the given number of times *after* driving them for the first time. 
-If route is defined as stand-alone route (defined with it's own id outside a vehicl definition), any stops defined within the route will be repeated as well. If the stops use attribute 'until', they will be shifted by attribute 'period' in each iteration.
+If route is defined as stand-alone route (defined with it's own id outside a vehicl definition), any stops defined within the route will be repeated as well. If the stops use attribute 'until', they will be shifted by attribute 'cycleTime' in each iteration.
 
 !!! caution
     When defining a route as child element of a vehicle, any defined stops will belong to the vehicle rather than the route and will not be repeated.
@@ -774,9 +774,9 @@ lists which parameter are used by which model(s).
 | lcOpposite              | The eagerness for overtaking through the opposite-direction lane. Higher values result in more lane-changing. *default: 1.0, range \[0-inf\[*                                                                                                            | LC2013         |
 | lcLookaheadLeft         | Factor for configuring the strategic lookahead distance when a change to the left is necessary (relative to right lookahead). *default: 2.0, range \]0-inf\[*                                                                                            | LC2013, SL2015 |
 | lcSpeedGainRight        | Factor for configuring the threshold asymmetry when changing to the left or to the right for speed gain. By default the decision for changing to the right takes more deliberation. Symmetry is achieved when set to 1.0. *default: 0.1, range \]0-inf\[* | LC2013, SL2015 |
-| lcSpeedGainLookahead    | Lookahead time in seconds for anticipating slow down. *default: 0, range \]0-inf\[* | LC2013, SL2015 |
+| lcSpeedGainLookahead    | Lookahead time in seconds for anticipating slow down. *default: 0, range \[0-inf\[* | LC2013, SL2015 |
 | lcCooperativeRoundabout | Factor that increases willingness to move to the inside lane in a multi-lane roundabout. *default: lcCooperative, range \]0-1[* | LC2013, SL2015 |
-| lcCooperativeSpeed      | Factor for cooperative speed adjustments. *default: lcCooperative, range \]0-1\[* | LC2013, SL2015 |
+| lcCooperativeSpeed      | Factor for cooperative speed adjustments. *default: lcCooperative, range \[0-1\]* | LC2013, SL2015 |
 | lcSublane               | The eagerness for using the configured lateral alignment within the lane. Higher values result in increased willingness to sacrifice speed for alignment. *default: 1.0, range \[0-inf\]*                                                                | SL2015         |
 | lcPushy                 | Willingness to encroach laterally on other drivers. ''default: 0, range 0 to 1                                                                                                                                                                           | SL2015         |
 | lcPushyGap              | Minimum lateral gap when encroaching laterally on other drives (alternative way to define lcPushy). ''default: minGapLat, range 0 to minGapLat                                                                                                           | SL2015         |
@@ -800,9 +800,6 @@ The parameters are set within the `<vType>`:
 
 The behavior at intersections may be configured with the parameters
 listed below.
-
-!!! note
-    These parameters are not available in version 0.30.0 and older
 
 | Attribute              | Value Type                           | Default    | Description                               |
 | ---------------------- | ------------------------------------ | ---------- | ----------------------------------------- |
@@ -955,6 +952,7 @@ Stops can be childs of vehicles, routes, persons or containers.
 | friendlyPos        | bool              | true,false                                                                                   | false              | whether invalid stop positions should be corrected automatically                                                       |
 | duration           | float(s)          | ≥0                                                                                           | \-                 | minimum duration for stopping                                                                                          |
 | until              | float(s)          | ≥0                                                                                           | \-                 | the time step at which the route continues                                                                             |
+| arrival            | float(s)          | ≥0                                                                                           | \-                 | the expected time of arrival for the stop. If this value is set, [stop-output]() will include the attribute ''arrivalDelay''.                                                                           |
 | extension          | float(s)          | ≥0                                                                                           | \-                 | the maximum time by which to extend the stop duration due to boarding persons and when waiting for expected persons / triggered stopping
 | index              | int, "end", "fit" | 0≤index≤number of stops in the route                                                         | "end"              | where to insert the stop in the vehicle's list of stops                                                                |
 | triggered          | bool              | true,false                                                                                   | false              | whether a person may end the stop                                                                                      |
@@ -982,7 +980,7 @@ Stops can be childs of vehicles, routes, persons or containers.
     Bus stops must have a length of at least 10
     
 ## startPos and endPos
-- by default vehicles will try to stop and the given endPos
+- by default vehicles will try to stop at the given endPos
 - if the vehicle comes to a halt earlier (i.e. due to a jam) then the stop counts as reached if the vehicle front is between startPos and endPos
 - if the vehicle picks up a person or container, it can do so as long as the person is between startPos and endPos
 - if the stop uses attribute 'speed', than that speed will be maintained between startPos and endPos

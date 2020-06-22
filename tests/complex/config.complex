@@ -88,6 +88,7 @@ output:([0-9]* ms){REPLACE (TIME)}
 log:Simulation.*started with{REPLACE Simulation started with}
 log:Starting server on port [0-9]*{REPLACE Starting server on port <PORT>}
 log:^Performance:{->}^Vehicles:
+log:traci.start(.*){REPLACE traci.start(ARGS)}
 net:<!--{[->]}-->
 vehroutes:<!--{[->]}-->
 vehroutes2:<!--{[->]}-->
@@ -118,6 +119,8 @@ errors:Traceback (most recent call last):{->}FatalTraCIError
 errors:data\\{REPLACE data/}
 errors:javax.xml.soap.FactoryFinder find
 errors:Warning: State was written with sumo version
+errors:Warning: Overhead wire solver (Eigen) not compiled in, expect errors in overhead wire simulation
+errors:Error: Overhead wire solver is on, but the Eigen library has not been compiled in!
 ps:%%CreationDate
 
 [unordered_text]

@@ -40,6 +40,21 @@ def print_remaining_plan(personID, comment=""):
         print("  %s: %s" % (i, traci.person.getStage(personID, i)))
 
 
+def print_prior_plan(personID, comment=""):
+    print("prio stages for '%s' %s" % (personID, comment))
+    stages = []
+    i = -1
+    while True:
+        try:
+            stages.append((i, traci.person.getStage(personID, i)))
+            i -= 1
+        except traci.TraCIException:
+            break
+    stages.reverse()
+    for i, stage in stages:
+        print("  %s: %s" % (i, stage))
+
+
 traci.start([sumolib.checkBinary('sumo'), "-c", "sumo.sumocfg", "--fcd-output", "fcd.xml"])
 # add walking person
 traci.person.add("newPerson", "3si", -10)
@@ -142,6 +157,7 @@ print("persons on edge %s at time %s: %s" % (
 traci.person.removeStages("newPerson")
 traci.person.appendWaitingStage(
     "newPerson", 10, "Jumped out of a moving vehicle. Ouch!")
+print_prior_plan("newPerson", "past plan")
 
 step()
 # change plan on junction

@@ -20,6 +20,8 @@
 #pragma once
 #include <config.h>
 
+#include <netedit/frames/GNEFrameAttributesModuls.h>
+#include <netedit/frames/GNEFrameModuls.h>
 #include <utils/common/SUMOVehicleClass.h>
 #include <utils/vehicle/SUMORouteHandler.h>
 #include <utils/xml/SUMOSAXAttributes.h>
@@ -96,8 +98,17 @@ public:
     /// @brief check if there is already a person (Person or PersonFlow) with the given ID
     static bool isPersonIdDuplicated(GNENet* net, const std::string& id);
 
-    /// @brief build functions
+    /// @name build routes
     /// @{
+
+    /// @brief build route
+    static void buildRoute(GNENet* net, bool undoDemandElements, const RouteParameter &routeParameters, const std::vector<SUMOVehicleParameter::Stop> &activeStops);
+
+    /// @}
+
+    /// @name build vehicles
+    /// @{
+
     /// @brief build a vehicle over an existent route
     static void buildVehicleOverRoute(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter& vehicleParameters);
 
@@ -105,10 +116,10 @@ public:
     static void buildFlowOverRoute(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter& vehicleParameters);
 
     /// @brief build vehicle with a embedded route
-    static void buildVehicleWithEmbeddedRoute(GNENet* net, bool undoDemandElements, SUMOVehicleParameter vehicleParameters, GNEDemandElement* embeddedRouteCopy);
+    static void buildVehicleEmbeddedRoute(GNENet* net, bool undoDemandElements, SUMOVehicleParameter vehicleParameters, const std::vector<GNEEdge*>& edges);
 
     /// @brief build flow with a embedded route
-    static void buildFlowWithEmbeddedRoute(GNENet* net, bool undoDemandElements, SUMOVehicleParameter vehicleParameters, GNEDemandElement* embeddedRouteCopy);
+    static void buildFlowEmbeddedRoute(GNENet* net, bool undoDemandElements, SUMOVehicleParameter vehicleParameters, const std::vector<GNEEdge*>& edges);
 
     /// @brief build trip
     static void buildTrip(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter& vehicleParameters, GNEEdge* fromEdge, GNEEdge* toEdge, const std::vector<GNEEdge*>& via);
@@ -118,38 +129,36 @@ public:
 
     /// @brief build stop
     static void buildStop(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter::Stop& stopParameters, GNEDemandElement* stopParent);
+    /// @}
 
+    /// @name build person
+    /// @{
     /// @brief build person
     static void buildPerson(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter& personParameters);
 
     /// @brief build person flow
     static void buildPersonFlow(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter& personFlowParameters);
+    /// @}
 
-    /// @brief build trip using a from-to edges
-    static void buildPersonTripFromTo(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, double arrivalPos,
-                                      const std::vector<std::string>& types, const std::vector<std::string>& modes);
+    /// @name build personPlan
+    /// @{
+    /// @brief build person plan functions (used in Person / PersonPlan frames)
+    static bool buildPersonPlan(SumoXMLTag tag, GNEDemandElement *personParent, GNEFrameAttributesModuls::AttributesCreator* personPlanAttributes, GNEFrameModuls::PathCreator* pathCreator);
 
-    /// @brief build trip using a from edge and a busStop
-    static void buildPersonTripBusStop(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* busStop,
-                                       const std::vector<std::string>& types, const std::vector<std::string>& modes);
+    /// @brief build person trip
+    static void buildPersonTrip(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, 
+        GNEAdditional* busStopFrom, GNEAdditional* busStopTo, double arrivalPos, const std::vector<std::string>& types, const std::vector<std::string>& modes);
 
-    /// @brief build walk using a list of consecutive edges
-    static void buildWalkEdges(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, const std::vector<GNEEdge*>& edges, double arrivalPos);
+    /// @brief build walk
+    static void buildWalk(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, 
+        GNEAdditional* busStopFrom, GNEAdditional* busStopTo, const std::vector<GNEEdge*>& edges, GNEDemandElement* route, double arrivalPos);
 
-    /// @brief build walk using a from-to edges
-    static void buildWalkFromTo(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, double arrivalPos);
-
-    /// @brief build walk using a from edge an a busStop
-    static void buildWalkBusStop(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* busStop);
-
-    /// @brief build walk using a list of consecutive edges
-    static void buildWalkRoute(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEDemandElement* route, double arrivalPos);
-
-    /// @brief build ride using a from-to edges
-    static void buildRideFromTo(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, const std::vector<std::string>& lines, double arrivalPos);
-
-    /// @brief build ride using a from edge and a busStop
-    static void buildRideBusStop(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* busStop, const std::vector<std::string>& lines);
+    /// @brief build ride
+    static void buildRide(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, 
+        GNEAdditional* busStopFrom, GNEAdditional* busStopTo, double arrivalPos, const std::vector<std::string>& lines);
+    
+    /// @brief build stop
+    static void buildPersonStop(GNENet* net, bool undoDemandElements, GNEDemandElement* personParent, GNEEdge* edge, GNEAdditional* busStop, const SUMOVehicleParameter::Stop& stopParameters);
 
     /// @}
 
@@ -185,12 +194,6 @@ public:
     static void setFlowParameters(const SumoXMLAttr attribute, int& parameters);
 
 protected:
-    /// @brief embebbe route within a vehicle
-    static void embebbeRoute(GNEVehicle* vehicle, GNEUndoList* undoList);
-
-    /// @brief separate vehicle and embedded route
-    static GNEVehicle* separateEmbeddedRoute(GNEVehicle* vehicle, GNEUndoList* undoList);
-
     /// @brief opens a type distribution for reading
     void openVehicleTypeDistribution(const SUMOSAXAttributes& attrs);
 
@@ -256,11 +259,11 @@ protected:
     /// @brief Processing of a person
     void addPerson(const SUMOSAXAttributes& attrs);
 
-    /// @brief Processing of a container
-    void addContainer(const SUMOSAXAttributes& attrs);
-
     /// @brief Processing of a ride
     void addRide(const SUMOSAXAttributes& attrs);
+
+    /// @brief Processing of a container
+    void addContainer(const SUMOSAXAttributes& attrs);
 
     /// @brief Processing of a transport
     void addTransport(const SUMOSAXAttributes& attrs);
@@ -274,6 +277,15 @@ private:
         /// @brief default constructor
         PersonPlansValues();
 
+        /// @brief update tag
+        void updateGNETag();
+
+        /// @brief check integrity
+        bool checkIntegrity() const;
+
+        /// @brief is first person plan
+        bool isFirstPersonPlan() const;
+
         /// @brief return last valid edge (used to create consecutive person plans)
         GNEEdge* getLastEdge() const;
 
@@ -281,28 +293,19 @@ private:
         SumoXMLTag tag;
 
         /// @brief from edge
-        GNEEdge* from;
+        GNEEdge* fromEdge;
 
         /// @brief to edge
-        GNEEdge* to;
-
-        /// @brief via edges
-        std::vector<GNEEdge*> via;
+        GNEEdge* toEdge;
 
         /// @brief list of edges
         std::vector<GNEEdge*> edges;
 
         /// @brief busStop
-        GNEAdditional* busStop;
+        GNEAdditional* fromBusStop;
 
-        /// @brief containerStop
-        GNEAdditional* containerStop;
-
-        /// @brief chargingStation
-        GNEAdditional* chargingStation;
-
-        /// @brief parkingArea
-        GNEAdditional* parkingArea;
+        /// @brief busStop
+        GNEAdditional* toBusStop;
 
         /// @brief arrival route
         GNEDemandElement* route;
@@ -319,18 +322,37 @@ private:
         /// @brief arrival pos
         double arrivalPos;
 
-        /// @brief laneStop
-        GNELane* laneStop;
+        /// @brief edge stop
+        GNEEdge* edgeStop;
 
         /// @brief stop parameters
         SUMOVehicleParameter::Stop stopParameters;
+
+    private:
+        /// @brief Invalidated copy constructor.
+        PersonPlansValues(PersonPlansValues*) = delete;
+
+        /// @brief Invalidated assignment operator.
+        PersonPlansValues& operator=(PersonPlansValues*) = delete;
+    };
+
+    /// @brief person value
+    struct PersonValue {
+        /// @brief add person plan value (
+        bool addPersonValue(GNENet *net, SumoXMLTag tag, const SUMOSAXAttributes& attrs);
+
+        /// @brief check person plan loaded (this will change tags, set begin and end elements, etc.)
+        bool checkPersonPlanValues();
+
+        /// @brief container for person trips loaded values
+        std::vector<PersonPlansValues> myPersonPlanValues;
     };
 
     /// @brief pointer to GNENet
     GNENet* myNet;
 
-    /// @brief container for person trips loaded values
-    std::vector<PersonPlansValues> myPersonPlanValues;
+    /// @brief NETEDIT person values
+    PersonValue myPersonValues;
 
     /// @brief NETEDIT Route Parameters
     RouteParameter myRouteParameter;

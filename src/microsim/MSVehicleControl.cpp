@@ -28,6 +28,7 @@
 #include "MSNet.h"
 #include "MSRouteHandler.h"
 #include <microsim/devices/MSVehicleDevice.h>
+#include <microsim/devices/MSDevice_Tripinfo.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/common/Named.h>
 #include <utils/common/RGBColor.h>
@@ -137,7 +138,7 @@ MSVehicleControl::isPendingRemoval(SUMOVehicle* veh) {
 
 void
 MSVehicleControl::removePending() {
-    OutputDevice* tripinfoOut = OptionsCont::getOptions().isSet("tripinfo-output") ? &OutputDevice::getDeviceByOption("tripinfo-output") : nullptr;
+    OutputDevice* const tripinfoOut = OptionsCont::getOptions().isSet("tripinfo-output") ? &OutputDevice::getDeviceByOption("tripinfo-output") : nullptr;
 #ifdef HAVE_FOX
     std::vector<SUMOVehicle*>& vehs = myPendingRemovals.getContainer();
 #else
@@ -148,10 +149,12 @@ MSVehicleControl::removePending() {
         myTotalTravelTime += STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - veh->getDeparture());
         myRunningVehNo--;
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_ARRIVED);
+        // vehicle is equipped with tripinfo device (not all vehicles are)
+        const bool hasTripinfo = veh->getDevice(typeid(MSDevice_Tripinfo)) != nullptr;
         for (MSVehicleDevice* const dev : veh->getDevices()) {
-            dev->generateOutput(tripinfoOut);
+            dev->generateOutput(hasTripinfo ? tripinfoOut : nullptr);
         }
-        if (tripinfoOut != nullptr) {
+        if (tripinfoOut != nullptr && hasTripinfo) {
             // close tag after tripinfo (possibly including emissions from another device) have been written
             tripinfoOut->closeTag();
         }
@@ -479,18 +482,21 @@ MSVehicleControl::getVehicleMeanSpeeds() const {
 
 
 int
-MSVehicleControl::getQuota(double frac) const {
+MSVehicleControl::getQuota(double frac, int loaded) const {
     frac = frac < 0 ? myScale : frac;
     if (frac < 0 || frac == 1.) {
         return 1;
     }
-    // the vehicle in question has already been loaded, hence  the '-1'
-    const int loaded = frac > 1. ? (int)(myLoadedVehNo / frac) : myLoadedVehNo - 1;
+    const int origLoaded = (loaded < 1 
+            // the vehicle in question has already been loaded, hence  the '-1'
+            ? frac > 1. ? (int)(myLoadedVehNo / frac) : myLoadedVehNo - 1
+            // given transportable number reflects only previously loaded
+            : frac > 1. ? (int)(loaded / frac) : loaded);
     const int base = (int)frac;
     const int resolution = 1000;
     const int intFrac = (int)floor((frac - base) * resolution + 0.5);
     // apply % twice to avoid integer overflow
-    if (((loaded % resolution) * intFrac) % resolution < intFrac) {
+    if (((origLoaded % resolution) * intFrac) % resolution < intFrac) {
         return base + 1;
     }
     return base;

@@ -71,9 +71,6 @@ GNEBusStop::updateGeometry() {
     // Set block icon rotation, and using their rotation for sign
     myBlockIcon.setRotation(getParentLanes().front());
 
-    // obtain parent edge
-    const GNEEdge* edge = getParentLanes().front()->getParentEdge();
-
     // update child demand elements geometry
     for (const auto& i : getChildDemandElements()) {
         // special case for person trips
@@ -81,14 +78,14 @@ GNEBusStop::updateGeometry() {
             // update previous and next person plan
             GNEDemandElement* previousDemandElement = i->getParentDemandElements().front()->getPreviousChildDemandElement(i);
             if (previousDemandElement) {
-                previousDemandElement->updatePartialGeometry(edge);
+                previousDemandElement->updatePartialGeometry(getParentLanes().front());
             }
             GNEDemandElement* nextDemandElement = i->getParentDemandElements().front()->getNextChildDemandElement(i);
             if (nextDemandElement) {
-                nextDemandElement->updatePartialGeometry(edge);
+                nextDemandElement->updatePartialGeometry(getParentLanes().front());
             }
         }
-        i->updatePartialGeometry(edge);
+        i->updatePartialGeometry(getParentLanes().front());
     }
 
     // mark dotted geometry deprecated
@@ -284,9 +281,9 @@ GNEBusStop::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList*
         case SUMO_ATTR_ID: {
             // change ID of BusStop
             undoList->p_add(new GNEChange_Attribute(this, key, value));
-            // Change Ids of all Acces children
-            for (auto i : getChildAdditionals()) {
-                i->setAttribute(SUMO_ATTR_ID, generateChildID(SUMO_TAG_ACCESS), undoList);
+            // Change IDs of all access children
+            for (const auto &access : getChildAdditionals()) {
+                access->setAttribute(SUMO_ATTR_ID, generateAdditionalChildID(SUMO_TAG_ACCESS), undoList);
             }
             break;
         }

@@ -18,6 +18,10 @@
 %rename(vehicle) Vehicle;
 %rename(vehicletype) VehicleType;
 %rename(calibrator) Calibrator;
+%rename(busstop) BusStop;
+%rename(parkingarea) ParkingArea;
+%rename(chargingstation) ChargingStation;
+%rename(overheadwire) OverheadWire;
 
 // adding dummy init and close for easier traci -> libsumo transfer
 %pythoncode %{
@@ -31,12 +35,6 @@ def hasGUI():
 
 def init(port):
     print("Warning! To make your code usable with traci and libsumo, please use traci.start instead of traci.init.")
-
-def close():
-    simulation.close()
-
-def start(args):
-    simulation.load(args[1:])
 
 def load(args):
     simulation.load(args)
@@ -270,12 +268,12 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
         for (int i = 0; i < size; i++) {
             PyTuple_SetItem(nextLanes, i, PyUnicode_FromString(iter->continuationLanes[i].c_str()));
         }
-        PyTuple_SetItem($result, index++, Py_BuildValue("(sdddNN)",
+        PyTuple_SetItem($result, index++, Py_BuildValue("(sddiNN)",
                                                         iter->laneID.c_str(),
                                                         iter->length,
                                                         iter->occupation,
                                                         iter->bestLaneOffset,
-                                                        iter->allowsContinuation,
+                                                        PyBool_FromLong(iter->allowsContinuation),
                                                         nextLanes));
     }
 };
@@ -335,11 +333,7 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
 };
 
 %typemap(out) std::pair<std::string, double> {
-    if ($1.first == "") {
-        $result = Py_None;
-    } else {
-        $result = Py_BuildValue("(sd)", $1.first.c_str(), $1.second);
-    }
+    $result = Py_BuildValue("(sd)", $1.first.c_str(), $1.second);
 };
 
 %extend libsumo::TraCIStage {
@@ -363,6 +357,11 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
 };
 
 %exceptionclass libsumo::TraCIException;
+
+%pythonappend libsumo::Vehicle::getLeader(const std::string&, double) %{
+    if val[0] == "" and vehicle._legacyGetLeader:
+        return None
+%}
 
 #endif
 
@@ -423,6 +422,11 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
 #include <libsumo/VehicleType.h>
 #include <libsumo/Vehicle.h>
 #include <libsumo/Person.h>
+#include <libsumo/Calibrator.h>
+#include <libsumo/BusStop.h>
+#include <libsumo/ParkingArea.h>
+#include <libsumo/ChargingStation.h>
+#include <libsumo/OverheadWire.h>
 %}
 
 // Process symbols in header
@@ -444,6 +448,11 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
 %include "VehicleType.h"
 %include "Vehicle.h"
 %include "Person.h"
+%include "Calibrator.h"
+%include "BusStop.h"
+%include "ParkingArea.h"
+%include "ChargingStation.h"
+%include "OverheadWire.h"
 
 #ifdef SWIGPYTHON
 %pythoncode %{
@@ -468,6 +477,7 @@ vehicle.getRightLeaders = wrapAsClassMethod(_vehicle.VehicleDomain.getRightLeade
 vehicle.getLeftFollowers = wrapAsClassMethod(_vehicle.VehicleDomain.getLeftFollowers, vehicle)
 vehicle.getLeftLeaders = wrapAsClassMethod(_vehicle.VehicleDomain.getLeftLeaders, vehicle)
 vehicle.getLaneChangeStatePretty = wrapAsClassMethod(_vehicle.VehicleDomain.getLaneChangeStatePretty, vehicle)
+vehicle._legacyGetLeader = True
 person.removeStages = wrapAsClassMethod(_person.PersonDomain.removeStages, person)
 _trafficlight.TraCIException = TraCIException
 trafficlight.setLinkState = wrapAsClassMethod(_trafficlight.TrafficLightDomain.setLinkState, trafficlight)

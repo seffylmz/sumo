@@ -226,7 +226,7 @@ openend. The following types are available:
 - Additional infrastructure for
   [detecting](Simulation/Output.md#simulated_detectors) or for
   [influencing
-  traffic](SUMO_User_Documentation.md#traffic_management_and_other_structures).
+  traffic](index.md#traffic_management_and_other_structures).
 - [Point of Interest
   (PoI)](Simulation/Shapes.md#poi_point_of_interest_definitions)
 - [Polygon](Simulation/Shapes.md#polygon_definitions)
@@ -279,6 +279,12 @@ This slider allows setting the speedFactor to values between 0 and 2.
 ## Setting Rerouter Probabilities
 
 When loading [Rerouters with routeProbReroute definitions](Simulation/Rerouter.md#assigning_a_new_route), directional arrows will be shown where the available routes diverge. Shift-Clicking on the rerouter icon or the directional arrows will set 100% probability to one of the available routes. Clicking repeatedly will cycle through the routes and again set 100% to a route.
+
+## Starting and Stopping Vehicles
+From the vehicle context menu, the current vehicle can be made to stop (at the earliest possible location with maximum deceleration). If the vehicle is currently stopped it can also be made to abort the current stop.
+
+## Removing Vehicles
+From the vehicle context menu, the current vehicle can be removed from the simulation.
 
 ## Planned Interactions
 
@@ -354,7 +360,7 @@ support coloring according to permissions.
 The default coloring scheme (*uniform*) aims to color roads in a
 realistic way and also show some basic [access
 permissions](Simulation/VehiclePermissions.md). The road colors
-have to following meaning:
+have the following meanings:
 
 - <span style="color:#808080; background:#808080">FOO</span> sidewalk (`allow="pedestrian"`)
 - <span style="color:#C0422C; background:#C0422C">FOO</span> bike lane (`allow="bicycle"`)
@@ -417,7 +423,7 @@ connections exist.
   junction visualization option *Show link tls index*.
   
 ### Check connected components
-Since version 1.4 you can show all network components that are reachable from a particular lane by right-clicking on a lane and then using the 'select reachable' menu option. A new menu opens where you have to select the vehicle class to check. After chosing a vehicle class, all reachable lanes will be added to the lane selection and the edge coloring mode will be set to 'color by selection'. 
+Since version 1.4 you can show all network components that are reachable from a particular lane by right-clicking on a lane and then using the 'select reachable' menu option. A new menu opens where you have to select the vehicle class to check. After choosing a vehicle class, all reachable lanes will be added to the lane selection and the edge coloring mode will be set to 'color by selection'. 
 Consequently, all reachable lanes will be colored blue and all unreachable lanes will be gray.
 
 # Changing the appearance/visualisation of the simulation
@@ -503,7 +509,7 @@ value/range
 | by reroute number              | count   | The number of times this vehicle has bee rerouted                                                                                                                                                             |
 | by selection                   | \-      | Colors selected and unselected vehicles differently                                                                                                                                                           |
 | by offset from best lane       | count   | By the number of immediate lane changes the vehicle must perform in order to follow its route                                                                                                                 |
-| by accleration                 | m/s^2   |                                                                                                                                                                                                               |
+| by acceleration                 | m/s^2   |                                                                                                                                                                                                               |
 | by time gap                    | s       | By the time to collide with the leader vehicle assuming constant speeds                                                                                                                                       |
 
 In addition to the vehicle shape and coloring one can display blinker
@@ -656,6 +662,12 @@ The following attributes are supported
 
 !!! note
     The contents of a decal-configuration can also be embedded in a view-settings file and thus loaded on startup. see [Configuration Files](#configuration_files)
+
+!!! note
+    When loading an image file with an embedded geo-reference (i.e. [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF)) and the simulation network also has a geo-reference, then the image will be positioned automatically.
+    
+!!! note
+    Background images for a network can be downloaded with the [tileGet tool](Tools/Misc.md#tilegetpy).
 
 ## Transparency
 
@@ -825,8 +837,11 @@ Simulation](Simulation/Shapes.md)
 ## Showing routes and route-related information
 
 - To show the route(s) of a vehicle in the simulation, right-click and
-  select *Show Current Route* or *Show all Routes*. To show only the
-  remaining portion of the current route, select *Show Future Route*.
+  select *Show Current Route* or *Show all Routes*. 
+  - To show only the remaining portion of the current route, select *Show Future Route*.
+  - The upcoming stops and their planned timing is automtically shown along the route. To show only the next round of a cyclic route (i.e. for public transport), disable the checkbox 'show looped route'
+  - Direction reversal of rail vehicles will be shown along the route with the text 'reverse' and an index.
+  - To show the index of each edge along the route, the vehicle visualization option 'Show route index' can be activated
 - Thow show the route of person, right click and select *Show Current
   Route*. To show the trajectory on a walkingarea, select *Show
   Walkingarea Path*.

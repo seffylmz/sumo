@@ -242,22 +242,16 @@ MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
                 lastEdge = myReplacedRoutes[i].edge;
             }
         }
-        myCurrentRoute->writeEdgeIDs(os, lastEdge, nullptr);
+        numWritten += myCurrentRoute->writeEdgeIDs(os, lastEdge, nullptr);
         os << "\"";
 
         if (mySaveExits) {
-            int missingExitTimes = 0;
-            int remainingWithExitTime = (int)myExits.size() - numWritten;
-            assert(remainingWithExitTime >= 0);
-            assert(remainingWithExitTime <= (int)myCurrentRoute->size());
-            if (remainingWithExitTime < (int)myCurrentRoute->size()) {
-                missingExitTimes = myCurrentRoute->size() - remainingWithExitTime;
-            }
             std::vector<std::string> exits;
             for (SUMOTime t : myExits) {
                 exits.push_back(time2string(t));
             }
-            std::vector<std::string> missing(missingExitTimes, "-1");
+            assert(numWritten >= (int)myExits.size());
+            std::vector<std::string> missing(numWritten - (int)myExits.size(), "-1");
             exits.insert(exits.end(), missing.begin(), missing.end());
             os.writeAttr("exitTimes", exits);
         }
@@ -283,20 +277,20 @@ MSDevice_Vehroutes::writeOutput(const bool hasArrived) const {
     tmp.depart = myIntendedDepart ? myHolder.getParameter().depart : myHolder.getDeparture();
     if (!MSGlobals::gUseMesoSim) {
         if (tmp.wasSet(VEHPARS_DEPARTLANE_SET)) {
-            tmp.departLaneProcedure = DEPART_LANE_GIVEN;
+            tmp.departLaneProcedure = DepartLaneDefinition::GIVEN;
             tmp.departLane = myDepartLane;
         }
         if (tmp.wasSet(VEHPARS_DEPARTPOSLAT_SET)) {
-            tmp.departPosLatProcedure = DEPART_POSLAT_GIVEN;
+            tmp.departPosLatProcedure = DepartPosLatDefinition::GIVEN;
             tmp.departPosLat = myDepartPosLat;
         }
     }
     if (tmp.wasSet(VEHPARS_DEPARTPOS_SET)) {
-        tmp.departPosProcedure = DEPART_POS_GIVEN;
+        tmp.departPosProcedure = DepartPosDefinition::GIVEN;
         tmp.departPos = myDepartPos;
     }
     if (tmp.wasSet(VEHPARS_DEPARTSPEED_SET)) {
-        tmp.departSpeedProcedure = DEPART_SPEED_GIVEN;
+        tmp.departSpeedProcedure = DepartSpeedDefinition::GIVEN;
         tmp.departSpeed = myDepartSpeed;
     }
     const std::string typeID = myHolder.getVehicleType().getID() != DEFAULT_VTYPE_ID ? myHolder.getVehicleType().getID() : "";

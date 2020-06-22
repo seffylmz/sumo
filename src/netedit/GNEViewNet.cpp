@@ -34,6 +34,7 @@
 #include <netedit/frames/common/GNEDeleteFrame.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
 #include <netedit/frames/common/GNESelectorFrame.h>
+#include <netedit/frames/common/GNEMoveFrame.h>
 #include <netedit/frames/data/GNEEdgeDataFrame.h>
 #include <netedit/frames/data/GNEEdgeRelDataFrame.h>
 #include <netedit/frames/data/GNETAZRelDataFrame.h>
@@ -240,79 +241,79 @@ GNEViewNet::doInit() {}
 
 
 void
-GNEViewNet::buildViewToolBars(GUIGlChildWindow& cw) {
+GNEViewNet::buildViewToolBars(GUIGlChildWindow* v) {
     // build coloring tools
     {
         for (auto it_names : gSchemeStorage.getNames()) {
-            cw.getColoringSchemesCombo()->appendItem(it_names.c_str());
+            v->getColoringSchemesCombo()->appendItem(it_names.c_str());
             if (it_names == myVisualizationSettings->name) {
-                cw.getColoringSchemesCombo()->setCurrentItem(cw.getColoringSchemesCombo()->getNumItems() - 1);
+                v->getColoringSchemesCombo()->setCurrentItem(v->getColoringSchemesCombo()->getNumItems() - 1);
             }
         }
-        cw.getColoringSchemesCombo()->setNumVisible(MAX2(5, (int)gSchemeStorage.getNames().size() + 1));
+        v->getColoringSchemesCombo()->setNumVisible(MAX2(5, (int)gSchemeStorage.getNames().size() + 1));
     }
     // for junctions
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Junction\tLocate a junction within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEJUNCTION), &cw, MID_LOCATEJUNCTION,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEJUNCTION), v, MID_LOCATEJUNCTION,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for edges
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Street\tLocate a street within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEEDGE), &cw, MID_LOCATEEDGE,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEEDGE), v, MID_LOCATEEDGE,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 
     // for vehicles
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Vehicle\tLocate a vehicle within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEVEHICLE), &cw, MID_LOCATEVEHICLE,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEVEHICLE), v, MID_LOCATEVEHICLE,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 
     // for person
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Person\tLocate a person within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPERSON), &cw, MID_LOCATEPERSON,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPERSON), v, MID_LOCATEPERSON,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 
     // for routes
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Route\tLocate a route within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEROUTE), &cw, MID_LOCATEROUTE,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEROUTE), v, MID_LOCATEROUTE,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 
     // for routes
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Stop\tLocate a stop within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATESTOP), &cw, MID_LOCATESTOP,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATESTOP), v, MID_LOCATESTOP,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 
     // for persons (currently unused)
     /*
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Vehicle\tLocate a person within the network.",
                  GUIIconSubSys::getIcon(GUIIcon::LOCATEPERSON), &v, MID_LOCATEPERSON,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     */
 
     // for tls
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate TLS\tLocate a tls within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATETLS), &cw, MID_LOCATETLS,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATETLS), v, MID_LOCATETLS,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for additional stuff
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Additional\tLocate an additional structure within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEADD), &cw, MID_LOCATEADD,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEADD), v, MID_LOCATEADD,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for pois
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate PoI\tLocate a PoI within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPOI), &cw, MID_LOCATEPOI,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPOI), v, MID_LOCATEPOI,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for polygons
-    new FXButton(cw.getLocatorPopup(),
+    new FXButton(v->getLocatorPopup(),
                  "\tLocate Polygon\tLocate a Polygon within the network.",
-                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPOLY), &cw, MID_LOCATEPOLY,
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPOLY), v, MID_LOCATEPOLY,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 }
 
@@ -642,6 +643,7 @@ GNEViewNet::getEdgeLaneParamKeys(bool edgeKeys) const {
 std::vector<std::string>
 GNEViewNet::getEdgeDataAttrs() const {
     std::set<std::string> keys;
+    /*
     for (const auto &edge : myNet->getAttributeCarriers()->getEdges()) {
         GNEGenericData* genericData = edge.second->getCurrentGenericDataElement();
         if (genericData != nullptr) {
@@ -650,6 +652,7 @@ GNEViewNet::getEdgeDataAttrs() const {
             }
         }
     }
+    */
     return std::vector<std::string>(keys.begin(), keys.end());
 }
 
@@ -710,14 +713,14 @@ GNEViewNet::doPaintGL(int mode, const Boundary& bound) {
         // draw testing elements
         myTestingMode.drawTestingElements(myApp);
         // draw temporal trip/flow route
-        myViewParent->getVehicleFrame()->getEdgePathCreator()->drawTemporalPath();
+        myViewParent->getVehicleFrame()->getPathCreator()->drawTemporalRoute(myVisualizationSettings);
         // draw temporal person plan route
-        myViewParent->getPersonFrame()->getEdgePathCreator()->drawTemporalPath();
-        myViewParent->getPersonPlanFrame()->getPersonPlanCreator()->drawTemporalRoute();
-        // draw temporal non consecutive edge
-        myViewParent->getRouteFrame()->drawTemporalRoute(myVisualizationSettings);
+        myViewParent->getPersonFrame()->getPathCreator()->drawTemporalRoute(myVisualizationSettings);
+        myViewParent->getPersonPlanFrame()->getPathCreator()->drawTemporalRoute(myVisualizationSettings);
+        // draw temporal route
+        myViewParent->getRouteFrame()->getPathCreator()->drawTemporalRoute(myVisualizationSettings);
         // draw temporal edgeRelPath
-        myViewParent->getEdgeRelDataFrame()->getEdgePathCreator()->drawTemporalPath();
+        myViewParent->getEdgeRelDataFrame()->getPathCreator()->drawTemporalRoute(myVisualizationSettings);
     }
     // check menu checks of supermode demand
     if (myEditModes.isCurrentSupermodeDemand()) {
@@ -953,17 +956,17 @@ GNEViewNet::abortOperation(bool clearSelection) {
                 myViewParent->getSelectorFrame()->clearCurrentSelection();
             }
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_ROUTE) {
-            myViewParent->getRouteFrame()->hotkeyEsc();
+            myViewParent->getRouteFrame()->getPathCreator()->abortPathCreation();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_VEHICLE) {
-            myViewParent->getVehicleFrame()->getEdgePathCreator()->abortEdgePathCreation();
+            myViewParent->getVehicleFrame()->getPathCreator()->abortPathCreation();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_PERSON) {
-            myViewParent->getPersonFrame()->getEdgePathCreator()->abortEdgePathCreation();
+            myViewParent->getPersonFrame()->getPathCreator()->abortPathCreation();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_PERSONPLAN) {
-            myViewParent->getPersonPlanFrame()->getPersonPlanCreator()->abortPersonPlanCreation();
+            myViewParent->getPersonPlanFrame()->getPathCreator()->abortPathCreation();
         }
     } else if (myEditModes.isCurrentSupermodeData()) {
         if (myEditModes.dataEditMode == DataEditMode::DATA_EDGERELDATA) {
-            myViewParent->getEdgeRelDataFrame()->getEdgePathCreator()->abortEdgePathCreation();
+            myViewParent->getEdgeRelDataFrame()->getPathCreator()->abortPathCreation();
         } else if (myEditModes.dataEditMode == DataEditMode::DATA_TAZRELDATA) {
             myViewParent->getTAZRelDataFrame()->clearTAZSelection();
         }
@@ -1048,17 +1051,17 @@ GNEViewNet::hotkeyEnter() {
     } else if (myEditModes.isCurrentSupermodeDemand()) {
         // abort operation depending of current mode
         if (myEditModes.demandEditMode == DemandEditMode::DEMAND_ROUTE) {
-            myViewParent->getRouteFrame()->hotkeyEnter();
+            myViewParent->getRouteFrame()->getPathCreator()->createPath();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_VEHICLE) {
-            myViewParent->getVehicleFrame()->getEdgePathCreator()->finishEdgePathCreation();
+            myViewParent->getVehicleFrame()->getPathCreator()->createPath();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_PERSON) {
-            myViewParent->getPersonFrame()->getEdgePathCreator()->finishEdgePathCreation();
+            myViewParent->getPersonFrame()->getPathCreator()->createPath();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_PERSONPLAN) {
-            myViewParent->getPersonPlanFrame()->getPersonPlanCreator()->finishPersonPlanCreation();
+            myViewParent->getPersonPlanFrame()->getPathCreator()->createPath();
         }
     } else if (myEditModes.isCurrentSupermodeData()) {
         if (myEditModes.dataEditMode == DataEditMode::DATA_EDGERELDATA) {
-            myViewParent->getEdgeRelDataFrame()->getEdgePathCreator()->finishEdgePathCreation();
+            myViewParent->getEdgeRelDataFrame()->getPathCreator()->createPath();
         }
     }
 }
@@ -1072,17 +1075,17 @@ GNEViewNet::hotkeyBackSpace() {
     } else if (myEditModes.isCurrentSupermodeDemand()) {
         // abort operation depending of current mode
         if (myEditModes.demandEditMode == DemandEditMode::DEMAND_ROUTE) {
-            myViewParent->getRouteFrame()->hotkeyBackSpace();
+            myViewParent->getRouteFrame()->getPathCreator()->removeLastElement();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_VEHICLE) {
-            myViewParent->getVehicleFrame()->getEdgePathCreator()->removeLastInsertedElement();
+            myViewParent->getVehicleFrame()->getPathCreator()->removeLastElement();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_PERSON) {
-            myViewParent->getPersonFrame()->getEdgePathCreator()->removeLastInsertedElement();
+            myViewParent->getPersonFrame()->getPathCreator()->removeLastElement();
         } else if (myEditModes.demandEditMode == DemandEditMode::DEMAND_PERSONPLAN) {
-            myViewParent->getPersonPlanFrame()->getPersonPlanCreator()->removeLastAddedElement();
+            myViewParent->getPersonPlanFrame()->getPathCreator()->removeLastElement();
         }
     } else if (myEditModes.isCurrentSupermodeData()) {
         if (myEditModes.dataEditMode == DataEditMode::DATA_EDGERELDATA) {
-            myViewParent->getEdgeRelDataFrame()->getEdgePathCreator()->removeLastInsertedElement();
+            myViewParent->getEdgeRelDataFrame()->getPathCreator()->removeLastElement();
         }
     }
 }
@@ -2473,7 +2476,7 @@ GNEViewNet::onCmdToogleDrawSpreadVehicles(FXObject*, FXSelector sel, void*) {
     for (const auto& vehicle : myNet->getAttributeCarriers()->getDemandElements().at(SUMO_TAG_VEHICLE)) {
         vehicle.second->updateGeometry();
     }
-    for (const auto& routeFlow : myNet->getAttributeCarriers()->getDemandElements().at(SUMO_TAG_ROUTEFLOW)) {
+    for (const auto& routeFlow : myNet->getAttributeCarriers()->getDemandElements().at(GNE_TAG_FLOW_ROUTE)) {
         routeFlow.second->updateGeometry();
     }
     for (const auto& trip : myNet->getAttributeCarriers()->getDemandElements().at(SUMO_TAG_TRIP)) {
@@ -2840,14 +2843,21 @@ GNEViewNet::updateNetworkModeSpecificControls() {
             break;
         // specific modes
         case NetworkEditMode::NETWORK_CREATE_EDGE:
+            myViewParent->getCreateEdgeFrame()->show();
+            myViewParent->getCreateEdgeFrame()->focusUpperElement();
+            myCurrentFrame = myViewParent->getCreateEdgeFrame();
+            myNetworkCheckableButtons.createEdgeButton->setChecked(true);
             // show view options
             myNetworkViewOptions.menuCheckChainEdges->show();
             myNetworkViewOptions.menuCheckAutoOppositeEdge->show();
-            myNetworkCheckableButtons.createEdgeButton->setChecked(true);
             // show toolbar grip of view options
             myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions->show();
             break;
         case NetworkEditMode::NETWORK_MOVE:
+            myViewParent->getMoveFrame()->show();
+            myViewParent->getMoveFrame()->focusUpperElement();
+            myCurrentFrame = myViewParent->getMoveFrame();
+            myNetworkCheckableButtons.moveNetworkElementsButton->setChecked(true);
             // show view options
             myNetworkViewOptions.menuCheckWarnAboutMerge->show();
             myNetworkViewOptions.menuCheckShowJunctionBubble->show();
@@ -2995,6 +3005,9 @@ GNEViewNet::updateDemandModeSpecificControls() {
             myViewParent->getGNEAppWindows()->getToolbarsGrip().modeOptions->show();
             break;
         case DemandEditMode::DEMAND_MOVE:
+            myViewParent->getMoveFrame()->show();
+            myViewParent->getMoveFrame()->focusUpperElement();
+            myCurrentFrame = myViewParent->getMoveFrame();
             // set checkable button
             myDemandCheckableButtons.moveDemandElementsButton->setChecked(true);
             // show view options
@@ -3904,49 +3917,36 @@ GNEViewNet::processLeftButtonPressDemand(void* eventData) {
             // check if we clicked over a lane
             if (myObjectsUnderCursor.getLaneFront()) {
                 // Handle edge click
-                myViewParent->getRouteFrame()->handleEdgeClick(myObjectsUnderCursor.getLaneFront()->getParentEdge(), 
-                    myKeyPressed.shiftKeyPressed(), myKeyPressed.controlKeyPressed());
+                myViewParent->getRouteFrame()->addEdgeRoute(myObjectsUnderCursor.getLaneFront()->getParentEdge(), myKeyPressed);
             }
             // process click
             processClick(eventData);
             break;
         }
         case DemandEditMode::DEMAND_VEHICLE: {
-            // make sure that Control key isn't pressed
-            if (!myKeyPressed.controlKeyPressed()) {
-                // Handle click
-                myViewParent->getVehicleFrame()->addVehicle(myObjectsUnderCursor);
-            }
+            // Handle click
+            myViewParent->getVehicleFrame()->addVehicle(myObjectsUnderCursor, myKeyPressed);
             // process click
             processClick(eventData);
             break;
         }
         case DemandEditMode::DEMAND_STOP: {
-            // make sure that Control key isn't pressed
-            if (!myKeyPressed.controlKeyPressed()) {
-                // Handle click
-                myViewParent->getStopFrame()->addStop(myObjectsUnderCursor, myKeyPressed.shiftKeyPressed());
-            }
+            // Handle click
+            myViewParent->getStopFrame()->addStop(myObjectsUnderCursor, myKeyPressed);
             // process click
             processClick(eventData);
             break;
         }
         case DemandEditMode::DEMAND_PERSON: {
-            // make sure that Control key isn't pressed
-            if (!myKeyPressed.controlKeyPressed()) {
-                // Handle click
-                myViewParent->getPersonFrame()->addPerson(myObjectsUnderCursor);
-            }
+            // Handle click
+            myViewParent->getPersonFrame()->addPerson(myObjectsUnderCursor, myKeyPressed);
             // process click
             processClick(eventData);
             break;
         }
         case DemandEditMode::DEMAND_PERSONPLAN: {
-            // make sure that Control key isn't pressed
-            if (!myKeyPressed.controlKeyPressed()) {
-                // Handle click
-                myViewParent->getPersonPlanFrame()->addPersonPlan(myObjectsUnderCursor);
-            }
+            // Handle person plan click
+            myViewParent->getPersonPlanFrame()->addPersonPlanElement(myObjectsUnderCursor, myKeyPressed);
             // process click
             processClick(eventData);
             break;
@@ -4047,7 +4047,7 @@ GNEViewNet::processLeftButtonPressData(void* eventData) {
         case DataEditMode::DATA_EDGEDATA:
             // avoid create edgeData if control key is pressed
             if (!myKeyPressed.controlKeyPressed()) {
-                if (myViewParent->getEdgeDataFrame()->addEdgeData(myObjectsUnderCursor)) {
+                if (myViewParent->getEdgeDataFrame()->addEdgeData(myObjectsUnderCursor, myKeyPressed)) {
                     // update view to show the new edge data
                     updateViewNet();
                 }
@@ -4058,7 +4058,7 @@ GNEViewNet::processLeftButtonPressData(void* eventData) {
         case DataEditMode::DATA_EDGERELDATA:
             // avoid create edgeData if control key is pressed
             if (!myKeyPressed.controlKeyPressed()) {
-                if (myViewParent->getEdgeRelDataFrame()->addEdgeRelationData(myObjectsUnderCursor)) {
+                if (myViewParent->getEdgeRelDataFrame()->addEdgeRelationData(myObjectsUnderCursor, myKeyPressed)) {
                     // update view to show the new edge data
                     updateViewNet();
                 }
@@ -4069,7 +4069,7 @@ GNEViewNet::processLeftButtonPressData(void* eventData) {
         case DataEditMode::DATA_TAZRELDATA:
             // avoid create TAZData if control key is pressed
             if (!myKeyPressed.controlKeyPressed()) {
-                if (myViewParent->getTAZRelDataFrame()->addTAZRelationData(myObjectsUnderCursor)) {
+                if (myViewParent->getTAZRelDataFrame()->addTAZRelationData(myObjectsUnderCursor, myKeyPressed)) {
                     // update view to show the new TAZ data
                     updateViewNet();
                 }

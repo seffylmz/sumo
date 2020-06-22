@@ -238,6 +238,9 @@ public:
 
     void initDevices();
 
+    /// @brief checks wether the vehicle can depart on the first edge
+    bool hasValidRouteStart(std::string& msg);
+
     /// @name insertion/removal
     //@{
 
@@ -915,6 +918,8 @@ public:
     /// @brief repair errors in vehicle position after changing between internal edges
     void fixPosition();
 
+    /// @brief return lane and position along bestlanes at the given distance
+    std::pair<const MSLane*, double> getLanePosAfterDist(double distance) const;
 
     /** @brief Returns the vehicle's car following model definition
      *
@@ -1278,7 +1283,7 @@ public:
      * @param triggered a flag indicating whether the traci stop is triggered or not
      * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
      */
-    bool addTraciStop(MSLane* const lane, const double startPos, const double endPos, const SUMOTime duration, const SUMOTime until,
+    bool addTraciStop(const MSLane* const lane, const double startPos, const double endPos, const SUMOTime duration, const SUMOTime until,
                       const bool parking, const bool triggered, const bool containerTriggered, std::string& errorMsg);
 
     /**

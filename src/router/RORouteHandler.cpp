@@ -57,6 +57,8 @@ RORouteHandler::RORouteHandler(RONet& net, const std::string& file,
                                const bool checkSchema) :
     SUMORouteHandler(file, checkSchema ? "routes" : "", true),
     myNet(net),
+    myActiveRouteRepeat(0),
+    myActiveRoutePeriod(0),
     myActivePerson(nullptr),
     myActiveContainerPlan(nullptr),
     myActiveContainerPlanSize(0),
@@ -90,10 +92,10 @@ RORouteHandler::parseFromViaTo(SumoXMLTag tag, const SUMOSAXAttributes& attrs, b
     // from-attributes
     const std::string rid = "for " + element + " '" + myVehicleParameter->id + "'";
     if ((useTaz || !attrs.hasAttribute(SUMO_ATTR_FROM)) &&
-            (myVehicleParameter->wasSet(VEHPARS_FROM_TAZ_SET) || attrs.hasAttribute(SUMO_ATTR_FROMJUNCTION))) {
-        bool useJunction = attrs.hasAttribute(SUMO_ATTR_FROMJUNCTION);
+            (attrs.hasAttribute(SUMO_ATTR_FROM_TAZ) || attrs.hasAttribute(SUMO_ATTR_FROMJUNCTION))) {
+        const bool useJunction = attrs.hasAttribute(SUMO_ATTR_FROMJUNCTION);
         const std::string tazType = useJunction ? "junction" : "taz";
-        const std::string tazID = useJunction ? attrs.get<std::string>(SUMO_ATTR_FROMJUNCTION, myVehicleParameter->id.c_str(), ok, true) : myVehicleParameter->fromTaz;
+        const std::string tazID = attrs.get<std::string>(useJunction ? SUMO_ATTR_FROMJUNCTION : SUMO_ATTR_FROM_TAZ, myVehicleParameter->id.c_str(), ok, true);
         const ROEdge* fromTaz = myNet.getEdge(tazID + "-source");
         if (fromTaz == nullptr) {
             myErrorOutput->inform("Source " + tazType + " '" + tazID + "' not known for " + element + " '" + myVehicleParameter->id + "'!"
@@ -142,10 +144,10 @@ RORouteHandler::parseFromViaTo(SumoXMLTag tag, const SUMOSAXAttributes& attrs, b
 
     // to-attributes
     if ((useTaz || !attrs.hasAttribute(SUMO_ATTR_TO)) &&
-            (myVehicleParameter->wasSet(VEHPARS_TO_TAZ_SET) || attrs.hasAttribute(SUMO_ATTR_TOJUNCTION))) {
-        bool useJunction = attrs.hasAttribute(SUMO_ATTR_TOJUNCTION);
+            (attrs.hasAttribute(SUMO_ATTR_TO_TAZ) || attrs.hasAttribute(SUMO_ATTR_TOJUNCTION))) {
+        const bool useJunction = attrs.hasAttribute(SUMO_ATTR_TOJUNCTION);
         const std::string tazType = useJunction ? "junction" : "taz";
-        const std::string tazID = useJunction ? attrs.get<std::string>(SUMO_ATTR_TOJUNCTION, myVehicleParameter->id.c_str(), ok, true) : myVehicleParameter->toTaz;
+        const std::string tazID = attrs.get<std::string>(useJunction ? SUMO_ATTR_TOJUNCTION : SUMO_ATTR_TO_TAZ, myVehicleParameter->id.c_str(), ok, true);
         const ROEdge* toTaz = myNet.getEdge(tazID + "-sink");
         if (toTaz == nullptr) {
             myErrorOutput->inform("Sink " + tazType + " '" + tazID + "' not known for " + element + " '" + myVehicleParameter->id + "'!"
@@ -342,7 +344,7 @@ RORouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
         myErrorOutput->inform("Invalid reference to route '" + myActiveRouteRefID + "' in route " + rid + ".");
     }
     if (myCurrentAlternatives != nullptr && !attrs.hasAttribute(SUMO_ATTR_PROB)) {
-        WRITE_WARNING("No probability for a route in '" + rid + "', using default.");
+        WRITE_WARNINGF("No probability for route %, using default.", rid);
     }
     myActiveRouteProbability = attrs.getOpt<double>(SUMO_ATTR_PROB, myActiveRouteID.c_str(), ok, DEFAULT_VEH_PROB);
     if (ok && myActiveRouteProbability < 0) {
@@ -350,6 +352,20 @@ RORouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
     }
     myActiveRouteColor = attrs.hasAttribute(SUMO_ATTR_COLOR) ? new RGBColor(attrs.get<RGBColor>(SUMO_ATTR_COLOR, myActiveRouteID.c_str(), ok)) : nullptr;
     ok = true;
+    myActiveRouteRepeat = attrs.getOpt<int>(SUMO_ATTR_REPEAT, myActiveRouteID.c_str(), ok, 0);
+    myActiveRoutePeriod = attrs.getOptSUMOTimeReporting(SUMO_ATTR_CYCLETIME, myActiveRouteID.c_str(), ok, 0);
+    if (myActiveRouteRepeat > 0) {
+        SUMOVehicleClass vClass = SVC_IGNORING;
+        if (myVehicleParameter != nullptr) {
+            SUMOVTypeParameter* type = myNet.getVehicleTypeSecure(myVehicleParameter->vtypeid);
+            if (type != nullptr) {
+                vClass = type->vehicleClass;
+            }
+        }
+        if (myActiveRoute.size() > 0 && !myActiveRoute.back()->isConnectedTo(*myActiveRoute.front(), vClass)) {
+            myErrorOutput->inform("Disconnected route " + rid + " when repeating.");
+        }
+    }
     myCurrentCosts = attrs.getOpt<double>(SUMO_ATTR_COST, myActiveRouteID.c_str(), ok, -1);
     if (ok && myCurrentCosts != -1 && myCurrentCosts < 0) {
         myErrorOutput->inform("Invalid cost for route '" + myActiveRouteID + "'.");
@@ -377,6 +393,14 @@ RORouteHandler::openTrip(const SUMOSAXAttributes& /*attrs*/) {
 
 void
 RORouteHandler::closeRoute(const bool mayBeDisconnected) {
+    const bool mustReroute = myActiveRoute.size() == 0 && myActiveRouteStops.size() != 0;
+    if (mustReroute) {
+        // implicit route from stops
+        for (const SUMOVehicleParameter::Stop& stop : myActiveRouteStops) {
+            ROEdge* edge = myNet.getEdge(stop.lane.substr(0, stop.lane.rfind('_')));
+            myActiveRoute.push_back(edge);
+        }
+    }
     if (myActiveRoute.size() == 0) {
         if (myActiveRouteRefID != "" && myCurrentAlternatives != nullptr) {
             myCurrentAlternatives->addAlternativeDef(myNet.getRouteDef(myActiveRouteRefID));
@@ -415,6 +439,27 @@ RORouteHandler::closeRoute(const bool mayBeDisconnected) {
             last = roe;
         }
         myActiveRoute = fullRoute;
+    }
+    if (myActiveRouteRepeat > 0) {
+        // duplicate route
+        ConstROEdgeVector tmpEdges = myActiveRoute;
+        auto tmpStops = myActiveRouteStops;
+        for (int i = 0; i < myActiveRouteRepeat; i++) {
+            myActiveRoute.insert(myActiveRoute.begin(), tmpEdges.begin(), tmpEdges.end());
+            for (SUMOVehicleParameter::Stop stop : tmpStops) {
+                if (stop.until > 0) {
+                    if (myActiveRoutePeriod <= 0) {
+                        const std::string description = myVehicleParameter != nullptr
+                            ?  "for vehicle '" + myVehicleParameter->id + "'"
+                            :  "'" + myActiveRouteID + "'";
+                        throw ProcessError("Cannot repeat stops with 'until' in route " + description + " because no cycleTime is defined.");
+                    }
+                    stop.until += myActiveRoutePeriod * (i + 1);
+                    stop.arrival += myActiveRoutePeriod * (i + 1);
+                }
+                myActiveRouteStops.push_back(stop);
+            }
+        }
     }
     RORoute* route = new RORoute(myActiveRouteID, myCurrentCosts, myActiveRouteProbability, myActiveRoute,
                                  myActiveRouteColor, myActiveRouteStops);
@@ -1037,40 +1082,45 @@ RORouteHandler::addPersonTrip(const SUMOSAXAttributes& attrs) {
 
 void
 RORouteHandler::addWalk(const SUMOSAXAttributes& attrs) {
-    // XXX allow --repair?
-    bool ok = true;
-    if (attrs.hasAttribute(SUMO_ATTR_ROUTE)) {
-        const std::string routeID = attrs.get<std::string>(SUMO_ATTR_ROUTE, myVehicleParameter->id.c_str(), ok);
-        RORouteDef* routeDef = myNet.getRouteDef(routeID);
-        const RORoute* route = routeDef != nullptr ? routeDef->getFirstRoute() : nullptr;
-        if (route == nullptr) {
-            throw ProcessError("The route '" + routeID + "' for walk of person '" + myVehicleParameter->id + "' is not known.");
+    // parse walks from->to as person trips
+    if (attrs.hasAttribute(SUMO_ATTR_EDGES) || attrs.hasAttribute(SUMO_ATTR_ROUTE)) {
+        // XXX allow --repair?
+        bool ok = true;
+        if (attrs.hasAttribute(SUMO_ATTR_ROUTE)) {
+            const std::string routeID = attrs.get<std::string>(SUMO_ATTR_ROUTE, myVehicleParameter->id.c_str(), ok);
+            RORouteDef* routeDef = myNet.getRouteDef(routeID);
+            const RORoute* route = routeDef != nullptr ? routeDef->getFirstRoute() : nullptr;
+            if (route == nullptr) {
+                throw ProcessError("The route '" + routeID + "' for walk of person '" + myVehicleParameter->id + "' is not known.");
+            }
+            myActiveRoute = route->getEdgeVector();
+        } else {
+            myActiveRoute.clear();
+            parseEdges(attrs.get<std::string>(SUMO_ATTR_EDGES, myVehicleParameter->id.c_str(), ok), myActiveRoute, " walk for person '" + myVehicleParameter->id + "'", ok);
         }
-        myActiveRoute = route->getEdgeVector();
+        const char* const objId = myVehicleParameter->id.c_str();
+        const double duration = attrs.getOpt<double>(SUMO_ATTR_DURATION, objId, ok, -1);
+        if (attrs.hasAttribute(SUMO_ATTR_DURATION) && duration <= 0) {
+            throw ProcessError("Non-positive walking duration for  '" + myVehicleParameter->id + "'.");
+        }
+        const double speed = attrs.getOpt<double>(SUMO_ATTR_SPEED, objId, ok, -1.);
+        if (attrs.hasAttribute(SUMO_ATTR_SPEED) && speed <= 0) {
+            throw ProcessError("Non-positive walking speed for  '" + myVehicleParameter->id + "'.");
+        }
+        double departPos = 0.;
+        double arrivalPos = 0.;
+        if (attrs.hasAttribute(SUMO_ATTR_DEPARTPOS)) {
+            WRITE_WARNING("The attribute departPos is no longer supported for walks, please use the person attribute, the arrivalPos of the previous step or explicit stops.");
+        }
+        if (attrs.hasAttribute(SUMO_ATTR_ARRIVALPOS)) {
+            arrivalPos = SUMOVehicleParserHelper::parseWalkPos(SUMO_ATTR_ARRIVALPOS, myHardFail, objId, myActiveRoute.back()->getLength(), attrs.get<std::string>(SUMO_ATTR_ARRIVALPOS, objId, ok));
+        }
+        const std::string busStop = attrs.getOpt<std::string>(SUMO_ATTR_BUS_STOP, objId, ok, "");
+        if (ok) {
+            myActivePerson->addWalk(myActiveRoute, duration, speed, departPos, arrivalPos, busStop);
+        }
     } else {
-        myActiveRoute.clear();
-        parseEdges(attrs.get<std::string>(SUMO_ATTR_EDGES, myVehicleParameter->id.c_str(), ok), myActiveRoute, " walk for person '" + myVehicleParameter->id + "'", ok);
-    }
-    const char* const objId = myVehicleParameter->id.c_str();
-    const double duration = attrs.getOpt<double>(SUMO_ATTR_DURATION, objId, ok, -1);
-    if (attrs.hasAttribute(SUMO_ATTR_DURATION) && duration <= 0) {
-        throw ProcessError("Non-positive walking duration for  '" + myVehicleParameter->id + "'.");
-    }
-    const double speed = attrs.getOpt<double>(SUMO_ATTR_SPEED, objId, ok, -1.);
-    if (attrs.hasAttribute(SUMO_ATTR_SPEED) && speed <= 0) {
-        throw ProcessError("Non-positive walking speed for  '" + myVehicleParameter->id + "'.");
-    }
-    double departPos = 0.;
-    double arrivalPos = 0.;
-    if (attrs.hasAttribute(SUMO_ATTR_DEPARTPOS)) {
-        WRITE_WARNING("The attribute departPos is no longer supported for walks, please use the person attribute, the arrivalPos of the previous step or explicit stops.");
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_ARRIVALPOS)) {
-        arrivalPos = SUMOVehicleParserHelper::parseWalkPos(SUMO_ATTR_ARRIVALPOS, myHardFail, objId, myActiveRoute.back()->getLength(), attrs.get<std::string>(SUMO_ATTR_ARRIVALPOS, objId, ok));
-    }
-    const std::string busStop = attrs.getOpt<std::string>(SUMO_ATTR_BUS_STOP, objId, ok, "");
-    if (ok) {
-        myActivePerson->addWalk(myActiveRoute, duration, speed, departPos, arrivalPos, busStop);
+        addPersonTrip(attrs);
     }
 }
 

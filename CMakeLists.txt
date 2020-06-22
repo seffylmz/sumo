@@ -66,7 +66,7 @@ elseif (MSVC)
     endif ()
     if (MSVC_VERSION GREATER 1914)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /experimental:external /external:W2")
-		set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I ")
+        set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I ")
     endif ()
     # exporting symbols for shared libraries needs to enabled explicitly
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -142,6 +142,7 @@ endif (APPLE)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND WIN32)
     option(USE_MINGW_64BITS "Use 64 bits libraries for the compilation with MinGW" true)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWIN32 -D_WIN32_WINNT=0x0501")
+    set(MINGW32 1)
 endif ()
 
 # Check if libraries have to be found, depending on SUMO_LIBRARIES
@@ -550,7 +551,7 @@ add_test(exampletest ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/docs/examples/runA
 find_package(Git)
 if (GIT_FOUND)
     add_custom_target(dist
-        COMMAND rm -rf sumo-${PACKAGE_VERSION} sumo-${PACKAGE_VERSION}.zip sumo-src-${PACKAGE_VERSION}.tar.gz sumo-src-${PACKAGE_VERSION}.zip sumo-all-${PACKAGE_VERSION}.tar.gz sumo-all-${PACKAGE_VERSION}.zip
+        COMMAND rm -rf sumo-${PACKAGE_VERSION} sumo-${PACKAGE_VERSION}.zip sumo-src-${PACKAGE_VERSION}.tar.gz sumo-src-${PACKAGE_VERSION}.zip sumo-all-${PACKAGE_VERSION}.tar.gz sumo-all-${PACKAGE_VERSION}.zip sumo-gui-macos-${PACKAGE_VERSION}.zip
         COMMAND ${GIT_EXECUTABLE} archive --prefix sumo-${PACKAGE_VERSION}/ -o sumo-${PACKAGE_VERSION}.zip HEAD
         COMMAND unzip -q sumo-${PACKAGE_VERSION}.zip
         COMMAND cp -a docs/tutorial docs/examples sumo-${PACKAGE_VERSION}/docs
@@ -565,6 +566,9 @@ if (GIT_FOUND)
         COMMAND cp -a tests sumo-${PACKAGE_VERSION}
         COMMAND zip -rq sumo-all-${PACKAGE_VERSION}.zip sumo-${PACKAGE_VERSION}
         COMMAND tar -czf sumo-all-${PACKAGE_VERSION}.tar.gz sumo-${PACKAGE_VERSION}
+        COMMAND mkdir sumo-${PACKAGE_VERSION}/sumo-gui-macos
+        COMMAND cp -a build/osx/sumo-gui/*.app build/osx/netedit/*.app build/osx/osm-web-wizard/*.app sumo-${PACKAGE_VERSION}/sumo-gui-macos
+        COMMAND zip -rq sumo-gui-macos-${PACKAGE_VERSION}.zip sumo-${PACKAGE_VERSION}/sumo-gui-macos/*.app
         COMMAND rm -rf sumo-${PACKAGE_VERSION} sumo-${PACKAGE_VERSION}.zip
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     add_dependencies(dist examples doc ${JAVA_TARGETS})

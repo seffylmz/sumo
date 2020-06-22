@@ -111,6 +111,7 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myNumberReroutes(0),
     myStopUntilOffset(0),
     myOdometer(0.),
+    myRouteValidity(ROUTE_UNCHECKED),
     myNumericalID(myCurrentNumericalIndex++),
     myEdgeWeights(nullptr)
 #ifdef _DEBUG
@@ -122,14 +123,6 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     }
     if (!pars->wasSet(VEHPARS_FORCE_REROUTE)) {
         calculateArrivalParams();
-        if (MSGlobals::gCheckRoutes) {
-            std::string msg;
-            if (!hasValidRoute(msg)) {
-                msg = "Vehicle '" + pars->id + "' has no valid route. " + msg;
-                delete myParameter;
-                throw ProcessError(msg);
-            }
-        }
     }
     myRoute->addReference();
 }
@@ -494,6 +487,47 @@ MSBaseVehicle::hasValidRoute(std::string& msg, const MSRoute* route) const {
 }
 
 
+bool
+MSBaseVehicle::hasValidRouteStart(std::string& msg) {
+    if (myRoute->getEdges().size() > 0 && !myRoute->getEdges().front()->prohibits(this)) {
+        myRouteValidity &= ~ROUTE_START_INVALID_PERMISSIONS;
+        return true;
+    } else {
+        msg = "Vehicle '" + getID() + "' is not allowed to depart on its first edge.";
+        myRouteValidity |= ROUTE_START_INVALID_PERMISSIONS;
+        return false;
+    }
+}
+
+
+int
+MSBaseVehicle::getRouteValidity(bool update, bool silent) {
+    if (!update) {
+        return myRouteValidity;
+    }
+    // insertion check must be done in any case
+    std::string msg;
+    if (!hasValidRouteStart(msg)) {
+        if (MSGlobals::gCheckRoutes) {
+            throw ProcessError(msg);
+        } else if (!silent) {
+            // vehicle will be discarded
+            WRITE_WARNING(msg);
+        }
+    }
+    if (MSGlobals::gCheckRoutes
+            && (myRouteValidity & ROUTE_UNCHECKED) != 0
+            // we could check after the first rerouting
+            && (!myParameter->wasSet(VEHPARS_FORCE_REROUTE))) {
+        if (!hasValidRoute(msg, myRoute)) {
+            myRouteValidity |= ROUTE_INVALID;
+            throw ProcessError("Vehicle '" + getID() + "' has no valid route. " + msg);
+        }
+    }
+    myRouteValidity &= ~ROUTE_UNCHECKED;
+    return myRouteValidity;
+}
+
 void
 MSBaseVehicle::addReminder(MSMoveReminder* rem) {
 #ifdef _DEBUG
@@ -551,7 +585,7 @@ MSBaseVehicle::calculateArrivalParams() {
     const std::vector<MSLane*>& lanes = myRoute->getLastEdge()->getLanes();
     const double lastLaneLength = lanes[0]->getLength();
     switch (myParameter->arrivalPosProcedure) {
-        case ARRIVAL_POS_GIVEN:
+        case ArrivalPosDefinition::GIVEN:
             if (fabs(myParameter->arrivalPos) > lastLaneLength) {
                 WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given position!");
             }
@@ -561,23 +595,23 @@ MSBaseVehicle::calculateArrivalParams() {
                 myArrivalPos = MAX2(myArrivalPos + lastLaneLength, 0.);
             }
             break;
-        case ARRIVAL_POS_RANDOM:
+        case ArrivalPosDefinition::RANDOM:
             myArrivalPos = RandHelper::rand(lastLaneLength);
             break;
-        case ARRIVAL_POS_CENTER:
+        case ArrivalPosDefinition::CENTER:
             myArrivalPos = lastLaneLength / 2.;
             break;
         default:
             myArrivalPos = lastLaneLength;
             break;
     }
-    if (myParameter->arrivalLaneProcedure == ARRIVAL_LANE_GIVEN) {
+    if (myParameter->arrivalLaneProcedure == ArrivalLaneDefinition::GIVEN) {
         if (myParameter->arrivalLane >= (int)lanes.size() || !lanes[myParameter->arrivalLane]->allowsVehicleClass(myType->getVehicleClass())) {
             WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given lane '" + myRoute->getLastEdge()->getID() + "_" + toString(myParameter->arrivalLane) + "'!");
         }
         myArrivalLane = MIN2(myParameter->arrivalLane, (int)(lanes.size() - 1));
     }
-    if (myParameter->arrivalSpeedProcedure == ARRIVAL_SPEED_GIVEN) {
+    if (myParameter->arrivalSpeedProcedure == ArrivalSpeedDefinition::GIVEN) {
         for (std::vector<MSLane*>::const_iterator l = lanes.begin(); l != lanes.end(); ++l) {
             if (myParameter->arrivalSpeed <= (*l)->getVehicleMaxSpeed(this)) {
                 return;

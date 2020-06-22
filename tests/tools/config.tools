@@ -166,6 +166,7 @@ output:Warning: Module 'rtree' not available. Using brute-force fallback
 output:2147483647{REPLACE 9223372036854775807}
 output:Simulation.*started with{REPLACE Simulation started with}
 output:Retrying in
+output:00000 *${REPLACE 00000}
 dualog:uration:.*ms
 dualog:Real time factor
 dualog:UPS
@@ -177,6 +178,7 @@ osmtrips:<!-- generated on{[->]}-->
 districts:<!-- generated on{[->]}-->
 pois:<!--
 routes:<!-- generated on{[->]}-->
+xml:<!-- generated on{[->]}-->
 errors:Execution of .*duarouter.*'{REPLACE Execution of <path-to>duarouter'}
 errors:Leaked object at 
 errors:*** 9 leaks found
@@ -212,11 +214,16 @@ osmbatch:#!/bin/bash
 image:id="[^"]*"{REPLACE id="ReplacedTransientID"}
 image:url\(.*\){REPLACE url(ReplacedTransientURL)}
 image:href="[^"]*"{REPLACE href="ReplacedTransientHREF"}
+image:http:{REPLACE https:}
+image-600:http:{REPLACE https:}
+image-800:http:{REPLACE https:}
 csv:\r$
 
 [floating_point_tolerance]
 net:0.0101
-image:0.001
+image:1.001
+image-600:1.001
+image-800:1.001
 osmbatch:0.001
 osmlines:0.0101
 osmstops:0.0101
@@ -224,6 +231,8 @@ osmtrips:0.0101
 ptroutes:0.0101
 summary:0.0001
 routes:0.0001
+output:0.0001
+csv:0.0101
 
 [unordered_text]
 errors:ERROR:SCHEMA

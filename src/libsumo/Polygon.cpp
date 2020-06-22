@@ -38,6 +38,7 @@ namespace libsumo {
 // ===========================================================================
 SubscriptionResults Polygon::mySubscriptionResults;
 ContextSubscriptionResults Polygon::myContextSubscriptionResults;
+NamedRTree* Polygon::myTree(nullptr);
 
 
 // ===========================================================================
@@ -127,6 +128,13 @@ Polygon::add(const std::string& polygonID, const TraCIPositionVector& shape, con
     if (!shapeCont.addPolygon(polygonID, polygonType, col, (double)layer, Shape::DEFAULT_ANGLE, Shape::DEFAULT_IMG_FILE, Shape::DEFAULT_RELATIVEPATH, pShape, false, fill, lineWidth)) {
         throw TraCIException("Could not add polygon '" + polygonID + "'");
     }
+    if (myTree != nullptr) {
+        SUMOPolygon* p = shapeCont.getPolygons().get(polygonID);
+        Boundary b = p->getShape().getBoxBoundary();
+        const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
+        const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};
+        myTree->Insert(cmin, cmax, p);
+    }
 }
 
 
@@ -186,6 +194,15 @@ void
 Polygon::remove(const std::string& polygonID, int /* layer */) {
     // !!! layer not used yet (shouldn't the id be enough?)
     ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+    if (myTree != nullptr) {
+        SUMOPolygon* p = shapeCont.getPolygons().get(polygonID);
+        if (p != nullptr) {
+            Boundary b = p->getShape().getBoxBoundary();
+            const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
+            const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};
+            myTree->Remove(cmin, cmax, p);
+        }
+    }
     if (!shapeCont.removePolygon(polygonID)) {
         throw TraCIException("Could not remove polygon '" + polygonID + "'");
     }
@@ -247,17 +264,24 @@ LIBSUMO_SUBSCRIPTION_IMPLEMENTATION(Polygon, POLYGON)
 
 NamedRTree*
 Polygon::getTree() {
-    NamedRTree* t = new NamedRTree();
-    ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
-    for (const auto& i : shapeCont.getPolygons()) {
-        Boundary b = i.second->getShape().getBoxBoundary();
-        const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
-        const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};
-        t->Insert(cmin, cmax, i.second);
+    if (myTree == nullptr) {
+        myTree = new NamedRTree();
+        ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+        for (const auto& i : shapeCont.getPolygons()) {
+            Boundary b = i.second->getShape().getBoxBoundary();
+            const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
+            const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};
+            myTree->Insert(cmin, cmax, i.second);
+        }
     }
-    return t;
+    return myTree;
 }
 
+void
+Polygon::cleanup() {
+    delete myTree;
+    myTree = nullptr;
+}
 
 void
 Polygon::storeShape(const std::string& id, PositionVector& shape) {

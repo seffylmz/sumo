@@ -1,4 +1,4 @@
-Eclipse SUMO Version v1_6_0+0169-997ba5ddf1
+Eclipse SUMO Version v1_6_0+0870-48191dc38d
  Copyright (C) 2001-2020 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 A microscopic, multi-modal traffic simulation.
 
@@ -186,7 +186,7 @@ Processing Options:
                                          300, non-positive values disable
                                          teleporting
   --time-to-teleport.highways TIME     The waiting time after which vehicles on
-                                         a fast road (speed > 69m/s) are
+                                         a fast road (speed > 69km/h) are
                                          teleported if they are on a
                                          non-continuing lane
   --waiting-time-memory TIME           Length of time interval, over which
@@ -369,6 +369,7 @@ Emissions Options:
                                          vehicles
   --device.emissions.deterministic     The 'emissions' devices are set
                                          deterministic using a fraction of 1000
+  --device.emissions.period STR        Recording period for emission-output
 
 Communication Options:
   --device.btreceiver.probability FLOAT  The probability for a vehicle to have
@@ -532,8 +533,9 @@ Bluelight Device Options:
                                          vehicles
   --device.bluelight.deterministic     The 'bluelight' devices are set
                                          deterministic using a fraction of 1000
-  --device.bluelight.parameter FLOAT   An exemplary parameter which can be used
-                                         by all instances of the example device
+  --device.bluelight.reactiondist FLOAT  Set the distance at which other
+                                         drivers react to the blue light and
+                                         siren sound
 
 FCD Device Options:
   --device.fcd.probability FLOAT       The probability for a vehicle to have a
@@ -605,6 +607,7 @@ Mesoscopic Options:
                                          computed based on edge speed and tauff
                                          (default)
   --meso-multi-queue                   Enable multiple queues at edge ends
+  --meso-lane-queue                    Enable separate queues for every lane
   --meso-junction-control              Enable mesoscopic traffic light and
                                          priority junction handling
   --meso-junction-control.limited      Enable mesoscopic traffic light and

@@ -35,39 +35,57 @@ class GNEVehicle;
 class GNEWalk : public GNEDemandElement, public Parameterised {
 
 public:
-    /**@brief parameter constructor for walkEdges
-     * @param[in] viewNet view in which this Walk is placed
-     * @param[in] personParent person parent
-     * @param[in] edges list of consecutive edges of this walk
-     * @param[in] arrivalPosition arrival position on the destination edge
-     */
-    GNEWalk(GNENet* net, GNEDemandElement* personParent, const std::vector<GNEEdge*>& edges, double arrivalPosition);
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Walk is placed
+    * @param[in] personParent person parent
+    * @param[in] fromEdge from edge
+    * @param[in] toEdge to edge
+    * @param[in] arrivalPosition arrival position on the destination edge
+    */
+    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge, double arrivalPosition);
 
-    /**@brief parameter constructor for walkEdges
-     * @param[in] viewNet view in which this Walk is placed
-     * @param[in] personParent person parent
-     * @param[in] edges list of consecutive edges of this walk
-     * @param[in] arrivalPosition arrival position on the destination edge
-     */
-    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEEdge* toEdge,
-            const std::vector<GNEEdge*>& via, double arrivalPosition);
+    /**@brief parameter constructor for person edge->busStop
+    * @param[in] viewNet view in which this Walk is placed
+    * @param[in] personParent person parent
+    * @param[in] fromEdge from edge
+    * @param[in] toBusStop to busStop
+    * @param[in] arrivalPosition arrival position on the destination edge
+    */
+    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* toBusStop, double arrivalPosition);
 
-    /**@brief parameter constructor for walkBusStop
-     * @param[in] viewNet view in which this Walk is placed
-     * @param[in] personParent person parent
-     * @param[in] edges list of consecutive edges of this walk
-     * @param[in] busStop destination busStop
-     */
-    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEEdge* fromEdge, GNEAdditional* busStop,
-            const std::vector<GNEEdge*>& via);
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Walk is placed
+    * @param[in] personParent person parent
+    * @param[in] fromBusStop from busStop
+    * @param[in] toEdge to edge
+    * @param[in] arrivalPosition arrival position on the destination edge
+    */
+    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEAdditional* fromBusStop, GNEEdge* toEdge, double arrivalPosition);
 
-    /**@brief parameter constructor for walkRoute
-     * @param[in] viewNet view in which this Walk is placed
-     * @param[in] personParent person parent
-     * @param[in] personParent route parent
-     * @param[in] arrivalPosition arrival position on the last route's edge
-     */
-    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEDemandElement* routeParent, double arrivalPosition);
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Walk is placed
+    * @param[in] personParent person parent
+    * @param[in] fromBusStop from busStop
+    * @param[in] toBusStop to busStop
+    * @param[in] arrivalPosition arrival position on the destination edge
+    */
+    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEAdditional* fromBusStop, GNEAdditional* toBusStop, double arrivalPosition);
+
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Walk is placed
+    * @param[in] personParent person parent
+    * @param[in] edges list of edges
+    * @param[in] arrivalPosition arrival position on the destination edge
+    */
+    GNEWalk(GNENet* net, GNEDemandElement* personParent, std::vector<GNEEdge*> edges, double arrivalPosition);
+
+    /**@brief parameter constructor for person edge->edge
+    * @param[in] viewNet view in which this Walk is placed
+    * @param[in] personParent person parent
+    * @param[in] route route
+    * @param[in] arrivalPosition arrival position on the destination edge
+    */
+    GNEWalk(GNENet* net, GNEDemandElement* personParent, GNEDemandElement* route, double arrivalPosition);
 
     /// @brief destructor
     ~GNEWalk();
@@ -88,12 +106,6 @@ public:
 
     /// @name members and functions relative to elements common to all demand elements
     /// @{
-    /// @brief obtain from edge of this demand element
-    GNEEdge* getFromEdge() const;
-
-    /// @brief obtain to edge of this demand element
-    GNEEdge* getToEdge() const;
-
     /// @brief obtain VClass related with this demand element
     SUMOVehicleClass getVClass() const;
 
@@ -125,9 +137,6 @@ public:
 
     /// @brief update dotted contour
     void updateDottedContour();
-
-    /// @brief partial update pre-computed geometry information
-    void updatePartialGeometry(const GNEEdge* edge);
 
     /// @brief compute path
     void computePath();
@@ -169,6 +178,19 @@ public:
      * @see GUIGlObject::drawGL
      */
     void drawGL(const GUIVisualizationSettings& s) const;
+
+    /**@brief Draws partial object
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] lane lane in which draw partial
+    */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const;
+
+    /**@brief Draws partial object (junction)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] fromLane from GNELane
+     * @param[in] toLane to GNELane
+     */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const;
     /// @}
 
     /// @brief inherited from GNEAttributeCarrier
