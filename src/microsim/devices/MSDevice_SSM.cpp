@@ -475,7 +475,7 @@ MSDevice_SSM::computeGlobalMeasures() {
             if (leader.first == nullptr) {
                 mySGAPspan.push_back(INVALID_DOUBLE);
             } else {
-                double sgap = leader.second + leader.first->getVehicleType().getMinGap();
+                double sgap = leader.second + myHolder.getVehicleType().getMinGap();
                 mySGAPspan.push_back(sgap);
                 if (sgap < myMinSGAP.first.second) {
                     myMinSGAP = std::make_pair(std::make_pair(std::make_pair(SIMTIME, myHolderMS->getPosition()), sgap), leader.first->getID());
@@ -487,7 +487,7 @@ MSDevice_SSM::computeGlobalMeasures() {
             if (leader.first == nullptr || myHolderMS->getSpeed() == 0.) {
                 myTGAPspan.push_back(INVALID_DOUBLE);
             } else {
-                const double tgap = (leader.second + leader.first->getVehicleType().getMinGap()) / myHolderMS->getSpeed();
+                const double tgap = (leader.second + myHolder.getVehicleType().getMinGap()) / myHolderMS->getSpeed();
                 myTGAPspan.push_back(tgap);
                 if (tgap < myMinTGAP.first.second) {
                     myMinTGAP = std::make_pair(std::make_pair(std::make_pair(SIMTIME, myHolderMS->getPosition()), tgap), leader.first->getID());
@@ -2285,7 +2285,10 @@ MSDevice_SSM::classifyEncounter(const FoeInfo* foeInfo, EncounterApproachInfo& e
                     if (!foeConflictLane->getCanonicalSuccessorLane()->isInternal()) {
                         // intersection has wierd geometry and the intersection was found
                         egoDistToConflictFromJunctionEntry = 0;
-                        WRITE_WARNINGF("Cannot compute SSM due to bad internal lane geometry at junction '%'.", egoEntryLink->getJunction()->getID())
+                        WRITE_WARNINGF("Cannot compute SSM due to bad internal lane geometry at junction '%'. Crossing point between traffic from links % and % not found.",
+                                       egoEntryLink->getJunction()->getID(),
+                                       egoEntryLink->getIndex(),
+                                       foeEntryLink->getIndex());
                         break;
                     }
                     foeConflictLane = foeConflictLane->getCanonicalSuccessorLane();
@@ -2304,13 +2307,16 @@ MSDevice_SSM::classifyEncounter(const FoeInfo* foeInfo, EncounterApproachInfo& e
                         foeDistToConflictFromJunctionEntry += 0.5 * (egoConflictLane->getWidth() - e->ego->getVehicleType().getWidth());
                         break;
                     } else {
-                        if (!egoConflictLane->getCanonicalSuccessorLane()->isInternal()) {
-                            // intersection has wierd geometry and the intersection was found
-                            foeDistToConflictFromJunctionEntry = 0;
-                            WRITE_WARNINGF("Cannot compute SSM due to bad internal lane geometry at junction '%'.", foeEntryLink->getJunction()->getID())
-                            break;
-                        }
                         egoInternalLaneLengthsBeforeCrossing += egoConflictLane->getLength();
+                    }
+                    if (!egoConflictLane->getCanonicalSuccessorLane()->isInternal()) {
+                        // intersection has wierd geometry and the intersection was found
+                        foeDistToConflictFromJunctionEntry = 0;
+                        WRITE_WARNINGF("Cannot compute SSM due to bad internal lane geometry at junction '%'. Crossing point between traffic from links % and % not found.",
+                                       foeEntryLink->getJunction()->getID(),
+                                       foeEntryLink->getIndex(),
+                                       egoEntryLink->getIndex());
+                        break;
                     }
                     egoConflictLane = egoConflictLane->getCanonicalSuccessorLane();
                     assert(egoConflictLane != 0 && egoConflictLane->isInternal()); // this loop should be ended by the break! Otherwise the lanes do not cross, which should be the case here.

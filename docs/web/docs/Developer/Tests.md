@@ -18,7 +18,7 @@ files you are comparing the current outputs to *are* right - you have to
 prepare them once and update/verify them again every time the expected
 results change.
 
-At the moment all our \[Developer/Nightly_Build tests run each night\]
+At the moment all our tests run [each night](Nightly_Build.md)
 with the results on this [summary webpage](https://sumo.dlr.de/daily/).
 
 # Setup
@@ -97,9 +97,9 @@ probably everything included. With openSUSE 10.2 you need python-gtk and
 python-cairo as well as tkdiff before installing TextTest. If you don't
 need the GUI you can probably even skip these.
 
-## MacOS setup
+## macOS setup
 
-You can easily install all TextTest 4.x and all of its dependencies on a recent MacOS with Homebrew.  
+You can easily install all TextTest 4.x and all of its dependencies on a recent macOS with Homebrew.  
 
 1. Make sure to have python 3.x installed:
    `brew install python`
@@ -124,11 +124,11 @@ to collapse the static test suites on program start. E.g.:
 
 # Running the Tests
 
-Within the  `$SUMO_HOME/tests` folder you can find batch files for Windows and shell files for Linux & MacOS which start
-[TextTest](http://texttest.org/) with our test suites. `runAllTests.bat` (Windows) or `runTests.sh` (Linux, MacOS)
+Within the  `$SUMO_HOME/tests` folder you can find batch files for Windows and shell files for Linux & macOS which start
+[TextTest](http://texttest.org/) with our test suites. `runAllTests.bat` (Windows) or `runTests.sh` (Linux, macOS)
 starts TextTest for testing all applications located in the folder,
-`runNetconvertTests.bat` (Windows) will only show tests for NETCONVERT,
-`runDuarouterTests.bat`(Windows) only those for DUAROUTER etc.
+`runNetconvertTests.bat` (Windows) will only show tests for netconvert,
+`runDuarouterTests.bat`(Windows) only those for duarouter etc.
 
 # Adding a Test to an existing Application
 
@@ -270,8 +270,8 @@ Our TextTest tests can be grouped into the categories described below
 ## Application Tests
 
 These tests are for the executable files in the *bin* folder such as
-[NETCONVERT](../NETCONVERT.md), [DUAROUTER](../DUAROUTER.md)
-and [SUMO](../SUMO.md). They work by running their application once
+[netconvert](../netconvert.md), [duarouter](../duarouter.md)
+and [sumo](../sumo.md). They work by running their application once
 with a predefined set of input files and compare against expected output
 files. The tests for sumo run once with the GUI version and once without
 GUI..
@@ -298,7 +298,7 @@ the traci python client (runner.py is a traci script in this case).
 
 ## Interactive GUI Tests
 
-These tests are currently only active for [NETEDIT](../NETEDIT.md)
+These tests are currently only active for [netedit](../netedit.md)
 and are described in more detail on the page
 [Developer/GUI_Testing](../Developer/GUI_Testing.md).
 

@@ -29,12 +29,9 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/data/GNEGenericData.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
 
 #include "GNEDataInterval.h"
-#include "GNEDataSet.h"
 
 
 // ===========================================================================
@@ -49,8 +46,7 @@ GNEDataInterval::GNEDataInterval(GNEDataSet* dataSetParent, const double begin, 
     GNEAttributeCarrier(SUMO_TAG_DATAINTERVAL, dataSetParent->getNet()),
     myDataSetParent(dataSetParent),
     myBegin(begin),
-    myEnd(end),
-    myAttributeColorsDeprecated(true) {
+    myEnd(end) {
 }
 
 
@@ -75,60 +71,35 @@ GNEDataInterval::updateGenericDataIDs() {
 
 
 void 
-GNEDataInterval::markAttributeColorsDeprecated() {
-    myAttributeColorsDeprecated = true;
-    // also mark it in data set parent
-    myDataSetParent->markAttributeColorsDeprecated();
-}
-
-
-void 
 GNEDataInterval::updateAttributeColors() {
-    if (myAttributeColorsDeprecated) {
-        // first clear container
-        myAttributeColors.clear();
-        // iterate over generic data children
-        for (const auto &genericData : myGenericDataChildren) {
-            for (const auto &param : genericData->getParametersMap()) {
+    // first clear both container
+    myAllAttributeColors.clear();
+    mySpecificAttributeColors.clear();
+    // iterate over generic data children
+    for (const auto &genericData : myGenericDataChildren) {
+        for (const auto &param : genericData->getParametersMap()) {
+            // check if value can be parsed
+            if (canParse<double>(param.second)) {
                 // parse param value
                 const double value = parse<double>(param.second);
-                // if param doesn't exist, simply add it
-                if (myAttributeColors.count(param.first) == 0) {
-                    myAttributeColors[param.first] = AttributeColors(value);
-                } else {
-                    // update min value
-                    if (value < myAttributeColors.at(param.first).minValue) {
-                        myAttributeColors.at(param.first).minValue = value;
-                    }
-                    // update max value
-                    if (value > myAttributeColors.at(param.first).maxValue) {
-                        myAttributeColors.at(param.first).minValue = value;
-                    }
-                }
+                // update values in both containers
+                myAllAttributeColors.updateValues(param.first, value);
+                mySpecificAttributeColors[genericData->getTagProperty().getTag()].updateValues(param.first, value);
             }
         }
-        myAttributeColorsDeprecated = false;
     }
 }
 
 
-double 
-GNEDataInterval::getMinimumParameterValue(const std::string& parameter) const {
-    if (myAttributeColors.count(parameter) > 0) {
-        return myAttributeColors.at(parameter).minValue;
-    } else {
-        return 0;
-    }
+const GNEDataSet::AttributeColors&
+GNEDataInterval::getAllAttributeColors() const {
+    return myAllAttributeColors;
 }
 
 
-double
-GNEDataInterval::getMaximumParameterValue(const std::string& parameter) const {
-    if (myAttributeColors.count(parameter) > 0) {
-        return myAttributeColors.at(parameter).maxValue;
-    } else {
-        return 0;
-    }
+const std::map<SumoXMLTag, GNEDataSet::AttributeColors>&
+GNEDataInterval::getSpecificAttributeColors() const {
+    return mySpecificAttributeColors;
 }
 
 
@@ -146,12 +117,6 @@ GNEDataInterval::getGUIGlObject() {
 
 void
 GNEDataInterval::updateGeometry() {
-    // nothing to update
-}
-
-
-void
-GNEDataInterval::updateDottedContour() {
     // nothing to update
 }
 
@@ -191,10 +156,15 @@ GNEDataInterval::addGenericDataChild(GNEGenericData* genericData) {
     // check that GenericData wasn't previously inserted
     if (!hasGenericDataChild(genericData)) {
         myGenericDataChildren.push_back(genericData);
-        // mark attributeColors deprecated
-        myAttributeColorsDeprecated = true;
         // update generic data IDs
         updateGenericDataIDs();
+        // update geometry after insertion if myUpdateGeometryEnabled is enabled
+        if (myNet->isUpdateGeometryEnabled()) {
+            // update generic data geometry
+            genericData->updateGeometry();
+        }
+        // update colors
+        genericData->getDataIntervalParent()->getDataSetParent()->updateAttributeColors();
     } else {
         throw ProcessError("GenericData was already inserted");
     }
@@ -208,11 +178,11 @@ GNEDataInterval::removeGenericDataChild(GNEGenericData* genericData) {
     if (it != myGenericDataChildren.end()) {
         // remove generic data child
         myGenericDataChildren.erase(it);
-        // mark attributeColors deprecated
-        myAttributeColorsDeprecated = true;
         // remove it from Inspector Frame and AttributeCarrierHierarchy
         myDataSetParent->getNet()->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(genericData);
         myDataSetParent->getNet()->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(genericData);
+        // update colors
+        genericData->getDataIntervalParent()->getDataSetParent()->updateAttributeColors();
     } else {
         throw ProcessError("GenericData wasn't previously inserted");
     }
@@ -317,18 +287,6 @@ GNEDataInterval::getPopUpID() const {
 std::string
 GNEDataInterval::getHierarchyName() const {
     return "interval: " + getAttribute(SUMO_ATTR_BEGIN) + " -> " + getAttribute(SUMO_ATTR_END);
-}
-
-
-GNEDataInterval::AttributeColors::AttributeColors() :
-    minValue(0),
-    maxValue(0) {
-}
-
-
-GNEDataInterval::AttributeColors::AttributeColors(const double defaultValue) :
-    minValue(defaultValue),
-    maxValue(defaultValue) {
 }
 
 

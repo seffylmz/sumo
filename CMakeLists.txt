@@ -344,6 +344,14 @@ if (CHECK_OPTIONAL_LIBS)
         set(ENABLED_FEATURES "${ENABLED_FEATURES} Eigen")
     endif (EIGEN3_FOUND)
 
+#    set(JPS_FOUND 1)
+    if (JPS_FOUND)
+        add_library(jps SHARED IMPORTED) # or STATIC instead of SHARED
+        set_target_properties(jps PROPERTIES IMPORTED_LOCATION "/tmp/libjps.so")
+        include_directories(SYSTEM "/tmp/include")
+        set(HAVE_JPS 1)
+    endif (JPS_FOUND)
+
     list(APPEND SUMO_LIBRARIES_DLL ${SUMO_OPTIONAL_LIBRARIES_DLL})
 endif (CHECK_OPTIONAL_LIBS)
 
@@ -567,7 +575,7 @@ if (GIT_FOUND)
         COMMAND zip -rq sumo-all-${PACKAGE_VERSION}.zip sumo-${PACKAGE_VERSION}
         COMMAND tar -czf sumo-all-${PACKAGE_VERSION}.tar.gz sumo-${PACKAGE_VERSION}
         COMMAND mkdir sumo-${PACKAGE_VERSION}/sumo-gui-macos
-        COMMAND cp -a build/osx/sumo-gui/*.app build/osx/netedit/*.app build/osx/osm-web-wizard/*.app sumo-${PACKAGE_VERSION}/sumo-gui-macos
+        COMMAND cp -a build/macos/*/*.app sumo-${PACKAGE_VERSION}/sumo-gui-macos
         COMMAND zip -rq sumo-gui-macos-${PACKAGE_VERSION}.zip sumo-${PACKAGE_VERSION}/sumo-gui-macos/*.app
         COMMAND rm -rf sumo-${PACKAGE_VERSION} sumo-${PACKAGE_VERSION}.zip
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

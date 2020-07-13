@@ -114,9 +114,6 @@ public:
     /// @brief update pre-computed geometry information
     void updateGeometry();
 
-    /// @brief update dotted contour
-    void updateDottedContour();
-
     /// @brief Returns the boundary to which the view shall be centered in order to show the object
     Boundary getCenteringBoundary() const;
 
@@ -237,16 +234,13 @@ protected:
     /// @brief flag for block shape
     bool myBlockShape;
 
-    /// @brief flag to indicate if polygon is open or closed
-    bool myClosedShape;
-
     /// @brief flag to indicate if polygon is simplified
     bool mySimplifiedShape;
 
-private:
-    /// @brief hint size of vertex
-    static const double myHintSize;
+    /// @brief geometry for lenghts/rotations
+    GNEGeometry::Geometry myPolygonGeometry;
 
+private:
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
 

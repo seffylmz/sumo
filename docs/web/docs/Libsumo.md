@@ -8,7 +8,7 @@ permalink: /Libsumo/
 The main way to interact with a running simulation is
 [TraCI](TraCI.md) which gives the complete flexibility of doing
 cross-platform, cross-language, and networked interaction with
-[SUMO](SUMO.md) acting as a server. One major drawback is the
+[sumo](sumo.md) acting as a server. One major drawback is the
 communication overhead due to the protocol and the socket communication.
 To have a more efficient coupling without the need for socket
 communication, the TraCI API is provided as a C++ library with the
@@ -26,14 +26,13 @@ following properties:
 
 The following things currently do not work (or work differently than with the TraCI Python client):
 
-- running with [SUMO-GUI](SUMO-GUI.md)
+- running with [sumo-gui](sumo-gui.md)
 - subscriptions that require additional arguments (except for *vehicle.getLeader*)
 - stricter type checking
   - the TraCI client sometimes accepts any iterable object where Libsumo wants a list
   - TraCI client may accept any object where Libsumo needs a boolean value
 - using traci.init or traci.connect is not possible (you always need to use libsumo.start)
 - with traci every TraCIException will generate a message on stderr, Libsumo does not generate this message
-- the stepListener interface is not supported
 
 # Building it
 

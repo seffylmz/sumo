@@ -68,6 +68,11 @@ public:
 
     MSStage* clone() const;
 
+    /// @brief return default value for undefined arrivalPos
+    double getArrivalPos() const;
+
+    bool unspecifiedArrivalPos() const;
+
     /// abort this stage (TraCI)
     void abort(MSTransportable* t);
 
@@ -82,9 +87,7 @@ public:
     double getAngle(SUMOTime now) const;
 
     /// @brief get travel distance in this stage
-    double getDistance() const {
-        return myVehicleDistance;
-    }
+    double getDistance() const;
 
     /// @brief return (brief) string representation of the current stage
     std::string getStageDescription(const bool isPerson) const;

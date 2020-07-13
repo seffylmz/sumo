@@ -60,17 +60,6 @@ GNEVariableSpeedSign::updateGeometry() {
 
     // update child connections
     myChildConnections.update();
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNEVariableSpeedSign::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), myPosition, 0,
-                                          myNet->getViewNet()->getVisualisationSettings().additionalSettings.VSSSize,
-                                          myNet->getViewNet()->getVisualisationSettings().additionalSettings.VSSSize);
 }
 
 
@@ -162,25 +151,22 @@ GNEVariableSpeedSign::drawGL(const GUIVisualizationSettings& s) const {
         } else {
             GLHelper::setColor(RGBColor::WHITE);
             GLHelper::drawBoxLine(Position(0, s.additionalSettings.VSSSize), 0, 2 * s.additionalSettings.VSSSize, s.additionalSettings.VSSSize);
-
         }
         // Pop draw icon matrix
         glPopMatrix();
         // Show Lock icon
         myBlockIcon.drawIcon(s, VSSExaggeration, 0.4);
         // Draw child connections
-        drawChildConnections(s, getType());
+        drawChildConnections(s, getType(), VSSExaggeration);
         // Draw name if isn't being drawn for selecting
         if (!s.drawForRectangleSelection) {
             drawName(getPositionInView(), s.scale, s.addName);
         }
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), VSSExaggeration, myDottedGeometry);
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedSquaredShape(s, myPosition, s.additionalSettings.VSSSize, s.additionalSettings.VSSSize, 0, VSSExaggeration);
             // draw shape dotte contour aroud alld connections between child and parents
-            for (auto i : myChildConnections.connectionPositions) {
-                GLHelper::drawShapeDottedContourAroundShape(s, getType(), i, 0);
-            }
+            drawChildDottedConnections(s, VSSExaggeration);
         }
         // Pop name
         glPopName();

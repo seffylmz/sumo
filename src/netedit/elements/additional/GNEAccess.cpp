@@ -23,8 +23,6 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
@@ -94,14 +92,6 @@ GNEAccess::updateGeometry() {
     myBlockIcon.offset = Position(-1, 0);
     // Set block icon rotation, and using their rotation for logo
     myBlockIcon.setRotation(getParentLanes().front());
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNEAccess::updateDottedContour() {
-    //
 }
 
 
@@ -184,20 +174,18 @@ GNEAccess::drawGL(const GUIVisualizationSettings& s) const {
         glTranslated(myAdditionalGeometry.getPosition().x(), myAdditionalGeometry.getPosition().y(), GLO_ACCESS);
         // draw circle
         if (s.drawForRectangleSelection) {
-            GLHelper::drawFilledCircle((double) 0.5 * exaggeration, 8);
+            GLHelper::drawFilledCircle(0.5 * exaggeration, 8);
         } else {
-            GLHelper::drawFilledCircle((double) 0.5 * exaggeration, 16);
-            // check if dotted contour has to be drawn
-            if (myNet->getViewNet()->getDottedAC() == this) {
-                /*
-                                GLHelper::drawShapeDottedContourAroundClosedShape(s, getType(), vertices);
-                */
-            }
+            GLHelper::drawFilledCircle(0.5 * exaggeration, 16);
         }
         // pop matrix
         glPopMatrix();
         // pop gl identficador
         glPopName();
+        // check if dotted contour has to be drawn
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedContourCircle(s, myAdditionalGeometry.getPosition(), 0.5, exaggeration);
+        }
     }
 }
 

@@ -292,12 +292,6 @@ GNEWalk::updateGeometry() {
 
 
 void
-GNEWalk::updateDottedContour() {
-    //
-}
-
-
-void
 GNEWalk::computePath() {
     // update lanes depending of walk tag
     if (myTagProperty.getTag() == GNE_TAG_WALK_EDGE_EDGE) {
@@ -420,16 +414,16 @@ GNEWalk::drawGL(const GUIVisualizationSettings& /*s*/) const {
 
 
 void 
-GNEWalk::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const {
+GNEWalk::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const {
     // draw person plan over lane
-    drawPersonPlanPartialLane(s, lane, s.widthSettings.walk, s.colorSettings.walk);
+    drawPersonPlanPartialLane(s, lane, offsetFront, s.widthSettings.walk, s.colorSettings.walk);
 }
 
 
 void 
-GNEWalk::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const {
+GNEWalk::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const {
     // draw person plan over junction
-    drawPersonPlanPartialJunction(s, fromLane, toLane, s.widthSettings.walk, s.colorSettings.walk);
+    drawPersonPlanPartialJunction(s, fromLane, toLane, offsetFront, s.widthSettings.walk, s.colorSettings.walk);
 }
 
 

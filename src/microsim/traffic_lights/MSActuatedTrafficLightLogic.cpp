@@ -304,7 +304,7 @@ MSActuatedTrafficLightLogic::init(NLDetectorBuilder& nb) {
                 }
             }
             if (loops.size() == 0) {
-                WRITE_WARNING("At actuated tlLogic '" + getID() + "', actuated phase " + toString(phaseIndex) + " has no controlling detector");
+                WRITE_WARNINGF("At actuated tlLogic '%', actuated phase % has no controlling detector", getID(), toString(phaseIndex));
             }
         }
 #ifdef DEBUG_DETECTORS
@@ -340,7 +340,7 @@ MSActuatedTrafficLightLogic::init(NLDetectorBuilder& nb) {
     for (int i : actuatedLinks) {
         if (linkToLoops[i].size() == 0 && myLinks[i].size() > 0
                 && (myLinks[i].front()->getLaneBefore()->getPermissions() & motorized) != 0) {
-            WRITE_WARNING("At actuated tlLogic '" + getID() + "', linkIndex " + toString(i) + " has no controlling detector");
+            WRITE_WARNINGF("At actuated tlLogic '%', linkIndex % has no controlling detector", getID(), toString(i));
         }
     }
     // parse maximum green times for each link (optional)
@@ -742,5 +742,24 @@ MSActuatedTrafficLightLogic::getLinkMinDuration(int target) const {
     }
     return result;
 }
+
+
+void
+MSActuatedTrafficLightLogic::setParameter(const std::string& key, const std::string& value) {
+    // some pre-defined parameters can be updated at runtime
+    if (key == "detector-gap" || key == "passing-time" || key == "file" || key == "freq" || key == "vTypes"
+            || StringUtils::startsWith(key, "linkMaxDur")
+            || StringUtils::startsWith(key, "linkMinDur")) {
+        throw InvalidArgument(key + " cannot be changed dynamically for actuated traffic light '" + getID() + "'");
+    } else if (key == "max-gap") {
+        myMaxGap = StringUtils::toDouble(value);
+    } else if (key == "show-detectors") {
+        myShowDetectors = StringUtils::toBool(value);
+    } else if (key == "inactive-threshold") {
+        myInactiveThreshold = string2time(value);
+    }
+    Parameterised::setParameter(key, value);
+}
+
 
 /****************************************************************************/

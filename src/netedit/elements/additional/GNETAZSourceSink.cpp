@@ -19,7 +19,6 @@
 /****************************************************************************/
 #include <config.h>
 
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNENet.h>
@@ -85,11 +84,6 @@ GNETAZSourceSink::commitGeometryMoving(GNEUndoList*) {
 void
 GNETAZSourceSink::updateGeometry() {
     // This TAZElement doesn't own a geometry
-}
-
-void
-GNETAZSourceSink::updateDottedContour() {
-    // This TAZElement doesn't own a dotted contour
 }
 
 

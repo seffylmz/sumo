@@ -16,10 +16,8 @@
 # @date    2020-03-16
 
 from __future__ import absolute_import
-import struct
 from . import constants as tc
 from .domain import Domain
-from .storage import Storage
 
 
 class CalibratorDomain(Domain):
@@ -113,15 +111,5 @@ class CalibratorDomain(Domain):
         """setFlow(string, double, double, double, double, string, string, string, string) -> None
         Update or add a calibrator interval
         """
-        messageString = struct.pack("!Bi", tc.TYPE_COMPOUND, 8)
-        messageString += struct.pack("!Bd", tc.TYPE_DOUBLE, begin)
-        messageString += struct.pack("!Bd", tc.TYPE_DOUBLE, end)
-        messageString += struct.pack("!Bd", tc.TYPE_DOUBLE, vehsPerHour)
-        messageString += struct.pack("!Bd", tc.TYPE_DOUBLE, speed)
-        for val in (typeID, routeID, departLane, departSpeed):
-            val = str(val)
-            messageString += struct.pack("!Bi", tc.TYPE_STRING, len(val)) + val.encode("latin1")
-        self._connection._beginMessage(
-            tc.CMD_SET_CALIBRATOR_VARIABLE, tc.CMD_SET_FLOW, calibratorID, len(messageString))
-        self._connection._string += messageString
-        self._connection._sendExact()
+        self._setCmd(tc.CMD_SET_FLOW, calibratorID, "tddddssss", 8, begin, end,
+                     vehsPerHour, speed, typeID, routeID, departLane, departSpeed)

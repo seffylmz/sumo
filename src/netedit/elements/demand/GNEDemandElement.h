@@ -176,13 +176,6 @@ public:
 
     /// @name members and functions relative to elements common to all demand elements
     /// @{
-/*
-    /// @brief obtain from edge of this demand element
-    virtual GNEEdge* getFromEdge() const = 0;
-
-    /// @brief obtain to edge of this demand element
-    virtual GNEEdge* getToEdge() const = 0;
-*/
     /// @brief obtain VClass related with this demand element
     virtual SUMOVehicleClass getVClass() const = 0;
 
@@ -240,9 +233,6 @@ public:
     /// @brief update pre-computed geometry information
     virtual void updateGeometry() = 0;
 
-    /// @brief update dotted contour
-    virtual void updateDottedContour() = 0;
-
     /// @brief compute path
     virtual void computePath() = 0;
 
@@ -291,15 +281,17 @@ public:
     /**@brief Draws partial object (lane)
     * @param[in] s The settings for the current view (may influence drawing)
     * @param[in] lane GNELane in which draw partial
+    * @param[in] drawGeometry flag to enable/disable draw geometry (lines, boxLines, etc.)
     */
-    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const = 0;
+    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const = 0;
 
     /**@brief Draws partial object (junction)
      * @param[in] s The settings for the current view (may influence drawing)
      * @param[in] fromLane from GNELane
      * @param[in] toLane to GNELane
+     * @param[in] offsetFront offset for drawing element front (needed for selected elements)
      */
-    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const = 0;
+    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const = 0;
     /// @}
 
     /// @name inherited from GNEAttributeCarrier
@@ -389,11 +381,11 @@ protected:
 
     /// @brief draw person plan partial lane
     void drawPersonPlanPartialLane(const GUIVisualizationSettings& s, const GNELane* lane, 
-        const double personPlanWidth, const RGBColor &personPlanColor) const;
+        const double offsetFront, const double personPlanWidth, const RGBColor &personPlanColor) const;
 
     /// @brief draw person plan partial junction
     void drawPersonPlanPartialJunction(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, 
-        const double personPlanWidth, const RGBColor &personPlanColor) const;
+        const double offsetFront, const double personPlanWidth, const RGBColor &personPlanColor) const;
 
     /// @brief person plans arrival position radius
     static const double myPersonPlanArrivalPositionDiameter;

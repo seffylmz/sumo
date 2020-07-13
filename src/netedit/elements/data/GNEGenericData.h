@@ -27,6 +27,7 @@
 
 #include <netedit/elements/GNEHierarchicalParentElements.h>
 #include <netedit/elements/GNEHierarchicalChildElements.h>
+#include <netedit/elements/GNEPathElements.h>
 #include <netedit/GNEGeometry.h>
 #include <utils/common/Parameterised.h>
 #include <utils/geom/PositionVector.h>
@@ -50,7 +51,7 @@ class GNEDataInterval;
  * @class GNEGenericData
  * @brief An Element which don't belongs to GNENet but has influency in the simulation
  */
-class GNEGenericData : public GUIGlObject, public GNEAttributeCarrier, public Parameterised, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements {
+class GNEGenericData : public GUIGlObject, public GNEAttributeCarrier, public Parameterised, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements, public GNEPathElements {
 
 public:
     /**@brief Constructor
@@ -118,9 +119,6 @@ public:
     /// @brief update pre-computed geometry information
     virtual void updateGeometry() = 0;
 
-    /// @brief update dotted contour
-    virtual void updateDottedContour() = 0;
-
     /// @brief Returns element position in view
     virtual Position getPositionInView() const = 0;
 
@@ -165,7 +163,22 @@ public:
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const;
+    virtual void drawGL(const GUIVisualizationSettings& s) const = 0;
+
+    /**@brief Draws partial object (lane)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] lane GNELane in which draw partial
+     * @param[in] offsetFront offset for drawing element front (needed for selected elements)
+     */
+    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const = 0;
+
+    /**@brief Draws partial object (junction)
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @param[in] fromLane from GNELane
+     * @param[in] toLane to GNELane
+     * @param[in] offsetFront offset for drawing element front (needed for selected elements)
+     */
+    virtual void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const = 0;
 
     //// @brief Returns the boundary to which the view shall be centered in order to show the object
     virtual Boundary getCenteringBoundary() const = 0;
@@ -228,6 +241,12 @@ public:
 protected:
     /// @brief dataInterval Parent
     GNEDataInterval* myDataIntervalParent;
+
+    /// @brief draw filtered attribute
+    void drawFilteredAttribute(const GUIVisualizationSettings& s, const PositionVector &laneShape, const std::string &attribute) const;
+
+    /// @brief check if attribute is visible in inspect, delete or select mode
+    bool isVisibleInspectDeleteSelect() const;
 
 private:
     /// @brief method for setting the attribute and nothing else (used in GNEChange_Attribute)

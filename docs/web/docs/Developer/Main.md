@@ -22,8 +22,8 @@ permalink: /Developer/Main/
   build on Linux
 - [Installing/Windows Build](../Installing/Windows_Build.md) -
   how to build on Windows
-- [Installing/MacOS Build](../Installing/MacOS_Build.md) - how to
-  build on MacOS
+- [Installing/macOS Build](../Installing/MacOS_Build.md) - how to
+  build on macOS
 - [Developer/Documentation Build](Documentation_Build.md) - how to build the
   documentation
 - [Developer/Nightly Build](Nightly_Build.md) - what
@@ -51,7 +51,6 @@ permalink: /Developer/Main/
 - [Progress on implementing an XML validation](XML_Validation.md)
 - [Developer/HowToRelease](HowToRelease.md) - how to build a release
 - [Developer/Docker](Docker.md) - projects using Dockerised SUMO
-- [Eclipse Migration](../Eclipse_Migration.md)
 - [Git](../GitStuff.md)
 - [Visual Studio Code](VisualStudioCode.md) - how to use Visual Studio Code with the SUMO code base
 
@@ -65,7 +64,3 @@ permalink: /Developer/Main/
 - [SUMO brew formula on Travis](https://travis-ci.org/dlr-ts/homebrew-sumo)
 - [SUMO on OpenHub](https://www.openhub.net/p/sumo/)
 - [SUMO on codeclimate](https://codeclimate.com/github/DLR-TS/sumo)
-
-## Text Snippets
-
-- [Purgatory/Text Snippets](../Purgatory/Text_Snippets.md) - some text snippets

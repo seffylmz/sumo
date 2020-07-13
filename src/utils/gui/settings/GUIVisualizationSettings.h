@@ -213,6 +213,29 @@ struct GUIVisualizationCandidateColorSettings {
     static const RGBColor conflict;
 };
 
+/// @brief struct for connection settings
+struct GUIVisualizationNeteditSizeSettings {
+
+    /// @brief junction buuble radius
+    static const double junctionBubbleRadius;
+
+    /// @brief moving geometry point radius
+    static const double movingGeometryPointRadius;
+
+    /// @brief polygon contour width
+    static const double polygonContourWidth;
+
+    /// @brief poly line width
+    static const double polylineWidth;
+};
+
+/// @brief struct for connection settings
+struct GUIVisualizationConnectionSettings {
+
+    /// @brief connection width
+    static const double connectionWidth;
+};
+
 
 /// @brief struct for additional settings
 struct GUIVisualizationAdditionalSettings {
@@ -508,6 +531,12 @@ public:
     /// @brief function to calculate circle resolution for all circles drawn in drawGL(...) functions
     int getCircleResolution() const;
 
+    /// @brief check if dotted contour can be drawn
+    bool drawDottedContour() const;
+
+    /// @brief check if moving geometry point can be draw
+    bool drawMovingGeometryPoint(double exaggeration) const;
+
     /// @brief The name of this setting
     std::string name;
 
@@ -772,6 +801,9 @@ public:
     /// @brief flag to force draw for rectangle selection (see drawForRectangleSelection)
     bool forceDrawForRectangleSelection;
 
+    /// @brief flag to force draw dotted contour
+    bool forceDrawDottedContour;
+
     /**@brief whether drawing is performed in left-hand networks
      * @note used to avoid calls to OptionsCont::getOptions() in every drawgl(...) function, and
      * updated in every doPaintGL(int mode, const Boundary& bound) call
@@ -800,6 +832,12 @@ public:
 
     /// @brief candidate color settings
     GUIVisualizationCandidateColorSettings candidateColorSettings;
+
+    /// @brief netedit size settings
+    GUIVisualizationNeteditSizeSettings neteditSizeSettings;
+
+    /// @brief connection settings
+    GUIVisualizationConnectionSettings connectionSettings;
 
     /// @brief Additional settings
     GUIVisualizationAdditionalSettings additionalSettings;

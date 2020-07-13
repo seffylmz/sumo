@@ -23,7 +23,6 @@
 #include <netedit/dialogs/GNERerouterDialog.h>
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNENet.h>
-#include <netedit/GNEViewNet.h>
 
 #include "GNERerouterInterval.h"
 
@@ -68,11 +67,6 @@ GNERerouterInterval::commitGeometryMoving(GNEUndoList*) {
 void
 GNERerouterInterval::updateGeometry() {
     // This additional doesn't own a geometry
-}
-
-
-void GNERerouterInterval::updateDottedContour() {
-    // This additional doesn't own a dotted contour
 }
 
 

@@ -21,8 +21,6 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
@@ -128,19 +126,6 @@ GNEDetectorEntryExit::updateGeometry() {
 
     // update E3 parent children
     getParentAdditionals().at(0)->updateChildConnections();
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNEDetectorEntryExit::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(),
-                                          myAdditionalGeometry.getPosition(),
-                                          myAdditionalGeometry.getRotation(),
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E3EntryExitWidth,
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E3EntryExitHeight);
 }
 
 
@@ -257,8 +242,8 @@ GNEDetectorEntryExit::drawGL(const GUIVisualizationSettings& s) const {
             drawName(getPositionInView(), s.scale, s.addName);
         }
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), entryExitExaggeration, myDottedGeometry);
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            // GNEGeometry::drawShapeDottedContour(s, getType(), entryExitExaggeration, myDottedGeometry);
         }
         // pop gl identificator
         glPopName();

@@ -529,12 +529,14 @@ SUMOVehicleParameter::parseArrivalSpeed(const std::string& val, const std::strin
 
 
 double
-SUMOVehicleParameter::interpretEdgePos(double pos, double maximumValue, SumoXMLAttr attr, const std::string& id) {
+SUMOVehicleParameter::interpretEdgePos(double pos, double maximumValue, SumoXMLAttr attr, const std::string& id, bool silent) {
     if (pos < 0) {
         pos = maximumValue + pos;
     }
-    if (pos > maximumValue) {
-        WRITE_WARNING("Invalid " + toString(attr) + " " + toString(pos) + " given for " + id + ". Using edge end instead.");
+    if (pos > maximumValue && pos != std::numeric_limits<double>::infinity()) {
+        if (!silent) {
+            WRITE_WARNING("Invalid " + toString(attr) + " " + toString(pos) + " given for " + id + ". Using edge end instead.");
+        }
         pos = maximumValue;
     }
     return pos;

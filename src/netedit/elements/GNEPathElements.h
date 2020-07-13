@@ -31,6 +31,7 @@ class GNELane;
 class GNEJunction;
 class GNEAdditional;
 class GNEDemandElement;
+class GNEGenericData;
 
 // ===========================================================================
 // class definitions
@@ -43,7 +44,6 @@ class GNEDemandElement;
 class GNEPathElements {
 
 public:
-
     /// @brief path element
     class PathElement {
 
@@ -51,19 +51,46 @@ public:
         /// @brief constructor for lanes
         PathElement(GNELane* lane);
 
+        /// @brief update nextLane
+        void updateNextLane(GNELane* lane);
+
         /// @brief get junction
         GNEJunction* getJunction() const;
 
         /// @brief get lane
         GNELane* getLane() const;
 
+        /// @brief get next lane
+        GNELane* getNextLane() const;
+
     protected:
         /// @brief lane
         GNELane* myLane;
 
+        /// @brief nextLane
+        GNELane* myNextLane;
+
     private:
         /// @brief default constructor
         PathElement();
+    };
+
+    /// @brief typedef junction path element marker
+    class JunctionPathElementMarker {
+
+    public:
+        /// @brief constructor
+        JunctionPathElementMarker();
+
+        /// @brief check if the given tag and path element was previoulsy registered/marked
+        bool exist(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement);
+
+        /// @brief mark the given tag and path element
+        void mark(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement);
+
+    private:
+        /// @brief container for junction path element marker
+        std::map<SumoXMLTag, std::map<GNELane*, std::set<GNELane*> > > myContainer;
     };
 
     /// @brief Constructor for additional elements
@@ -72,6 +99,9 @@ public:
     /// @brief Constructor for demand elements
     GNEPathElements(GNEDemandElement* demandElement);
 
+    /// @brief Constructor for generic datas
+    GNEPathElements(GNEGenericData* genericData);
+
     /// @brief Destructor
     ~GNEPathElements();
 
@@ -79,10 +109,10 @@ public:
     const std::vector<GNEPathElements::PathElement>& getPath() const;
 
     /// @brief draw lane path child
-    void drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane) const;
+    void drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane, const double offset) const;
 
     /// @brief draw junction path child
-    void drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction) const;
+    void drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction, const double offset, GNEPathElements::JunctionPathElementMarker &junctionPathElementMarker) const;
 
 protected:
     /// @brief calculate path lanes (Dijkstra)
@@ -97,12 +127,18 @@ protected:
     /// @brief reset path lanes
     void resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
 
+    /// @brief calculate consecutive path lanes (used by genericdatas)
+    void calculateGenericDataLanePath(const std::vector<GNEEdge*> &edges);
+
 private:
     /// @brief pointer to additional element
     GNEAdditional* myAdditionalElement;
 
     /// @brief pointer to demand element
     GNEDemandElement* myDemandElement;
+
+    /// @brief pointer to generic data
+    GNEGenericData* myGenericData;
 
     /// @brief vector of edges used in paths
     std::vector<PathElement> myPathElements;
@@ -112,6 +148,9 @@ private:
 
     /// @brief remove elements
     void removeElements();
+
+    /// @brief update path element
+    void updatePathElements();
 
     /// @brief calculate from-via-to edges
     const std::vector<GNEEdge*> calculateFromViaToEdges(GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);

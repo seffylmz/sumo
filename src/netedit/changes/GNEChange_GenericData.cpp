@@ -24,8 +24,11 @@
 #include <config.h>
 
 #include <netedit/GNENet.h>
+#include <netedit/elements/data/GNEDataSet.h>
+#include <netedit/elements/data/GNEDataInterval.h>
 #include <netedit/elements/data/GNEGenericData.h>
 #include <netedit/elements/data/GNEDataInterval.h>
+#include <netedit/elements/network/GNEJunction.h>
 
 #include "GNEChange_GenericData.h"
 
@@ -41,7 +44,9 @@ FXIMPLEMENT_ABSTRACT(GNEChange_GenericData, GNEChange, nullptr, 0)
 GNEChange_GenericData::GNEChange_GenericData(GNEGenericData* genericData, bool forward) :
     GNEChange(genericData, genericData, forward, genericData->isAttributeCarrierSelected()),
     myGenericData(genericData),
-    myDataIntervalParent(genericData->getDataIntervalParent()) {
+    myDataSetParent(genericData->getDataIntervalParent()->getDataSetParent()),
+    myDataIntervalParent(genericData->getDataIntervalParent()),
+    myPath(genericData->getPath()) {
     myGenericData->incRef("GNEChange_GenericData");
 }
 
@@ -52,8 +57,22 @@ GNEChange_GenericData::~GNEChange_GenericData() {
     if (myGenericData->unreferenced()) {
         // show extra information for tests
         WRITE_DEBUG("Deleting unreferenced " + myGenericData->getTagStr() + " '" + myGenericData->getID() + "'");
-        // remove genericData from parents and children
-        removeElementFromParentsAndChildren(myGenericData);
+        // check that generic data don't exist
+        if (myGenericData->getNet()->getAttributeCarriers()->dataSetExist(myDataSetParent) &&
+            myDataSetParent->dataIntervalChildrenExist(myDataIntervalParent) &&
+            myDataIntervalParent->hasGenericDataChild(myGenericData)) {
+            // delete generic data from interval parent
+            myDataIntervalParent->removeGenericDataChild(myGenericData);
+            // remove element from path
+            for (const auto& pathElement : myPath) {
+                pathElement.getLane()->removePathGenericData(myGenericData);
+                if (pathElement.getJunction()) {
+                    pathElement.getJunction()->removePathGenericData(myGenericData);
+                }
+            }
+            // remove genericData from parents and children
+            removeElementFromParentsAndChildren(myGenericData);
+        }
         // delete generic data
         delete myGenericData;
     }
@@ -71,6 +90,13 @@ GNEChange_GenericData::undo() {
         }
         // delete generic data from interval parent
         myDataIntervalParent->removeGenericDataChild(myGenericData);
+        // remove element from path
+        for (const auto& pathElement : myPath) {
+            pathElement.getLane()->removePathGenericData(myGenericData);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathGenericData(myGenericData);
+            }
+        }
         // remove genericData from parents and children
         removeElementFromParentsAndChildren(myGenericData);
     } else {
@@ -112,6 +138,13 @@ GNEChange_GenericData::redo() {
         }
         // delete generic data from interval parent
         myDataIntervalParent->removeGenericDataChild(myGenericData);
+        // remove element from path
+        for (const auto& pathElement : myPath) {
+            pathElement.getLane()->removePathGenericData(myGenericData);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathGenericData(myGenericData);
+            }
+        }
         // remove genericData from parents and children
         removeElementFromParentsAndChildren(myGenericData);
     }

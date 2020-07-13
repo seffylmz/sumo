@@ -26,6 +26,8 @@
 #include <microsim/MSStoppingPlace.h>
 #include <microsim/transportables/MSPerson.h>
 #include <microsim/transportables/MSStageDriving.h>
+#include <microsim/devices/MSDevice_Taxi.h>
+#include <microsim/devices/MSDispatch_TraCI.h>
 #include <libsumo/TraCIConstants.h>
 #include <utils/geom/GeomHelper.h>
 #include <utils/common/StringTokenizer.h>
@@ -119,6 +121,42 @@ Person::getLanePosition(const std::string& personID) {
     return getPerson(personID)->getEdgePos();
 }
 
+std::vector<TraCIStage>
+Person::getTaxiReservations(int onlyNew) {
+    std::vector<TraCIStage> result;
+    MSDispatch* dispatcher = MSDevice_Taxi::getDispatchAlgorithm();
+    if (dispatcher != nullptr) {
+        MSDispatch_TraCI* traciDispatcher = dynamic_cast<MSDispatch_TraCI*>(dispatcher); 
+        if (traciDispatcher == nullptr) {
+            throw TraCIException("device.taxi.dispatch-algorithm 'traci' has not been loaded");
+        }
+        for (Reservation* res : dispatcher->getReservations()) {
+            if (onlyNew != 0) {
+                if (res->recheck != SUMOTime_MAX) {
+                    continue;
+                }
+                // reservations become the responsibility of the traci client
+                res->recheck = SUMOTime_MAX;
+            }
+            result.push_back(TraCIStage(STAGE_DRIVING,
+                        joinNamedToStringSorting(res->persons, " "), // vType
+                        "taxi", // line
+                        traciDispatcher->getReservationID(res), // destStop
+                        std::vector<std::string>({ res->from->getID(), res->to->getID() }), // edges
+                        STEPS2TIME(res->reservationTime), // traveltime
+                        (double)res->persons.size(), // cost
+                        -1, // length
+                        res->group, // intended
+                        STEPS2TIME(res->pickupTime), // depart
+                        res->fromPos, // departPos
+                        res->toPos, // arrivalPos
+                        "" // description
+                        ));
+        }
+    }
+    return result;
+}
+
 
 TraCIColor
 Person::getColor(const std::string& personID) {
@@ -194,16 +232,23 @@ Person::getStage(const std::string& personID, int nextStageIndex) {
     }
     result.description = stage->getStageDescription(p->isPerson());
     result.length = stage->getDistance();
-    // negative values indicate that the information is not available
-    result.cost = -1;
-    result.travelTime = -1;
+    if (result.length == -1.) {
+        result.length = INVALID_DOUBLE_VALUE;
+    }
+    result.departPos = INVALID_DOUBLE_VALUE;
+    result.cost = INVALID_DOUBLE_VALUE;
+    result.travelTime = INVALID_DOUBLE_VALUE;
+    result.depart = stage->getDeparted() >= 0 ? STEPS2TIME(stage->getDeparted()) : INVALID_DOUBLE_VALUE;
+    result.travelTime = stage->getArrived() >= 0 ? STEPS2TIME(stage->getArrived() - stage->getDeparted()) : INVALID_DOUBLE_VALUE;
     // Some stage type dependant attributes
     switch (stage->getStageType()) {
         case MSStageType::DRIVING: {
             MSStageDriving* const drivingStage = static_cast<MSStageDriving*>(stage);
             result.vType = drivingStage->getVehicleType();
             result.intended = drivingStage->getIntendedVehicleID();
-            result.depart = STEPS2TIME(drivingStage->getIntendedDepart());
+            if (result.depart < 0 && drivingStage->getIntendedDepart() >= 0) {
+                result.depart = STEPS2TIME(drivingStage->getIntendedDepart());
+            }
             const std::set<std::string> lines = drivingStage->getLines();
             for (auto line = lines.begin(); line != lines.end(); line++) {
                 if (line != lines.begin()) {
@@ -1005,8 +1050,10 @@ Person::handleVariable(const std::string& objID, const int variable, VariableWra
             return wrapper->wrapInt(objID, variable, getRemainingStages(objID));
         case VAR_VEHICLE:
             return wrapper->wrapString(objID, variable, getVehicle(objID));
-        default:
+        case VAR_TAXI_RESERVATIONS:
             return false;
+        default:
+            return libsumo::VehicleType::handleVariable(getTypeID(objID), variable, wrapper);
     }
 }
 

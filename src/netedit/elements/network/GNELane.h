@@ -47,6 +47,33 @@ class GNELane : public GNENetworkElement, public GNECandidateElement, public FXD
     FXDECLARE(GNELane)
 
 public:
+    /// @brief class for LaneDrawingConstants
+    class LaneDrawingConstants {
+
+    public:
+        /// @brief parameter constructor
+        LaneDrawingConstants(const GUIVisualizationSettings& s, const GNELane* lane);
+
+        /// @brief selection scale
+        const double selectionScale;
+
+        /// @brief exaggeration
+        const double exaggeration;
+
+        // compute lane-marking intersection points)
+        const double halfWidth2;
+
+        // Draw as a normal lane, and reduce width to make sure that a selected edge can still be seen
+        const double halfWidth;
+
+    private:
+        // default constructor
+        LaneDrawingConstants();
+
+        /// @brief Invalidated assignment operator.
+        LaneDrawingConstants& operator=(const LaneDrawingConstants&) = delete;
+    };
+
     /**@brief Constructor
      * @param[in] idStorage The storage of gl-ids to get the one for this lane representation from
      * @param[in] the edge this lane belongs to
@@ -67,6 +94,9 @@ public:
 
     /// @brief get lengths of the single shape parts
     const std::vector<double>& getShapeLengths() const;
+
+    /// @brief get dotted lane geometry
+    const GNEGeometry::DottedGeometry &getDottedLaneGeometry() const;
 
     /// @brief update pre-computed geometry information
     void updateGeometry();
@@ -197,6 +227,12 @@ public:
     /// @brief remove path demand element (used by GNEPathElement)
     void removePathDemandElement(GNEDemandElement* demandElement);
 
+    /// @brief add path demand element (used by GNEPathElement)
+    void addPathGenericData(GNEGenericData* genericData);
+
+    /// @brief remove path demand element (used by GNEPathElement)
+    void removePathGenericData(GNEGenericData* genericData);
+
     /// @brief invalidate path element childs
     void invalidatePathElements();
 
@@ -210,9 +246,6 @@ public:
 
     /// @brief whether to draw this lane as a railway
     bool drawAsRailway(const GUIVisualizationSettings& s) const;
-
-    /// @brief draw partial E2 detector plan
-    void drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEAdditional* E2Detector, const GNEJunction* junction) const;
 
 protected:
     /// @brief FOX needs this
@@ -228,6 +261,9 @@ private:
     /// @brief lane geometry
     GNEGeometry::Geometry myLaneGeometry;
 
+    /// @brief dotted lane geometry
+    GNEGeometry::DottedGeometry myDottedLaneGeometry;
+
     /// @name computed only once (for performance) in updateGeometry()
     /// @{
 
@@ -239,10 +275,10 @@ private:
     /// @}
 
     /// @brief optional special color
-    const RGBColor* mySpecialColor = nullptr;
+    const RGBColor* mySpecialColor;
 
     /// @brief optional value that corresponds to which the special color corresponds
-    double mySpecialColorValue = -1;
+    double mySpecialColorValue;
 
     /// @brief The color of the shape parts (cached)
     mutable std::vector<RGBColor> myShapeColors;
@@ -250,17 +286,17 @@ private:
     /// @brief lane2lane connections
     GNEGeometry::Lane2laneConnection myLane2laneConnections;
 
-    /// @brief vector with references to path additional elements
-    std::vector<GNEAdditional*> myPathAdditionalElements;
+    /// @brief map with references to path additional elements
+    std::map<SumoXMLTag, std::vector<GNEAdditional*> > myPathAdditionalElements;
 
-    /// @brief vector with references to path demand elements
-    std::vector<GNEDemandElement*> myPathDemandElements;
+    /// @brief map with references to path demand elements
+    std::map<SumoXMLTag, std::vector<GNEDemandElement*> > myPathDemandElements;
+
+    /// @brief map with references to path generic data elements
+    std::map<SumoXMLTag, std::vector<GNEGenericData*> > myPathGenericDatas;
 
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
-
-    /// @brief update dotted contour
-    void updateDottedContour();
 
     /// @brief draw lane markings
     void drawMarkings(const GUIVisualizationSettings& s, double scale) const;

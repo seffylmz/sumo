@@ -215,7 +215,7 @@ GNEViewNet::GNEViewNet(FXComposite* tmpParent, FXComposite* actualParent, GUIMai
     myNet(net),
     myCurrentFrame(nullptr),
     myUndoList(undoList),
-    myDottedAC(nullptr) {
+    myInspectedAttributeCarrier(nullptr) {
     // view must be the final member of actualParent
     reparent(actualParent);
     // Build edit modes
@@ -604,7 +604,7 @@ GNEViewNet::GNEViewNet() :
     myNet(nullptr),
     myCurrentFrame(nullptr),
     myUndoList(nullptr),
-    myDottedAC(nullptr) {
+    myInspectedAttributeCarrier(nullptr) {
 }
 
 
@@ -662,9 +662,6 @@ GNEViewNet::doPaintGL(int mode, const Boundary& bound) {
     // init view settings
     if (!myVisualizationSettings->drawForPositionSelection && myVisualizationSettings->forceDrawForPositionSelection) {
         myVisualizationSettings->drawForPositionSelection = true;
-        myVisualizationSettings->drawForRectangleSelection = true;
-    } else {
-        myVisualizationSettings->drawForRectangleSelection = false;
     }
     if (!myVisualizationSettings->drawForRectangleSelection && myVisualizationSettings->forceDrawForRectangleSelection) {
         myVisualizationSettings->drawForRectangleSelection = true;
@@ -733,9 +730,9 @@ GNEViewNet::doPaintGL(int mode, const Boundary& bound) {
         // check if menuCheckLockPerson must be enabled or disabled
         if (myDemandViewOptions.menuCheckLockPerson->getCheck() == FALSE) {
             // check if we're in inspector mode and we're inspecting exactly one element
-            if ((myEditModes.demandEditMode == DemandEditMode::DEMAND_INSPECT) && getDottedAC()) {
+            if ((myEditModes.demandEditMode == DemandEditMode::DEMAND_INSPECT) && myInspectedAttributeCarrier) {
                 // obtain tag property
-                const GNETagProperties& tagProperty = getDottedAC()->getTagProperty();
+                const GNETagProperties& tagProperty = myInspectedAttributeCarrier->getTagProperty();
                 // enable menu check lock person if is either a person, a person plan or a person stop
                 if (tagProperty.isPerson() || tagProperty.isPersonPlan() || tagProperty.isPersonStop()) {
                     myDemandViewOptions.menuCheckLockPerson->enable();
@@ -1126,18 +1123,14 @@ GNEViewNet::getIntervalBar() {
 
 
 const GNEAttributeCarrier*
-GNEViewNet::getDottedAC() const {
-    return myDottedAC;
+GNEViewNet::getInspectedAttributeCarrier() const {
+    return myInspectedAttributeCarrier;
 }
 
 
 void
-GNEViewNet::setDottedAC(GNEAttributeCarrier* AC) {
-    myDottedAC = AC;
-    // check if dotted geometry has to be updated
-    if (myDottedAC && myDottedAC->getDottedGeometry().isGeometryDeprecated()) {
-        myDottedAC->updateDottedContour();
-    }
+GNEViewNet::setInspectedAttributeCarrier(const GNEAttributeCarrier* AC) {
+    myInspectedAttributeCarrier = AC;
 }
 
 
@@ -2139,18 +2132,22 @@ GNEViewNet::updateCursor() {
     bool cursorMove = false;
     // check if in current mode/supermode cursor move can be shown
     if (myEditModes.isCurrentSupermodeNetwork()) {
-        if ((myEditModes.networkEditMode == NetworkEditMode::NETWORK_ADDITIONAL) ||
-                (myEditModes.networkEditMode == NetworkEditMode::NETWORK_POLYGON) ||
-                (myEditModes.networkEditMode == NetworkEditMode::NETWORK_TAZ)) {
+        if ((myEditModes.networkEditMode == NetworkEditMode::NETWORK_SELECT) ||
+            (myEditModes.networkEditMode == NetworkEditMode::NETWORK_ADDITIONAL) ||
+            (myEditModes.networkEditMode == NetworkEditMode::NETWORK_POLYGON) ||
+            (myEditModes.networkEditMode == NetworkEditMode::NETWORK_TAZ)) {
             cursorMove = true;
         }
     } else if (myEditModes.isCurrentSupermodeDemand()) {
-        if ((myEditModes.demandEditMode == DemandEditMode::DEMAND_VEHICLE) ||
+        if ((myEditModes.demandEditMode == DemandEditMode::DEMAND_SELECT) ||
+            (myEditModes.demandEditMode == DemandEditMode::DEMAND_VEHICLE) ||
             (myEditModes.demandEditMode == DemandEditMode::DEMAND_STOP)) {
             cursorMove = true;
         }
     } else if (myEditModes.isCurrentSupermodeData()) {
-        // unused in data mode
+        if (myEditModes.dataEditMode == DataEditMode::DATA_SELECT) {
+            cursorMove = true;
+        }
     }
     // update cursor if control key is pressed
     if (myKeyPressed.controlKeyPressed() && cursorMove) {
@@ -2286,7 +2283,7 @@ long
 GNEViewNet::onCmdClearConnections(FXObject*, FXSelector, void*) {
     GNEJunction* junction = getJunctionAtPopupPosition();
     if (junction != nullptr) {
-        if (myDottedAC != nullptr && myDottedAC->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
+        if (myInspectedAttributeCarrier != nullptr && myInspectedAttributeCarrier->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
             // make sure we do not inspect the connection will it is being deleted
             myViewParent->getInspectorFrame()->clearInspectedAC();
         }
@@ -2314,7 +2311,7 @@ long
 GNEViewNet::onCmdResetConnections(FXObject*, FXSelector, void*) {
     GNEJunction* junction = getJunctionAtPopupPosition();
     if (junction != nullptr) {
-        if (myDottedAC != nullptr && myDottedAC->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
+        if (myInspectedAttributeCarrier != nullptr && myInspectedAttributeCarrier->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
             // make sure we do not inspect the connection will it is being deleted
             myViewParent->getInspectorFrame()->clearInspectedAC();
         }
@@ -2598,7 +2595,7 @@ GNEViewNet::onCmdToogleLockPerson(FXObject*, FXSelector sel, void*) {
     // lock or unlock current inspected person depending of menuCheckLockPerson value
     if (myDemandViewOptions.menuCheckLockPerson->getCheck()) {
         // obtan locked person or person plan
-        const GNEDemandElement* personOrPersonPlan = dynamic_cast<const GNEDemandElement*>(getDottedAC());
+        const GNEDemandElement* personOrPersonPlan = dynamic_cast<const GNEDemandElement*>(myInspectedAttributeCarrier);
         if (personOrPersonPlan) {
             // lock person depending if casted demand element is either a person or a person plan
             if (personOrPersonPlan->getTagProperty().isPerson()) {
@@ -3288,10 +3285,23 @@ GNEViewNet::deleteSelectedDemandElements() {
     if (demandElements.size() > 0) {
         std::string plural = demandElements.size() == 1 ? ("") : ("s");
         myUndoList->p_begin("delete selected demand elements" + plural);
-        for (auto i : demandElements) {
+        // declare vector for persons
+        std::vector<GNEDemandElement*> persons;
+        for (const auto &demandElement: demandElements) {
+            // check if element is a personplan
+            if (demandElement->getTagProperty().isPersonPlan()) {
+                persons.push_back(demandElement->getParentDemandElements().front());
+            }
             // due there are demand elements that are removed when their parent is removed, we need to check if yet exists before removing
-            if (myNet->retrieveDemandElement(i->getTagProperty().getTag(), i->getID(), false) != nullptr) {
-                myNet->deleteDemandElement(i, myUndoList);
+            if (myNet->retrieveDemandElement(demandElement->getTagProperty().getTag(), demandElement->getID(), false) != nullptr) {
+                myNet->deleteDemandElement(demandElement, myUndoList);
+            }
+        }
+        // check if we have to remove empty persons
+        for (const auto &person : persons) {
+            // due person could be removed previously, check if exist
+            if (person->getChildDemandElements().empty() && myNet->retrieveDemandElement(person->getTagProperty().getTag(), person->getID(), false) != nullptr) {
+                myNet->deleteDemandElement(person, myUndoList);
             }
         }
         myUndoList->p_end();
@@ -3549,14 +3559,14 @@ GNEViewNet::drawTemporalDrawShape() const {
         // draw blue line with the current drawed shape
         glPushMatrix();
         glLineWidth(2);
-        glTranslated(0, 0, GLO_MAX);
+        glTranslated(0, 0, GLO_TEMPORALSHAPE);
         GLHelper::setColor(RGBColor::BLUE);
         GLHelper::drawLine(temporalShape);
         glPopMatrix();
         // draw red line from the last point of shape to the current mouse position
         glPushMatrix();
         glLineWidth(2);
-        glTranslated(0, 0, GLO_MAX);
+        glTranslated(0, 0, GLO_TEMPORALSHAPE);
         // draw last line depending if shift key (delete last created point) is pressed
         if (deleteLastCreatedPoint) {
             GLHelper::setColor(RGBColor::RED);
@@ -3611,23 +3621,29 @@ GNEViewNet::processLeftButtonPressNetwork(void* eventData) {
             break;
         }
         case NetworkEditMode::NETWORK_SELECT:
-            // check if a rect for selecting is being created
-            if (myKeyPressed.shiftKeyPressed()) {
-                // begin rectangle selection
-                mySelectingArea.beginRectangleSelection();
-            } else {
-                // first check that under cursor there is an attribute carrier, isn't a demand element and is selectable
-                if (myObjectsUnderCursor.getAttributeCarrierFront() && !myObjectsUnderCursor.getAttributeCarrierFront()->getTagProperty().isDemandElement()) {
-                    // Check if this GLobject type is locked
-                    if (!myViewParent->getSelectorFrame()->getLockGLObjectTypes()->IsObjectTypeLocked(myObjectsUnderCursor.getGlTypeFront())) {
-                        // toogle networkElement selection
-                        if (myObjectsUnderCursor.getAttributeCarrierFront()->isAttributeCarrierSelected()) {
-                            myObjectsUnderCursor.getAttributeCarrierFront()->unselectAttributeCarrier();
-                        } else {
-                            myObjectsUnderCursor.getAttributeCarrierFront()->selectAttributeCarrier();
+            // avoid to select if control key is pressed
+            if (!myKeyPressed.controlKeyPressed()) {
+                // check if a rect for selecting is being created
+                if (myKeyPressed.shiftKeyPressed()) {
+                    // begin rectangle selection
+                    mySelectingArea.beginRectangleSelection();
+                } else {
+                    // first check that under cursor there is an attribute carrier, isn't a demand element and is selectable
+                    if (myObjectsUnderCursor.getAttributeCarrierFront() && !myObjectsUnderCursor.getAttributeCarrierFront()->getTagProperty().isDemandElement()) {
+                        // Check if this GLobject type is locked
+                        if (!myViewParent->getSelectorFrame()->getLockGLObjectTypes()->IsObjectTypeLocked(myObjectsUnderCursor.getGlTypeFront())) {
+                            // toogle networkElement selection
+                            if (myObjectsUnderCursor.getAttributeCarrierFront()->isAttributeCarrierSelected()) {
+                                myObjectsUnderCursor.getAttributeCarrierFront()->unselectAttributeCarrier();
+                            } else {
+                                myObjectsUnderCursor.getAttributeCarrierFront()->selectAttributeCarrier();
+                            }
                         }
                     }
+                    // process click
+                    processClick(eventData);
                 }
+            } else {
                 // process click
                 processClick(eventData);
             }
@@ -3866,11 +3882,8 @@ GNEViewNet::processLeftButtonPressDemand(void* eventData) {
             break;
         }
         case DemandEditMode::DEMAND_SELECT:
-            // check if a rect for selecting is being created
-            if (myKeyPressed.shiftKeyPressed()) {
-                // begin rectangle selection
-                mySelectingArea.beginRectangleSelection();
-            } else {
+            // avoid to select if control key is pressed
+            if (!myKeyPressed.controlKeyPressed()) {
                 // check if a rect for selecting is being created
                 if (myKeyPressed.shiftKeyPressed()) {
                     // begin rectangle selection
@@ -3891,6 +3904,9 @@ GNEViewNet::processLeftButtonPressDemand(void* eventData) {
                     // process click
                     processClick(eventData);
                 }
+            } else {
+                // process click
+                processClick(eventData);
             }
             break;
         case DemandEditMode::DEMAND_MOVE: {
@@ -4017,11 +4033,8 @@ GNEViewNet::processLeftButtonPressData(void* eventData) {
             break;
         }
         case DataEditMode::DATA_SELECT:
-            // check if a rect for selecting is being created
-            if (myKeyPressed.shiftKeyPressed()) {
-                // begin rectangle selection
-                mySelectingArea.beginRectangleSelection();
-            } else {
+            // avoid to select if control key is pressed
+            if (!myKeyPressed.controlKeyPressed()) {
                 // check if a rect for selecting is being created
                 if (myKeyPressed.shiftKeyPressed()) {
                     // begin rectangle selection
@@ -4042,6 +4055,9 @@ GNEViewNet::processLeftButtonPressData(void* eventData) {
                     // process click
                     processClick(eventData);
                 }
+            } else {
+                // process click
+                processClick(eventData);
             }
             break;
         case DataEditMode::DATA_EDGEDATA:

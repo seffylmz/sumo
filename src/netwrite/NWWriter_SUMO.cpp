@@ -682,38 +682,40 @@ NWWriter_SUMO::writeConnection(OutputDevice& into, const NBEdge& from, const NBE
     into.writeAttr(SUMO_ATTR_TO, c.toEdge->getID());
     into.writeAttr(SUMO_ATTR_FROM_LANE, c.fromLane);
     into.writeAttr(SUMO_ATTR_TO_LANE, c.toLane);
-    if (c.mayDefinitelyPass && style != TLL) {
-        into.writeAttr(SUMO_ATTR_PASS, c.mayDefinitelyPass);
-    }
-    if ((from.getToNode()->getKeepClear() == false || c.keepClear == false) && style != TLL) {
-        into.writeAttr<bool>(SUMO_ATTR_KEEP_CLEAR, false);
-    }
-    if (c.contPos != NBEdge::UNSPECIFIED_CONTPOS && style != TLL) {
-        into.writeAttr(SUMO_ATTR_CONTPOS, c.contPos);
-    }
-    if (c.visibility != NBEdge::UNSPECIFIED_VISIBILITY_DISTANCE && style != TLL) {
-        into.writeAttr(SUMO_ATTR_VISIBILITY_DISTANCE, c.visibility);
-    }
-    if (c.permissions != SVC_UNSPECIFIED && style != TLL) {
-        writePermissions(into, c.permissions);
-    }
-    if (c.speed != NBEdge::UNSPECIFIED_SPEED && style != TLL) {
-        into.writeAttr(SUMO_ATTR_SPEED, c.speed);
-    }
-    if (c.customLength != NBEdge::UNSPECIFIED_LOADED_LENGTH && style != TLL) {
-        into.writeAttr(SUMO_ATTR_LENGTH, c.customLength);
-    }
-    if (c.customShape.size() != 0 && style != TLL) {
-        if (geoAccuracy) {
-            into.setPrecision(gPrecisionGeo);
+    if (style != TLL) {
+        if (c.mayDefinitelyPass) {
+            into.writeAttr(SUMO_ATTR_PASS, c.mayDefinitelyPass);
         }
-        into.writeAttr(SUMO_ATTR_SHAPE, c.customShape);
-        if (geoAccuracy) {
-            into.setPrecision();
+        if (c.keepClear == KEEPCLEAR_FALSE) {
+            into.writeAttr<bool>(SUMO_ATTR_KEEP_CLEAR, false);
         }
-    }
-    if (c.uncontrolled != false && style != TLL) {
-        into.writeAttr(SUMO_ATTR_UNCONTROLLED, c.uncontrolled);
+        if (c.contPos != NBEdge::UNSPECIFIED_CONTPOS) {
+            into.writeAttr(SUMO_ATTR_CONTPOS, c.contPos);
+        }
+        if (c.visibility != NBEdge::UNSPECIFIED_VISIBILITY_DISTANCE) {
+            into.writeAttr(SUMO_ATTR_VISIBILITY_DISTANCE, c.visibility);
+        }
+        if (c.permissions != SVC_UNSPECIFIED) {
+            writePermissions(into, c.permissions);
+        }
+        if (c.speed != NBEdge::UNSPECIFIED_SPEED) {
+            into.writeAttr(SUMO_ATTR_SPEED, c.speed);
+        }
+        if (c.customLength != NBEdge::UNSPECIFIED_LOADED_LENGTH) {
+            into.writeAttr(SUMO_ATTR_LENGTH, c.customLength);
+        }
+        if (c.customShape.size() != 0) {
+            if (geoAccuracy) {
+                into.setPrecision(gPrecisionGeo);
+            }
+            into.writeAttr(SUMO_ATTR_SHAPE, c.customShape);
+            if (geoAccuracy) {
+                into.setPrecision();
+            }
+        }
+        if (c.uncontrolled != false) {
+            into.writeAttr(SUMO_ATTR_UNCONTROLLED, c.uncontrolled);
+        }
     }
     if (style != PLAIN) {
         if (includeInternal) {
@@ -736,6 +738,14 @@ NWWriter_SUMO::writeConnection(OutputDevice& into, const NBEdge& from, const NBE
             const LinkState linkState = from.getToNode()->getLinkState(
                                             &from, c.toEdge, c.fromLane, c.toLane, c.mayDefinitelyPass, c.tlID);
             into.writeAttr(SUMO_ATTR_STATE, linkState);
+            if (linkState == LINKSTATE_MINOR
+                    && c.visibility == NBEdge::UNSPECIFIED_VISIBILITY_DISTANCE
+                    && c.toEdge->getJunctionPriority(c.toEdge->getToNode()) == NBEdge::JunctionPriority::ROUNDABOUT) {
+                const double visibilityDistance = OptionsCont::getOptions().getFloat("roundabouts.visibility-distance");
+                if (visibilityDistance != NBEdge::UNSPECIFIED_VISIBILITY_DISTANCE) {
+                    into.writeAttr(SUMO_ATTR_VISIBILITY_DISTANCE, visibilityDistance);
+                }
+            }
         }
     }
     c.writeParams(into);

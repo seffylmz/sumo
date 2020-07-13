@@ -301,10 +301,6 @@ GNEPerson::updateGeometry() {
     }
 }
 
-void
-GNEPerson::updateDottedContour() {
-    //
-}
 
 void
 GNEPerson::computePath() {
@@ -446,8 +442,8 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
                 GLHelper::drawTextSettings(s.personValue, toString(value), personValuePosition, s.scale, s.angle, GLO_MAX - getType());
             }
             // check if dotted contour has to be drawn
-            if (myNet->getViewNet()->getDottedAC() == this) {
-                GLHelper::drawShapeDottedContourRectangle(s, getType(), personPosition, exaggeration, exaggeration);
+            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+                // GLHelper::drawShapeDottedContourRectangle(s, getType(), personPosition, exaggeration, exaggeration);
             }
             // pop name
             glPopName();
@@ -457,13 +453,13 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
 
 
 void 
-GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/) const {
+GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
     // Stops don't use drawPartialGL
 }
 
 
 void 
-GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/) const {
+GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/, const double /*offsetFront*/) const {
     // Stops don't use drawPartialGL
 }
 
@@ -697,17 +693,17 @@ GNEPerson::getHierarchyName() const {
     // special case for Trips and flow
     if ((myTagProperty.getTag() == SUMO_TAG_TRIP) || (myTagProperty.getTag() == SUMO_TAG_FLOW)) {
         // check if we're inspecting a Edge
-        if (myNet->getViewNet()->getDottedAC() &&
-                myNet->getViewNet()->getDottedAC()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
+        if (myNet->getViewNet()->getInspectedAttributeCarrier() &&
+                myNet->getViewNet()->getInspectedAttributeCarrier()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
             // check if edge correspond to a "from", "to" or "via" edge
-            if (getParentEdges().front() == myNet->getViewNet()->getDottedAC()) {
+            if (getParentEdges().front() == myNet->getViewNet()->getInspectedAttributeCarrier()) {
                 return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (from)";
-            } else if (getParentEdges().front() == myNet->getViewNet()->getDottedAC()) {
+            } else if (getParentEdges().front() == myNet->getViewNet()->getInspectedAttributeCarrier()) {
                 return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (to)";
             } else {
                 // iterate over via
                 for (const auto& i : via) {
-                    if (i == myNet->getViewNet()->getDottedAC()->getID()) {
+                    if (i == myNet->getViewNet()->getInspectedAttributeCarrier()->getID()) {
                         return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (via)";
                     }
                 }

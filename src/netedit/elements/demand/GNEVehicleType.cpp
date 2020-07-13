@@ -138,12 +138,6 @@ GNEVehicleType::updateGeometry() {
 
 
 void
-GNEVehicleType::updateDottedContour() {
-    //
-}
-
-
-void
 GNEVehicleType::computePath() {
     // nothing to compute
 }
@@ -187,13 +181,13 @@ GNEVehicleType::drawGL(const GUIVisualizationSettings&) const {
 
 
 void 
-GNEVehicleType::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/) const {
+GNEVehicleType::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
     // vehicleTypes don't use drawPartialGL
 }
 
 
 void
-GNEVehicleType::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /* fromLane */, const GNELane* /* toLane */) const {
+GNEVehicleType::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /* fromLane */, const GNELane* /* toLane */, const double /*offsetFront*/) const {
     // vehicleTypes don't use drawPartialGL
 }
 

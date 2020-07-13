@@ -21,8 +21,6 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
@@ -122,18 +120,6 @@ GNEDetectorE1Instant::updateGeometry() {
 
     // Set block icon rotation, and using their rotation for logo
     myBlockIcon.setRotation(getParentLanes().front());
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void GNEDetectorE1Instant::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(),
-                                          myAdditionalGeometry.getPosition(),
-                                          myAdditionalGeometry.getRotation(),
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E1InstantWidth,
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E1InstantHeight);
 }
 
 
@@ -232,8 +218,8 @@ GNEDetectorE1Instant::drawGL(const GUIVisualizationSettings& s) const {
             drawName(getPositionInView(), s.scale, s.addName);
         }
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), E1InstantExaggeration, myDottedGeometry);
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedSquaredShape(s, myAdditionalGeometry.getPosition(), 2, 1, myAdditionalGeometry.getRotation() + 90, E1InstantExaggeration);
         }
         glPopName();
     }

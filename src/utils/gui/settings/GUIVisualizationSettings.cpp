@@ -81,6 +81,21 @@ const RGBColor GUIVisualizationCandidateColorSettings::special(255, 0, 255, 255)
 const RGBColor GUIVisualizationCandidateColorSettings::conflict(255, 255, 0, 255);  // Yellow
 
 // -------------------------------------------------------------------------
+// Netedit size values
+// -------------------------------------------------------------------------
+
+const double GUIVisualizationNeteditSizeSettings::junctionBubbleRadius(4);
+const double GUIVisualizationNeteditSizeSettings::movingGeometryPointRadius(1.2);
+const double GUIVisualizationNeteditSizeSettings::polygonContourWidth(0.3);
+const double GUIVisualizationNeteditSizeSettings::polylineWidth(1);
+
+// -------------------------------------------------------------------------
+// additional values
+// -------------------------------------------------------------------------
+
+const double GUIVisualizationConnectionSettings::connectionWidth(0.2);
+
+// -------------------------------------------------------------------------
 // additional values
 // -------------------------------------------------------------------------
 
@@ -138,10 +153,10 @@ const RGBColor GUIVisualizationStoppingPlaceSettings::parkingSpaceColor(255, 200
 // Dotted contour values
 // -------------------------------------------------------------------------
 
-const double GUIVisualizationDottedContourSettings::segmentWidth(0.15);
+const double GUIVisualizationDottedContourSettings::segmentWidth(0.2);
 const double GUIVisualizationDottedContourSettings::segmentLength(2);
-const RGBColor GUIVisualizationDottedContourSettings::firstColor(255, 255, 255);
-const RGBColor GUIVisualizationDottedContourSettings::secondColor(0, 0, 0);
+const RGBColor GUIVisualizationDottedContourSettings::firstColor(235, 235, 235);
+const RGBColor GUIVisualizationDottedContourSettings::secondColor(20, 20, 20);
 
 // -------------------------------------------------------------------------
 // widths of certain NETEDIT objects
@@ -162,7 +177,7 @@ const double GUIVisualizationDetailSettings::laneTextures(20); // originally 10
 const double GUIVisualizationDetailSettings::lockIcon(30);
 const double GUIVisualizationDetailSettings::additionalTextures(20); // originally 10
 const double GUIVisualizationDetailSettings::geometryPointsDetails(10);
-const double GUIVisualizationDetailSettings::geometryPointsText(30);
+const double GUIVisualizationDetailSettings::geometryPointsText(20);
 const double GUIVisualizationDetailSettings::stoppingPlaceDetails(10);
 const double GUIVisualizationDetailSettings::stoppingPlaceText(10);
 const double GUIVisualizationDetailSettings::detectorDetails(10);
@@ -432,9 +447,10 @@ GUIVisualizationSettings::GUIVisualizationSettings(bool _netedit) :
     drawForRectangleSelection(false),
     forceDrawForPositionSelection(false),
     forceDrawForRectangleSelection(false),
+    forceDrawDottedContour(false),
     lefthand(false),
     disableLaneIcons(false) {
-
+    // init defaults depending of NETEDIT or SUMO-GUI
     if (netedit) {
         initNeteditDefaults();
     } else {
@@ -1369,6 +1385,7 @@ GUIVisualizationSettings::save(OutputDevice& dev) const {
     dev.writeAttr("drawBoundaries", drawBoundaries);
     dev.writeAttr("forceDrawPositionSelection", forceDrawForPositionSelection);
     dev.writeAttr("forceDrawRectangleSelection", forceDrawForRectangleSelection);
+    dev.writeAttr("forceDrawDottedContour", forceDrawDottedContour);
     dev.closeTag();
     dev.openTag(SUMO_TAG_VIEWSETTINGS_BACKGROUND);
     dev.writeAttr("backgroundColor", backgroundColor);
@@ -1539,6 +1556,9 @@ GUIVisualizationSettings::operator==(const GUIVisualizationSettings& v2) {
         return false;
     }
     if (forceDrawForRectangleSelection != v2.forceDrawForRectangleSelection) {
+        return false;
+    }
+    if (forceDrawDottedContour != v2.forceDrawDottedContour) {
         return false;
     }
     if (backgroundColor != v2.backgroundColor) {
@@ -1888,5 +1908,20 @@ GUIVisualizationSettings::getCircleResolution() const {
     }
 }
 
+
+bool 
+GUIVisualizationSettings::drawDottedContour() const {
+    if (drawForPositionSelection || drawForRectangleSelection) {
+        return false;
+    } else {
+        return forceDrawDottedContour;
+    }
+}
+
+
+bool 
+GUIVisualizationSettings::drawMovingGeometryPoint(const double exaggeration) const {
+    return (scale * neteditSizeSettings.movingGeometryPointRadius * exaggeration > 10);
+}
 
 /****************************************************************************/

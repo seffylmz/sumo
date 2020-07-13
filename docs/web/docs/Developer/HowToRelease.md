@@ -33,7 +33,7 @@ software (Veins, VSimRTI, flow etc.) at this stage.
     and rebuild TraCI constants in python
     (tools/traci/rebuildConstants.py)
   - check whether the network version needs to be incremented and
-    update the value in NWFrame::MAJOR_VERSION. Netconvert tests
+    update the value in NWFrame::MAJOR_VERSION. netconvert tests
     need to be updated afterwards.
   - update author information
 - check the regular tests
@@ -100,7 +100,7 @@ and committing the changes after careful inspection
 > git tag -a v0_13_7 -m "tagging release 0.13.7, refs #563"
 > git push --tags
 ```
-- create new OSX application bundles with the new version number (`build/osx/...`) - can only be done on OSX with platypus installed (see {{Source}}build/osx/README.txt)
+- create new macOS application bundles with the new version number (`build/macos/...`) - can only be done on macOS with platypus installed (see {{Source}}build/macos/README.txt)
 
 ### Release day
 

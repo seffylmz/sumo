@@ -62,17 +62,6 @@ GNEDetectorE3::updateGeometry() {
 
     // Update connection's geometry
     myChildConnections.update();
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNEDetectorE3::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), myPosition, 0,
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E3Size,
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E3Size);
 }
 
 
@@ -164,18 +153,16 @@ GNEDetectorE3::drawGL(const GUIVisualizationSettings& s) const {
         // Show Lock icon depending
         myBlockIcon.drawIcon(s, E3Exaggeration, 0.4);
         // Draw child connections
-        drawChildConnections(s, getType());
+        drawChildConnections(s, getType(), E3Exaggeration);
         // Draw name if isn't being drawn for selecting
         if (!s.drawForRectangleSelection) {
             drawName(getPositionInView(), s.scale, s.addName);
         }
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), E3Exaggeration, myDottedGeometry);
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedSquaredShape(s, myPosition, s.detectorSettings.E3Size, s.detectorSettings.E3Size, 0, E3Exaggeration);
             // draw shape dotte contour aroud alld connections between child and parents
-            for (auto i : myChildConnections.connectionPositions) {
-                GLHelper::drawShapeDottedContourAroundShape(s, getType(), i, 0);
-            }
+            drawChildDottedConnections(s, E3Exaggeration);
         }
         // Pop name
         glPopName();

@@ -29,12 +29,12 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/frames/data/GNEEdgeDataFrame.h>
+#include <utils/gui/div/GLHelper.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #include "GNEEdgeData.h"
 #include "GNEDataInterval.h"
-#include "GNEDataSet.h"
 
 
 // ===========================================================================
@@ -57,28 +57,47 @@ GNEEdgeData::~GNEEdgeData() {}
 
 const RGBColor& 
 GNEEdgeData::getColor() const {
+    if (myNet->getViewNet()->getEditModes().dataEditMode == DataEditMode::DATA_EDGEDATA) {
+        // get selected data interval and filtered attribute
+        const GNEDataInterval *dataInterval = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getIntervalSelector()->getDataInterval();
+        const std::string filteredAttribute = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getAttributeSelector()->getFilteredAttribute();
+        // continue if there is a selected data interval and filtered attribute
+        if (dataInterval && (filteredAttribute.size() > 0)) {
+            // obtain minimum and maximum value
+            const double minValue = dataInterval->getSpecificAttributeColors().at(myTagProperty.getTag()).getMinValue(filteredAttribute);
+            const double maxValue = dataInterval->getSpecificAttributeColors().at(myTagProperty.getTag()).getMaxValue(filteredAttribute);
+            // get value
+            const double value = parse<double>(getParameter(filteredAttribute, "0"));
+            // return color
+            return GNEViewNetHelper::getRainbowScaledColor(minValue, maxValue, value);
+        }
+    }
+    // return default color
     return RGBColor::RED;
 }
 
 
 bool 
 GNEEdgeData::isGenericDataVisible() const {
-    // obtain pointer to edge data frame (only for code legibly)
-    const GNEEdgeDataFrame* edgeDataFrame = myDataIntervalParent->getNet()->getViewNet()->getViewParent()->getEdgeDataFrame();
+    // first check if we're in supermode data
+    if (!myNet->getViewNet()->getEditModes().isCurrentSupermodeData()) {
+        return false;
+    }
     // get current data edit mode
     DataEditMode dataMode = myNet->getViewNet()->getEditModes().dataEditMode;
     // check if we have to filter generic data
     if ((dataMode == DataEditMode::DATA_INSPECT) || (dataMode == DataEditMode::DATA_DELETE) || (dataMode == DataEditMode::DATA_SELECT)) {
-        return true;
-    } else if (edgeDataFrame->shown()) {
+        return isVisibleInspectDeleteSelect();
+    } else if (myDataIntervalParent->getNet()->getViewNet()->getViewParent()->getEdgeDataFrame()->shown()) {
+        // get selected data interval and filtered attribute
+        const GNEDataInterval *dataInterval = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getIntervalSelector()->getDataInterval();
+        const std::string filteredAttribute = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getAttributeSelector()->getFilteredAttribute();
         // check interval
-        if ((edgeDataFrame->getIntervalSelector()->getDataInterval() != nullptr) &&
-            (edgeDataFrame->getIntervalSelector()->getDataInterval() != myDataIntervalParent)) {
+        if ((dataInterval != nullptr) && (dataInterval != myDataIntervalParent)) {
             return false;
         }
         // check attribute
-        if ((edgeDataFrame->getAttributeSelector()->getFilteredAttribute().size() > 0) &&
-            (getParametersMap().count(edgeDataFrame->getAttributeSelector()->getFilteredAttribute()) == 0)) {
+        if ((filteredAttribute.size() > 0) && (getParametersMap().count(filteredAttribute) == 0)) {
             return false;
         }
         // all checks ok, then return true
@@ -92,16 +111,8 @@ GNEEdgeData::isGenericDataVisible() const {
 
 void
 GNEEdgeData::updateGeometry() {
-    // nothing to update
-}
-
-
-void
-GNEEdgeData::updateDottedContour() {
-    // just update geometry of parent edge
-    if (getParentEdges().front()->getDottedGeometry().isGeometryDeprecated()) {
-        getParentEdges().front()->updateDottedContour();
-    }
+    // calculate generic data path
+    calculateGenericDataLanePath(getParentEdges());
 }
 
 
@@ -142,6 +153,57 @@ GNEEdgeData::getGenericDataProblem() const {
 void
 GNEEdgeData::fixGenericDataProblem() {
     throw InvalidArgument(getTagStr() + " cannot fix any problem");
+}
+
+
+void 
+GNEEdgeData::drawGL(const GUIVisualizationSettings& /*s*/) const {
+    // Nothing to draw
+}
+
+
+void 
+GNEEdgeData::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const {
+    // get lane width
+    const double laneWidth = s.addSize.getExaggeration(s, lane) * (lane->getParentEdge()->getNBEdge()->getLaneWidth(lane->getIndex()) * 0.5);
+    // Start drawing adding an gl identificator
+    glPushName(getGlID());
+    // Add a draw matrix
+    glPushMatrix();
+    // Start with the drawing of the area traslating matrix to origin
+    glTranslated(0, 0, getType() + offsetFront);
+    // Set orange color
+    GLHelper::setColor(RGBColor::BLACK);
+    // draw box lines
+    GNEGeometry::drawLaneGeometry(myNet->getViewNet(), lane->getLaneShape(), lane->getShapeRotations(), lane->getShapeLengths(), {}, laneWidth);
+    // translate to top
+    glTranslated(0, 0, 0.01);
+    // Set color
+    if (isAttributeCarrierSelected()) {
+        GLHelper::setColor(s.colorSettings.selectedEdgeDataColor);
+    } else {
+        GLHelper::setColor(getColor());
+    }
+    // draw interne box lines
+    GNEGeometry::drawLaneGeometry(myNet->getViewNet(), lane->getLaneShape(), lane->getShapeRotations(), lane->getShapeLengths(), {}, laneWidth - 0.1);
+    // Pop last matrix
+    glPopMatrix();
+    // Pop name
+    glPopName();
+    // draw filtered attribute
+    if (getParentEdges().front()->getLanes().front() == lane) {
+        drawFilteredAttribute(s, lane->getLaneShape(), myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getAttributeSelector()->getFilteredAttribute());
+    }
+    // check if shape dotted contour has to be drawn
+    if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+        GNEGeometry::drawDottedContourEdge(s, lane->getParentEdge(), true, true);
+    }
+}
+
+
+void
+GNEEdgeData::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/, const double /*offsetFront*/) const {
+    // EdgeDatas don't use drawPartialGL over junction
 }
 
 
@@ -249,8 +311,8 @@ GNEEdgeData::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case GNE_ATTR_PARAMETERS:
             setParametersStr(value);
-            // mark interval parent as deprecated
-            myDataIntervalParent->markAttributeColorsDeprecated();
+            // update attribute colors
+            myDataIntervalParent->getDataSetParent()->updateAttributeColors();
             break;
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");

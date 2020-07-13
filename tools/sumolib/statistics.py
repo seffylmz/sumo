@@ -18,21 +18,23 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import sys
-import time
-import os
 import math
-import colorsys
-import socket
-import random
 import warnings
 from collections import defaultdict
+
+
+def round(value):  # to round in Python 3 like in Python 2
+    if value < 0:
+        return math.ceil(value - 0.5)
+    else:
+        return math.floor(value + 0.5)
 
 
 class _ExtremeType(object):
     """
     see http://www.python.org/dev/peps/pep-0326/
     """
+
     def __init__(self, isMax, rep):
         object.__init__(self)
         self._isMax = isMax
@@ -62,6 +64,10 @@ class _ExtremeType(object):
 
 uMax = _ExtremeType(True, "uMax")
 uMin = _ExtremeType(False, "uMin")
+
+
+def setPrecision(formatstr, precision):
+    return formatstr.replace('%.2f', '%.' + str(int(precision)) + 'f')
 
 
 class Statistics:
@@ -186,27 +192,30 @@ class Statistics:
     def histogram(self):
         return [(k * self.scale, self.counts[k]) for k in sorted(self.counts.keys())]
 
-    def __str__(self):
+    def toString(self, precision=2):
         if len(self.values) > 0:
             min = ''
             if self.printMin:
-                min = 'min %.2f%s, ' % (self.min,
-                                        ('' if self.min_label is None else ' (%s)' % (self.min_label,)))
-            result = '%s: count %s, %smax %.2f%s, mean %.2f' % (
+                min = setPrecision('min %.2f%s, ', precision) % (
+                    self.min, ('' if self.min_label is None else ' (%s)' % (self.min_label,)))
+            result = setPrecision('%s: count %s, %smax %.2f%s, mean %.2f', precision) % (
                 self.label, len(self.values), min,
                 self.max,
                 ('' if self.max_label is None else ' (%s)' %
                  (self.max_label,)),
                 self.avg())
-            result += ' Q1 %.2f, median %.2f, Q3 %.2f' % self.quartiles()
+            result += setPrecision(' Q1 %.2f, median %.2f, Q3 %.2f', precision) % self.quartiles()
             if self.abs:
-                result += ', mean_abs %.2f, median_abs %.2f' % (
+                result += setPrecision(', mean_abs %.2f, median_abs %.2f', precision) % (
                     self.avg_abs(), self.mean_abs())
             if self.counts is not None:
                 result += '\n histogram: %s' % self.histogram()
             return result
         else:
             return '%s: no values' % self.label
+
+    def __str__(self):
+        return self.toString()
 
 
 def geh(m, c):

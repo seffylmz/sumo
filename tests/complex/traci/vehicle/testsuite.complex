@@ -1,5 +1,12 @@
+# tests for vehicle mapping
+moveToXY
+
 # Tests the openGap() method.
 openGap
+replaceStop
+
+# test taxi API
+taxi
 
 # Tests the vehicle API
 vehicle

@@ -18,18 +18,28 @@
 # @date    2011-03-15
 
 from __future__ import absolute_import
-import struct
 import warnings
 from . import constants as tc
 from .domain import Domain
-from .storage import Storage
 from .exceptions import FatalTraCIError
 
 
 class Stage(object):
 
-    def __init__(self, type, vType, line, destStop, edges, travelTime, cost, length, intended,
-                 depart, departPos, arrivalPos, description):
+    def __init__(self,
+                 type=tc.INVALID_INT_VALUE,
+                 vType="",
+                 line="",
+                 destStop="",
+                 edges=[],
+                 travelTime=tc.INVALID_DOUBLE_VALUE,
+                 cost=tc.INVALID_DOUBLE_VALUE,
+                 length=tc.INVALID_DOUBLE_VALUE,
+                 intended="",
+                 depart=tc.INVALID_DOUBLE_VALUE,
+                 departPos=tc.INVALID_DOUBLE_VALUE,
+                 arrivalPos=tc.INVALID_DOUBLE_VALUE,
+                 description=""):
         self.type = type
         self.vType = vType
         self.line = line
@@ -48,7 +58,10 @@ class Stage(object):
         if getattr(self, attrname) == default:
             return ""
         else:
-            return "%s=%s" % (attrname, getattr(self, attrname))
+            val = getattr(self, attrname)
+            if val == tc.INVALID_DOUBLE_VALUE:
+                val = "INVALID"
+            return "%s=%s" % (attrname, val)
 
     def __repr__(self):
         return "Stage(%s)" % ', '.join([v for v in [
@@ -88,39 +101,12 @@ def _readStage(result):
                  length, intended, depart, departPos, arrivalPos, description)
 
 
-def _stageSize(stage):
-    size = 1 + 4  # compound
-    size += 1 + 4  # stage type
-    size += 1 + 4 + len(stage.vType)  # vType
-    size += 1 + 4 + len(stage.line)  # line
-    size += 1 + 4 + len(stage.destStop)  # destStop
-    size += 1 + 4 + sum(map(len, stage.edges)) + 4 * len(stage.edges)  # edges
-    size += 1 + 8  # travelTime
-    size += 1 + 8  # cost
-    size += 1 + 8  # length
-    size += 1 + 4 + len(stage.intended)  # intended
-    size += 1 + 8  # depart
-    size += 1 + 8  # departPos
-    size += 1 + 8  # arrivalPos
-    size += 1 + 4 + len(stage.description)
-    return size
-
-
-def _writeStage(stage, connection):
-    connection._string += struct.pack("!Bi", tc.TYPE_COMPOUND, 13)
-    connection._string += struct.pack("!Bi", tc.TYPE_INTEGER, stage.type)
-    connection._packString(stage.vType)
-    connection._packString(stage.line)
-    connection._packString(stage.destStop)
-    connection._packStringList(stage.edges)
-    connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, stage.travelTime)
-    connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, stage.cost)
-    connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, stage.length)
-    connection._packString(stage.intended)
-    connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, stage.depart)
-    connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, stage.departPos)
-    connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, stage.arrivalPos)
-    connection._packString(stage.description)
+def _writeStage(stage):
+    format = "tisssldddsddds"
+    values = [13, stage.type, stage.vType, stage.line, stage.destStop, stage.edges,
+              stage.travelTime, stage.cost, stage.length, stage.intended,
+              stage.depart, stage.departPos, stage.arrivalPos, stage.description]
+    return format, values
 
 
 _RETURN_VALUE_FUNC = {tc.FIND_ROUTE: _readStage}

@@ -66,14 +66,6 @@ GNECrossing::updateGeometry() {
     auto crossing = myParentJunction->getNBNode()->getCrossing(myCrossingEdges);
     // obtain shape
     myCrossingGeometry.updateGeometry(crossing->customShape.size() > 0 ?  crossing->customShape : crossing->shape);
-    /*
-    // only rebuild shape if junction's shape isn't in Buuble mode
-    if (myParentJunction->getNBNode()->getShape().size() > 0) {
-        myCrossingGeometry.calculateShapeRotationsAndLengths();
-    }
-    */
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
 }
 
 
@@ -111,6 +103,7 @@ GNECrossing::drawGL(const GUIVisualizationSettings& s) const {
             (myCrossingGeometry.getShapeLengths().size() > 0) &&
             (s.scale > 3.0)) {
         const auto NBCrossing = myParentJunction->getNBNode()->getCrossing(myCrossingEdges);
+        // check that current mode isn't TLS
         if (myNet->getViewNet()->getEditModes().networkEditMode != NetworkEditMode::NETWORK_TLS) {
             // push draw matrix 1
             glPushMatrix();
@@ -168,14 +161,14 @@ GNECrossing::drawGL(const GUIVisualizationSettings& s) const {
             glPopName();
             // pop draw matrix 1
             glPopMatrix();
+            // check if dotted contour has to be drawn (not useful at high zoom)
+            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+                GNEGeometry::drawDottedContourShape(s, myCrossingGeometry.getShape(), halfWidth, 1);
+            }
         }
         // link indices must be drawn in all edit modes if isn't being drawn for selecting
         if (s.drawLinkTLIndex.show && !s.drawForRectangleSelection) {
             drawTLSLinkNo(s);
-        }
-        // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), 1, myDottedGeometry);
         }
     }
 }
@@ -454,28 +447,5 @@ GNECrossing::setAttribute(SumoXMLAttr key, const std::string& value) {
         myParentJunction->updateGeometry();
     }
 }
-
-
-void
-GNECrossing::updateDottedContour() {
-    auto crossing = myParentJunction->getNBNode()->getCrossing(myCrossingEdges);
-    // build contour using connection geometry
-    PositionVector contourFront = myCrossingGeometry.getShape();
-    PositionVector contourback = contourFront;
-    // move both to side
-    contourFront.move2side(crossing->width * 0.5);
-    contourback.move2side(crossing->width * -0.5);
-    // reverse contourback
-    contourback = contourback.reverse();
-    // add contour back to contourfront
-    for (const auto& position : contourback) {
-        contourFront.push_back(position);
-    }
-    // close contour front
-    contourFront.closePolygon();
-    // set as dotted contour
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), contourFront);
-}
-
 
 /****************************************************************************/

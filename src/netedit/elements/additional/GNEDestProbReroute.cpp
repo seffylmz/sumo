@@ -20,7 +20,6 @@
 #include <config.h>
 
 #include <netedit/dialogs/GNERerouterIntervalDialog.h>
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/GNENet.h>
 #include <netedit/GNEUndoList.h>
@@ -67,12 +66,6 @@ GNEDestProbReroute::commitGeometryMoving(GNEUndoList*) {
 void
 GNEDestProbReroute::updateGeometry() {
     // This additional doesn't own a geometry
-}
-
-
-void
-GNEDestProbReroute::updateDottedContour() {
-    // This additional doesn't own a dotted contour
 }
 
 

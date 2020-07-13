@@ -131,8 +131,6 @@ GNEConnection::updateGeometry() {
         }
         // mark connection as non-deprecated
         myShapeDeprecated = false;
-        // mark dotted geometry deprecated
-        myDottedGeometry.markDottedGeometryDeprecated();
     }
 }
 
@@ -287,6 +285,8 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
     }
     // Check if connection must be drawed
     if (drawConnection) {
+        // draw connection checking whether it is not too small if isn't being drawn for selecting
+        const double selectionScale = isAttributeCarrierSelected() ? s.selectionScale : 1;
         // check if boundary has to be drawn
         if (s.drawBoundaries) {
             GLHelper::drawBoundary(getBoundary());
@@ -307,8 +307,6 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
             // Set color depending of the link state
             GLHelper::setColor(GNEInternalLane::colorForLinksState(getLinkState()));
         }
-        // draw connection checking whether it is not too small if isn't being drawn for selecting
-        const double selectionScale = isAttributeCarrierSelected() ? s.selectionScale : 1;
         if ((s.scale * selectionScale < 5.) && !s.drawForRectangleSelection) {
             // If it's small, draw a simple line
             GLHelper::drawLine(myConnectionGeometry.getShape());
@@ -319,35 +317,38 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
             if (spreadSuperposed) {
                 shapeSuperposed.move2side(0.5);
             }
-            GLHelper::drawBoxLines(shapeSuperposed, myConnectionGeometry.getShapeRotations(), myConnectionGeometry.getShapeLengths(), 0.2 * selectionScale);
+            GLHelper::drawBoxLines(shapeSuperposed, myConnectionGeometry.getShapeRotations(), myConnectionGeometry.getShapeLengths(), s.connectionSettings.connectionWidth * selectionScale);
             glTranslated(0, 0, 0.1);
             GLHelper::setColor(GLHelper::getColor().changedBrightness(51));
             // check if internal junction marker has to be drawn
             if (myInternalJunctionMarker.size() > 0) {
                 GLHelper::drawLine(myInternalJunctionMarker);
             }
+            // Pop draw matrix 1
+            glPopMatrix();
+            // check if edge value has to be shown
+            if (s.edgeValue.show) {
+                NBEdge::Connection& nbCon = getNBEdgeConnection();
+                std::string value = nbCon.getParameter(s.edgeParam, "");
+                if (value != "") {
+                    int shapeIndex = (int)myConnectionGeometry.getShape().size() / 2;
+                    Position p = (myConnectionGeometry.getShape().size() == 2
+                        ? (myConnectionGeometry.getShape().front() * 0.67 + myConnectionGeometry.getShape().back() * 0.33)
+                        : myConnectionGeometry.getShape()[shapeIndex]);
+                    GLHelper::drawTextSettings(s.edgeValue, value, p, s.scale, 0);
+                }
+            }
+            // Pop name
+            glPopName();
             // check if dotted contour has to be drawn (not useful at high zoom)
-            if (myNet->getViewNet()->getDottedAC() == this) {
-                GNEGeometry::drawShapeDottedContour(s, getType(), 1, myDottedGeometry);
+            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+                // calculate dotted geometry
+                GNEGeometry::DottedGeometry dottedConnectionGeometry(s, myConnectionGeometry.getShape(), false);
+                dottedConnectionGeometry.setWidth(0.1);
+                // use drawDottedContourLane to draw it
+                GNEGeometry::drawDottedContourLane(s, dottedConnectionGeometry, s.connectionSettings.connectionWidth * selectionScale, true, true);
             }
         }
-        // Pop draw matrix 1
-        glPopMatrix();
-
-        if (s.edgeValue.show) {
-            NBEdge::Connection& nbCon = getNBEdgeConnection();
-            std::string value = nbCon.getParameter(s.edgeParam, "");
-            if (value != "") {
-                int shapeIndex = (int)myConnectionGeometry.getShape().size() / 2;
-                Position p = (myConnectionGeometry.getShape().size() == 2
-                              ? (myConnectionGeometry.getShape().front() * 0.67 + myConnectionGeometry.getShape().back() * 0.33)
-                              : myConnectionGeometry.getShape()[shapeIndex]);
-                GLHelper::drawTextSettings(s.edgeValue, value, p, s.scale, 0);
-            }
-        }
-
-        // Pop name
-        glPopName();
     }
 }
 
@@ -356,6 +357,7 @@ void
 GNEConnection::setSpecialColor(const RGBColor* color) {
     mySpecialColor = color;
 }
+
 
 std::string
 GNEConnection::getAttribute(SumoXMLAttr key) const {
@@ -590,7 +592,7 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value) {
             nbCon.mayDefinitelyPass = parse<bool>(value);
             break;
         case SUMO_ATTR_KEEP_CLEAR:
-            nbCon.keepClear = parse<bool>(value);
+            nbCon.keepClear = parse<bool>(value) ? KEEPCLEAR_TRUE : KEEPCLEAR_FALSE;
             break;
         case SUMO_ATTR_UNCONTROLLED:
             nbCon.uncontrolled = parse<bool>(value);
@@ -650,27 +652,5 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value) {
         updateGeometry();
     }
 }
-
-
-void
-GNEConnection::updateDottedContour() {
-    // build contour using connection geometry
-    PositionVector contourFront = myConnectionGeometry.getShape();
-    PositionVector contourback = contourFront;
-    // move both 0.25 to side
-    contourFront.move2side(0.25);
-    contourback.move2side(-0.25);
-    // reverse contourback
-    contourback = contourback.reverse();
-    // add contour back to contourfront
-    for (const auto& position : contourback) {
-        contourFront.push_back(position);
-    }
-    // close contour front
-    contourFront.closePolygon();
-    // set as dotted contour
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), contourFront);
-}
-
 
 /****************************************************************************/

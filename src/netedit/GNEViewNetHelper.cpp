@@ -46,9 +46,12 @@
 #include "GNEViewParent.h"
 #include "GNEApplicationWindow.h"
 
+
 // ===========================================================================
-// member method definitions
+// static members
 // ===========================================================================
+
+std::vector<RGBColor> GNEViewNetHelper::myRainbowScaledColors;
 
 // ---------------------------------------------------------------------------
 // GNEViewNetHelper::ObjectsUnderCursor - methods
@@ -688,11 +691,12 @@ GNEViewNetHelper::MoveSingleElementValues::calculatePolyValues() {
     // assign clicked poly to polyToMove
     myPolyToMove = myViewNet->myObjectsUnderCursor.getPolyFront();
     // calculate polyShapeOffset
-    double polyShapeOffset = myPolyToMove->getShape().nearest_offset_to_point2D(myViewNet->getPositionInformation(), false);
-    // if polyShapeOffset is -1, then we clicked over
+    const double polyShapeOffset = myPolyToMove->getShape().nearest_offset_to_point2D(myViewNet->getPositionInformation(), false);
+    // calculate distance to shape
+    const double distanceToShape = myPolyToMove->getShape().distance2D(myViewNet->getPositionInformation());
     // now we have two cases: if we're editing the X-Y coordenade or the altitude (z)
     if (myViewNet->myNetworkViewOptions.menuCheckMoveElevation->shown() && myViewNet->myNetworkViewOptions.menuCheckMoveElevation->getCheck() == TRUE) {
-        // check if in the clicked position a geometry point exist
+        // check if we clicked over a vertex index
         if (myPolyToMove->getPolyVertexIndex(myViewNet->getPositionInformation(), false) != -1) {
             // start geometry moving
             myPolyToMove->startPolyShapeGeometryMoving(polyShapeOffset);
@@ -704,11 +708,16 @@ GNEViewNetHelper::MoveSingleElementValues::calculatePolyValues() {
             // poly values wasn't calculated, then return false
             return false;
         }
-    } else {
+    } else if ((distanceToShape <= myViewNet->getVisualisationSettings().neteditSizeSettings.movingGeometryPointRadius) || myPolyToMove->isPolygonBlocked()) {
         // start geometry moving
         myPolyToMove->startPolyShapeGeometryMoving(polyShapeOffset);
         // poly values sucesfully calculated, then return true
         return true;
+    } else {
+        // stop poly moving
+        myPolyToMove = nullptr;
+        // poly values wasn't calculated, then return false
+        return false;
     }
 }
 
@@ -1077,7 +1086,7 @@ void
 GNEViewNetHelper::SelectingArea::drawRectangleSelection(const RGBColor& color) const {
     if (selectingUsingRectangle) {
         glPushMatrix();
-        glTranslated(0, 0, GLO_MAX - 1);
+        glTranslated(0, 0, GLO_RECTANGLESELECTION);
         GLHelper::setColor(color);
         glLineWidth(2);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -1235,7 +1244,7 @@ GNEViewNetHelper::TestingMode::drawTestingElements(GUIMainWindow* mainWindow) {
         const double size = myViewNet->p2m(32);
         Position center = myViewNet->screenPos2NetPos(8, 8);
         GLHelper::setColor(RGBColor::MAGENTA);
-        glTranslated(center.x(), center.y(), GLO_MAX - 1);
+        glTranslated(center.x(), center.y(), GLO_TESTELEMENT);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBegin(GL_QUADS);
         glVertex2d(0, 0);
@@ -1248,7 +1257,7 @@ GNEViewNetHelper::TestingMode::drawTestingElements(GUIMainWindow* mainWindow) {
         // show box with the current position relative to pink square
         Position posRelative = myViewNet->screenPos2NetPos(myViewNet->getWidth() - 40, myViewNet->getHeight() - 20);
         // adjust cursor position (24,25) to show exactly the same position as in function netedit.leftClick(match, X, Y)
-        GLHelper::drawTextBox(toString(myViewNet->getWindowCursorPosition().x() - 24) + " " + toString(myViewNet->getWindowCursorPosition().y() - 25), posRelative, GLO_MAX - 1, myViewNet->p2m(20), RGBColor::BLACK, RGBColor::WHITE);
+        GLHelper::drawTextBox(toString(myViewNet->getWindowCursorPosition().x() - 24) + " " + toString(myViewNet->getWindowCursorPosition().y() - 25), posRelative, GLO_TESTELEMENT, myViewNet->p2m(20), RGBColor::BLACK, RGBColor::WHITE);
         glPopMatrix();
     }
 }
@@ -1895,23 +1904,23 @@ bool
 GNEViewNetHelper::DemandViewOptions::showNonInspectedDemandElements(const GNEDemandElement* demandElement) const {
     if (menuCheckHideNonInspectedDemandElements->shown()) {
         // check conditions
-        if ((menuCheckHideNonInspectedDemandElements->getCheck() == FALSE) || (myViewNet->getDottedAC() == nullptr)) {
+        if ((menuCheckHideNonInspectedDemandElements->getCheck() == FALSE) || (myViewNet->getInspectedAttributeCarrier() == nullptr)) {
             // if checkbox is disabled or there isn't insepected element, then return true
             return true;
-        } else if (myViewNet->getDottedAC()->getTagProperty().isDemandElement()) {
-            if (myViewNet->getDottedAC() == demandElement) {
+        } else if (myViewNet->getInspectedAttributeCarrier()->getTagProperty().isDemandElement()) {
+            if (myViewNet->getInspectedAttributeCarrier() == demandElement) {
                 // if inspected element correspond to demandElement, return true
                 return true;
             } else {
                 // if demandElement is a route, check if dottedAC is one of their children (Vehicle or Stop)
                 for (const auto& i : demandElement->getChildDemandElements()) {
-                    if (i == myViewNet->getDottedAC()) {
+                    if (i == myViewNet->getInspectedAttributeCarrier()) {
                         return true;
                     }
                 }
                 // if demandElement is a vehicle, check if dottedAC is one of his route Parent
                 for (const auto& i : demandElement->getParentDemandElements()) {
-                    if (i == myViewNet->getDottedAC()) {
+                    if (i == myViewNet->getInspectedAttributeCarrier()) {
                         return true;
                     }
                 }
@@ -2858,5 +2867,47 @@ GNEViewNetHelper::EditShapes::saveEditedShape() {
     }
 }
 
+
+const std::vector<RGBColor>& 
+GNEViewNetHelper::getRainbowScaledColors() {
+    // if is empty, fill it
+    if (myRainbowScaledColors.empty()) {
+        // fill scale colors (10)
+        myRainbowScaledColors.push_back(RGBColor(232, 35,  0,   255));
+        myRainbowScaledColors.push_back(RGBColor(255, 165, 0,   255));
+        myRainbowScaledColors.push_back(RGBColor(255, 255, 0,   255));
+        myRainbowScaledColors.push_back(RGBColor(28,  215, 0,   255));
+        myRainbowScaledColors.push_back(RGBColor(0,   181, 100, 255));
+        myRainbowScaledColors.push_back(RGBColor(0,   255, 191, 255));
+        myRainbowScaledColors.push_back(RGBColor(178, 255, 255, 255));
+        myRainbowScaledColors.push_back(RGBColor(0,   112, 184, 255));
+        myRainbowScaledColors.push_back(RGBColor(56,  41,  131, 255));
+        myRainbowScaledColors.push_back(RGBColor(127, 0,   255, 255));
+    }
+    return myRainbowScaledColors;
+}
+
+
+const RGBColor&
+GNEViewNetHelper::getRainbowScaledColor(const double min, const double max, const double value) {
+    // check extremes
+    if (value <= min) {
+        return getRainbowScaledColors().front();
+    } else if (value >= max) {
+        return getRainbowScaledColors().back();
+    } else {
+        // calculate value procent between [min, max]
+        const double procent = ((value - min) * 100) / (max - min);
+        // check if is valid
+        if (procent <= 0) {
+            return getRainbowScaledColors().front();
+        } else if (procent >= 100) {
+            return getRainbowScaledColors().back();
+        } else {
+            // return scaled color
+            return getRainbowScaledColors().at((int)(procent / 10.0));
+        }
+    }
+}
 
 /****************************************************************************/

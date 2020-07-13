@@ -20,7 +20,6 @@
 #include <netedit/GNENet.h>
 #include <netedit/GNEUndoList.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/demand/GNEDemandElement.h>
 
 #include "GNECalibratorFlow.h"
 
@@ -88,11 +87,6 @@ GNECalibratorFlow::commitGeometryMoving(GNEUndoList*) {
 void
 GNECalibratorFlow::updateGeometry() {
     // This additional doesn't own a geometry
-}
-
-
-void GNECalibratorFlow::updateDottedContour() {
-    // This additional doesn't own a dotted contour
 }
 
 

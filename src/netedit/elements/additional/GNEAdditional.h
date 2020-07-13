@@ -206,11 +206,11 @@ public:
     virtual void splitEdgeGeometry(const double splitPosition, const GNENetworkElement* originalElement, const GNENetworkElement* newElement, GNEUndoList* undoList) = 0;
     /// @}
 
-    /// @brief update dotted contour
-    virtual void updateDottedContour() = 0;
-
     /// @brief Check if additional item is currently blocked (i.e. cannot be moved with mouse)
     bool isAdditionalBlocked() const;
+
+    /// @brief partial update pre-computed geometry information
+    void updatePartialGeometry(const GNELane* lane);
 
     /// @name inherited from GUIGlObject
     /// @{
@@ -241,6 +241,23 @@ public:
      * @see GUIGlObject::drawGL
      */
     virtual void drawGL(const GUIVisualizationSettings& s) const = 0;
+
+    /**@brief Draws partial object (lane)
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] lane GNELane in which draw partial
+    * @param[in] drawGeometry flag to enable/disable draw geometry (lines, boxLines, etc.)
+    * @note currently only E2Multilane detectors use drawPartialGL
+    */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const;
+
+    /**@brief Draws partial object (junction)
+    * @param[in] s The settings for the current view (may influence drawing)
+    * @param[in] fromLane from GNELane
+    * @param[in] toLane to GNELane
+    * @param[in] drawGeometry flag to enable/disable draw geometry (lines, boxLines, etc.)
+    * @note currently only E2Multilane detectors use drawPartialGL
+    */
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const;
     /// @}
 
     /// @name inherited from GNEAttributeCarrier
@@ -352,7 +369,7 @@ protected:
     GNEGeometry::Geometry myAdditionalGeometry;
 
     /// @brief segment geometry to be precomputed in updateGeometry(...) (used by E2Multilane)
-    GNEGeometry::SegmentGeometry mySegmentGeometry;
+    GNEGeometry::SegmentGeometry myAdditionalSegmentGeometry;
 
     /// @brief variable AdditionalMove
     AdditionalMove myMove;

@@ -279,13 +279,13 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, startEndEdgeMap=Non
                 if routeRef and not routeParts:
                     standaloneRoutesDepart[moving.route] = 'discard'
                 for ix_part, (newDepart, remaining) in enumerate(routeParts):
+                    cut_stops(moving, busStopEdges, remaining)
                     departShift = None
                     if routeRef:
-                        departShift = newDepart - float(oldDepart)
+                        departShift = cut_stops(routeRef, busStopEdges, remaining,
+                                                newDepart - float(oldDepart), options.defaultStopDuration)
                         standaloneRoutesDepart[moving.route] = departShift
-                    cut_stops(moving, busStopEdges, remaining)
-                    if routeRef:
-                        cut_stops(routeRef, busStopEdges, remaining, departShift, options.defaultStopDuration)
+                        newDepart = float(oldDepart) + departShift
                         routeRef.edges = " ".join(remaining)
                         yield -1, routeRef
                     else:
@@ -327,6 +327,7 @@ def cut_routes(aEdges, orig_net, options, busStopEdges=None, startEndEdgeMap=Non
 def cut_stops(vehicle, busStopEdges, remaining, departShift=0, defaultDuration=0):
     if vehicle.stop:
         skippedStopDuration = 0
+        haveStop = False
         for stop in list(vehicle.stop):
             if stop.busStop:
                 if not busStopEdges:
@@ -335,15 +336,21 @@ def cut_stops(vehicle, busStopEdges, remaining, departShift=0, defaultDuration=0
                     print("Skipping bus stop '%s', which could not be located." % stop.busStop)
                 elif busStopEdges[stop.busStop] in remaining:
                     if departShift > 0 and stop.until is not None:
-                        stop.until = max(0, float(stop.until) - (departShift + skippedStopDuration))
+                        stop.until = max(0, float(stop.until) - departShift)
+                    haveStop = True
                     continue
                 elif stop.duration is not None:
                     skippedStopDuration += float(stop.duration)
                 else:
                     skippedStopDuration += defaultDuration
             elif stop.lane[:-2] in remaining:
+                haveStop = True
                 continue
+            if stop.until is not None and not haveStop:
+                if departShift < float(stop.until):
+                    departShift = float(stop.until)
             vehicle.removeChild(stop)
+    return departShift
 
 
 def getFirstIndex(areaEdges, edges):

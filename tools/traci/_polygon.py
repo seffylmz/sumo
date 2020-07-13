@@ -16,9 +16,7 @@
 # @date    2011-03-16
 
 from __future__ import absolute_import
-import struct
 from .domain import Domain
-from .storage import Storage
 from . import constants as tc
 
 _RETURN_VALUE_FUNC = {tc.VAR_FILL: lambda result: bool(result.read("!i")[0])}
@@ -70,14 +68,14 @@ class PolygonDomain(Domain):
 
         Sets the (abstract) type of the polygon.
         """
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.VAR_TYPE, polygonID, "s", polygonType)
+        self._setCmd(tc.VAR_TYPE, polygonID, "s", polygonType)
 
     def setShape(self, polygonID, shape):
         """setShape(string, list((double, double))) -> None
 
         Sets the shape (list of 2D-positions) of this polygon.
         """
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.VAR_SHAPE, polygonID, "p", shape)
+        self._setCmd(tc.VAR_SHAPE, polygonID, "p", shape)
 
     def setColor(self, polygonID, color):
         """setColor(string, (integer, integer, integer, integer)) -> None
@@ -85,23 +83,25 @@ class PolygonDomain(Domain):
         Sets the rgba color of this polygon, i.e. (255,0,0) for the color red.
         The fourth component (alpha) is optional.
         """
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.VAR_COLOR, polygonID, "c", color)
+        self._setCmd(tc.VAR_COLOR, polygonID, "c", color)
 
     def setFilled(self, polygonID, filled):
         """setFilled(string, bool) -> None
         Sets the filled status of the polygon
         """
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.VAR_FILL, polygonID, "i", filled)
+        self._setCmd(tc.VAR_FILL, polygonID, "i", filled)
 
     def setLineWidth(self, polygonID, lineWidth):
         """setFilled(string, double) -> None
         Sets the line width for drawing unfilled polygon
         """
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.VAR_WIDTH, polygonID, "d", lineWidth)
+        self._setCmd(tc.VAR_WIDTH, polygonID, "d", lineWidth)
 
     def add(self, polygonID, shape, color, fill=False, polygonType="", layer=0, lineWidth=1):
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.ADD, polygonID, "tscBipd",
-                                  6, polygonType, color, fill, layer, shape, lineWidth) 
+        """add(string,  list((double, double)), (integer, integer, integer, integer), bool, string, integer, double) -> None
+        Adds a new polygon.
+        """
+        self._setCmd(tc.ADD, polygonID, "tscBipd", 6, polygonType, color, fill, layer, shape, lineWidth)
 
     def addDynamics(self, polygonID, trackedObjectID="", timeSpan=(), alphaSpan=(), looped=False, rotate=True):
         """ addDynamics(string, string, list(float), list(float), bool) -> void
@@ -118,8 +118,10 @@ class PolygonDomain(Domain):
             rotate - Whether, the polygon should be rotated with the tracked object (only applies when such is given)
                      The center of rotation is the object's position.
         """
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.VAR_ADD_DYNAMICS, polygonID, "tsffBB",
-                                  5, trackedObjectID, timeSpan, alphaSpan, looped, rotate)
+        self._setCmd(tc.VAR_ADD_DYNAMICS, polygonID, "tsffBB", 5, trackedObjectID, timeSpan, alphaSpan, looped, rotate)
 
     def remove(self, polygonID, layer=0):
-        self._connection._sendCmd(tc.CMD_SET_POLYGON_VARIABLE, tc.REMOVE, polygonID, "i", layer)
+        """remove(string, integer) -> None
+        Removes a polygon with the given ID
+        """
+        self._setCmd(tc.REMOVE, polygonID, "i", layer)

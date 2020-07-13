@@ -61,9 +61,12 @@ def ppStages(comment, stages):
     print("%s\n  %s\n" % (comment, "\n  ".join(map(str, stages))))
 
 
-traci.start([sumolib.checkBinary('sumo'), "-c", "sumo.sumocfg",
-             "--ignore-route-errors",
-             "--log", "log.txt"])
+version = traci.start([sumolib.checkBinary('sumo'), "-c", "sumo.sumocfg",
+                       "--ignore-route-errors",
+                       "--log", "log.txt"])
+print("version at start", version)
+print("version", traci.getVersion())
+
 traci.simulation.subscribe(
     [traci.constants.VAR_LOADED_VEHICLES_IDS, traci.constants.VAR_DEPARTED_VEHICLES_IDS])
 print(traci.simulation.getSubscriptionResults())
@@ -138,6 +141,7 @@ except traci.TraCIException as e:
         print(e, file=sys.stderr)
         sys.stderr.flush()
 
+print("getBusStopIDList", traci.simulation.getBusStopIDList())
 print("getBusStopWaiting", traci.simulation.getBusStopWaiting("bs"))
 print("getBusStopWaitingIDList", traci.simulation.getBusStopWaitingIDList("bs"))
 

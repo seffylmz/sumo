@@ -959,6 +959,8 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
         std::vector<std::string> dataElementsFiles = oc.getStringVector("data-files");
         // begin undolist
         myUndoList->p_begin("Loading data elements from '" + toString(dataElementsFiles) + "'");
+        // disable interval bar update
+        myViewNet->getIntervalBar().disableIntervalBarUpdate();
         // iterate over every data file
         for (const auto& dataElementsFile : dataElementsFiles) {
             WRITE_MESSAGE("Loading data elements from '" + dataElementsFile + "'");
@@ -971,7 +973,8 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             // disable validation for data elements
             XMLSubSys::setValidation("auto", "auto");
         }
-
+        // enable interval bar update
+        myViewNet->getIntervalBar().enableIntervalBarUpdate();
         myUndoList->p_end();
     }
     // check if additionals output must be changed
@@ -1785,7 +1788,7 @@ GNEApplicationWindow::onCmdToogleEditOptions(FXObject* obj, FXSelector sel, void
 
 long
 GNEApplicationWindow::onCmdHelp(FXObject*, FXSelector, void*) {
-    FXLinkLabel::fxexecute("https://sumo.dlr.de/docs/NETEDIT.html");
+    FXLinkLabel::fxexecute("https://sumo.dlr.de/docs/netedit.html");
     return 1;
 }
 

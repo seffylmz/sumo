@@ -205,6 +205,18 @@ enum GUIGlObjectType {
     /// @brief Traffic Assignment Zones (TAZs)
     GLO_TAZ = 400,
 
+    /// @brief Dotted contour (used in NETEDIT)
+    GLO_DOTTEDCONTOUR = 1024,
+
+    /// @brief temporal shape (used in NETEDIT)
+    GLO_TEMPORALSHAPE = 1030,
+    
+    /// @brief rectangle selection shape (used in NETEDIT)
+    GLO_RECTANGLESELECTION = 1040,
+
+    /// @brief test element (used in NETEDIT)
+    GLO_TESTELEMENT = 1050,
+
     /// @brief empty max
     GLO_MAX = 2048
 };

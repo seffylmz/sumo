@@ -17,10 +17,8 @@
 # @date    2011-03-17
 
 from __future__ import absolute_import
-import struct
 from . import constants as tc
 from .domain import Domain
-from .storage import Storage
 from .exceptions import TraCIException
 
 
@@ -41,7 +39,7 @@ class EdgeDomain(Domain):
         return self._getUniversal(tc.VAR_EDGE_TRAVELTIME, edgeID, "d", time)
 
     def getWaitingTime(self, edgeID):
-        """getWaitingTime() -> double
+        """getWaitingTime(string) -> double
         Returns the sum of the waiting time of all vehicles currently on
         that edge (see traci.vehicle.getWaitingTime).
         """

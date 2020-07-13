@@ -60,7 +60,7 @@ Open LiSuM, set the SUMO path in the system proferences dialog window
 and open an existing simulation project from the workspace. In the Tools
 menu, select "Start Lisa+ Virtual Controller" to start an instance of
 the LISA+ Virtual Controller. Pressing Ctrl+p or clicking on the "Play"
-button on the toolbar will open an instance of the SUMO-GUI, which will
+button on the toolbar will open an instance of the sumo-gui, which will
 take control over the system. Almost all menus, toolbars and dialog
 windows of LiSuM get blocked and from hereon the simulation may be
 started, paused, resumed and stopped from SUMO. Only the Control Units
@@ -233,7 +233,7 @@ If you want to contribute to the source or want to build for another reason
 make sure you have maven and a compatible JDK (8 or above) on your system.
 The cmake configuration step will create a "lisum-core" and a "lisum-gui" target
 (as well as a "lisum" target to build them both). Just run this target either
-using make (in a Linux or MacOS like environment) or by running the target from
+using make (in a Linux or macOS like environment) or by running the target from
 your IDE (e.g. Visual Studio on Windows). If you are using JDK8 and want the GUI
 you need to make sure that you have openjfx8 installed, since there is no openjfx
 for JDK8 on maven.

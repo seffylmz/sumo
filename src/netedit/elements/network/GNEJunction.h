@@ -48,9 +48,6 @@ class GNEJunction : public GNENetworkElement {
     friend class GNEChange_Crossing;
 
 public:
-    /// @brief constant values for drawing buubles
-    static const double BUBBLE_RADIUS;
-
     /**@brief Constructor
      * @param[in] net The net to inform about gui updates
      * @param[in] nbn The represented node
@@ -250,6 +247,12 @@ public:
     /// @brief remove path demand element (used by GNEPathElement)
     void removePathDemandElement(GNEDemandElement* demandElement);
 
+    /// @brief add path demand element (used by GNEPathElement)
+    void addPathGenericData(GNEGenericData* genericData);
+
+    /// @brief remove path demand element (used by GNEPathElement)
+    void removePathGenericData(GNEGenericData* genericData);
+
     /// @brief invalidate path element childs
     void invalidatePathElements();
 
@@ -269,14 +272,17 @@ private:
     /// @brief the built crossing objects
     std::vector<GNECrossing*> myGNECrossings;
 
-    /// @brief vector with references to path additional elements
-    std::vector<GNEAdditional*> myPathAdditionalElements;
+    /// @brief map with references to path additional elements
+    std::map<SumoXMLTag, std::vector<GNEAdditional*> > myPathAdditionalElements;
 
-    /// @brief vector with references to path demand elements
-    std::vector<GNEDemandElement*> myPathDemandElements;
+    /// @brief map with references to path demand elements
+    std::map<SumoXMLTag, std::vector<GNEDemandElement*> > myPathDemandElements;
+
+    /// @brief map with references to path generic data elements
+    std::map<SumoXMLTag, std::vector<GNEGenericData*> > myPathGenericDatas;
 
     /// @brief The maximum size (in either x-, or y-dimension) for determining whether to draw or not
-    double myMaxSize;
+    double myMaxDrawingSize;
 
     /// @brief whether this junction is the first junction for a newly creatededge
     /// @see GNEApplicationWindow::createEdgeSource)
@@ -301,16 +307,10 @@ private:
     void drawTLSIcon(const GUIVisualizationSettings& s) const;
 
     /// @brief draw junction childs
-    void drawJunctionChilds(const GUIVisualizationSettings& s) const;
-
-    /// @brief draw generic data between two edges
-    void drawPathGenericDataElementChilds(const GUIVisualizationSettings& s) const;
+    void drawJunctionChildren(const GUIVisualizationSettings& s) const;
 
     /// @brief method for setting the attribute and nothing else (used in GNEChange_Attribute)
     void setAttribute(SumoXMLAttr key, const std::string& value);
-
-    /// @brief update dotted contour
-    void updateDottedContour();
 
     /**@brief reposition the node at pos without updating GRID and informs the edges
     * @param[in] pos The new position

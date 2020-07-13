@@ -17,9 +17,7 @@
 # @date    2008-10-09
 
 from __future__ import absolute_import
-import struct
 from .domain import Domain
-from .storage import Storage
 from . import constants as tc
 from .exceptions import TraCIException
 
@@ -85,20 +83,14 @@ class PoiDomain(Domain):
 
         Sets the (abstract) type of the poi.
         """
-        self._connection._beginMessage(
-            tc.CMD_SET_POI_VARIABLE, tc.VAR_TYPE, poiID, 1 + 4 + len(poiType))
-        self._connection._packString(poiType)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_TYPE, poiID, "s", poiType)
 
     def setPosition(self, poiID, x, y):
         """setPosition(string, (double, double)) -> None
 
         Sets the position coordinates of the poi.
         """
-        self._connection._beginMessage(
-            tc.CMD_SET_POI_VARIABLE, tc.VAR_POSITION, poiID, 1 + 8 + 8)
-        self._connection._string += struct.pack("!Bdd", tc.POSITION_2D, x, y)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_POSITION, poiID, "o", (x, y))
 
     def setColor(self, poiID, color):
         """setColor(string, (integer, integer, integer, integer)) -> None
@@ -106,70 +98,50 @@ class PoiDomain(Domain):
         Sets the rgba color of the poi, i.e. (255,0,0) for the color red.
         The fourth component (alpha) is optional.
         """
-        self._connection._beginMessage(
-            tc.CMD_SET_POI_VARIABLE, tc.VAR_COLOR, poiID, 1 + 1 + 1 + 1 + 1)
-        self._connection._string += struct.pack("!BBBBB", tc.TYPE_COLOR, int(color[0]), int(color[1]), int(color[2]),
-                                                int(color[3]) if len(color) > 3 else 255)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_COLOR, poiID, "c", color)
 
     def setWidth(self, poiID, width):
         """setWidth(string, double) -> None
 
         Sets the width of the poi.
         """
-        self._connection._beginMessage(
-            tc.CMD_SET_POI_VARIABLE, tc.VAR_WIDTH, poiID, 1 + 8)
-        self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, width)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_WIDTH, poiID, "d", width)
 
     def setHeight(self, poiID, height):
         """setHeight(string, double) -> None
 
         Sets the height of the poi.
         """
-        self._connection._beginMessage(tc.CMD_SET_POI_VARIABLE, tc.VAR_HEIGHT, poiID, 1 + 8)
-        self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, height)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_HEIGHT, poiID, "d", height)
 
     def setAngle(self, poiID, angle):
         """setAngle(string, double) -> None
 
         Sets the angle of the poi.
         """
-        self._connection._beginMessage(tc.CMD_SET_POI_VARIABLE, tc.VAR_ANGLE, poiID, 1 + 8)
-        self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, angle)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_ANGLE, poiID, "d", angle)
 
     def setImageFile(self, poiID, imageFile):
         """setImageFile(string, string) -> None
 
         Sets the image file of the poi.
         """
-        self._connection._beginMessage(
-            tc.CMD_SET_POI_VARIABLE, tc.VAR_IMAGEFILE, poiID, 1 + 4 + len(imageFile))
-        self._connection._packString(imageFile)
-        self._connection._sendExact()
+        self._setCmd(tc.VAR_IMAGEFILE, poiID, "s", imageFile)
 
     def add(self, poiID, x, y, color, poiType="", layer=0, imgFile="", width=1, height=1, angle=0):
-        self._connection._beginMessage(tc.CMD_SET_POI_VARIABLE, tc.ADD, poiID, 1 + 4 + 1 + 4 + len(poiType) +
-                                       1 + 1 + 1 + 1 + 1 + 1 + 4 + 1 + 8 + 8 + 1 + 4 + len(imgFile) +
-                                       1 + 8 + 1 + 8 + 1 + 8)
-        self._connection._string += struct.pack("!Bi", tc.TYPE_COMPOUND, 8)
-        self._connection._packString(poiType)
-        self._connection._string += struct.pack("!BBBBB", tc.TYPE_COLOR, int(color[0]), int(color[1]), int(color[2]),
-                                                int(color[3]) if len(color) > 3 else 255)
-        self._connection._string += struct.pack("!Bi", tc.TYPE_INTEGER, layer)
-        self._connection._string += struct.pack("!Bdd", tc.POSITION_2D, x, y)
-        self._connection._packString(imgFile)
-        self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, width)
-        self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, height)
-        self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, angle)
-        self._connection._sendExact()
+        """
+        add(string, double, double, (byte, byte, byte, byte), string, integer, string, double, double, double) -> None
+
+        Adds a poi with the given values
+        """
+        self._setCmd(tc.ADD, poiID, "tsciosddd", 8, poiType, color, layer, (x, y), imgFile, width, height, angle)
 
     def remove(self, poiID, layer=0):
-        self._connection._beginMessage(tc.CMD_SET_POI_VARIABLE, tc.REMOVE, poiID, 1 + 4)
-        self._connection._string += struct.pack("!Bi", tc.TYPE_INTEGER, layer)
-        self._connection._sendExact()
+        """
+        remove(string, integer) -> None
+        Removes the poi with the given poiID
+        """
+        self._setCmd(tc.REMOVE, poiID, "i", layer)
 
     def highlight(self, poiID, color=(255, 0, 0, 255), size=-1, alphaMax=-1, duration=-1, type=0):
         """ highlight(string, color, float, ubyte) -> void
@@ -187,41 +159,7 @@ class PoiDomain(Domain):
             raise TraCIException("poi.highlight(): duration>0 requires alphaMax>0")
         if alphaMax > 0 and duration <= 0:
             raise TraCIException("poi.highlight(): alphaMax>0 requires duration>0")
-
-        if type > 0:
-            compoundLength = 5
-        elif alphaMax > 0:
-            compoundLength = 4
-        elif size > 0:
-            compoundLength = 2
-        elif color:
-            compoundLength = 1
+        if alphaMax > 0:
+            self._setCmd(tc.VAR_HIGHLIGHT, poiID, "tcdBdB", 5, color, size, alphaMax, duration, type)
         else:
-            compoundLength = 0
-
-        msg_length = 1 + 1
-        if compoundLength >= 1:
-            msg_length += 1 + 4
-        if compoundLength >= 2:
-            msg_length += 1 + 8
-        if compoundLength >= 3:
-            msg_length += 1 + 8 + 1 + 1
-        if compoundLength >= 5:
-            msg_length += 1 + 1
-        if not color:
-            # Send red as highlight standard
-            color = (255, 0, 0, 255)
-
-        self._connection._beginMessage(tc.CMD_SET_POI_VARIABLE, tc.VAR_HIGHLIGHT, poiID, msg_length)
-        self._connection._string += struct.pack("!BB", tc.TYPE_COMPOUND, compoundLength)
-        if compoundLength >= 1:
-            self._connection._string += struct.pack("!BBBBB", tc.TYPE_COLOR, int(color[0]), int(color[1]),
-                                                    int(color[2]), int(color[3]) if len(color) > 3 else 255)
-        if compoundLength >= 2:
-            self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, size)
-        if compoundLength >= 3:
-            self._connection._string += struct.pack("!BB", tc.TYPE_UBYTE, alphaMax)
-            self._connection._string += struct.pack("!Bd", tc.TYPE_DOUBLE, duration)
-        if compoundLength >= 5:
-            self._connection._string += struct.pack("!BB", tc.TYPE_UBYTE, type)
-        self._connection._sendExact()
+            self._setCmd(tc.VAR_HIGHLIGHT, poiID, "tcd", 2, color, size)

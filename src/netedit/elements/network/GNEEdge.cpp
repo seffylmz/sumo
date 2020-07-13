@@ -125,8 +125,22 @@ GNEEdge::updateGeometry() {
         for (const auto& childAdditionals : getChildAdditionals()) {
             childAdditionals->updateGeometry();
         }
-        // mark dotted geometry deprecated
-        myDottedGeometry.markDottedGeometryDeprecated();
+        // Update geometry of parent demand elements that have this edge as parent
+        for (const auto& additionalParent : getParentDemandElements()) {
+            additionalParent->updateGeometry();
+        }
+        // Update geometry of additionals demand elements vinculated to this edge
+        for (const auto& childAdditionals : getChildDemandElements()) {
+            childAdditionals->updateGeometry();
+        }
+        // Update geometry of parent generic datas that have this edge as parent
+        for (const auto& additionalParent : getParentGenericDatas()) {
+            additionalParent->updateGeometry();
+        }
+        // Update geometry of additionals generic datas vinculated to this edge
+        for (const auto& childAdditionals : getChildGenericDatas()) {
+            childAdditionals->updateGeometry();
+        }
     }
     // update vehicle geometry
     updateVehicleSpreadGeometries();
@@ -377,7 +391,8 @@ GNEEdge::commitEdgeShapeChange(GNEUndoList* undoList) {
     // restore original shape into shapeToCommit
     PositionVector innerShapeToCommit = myNBEdge->getInnerGeometry();
     // first check if second and penultimate isn't in Junction's buubles
-    double buubleRadius = GNEJunction::BUBBLE_RADIUS * myNet->getViewNet()->getVisualisationSettings().junctionSize.exaggeration;
+    double buubleRadius = myNet->getViewNet()->getVisualisationSettings().neteditSizeSettings.junctionBubbleRadius * 
+            myNet->getViewNet()->getVisualisationSettings().junctionSize.exaggeration;
     if (myNBEdge->getGeometry().size() > 2 && myNBEdge->getGeometry()[0].distanceTo2D(myNBEdge->getGeometry()[1]) < buubleRadius) {
         innerShapeToCommit.removeClosest(innerShapeToCommit[0]);
     }
@@ -525,25 +540,8 @@ GNEEdge::drawGL(const GUIVisualizationSettings& s) const {
         drawEdgeName(s);
     }
     // draw dotted contour
-    if (myNet->getViewNet()->getDottedAC()) {
-        // get dotted (inspected) AC
-        const GNEAttributeCarrier* AC = myNet->getViewNet()->getDottedAC();
-        // declare a flag for drawing dotted geometry
-        bool drawDottedGeometry = false;
-        if (AC == this) {
-            drawDottedGeometry = true;
-        } else if (AC->getTagProperty().isGenericData()) {
-            // iterate over generic data childs
-            for (const auto& genericData : getChildGenericDataElements()) {
-                // draw dotted contor around the first and last lane if isn't being drawn for selecting
-                if (genericData == AC) {
-                    drawDottedGeometry = true;
-                }
-            }
-        }
-        if (drawDottedGeometry) {
-            GNEGeometry::drawShapeDottedContour(s, GLO_EDGEDATA, s.laneWidthExaggeration, myDottedGeometry);
-        }
+    if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+        GNEGeometry::drawDottedContourEdge(s, this, true, true);
     }
 }
 
@@ -1253,54 +1251,6 @@ GNEEdge::updateVehicleStackLabels() {
     }
 }
 
-
-void
-GNEEdge::updateDottedContour() {
-    // obtain lanes
-    const GNELane* frontLane = myLanes.front();
-    const GNELane* backLane = myLanes.back();
-    // obtain visualization settings
-    const GUIVisualizationSettings& visualizationSetting = myNet->getViewNet()->getVisualisationSettings();
-    // obtain lane widdths
-    const double myHalfLaneWidthFront = myNBEdge->getLaneWidth(frontLane->getIndex()) / 2;
-    const double myHalfLaneWidthBack = (visualizationSetting.spreadSuperposed && backLane->drawAsRailway(visualizationSetting) &&
-                                        myNBEdge->isBidiRail()) ? 0 : myNBEdge->getLaneWidth(backLane->getIndex()) / 2;
-    // obtain shapes from NBEdge
-    PositionVector mainShape = frontLane->getParentEdge()->getNBEdge()->getLaneShape(frontLane->getIndex());
-    PositionVector backShape = backLane->getParentEdge()->getNBEdge()->getLaneShape(backLane->getIndex());
-    // move to side depending of lefthand
-    if (visualizationSetting.lefthand) {
-        mainShape.move2side(myHalfLaneWidthFront * -1);
-        backShape.move2side(myHalfLaneWidthBack);
-    } else {
-        mainShape.move2side(myHalfLaneWidthFront);
-        backShape.move2side(myHalfLaneWidthBack * -1);
-    }
-    // reverse back shape
-    backShape = backShape.reverse();
-    // add back shape into mainShape
-    for (const auto& position : backShape) {
-        mainShape.push_back(position);
-    }
-    // close polygon
-    mainShape.closePolygon();
-    // update edge dotted geometry
-    updateDottedGeometry(mainShape);
-}
-
-
-RGBColor 
-GNEEdge::getGenericDataColor(const GUIVisualizationSettings& s) const {
-    RGBColor color = s.laneColorer.getSchemes()[0].getColor(11);
-    /* FIX */
-    for (const auto &genericData : getChildGenericDataElements()) {
-        if (genericData->isGenericDataVisible()) {
-            return genericData->getColor();
-        }
-    }
-    return color;
-}
-
 // ===========================================================================
 // private
 // ===========================================================================
@@ -1866,7 +1816,7 @@ GNEEdge::smoothElevation(GNEUndoList* undoList) {
     } else {
         PositionVector modifiedShape = myNBEdge->getGeometry();
         if (modifiedShape.size() < 5) {
-            modifiedShape = modifiedShape.resample(OptionsCont::getOptions().getFloat("opendrive.curve-resolution"));
+            modifiedShape = modifiedShape.resample(OptionsCont::getOptions().getFloat("opendrive.curve-resolution"), false);
         }
         const double scale = elevation.length2D() / modifiedShape.length2D();
         //std::cout << "   elevation=" << elevation << "\n mod1=" << modifiedShape << " scale=" << scale << "\n";
@@ -2098,9 +2048,9 @@ GNEEdge::drawEdgeName(const GUIVisualizationSettings& s) const {
 void
 GNEEdge::drawRerouterSymbol(const GUIVisualizationSettings& s, GNEAdditional* rerouter) const {
     // Obtain exaggeration of the draw
-    const double exaggeration = s.addSize.getExaggeration(s, rerouter);
+    const double rerouteExaggeration = s.addSize.getExaggeration(s, rerouter);
     // first check if additional has to be drawn
-    if (s.drawAdditionals(exaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
+    if (s.drawAdditionals(rerouteExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
         // Start drawing adding an gl identificator
         glPushName(rerouter->getGlID());
         // draw rerouter symbol over all lanes
@@ -2111,7 +2061,7 @@ GNEEdge::drawRerouterSymbol(const GUIVisualizationSettings& s, GNEAdditional* re
             glPushMatrix();
             glTranslated(lanePos.x(), lanePos.y(), rerouter->getType());
             glRotated(-1 * laneRot, 0, 0, 1);
-            glScaled(exaggeration, exaggeration, 1);
+            glScaled(rerouteExaggeration, rerouteExaggeration, 1);
             // mode
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glBegin(GL_TRIANGLES);
@@ -2134,14 +2084,14 @@ GNEEdge::drawRerouterSymbol(const GUIVisualizationSettings& s, GNEAdditional* re
             // finish draw
             glPopMatrix();
             // draw contour if is selected
-            if (myNet->getViewNet()->getDottedAC() == rerouter) {
-                GLHelper::drawShapeDottedContourRectangle(s, getType(), lanePos, 2.8, 6, -1 * laneRot, 0, 3);
+            if (myNet->getViewNet()->getInspectedAttributeCarrier() == rerouter) {
+                // GLHelper::drawShapeDottedContourRectangle(s, getType(), lanePos, 2.8, 6, -1 * laneRot, 0, 3);
             }
         }
         // Pop name
         glPopName();
         // Draw connections
-        rerouter->drawChildConnections(s, getType());
+        rerouter->drawChildConnections(s, getType(), rerouteExaggeration);
     }
 }
 

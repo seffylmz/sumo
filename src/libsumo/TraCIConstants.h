@@ -57,7 +57,7 @@ TRACI_CONST int CMD_SIMSTEP = 0x02;
 // command: set connection priority (execution order)
 TRACI_CONST int CMD_SETORDER = 0x03;
 
-// command: stop node
+// command: stop vehicle
 TRACI_CONST int CMD_STOP = 0x12;
 
 // command: reroute to parking area
@@ -77,6 +77,15 @@ TRACI_CONST int CMD_CHANGESUBLANE = 0x15;
 
 // command: open gap
 TRACI_CONST int CMD_OPENGAP = 0x16;
+
+// command: replace vehicle stop and updated route
+TRACI_CONST int CMD_REPLACE_STOP = 0x17;
+
+// command: retrieve information about the current taxi fleet and their status
+TRACI_CONST int VAR_TAXI_FLEET = 0x20;
+
+// command: send dispatch request for the given taxi
+TRACI_CONST int CMD_TAXI_DISPATCH = 0x21;
 
 // command: change target
 TRACI_CONST int CMD_CHANGETARGET = 0x31;
@@ -572,6 +581,7 @@ TRACI_CONST int STOP_BUS_STOP = 0x08;
 TRACI_CONST int STOP_CONTAINER_STOP = 0x10;
 TRACI_CONST int STOP_CHARGING_STATION = 0x20;
 TRACI_CONST int STOP_PARKING_AREA = 0x40;
+TRACI_CONST int STOP_OVERHEAD_WIRE = 0x80;
 
 // ****************************************
 // Departure Flags
@@ -612,6 +622,13 @@ TRACI_CONST int ROUTING_MODE_AGGREGATED = 0x01;
 TRACI_CONST int ROUTING_MODE_EFFORT = 0x02;
 // use combined costs
 TRACI_CONST int ROUTING_MODE_COMBINED = 0x03;
+
+// ****************************************
+// Traffic light types
+// ****************************************
+TRACI_CONST int TRAFFICLIGHT_TYPE_STATIC = 0x00;
+TRACI_CONST int TRAFFICLIGHT_TYPE_ACTUATED = 0x03;
+TRACI_CONST int TRAFFICLIGHT_TYPE_DELAYBASED = 0x04;
 
 // ****************************************
 // FILTER TYPES (for context subscription filters)
@@ -1220,6 +1237,9 @@ TRACI_CONST int REPLACE_STAGE = 0xcd;
 
 // append a person stage (person)
 TRACI_CONST int REMOVE_STAGE = 0xc5;
+
+// retrieve taxi reservation (person)
+TRACI_CONST int VAR_TAXI_RESERVATIONS = 0xc6;
 
 // zoom
 TRACI_CONST int VAR_VIEW_ZOOM = 0xa0;

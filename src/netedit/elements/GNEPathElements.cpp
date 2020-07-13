@@ -19,6 +19,7 @@
 /****************************************************************************/
 #include <config.h>
 
+#include <netedit/elements/data/GNEGenericData.h>
 #include <netedit/elements/demand/GNEDemandElement.h>
 #include <netedit/elements/network/GNELane.h>
 #include <netedit/elements/network/GNEJunction.h>
@@ -36,13 +37,24 @@
 // ---------------------------------------------------------------------------
 
 GNEPathElements::PathElement::PathElement(GNELane* lane) :
-    myLane(lane) {
+    myLane(lane),
+    myNextLane(nullptr) {
+}
+
+
+void 
+GNEPathElements::PathElement::updateNextLane(GNELane* lane) {
+    myNextLane = lane;
 }
 
 
 GNEJunction* 
 GNEPathElements::PathElement::getJunction() const {
-    return myLane->getParentEdge()->getSecondParentJunction();
+    if (myNextLane) {
+        return myLane->getParentEdge()->getSecondParentJunction();
+    } else {
+        return nullptr;
+    }
 }
 
 
@@ -52,8 +64,41 @@ GNEPathElements::PathElement::getLane() const {
 }
 
 
+GNELane* 
+GNEPathElements::PathElement::getNextLane() const {
+    return myNextLane;
+}
+
+
 GNEPathElements::PathElement::PathElement():
-    myLane(nullptr) {
+    myLane(nullptr),
+    myNextLane(nullptr) {
+}
+
+// ---------------------------------------------------------------------------
+// GNEPathElements::PathElement - methods
+// ---------------------------------------------------------------------------
+
+GNEPathElements::JunctionPathElementMarker::JunctionPathElementMarker() {}
+
+
+bool 
+GNEPathElements::JunctionPathElementMarker::exist(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement) {
+    if (myContainer.count(tag) == 0) {
+        return false;
+    } else if (myContainer.at(tag).count(pathElement.getLane()) == 0) {
+        return false;
+    } else if (myContainer.at(tag).at(pathElement.getLane()).count(pathElement.getNextLane()) == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+
+void 
+GNEPathElements::JunctionPathElementMarker::mark(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement) {
+    myContainer[tag][pathElement.getLane()].insert(pathElement.getNextLane());
 }
 
 // ---------------------------------------------------------------------------
@@ -62,13 +107,22 @@ GNEPathElements::PathElement::PathElement():
 
 GNEPathElements::GNEPathElements(GNEAdditional* additional) :
     myAdditionalElement(additional),
-    myDemandElement(nullptr) {
+    myDemandElement(nullptr),
+    myGenericData(nullptr) {
 }
 
 
 GNEPathElements::GNEPathElements(GNEDemandElement* demandElement) :
     myAdditionalElement(nullptr),
-    myDemandElement(demandElement) {
+    myDemandElement(demandElement),
+    myGenericData(nullptr) {
+}
+
+
+GNEPathElements::GNEPathElements(GNEGenericData* genericData) :
+    myAdditionalElement(nullptr),
+    myDemandElement(nullptr),
+    myGenericData(genericData) {
 }
 
 
@@ -82,20 +136,79 @@ GNEPathElements::getPath() const {
 
 
 void 
-GNEPathElements::drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane) const {
-    for (const auto &pathElement : myPathElements) {
-        if (pathElement.getLane() == lane) {
-            myDemandElement->drawPartialGL(s, lane);
+GNEPathElements::drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane, const double offset) const {
+    // additionals
+    if (myAdditionalElement) {
+        for (const auto &pathElement : myPathElements) {
+            if (pathElement.getLane() == lane) {
+                myAdditionalElement->drawPartialGL(s, lane, offset);
+            }
+        }
+    }
+    // demand elements
+    if (myDemandElement) {
+        for (const auto &pathElement : myPathElements) {
+            if (pathElement.getLane() == lane) {
+                myDemandElement->drawPartialGL(s, lane, offset);
+            }
+        }
+    }
+    // generic datas (only in supermode Data)
+    if (myGenericData && myGenericData->isGenericDataVisible()) {
+        for (const auto &pathElement : myPathElements) {
+            if (pathElement.getLane() == lane) {
+                myGenericData->drawPartialGL(s, lane, offset);
+            }
         }
     }
 }
 
+
 void 
-GNEPathElements::drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction) const {
-    for (auto i = myPathElements.begin(); i != myPathElements.end(); i++) {
-        // check that next pathElement isn't the last 
-        if ((i->getJunction() == junction) && ((i+1) != myPathElements.end())) {
-            myDemandElement->drawPartialGL(s, i->getLane(), (i+1)->getLane());
+GNEPathElements::drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction, const double offset, GNEPathElements::JunctionPathElementMarker &junctionPathElementMarker) const {
+    // additionals
+    if (myAdditionalElement) {
+        for (const auto &pathElement : myPathElements) {
+            if (pathElement.getJunction() == junction) {
+                // always draw in position/rectangle selection
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    myAdditionalElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
+                } else if (!junctionPathElementMarker.exist( myAdditionalElement->getTagProperty().getTag(), pathElement)) {
+                    myAdditionalElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
+                    // register/mark path element
+                    junctionPathElementMarker.mark(myAdditionalElement->getTagProperty().getTag(), pathElement);
+                }
+            }
+        }
+    }
+    // demand elements
+    if (myDemandElement) {
+        for (const auto &pathElement : myPathElements) {
+            if (pathElement.getJunction() == junction) {
+                // always draw in position/rectangle selection
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    myDemandElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
+                } else if (!junctionPathElementMarker.exist(myDemandElement->getTagProperty().getTag(), pathElement)) {
+                    myDemandElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
+                    // register/mark path element
+                    junctionPathElementMarker.mark(myDemandElement->getTagProperty().getTag(), pathElement);
+                }
+            }
+        }
+    }
+    // generic datas
+    if (myGenericData && myGenericData->isGenericDataVisible()) {
+        for (const auto &pathElement : myPathElements) {
+            if (pathElement.getJunction() == junction) {
+                // always draw in position/rectangle selection
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    myGenericData->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
+                } else if (!junctionPathElementMarker.exist(myGenericData->getTagProperty().getTag(), pathElement)) {
+                    myGenericData->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
+                    // register/mark path element
+                    junctionPathElementMarker.mark(myGenericData->getTagProperty().getTag(), pathElement);
+                }
+            }
         }
     }
 }
@@ -132,6 +245,8 @@ GNEPathElements::calculatePathLanes(SUMOVehicleClass vClass, const bool allowedV
         } else {
             myPathElements = {fromLane, toLane};
         }
+        // update path elements
+        updatePathElements();
         // add path elements in lanes and junctions
         addElements();
     }
@@ -152,6 +267,8 @@ GNEPathElements::calculateConsecutivePathLanes(SUMOVehicleClass vClass, const bo
             myPathElements.push_back(edge->getLaneByDisallowedVClass(vClass));
         }
     }
+    // update path elements
+    updatePathElements();
     // add path elements in lanes and junctions
     addElements();
 }
@@ -167,6 +284,8 @@ GNEPathElements::calculateConsecutivePathLanes(const std::vector<GNELane*>& lane
     for (const auto &lane : lanes) {
         myPathElements.push_back(lane);
     }
+    // update path elements
+    updatePathElements();
     // add path elements in lanes and junctions
     addElements();
 }
@@ -198,6 +317,30 @@ GNEPathElements::resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClas
         } else {
             myPathElements = {fromLane, toLane};
         }
+        // update path elements
+        updatePathElements();
+        // add path elements in lanes and junctions
+        addElements();
+    }
+}
+
+
+void 
+GNEPathElements::calculateGenericDataLanePath(const std::vector<GNEEdge*> &edges) {
+    // only for demand elements
+    if (myGenericData) {
+        // remove path elements from lanes and junctions
+        removeElements();
+        // clear path
+        myPathElements.clear();
+        // iterate over edge lanes and add it
+        for (const auto &edge : edges) {
+            for (const auto &lane : edge->getLanes()) {
+                myPathElements.push_back(lane);
+            }
+        }
+        // update path elements
+        updatePathElements();
         // add path elements in lanes and junctions
         addElements();
     }
@@ -206,18 +349,34 @@ GNEPathElements::resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClas
 
 void 
 GNEPathElements::addElements() {
+    // additionals
     if (myAdditionalElement) {
         // add demandElement into parent lanes
         for (const auto& pathElement : myPathElements) {
             pathElement.getLane()->addPathAdditionalElement(myAdditionalElement);
-            pathElement.getJunction()->addPathAdditionalElement(myAdditionalElement);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->addPathAdditionalElement(myAdditionalElement);
+            }
         }
     }
+    // demand elements
     if (myDemandElement) {
         // add demandElement into parent lanes
         for (const auto& pathElement : myPathElements) {
             pathElement.getLane()->addPathDemandElement(myDemandElement);
-            pathElement.getJunction()->addPathDemandElement(myDemandElement);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->addPathDemandElement(myDemandElement);
+            }
+        }
+    }
+    // demand elements
+    if (myGenericData) {
+        // add genericData into parent lanes
+        for (const auto& pathElement : myPathElements) {
+            pathElement.getLane()->addPathGenericData(myGenericData);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->addPathGenericData(myGenericData);
+            }
         }
     }
 }
@@ -225,19 +384,44 @@ GNEPathElements::addElements() {
 
 void
 GNEPathElements::removeElements() {
+    // additionals
     if (myAdditionalElement) {
         // remove demandElement from parent lanes
         for (const auto& pathElement : myPathElements) {
             pathElement.getLane()->removePathAdditionalElement(myAdditionalElement);
-            pathElement.getJunction()->removePathAdditionalElement(myAdditionalElement);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathAdditionalElement(myAdditionalElement);
+            }
         }
     }
+    // demand elements
     if (myDemandElement) {
         // remove demandElement from parent lanes
         for (const auto& pathElement : myPathElements) {
             pathElement.getLane()->removePathDemandElement(myDemandElement);
-            pathElement.getJunction()->removePathDemandElement(myDemandElement);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathDemandElement(myDemandElement);
+            }
         }
+    }
+    // generic datas
+    if (myGenericData) {
+        // remove genericData from parent lanes
+        for (const auto& pathElement : myPathElements) {
+            pathElement.getLane()->removePathGenericData(myGenericData);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathGenericData(myGenericData);
+            }
+        }
+    }
+}
+
+
+void 
+GNEPathElements::updatePathElements() {
+    // update next lanes
+    for (auto i = myPathElements.begin(); i != (myPathElements.end()-1); i++) {
+        i->updateNextLane((i+1)->getLane());
     }
 }
 
@@ -261,7 +445,8 @@ GNEPathElements::calculateFromViaToEdges(GNELane* fromLane, GNELane* toLane, con
 
 GNEPathElements::GNEPathElements() :
     myAdditionalElement(nullptr),
-    myDemandElement(nullptr) {
+    myDemandElement(nullptr),
+    myGenericData(nullptr) {
 }
 
 /****************************************************************************/

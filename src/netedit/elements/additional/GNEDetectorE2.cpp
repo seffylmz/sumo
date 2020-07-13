@@ -23,8 +23,6 @@
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/changes/GNEChange_Connection.h>
 #include <netedit/elements/network/GNEConnection.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
@@ -248,63 +246,43 @@ void
 GNEDetectorE2::updateGeometry() {
     // declare variables for start and end positions
     double startPosFixed, endPosFixed;
-
-    // calculate start and end positions dependin of number of lanes
-    if (getParentLanes().size() == 1) {
-
-        // set start position
-        if (myPositionOverLane < 0) {
-            startPosFixed = 0;
-        } else if (myPositionOverLane > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
-            startPosFixed = getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength();
-        } else {
-            startPosFixed = myPositionOverLane;
-        }
-
-        // set end position
-        if ((myPositionOverLane + myLength) < 0) {
-            endPosFixed = 0;
-        } else if ((myPositionOverLane + myLength) > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
-            endPosFixed = getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength();
-        } else {
-            endPosFixed = (myPositionOverLane + myLength);
-        }
-
+    // set start position
+    if (myPositionOverLane < 0) {
+        startPosFixed = 0;
+    } else if (myPositionOverLane > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
+        startPosFixed = getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength();
+    } else {
+        startPosFixed = myPositionOverLane;
+    }
+    // set end position
+    if ((myPositionOverLane + myLength) < 0) {
+        endPosFixed = 0;
+    } else if ((myPositionOverLane + myLength) > getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength()) {
+        endPosFixed = getParentLanes().back()->getParentEdge()->getNBEdge()->getFinalLength();
+    } else {
+        endPosFixed = (myPositionOverLane + myLength);
+    }
+    if (myTagProperty.getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
+        // declare extreme geometry
+        GNEGeometry::ExtremeGeometry extremeGeometry;
+        // set extremes
+        extremeGeometry.laneStartPosition = startPosFixed;
+        extremeGeometry.laneEndPosition = endPosFixed;
+        // calculate consecutive path using parent lanes
+        calculateConsecutivePathLanes(getParentLanes());
+        // calculate edge geometry path using path
+        GNEGeometry::calculateLaneGeometricPath(myAdditionalSegmentGeometry, getPath(), extremeGeometry);
+    } else {
         // Cut shape using as delimitators fixed start position and fixed end position
         myAdditionalGeometry.updateGeometry(getParentLanes().front()->getLaneShape(), startPosFixed * getParentLanes().front()->getLengthGeometryFactor(), endPosFixed * getParentLanes().back()->getLengthGeometryFactor());
-
         // Set block icon position
         myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
+        // Set offset of the block icon
+        myBlockIcon.offset = Position(-0.75, 0);
+        // Set block icon rotation, and using their rotation for draw logo
+        myBlockIcon.setRotation(getParentLanes().front());
 
-    } else if (getParentLanes().size() > 1) {
-/**
-        GNEGeometry::calculateLaneGeometricPath(this, mySegmentGeometry, getParentLanes(), myPositionOverLane, myEndPositionOverLane);
-**/
-        /*
-        // Set block icon position
-        myBlockIcon.position = myAdditionalGeometry.multiShape.front().getLineCenter();
-
-        // check integrity
-        checkE2MultilaneIntegrity();
-        */
     }
-
-    // Set offset of the block icon
-    myBlockIcon.offset = Position(-0.75, 0);
-
-    // Set block icon rotation, and using their rotation for draw logo
-    myBlockIcon.setRotation(getParentLanes().front());
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNEDetectorE2::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(),
-                                          myAdditionalGeometry.getShape(),
-                                          myNet->getViewNet()->getVisualisationSettings().detectorSettings.E2Width);
 }
 
 
@@ -422,9 +400,9 @@ GNEDetectorE2::drawGL(const GUIVisualizationSettings& s) const {
             drawName(getPositionInView(), s.scale, s.addName);
         }
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
             if (myAdditionalGeometry.getShape().size() > 0) {
-                GNEGeometry::drawShapeDottedContour(s, getType(), E2Exaggeration, myDottedGeometry);
+                GNEGeometry::drawDottedContourShape(s, myAdditionalGeometry.getShape(), s.detectorSettings.E2Width, E2Exaggeration);
             }
         }
         // Pop name

@@ -1007,6 +1007,9 @@ public:
         /// @brief get a short description for showing in the gui
         std::string getDescription() const;
 
+        /// @brief initialize attributes from the given stop parameters
+        void initPars(const SUMOVehicleParameter::Stop& stopPar);
+
     private:
         /// @brief Invalidated assignment operator
         Stop& operator=(const Stop& src);
@@ -1274,31 +1277,21 @@ public:
     /**
      * schedule a new stop for the vehicle; each time a stop is reached, the vehicle
      * will wait for the given duration before continuing on its route
-     * @param lane     lane on wich to stop
-     * @param startPos start position on the given lane at wich to stop
-     * @param endPos   end position on the given lane at wich to stop
-     * @param duration waiting time duration
-     * @param until    time step at which the stop shall end
-     * @param parking  a flag indicating whether the traci stop is used for parking or not
-     * @param triggered a flag indicating whether the traci stop is triggered or not
-     * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
+     * @param[in] stop Stop parameters
+     * @param[out] errorMsg returned error message
      */
-    bool addTraciStop(const MSLane* const lane, const double startPos, const double endPos, const SUMOTime duration, const SUMOTime until,
-                      const bool parking, const bool triggered, const bool containerTriggered, std::string& errorMsg);
+    bool addTraciStop(SUMOVehicleParameter::Stop stop, std::string& errorMsg);
 
     /**
-     * schedule a new stop for the vehicle; each time a stop is reached, the vehicle
+     * replace the next stop at the given index with the given stop parameters
      * will wait for the given duration before continuing on its route
-     * @param stopId    bus or container stop id
-     * @param duration waiting time duration
-     * @param until    time step at which the stop shall end
-     * @param parking   a flag indicating whether the traci stop is used for parking or not
-     * @param triggered a flag indicating whether the traci stop is triggered or not
-     * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
-     * @param stoppingPlaceType a flag indicating the type of stopping place
+     * The route between start other stops and destination will be kept unchanged and
+     * only the part around the replacement index will be adapted according to the new stop location
+     * @param[in] nextStopDist The replacement index
+     * @param[in] stop Stop parameters
+     * @param[out] errorMsg returned error message
      */
-    bool addTraciStopAtStoppingPlace(const std::string& stopId, const SUMOTime duration, const SUMOTime until, const bool parking,
-                                     const bool triggered, const bool containerTriggered, const SumoXMLTag stoppingPlaceType, std::string& errorMsg);
+    bool replaceStop(int nextStopIndex, SUMOVehicleParameter::Stop stop, const std::string& info, std::string& errorMsg);
 
     /**
     * returns the next imminent stop in the stop queue
@@ -1317,14 +1310,18 @@ public:
         return myStops;
     }
 
+    inline const std::vector<SUMOVehicleParameter::Stop>& getPastStops() {
+        return myPastStops;
+    }
+
     /**
     * resumes a vehicle from stopping
     * @return true on success, the resuming fails if the vehicle wasn't parking in the first place
     */
     bool resumeFromStopping();
 
-    /// @brief deletes the next stop if it exists
-    void abortNextStop();
+    /// @brief deletes the next stop at the given index if it exists
+    bool abortNextStop(int nextStopIndex = 0);
 
     /// @brief update a vector of further lanes and return the new backPos
     double updateFurtherLanes(std::vector<MSLane*>& furtherLanes,
@@ -1963,6 +1960,9 @@ protected:
 
     /// @brief The vehicle's list of stops
     std::list<Stop> myStops;
+
+    /// @brief The list of stops that the vehicle has already reached
+    std::vector<SUMOVehicleParameter::Stop> myPastStops;
 
     /// @brief The current acceleration after dawdling in m/s
     double myAcceleration;

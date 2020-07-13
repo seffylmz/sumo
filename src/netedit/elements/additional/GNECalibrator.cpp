@@ -22,8 +22,6 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/dialogs/GNECalibratorDialog.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
@@ -94,14 +92,6 @@ GNECalibrator::updateGeometry() {
     } else {
         throw ProcessError("Both edges and lanes aren't defined");
     }
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void GNECalibrator::updateDottedContour() {
-    //GLHelper::drawShapeDottedContourRectangle(s, getType(), pos, 2.8, 6, rot, 0, 3);
 }
 
 
@@ -350,8 +340,8 @@ void GNECalibrator::drawCalibratorSymbol(const GUIVisualizationSettings& s, cons
     }
     glPopMatrix();
     // check if dotted contour has to be drawn
-    if (myNet->getViewNet()->getDottedAC() == this) {
-        GNEGeometry::drawShapeDottedContour(s, getType(), exaggeration, myDottedGeometry);
+    if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+        // GNEGeometry::drawShapeDottedContour(s, getType(), exaggeration, myDottedGeometry);
     }
 }
 

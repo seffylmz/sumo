@@ -297,6 +297,9 @@ public:
      */
     class Stop : public Parameterised {
     public:
+        /// @brief Destructor
+        virtual ~Stop() {}
+
         /** @brief Writes the stop as XML
          *
          * @param[in, out] dev The device to write into
@@ -335,7 +338,7 @@ public:
         double endPos = 0.;
 
         /// @brief The (expected) time at which the vehicle reaches the stop
-        SUMOTime arrival = 0;
+        SUMOTime arrival = -1;
 
         /// @brief The stopping duration
         SUMOTime duration = -1;
@@ -541,7 +544,7 @@ public:
      * @param[in] id The id of the object to which this attribute belongs
      * @return Whether the interpreted position
      */
-    static double interpretEdgePos(double pos, double maximumValue, SumoXMLAttr attr, const std::string& id);
+    static double interpretEdgePos(double pos, double maximumValue, SumoXMLAttr attr, const std::string& id, bool silent = false);
 
     /** @brief Validates a given person modes value
      * @param[in] modes The modes value to parse

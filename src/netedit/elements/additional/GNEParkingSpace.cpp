@@ -71,26 +71,6 @@ GNEParkingSpace::updateGeometry() {
 }
 
 
-void
-GNEParkingSpace::updateDottedContour() {
-    // calculate shape using a Position vector as reference
-    PositionVector shape({
-        {-(myWidth / 2), 0},
-        { (myWidth / 2), 0},
-        { (myWidth / 2), myLength},
-        {-(myWidth / 2), myLength},
-    });
-    // close shape
-    shape.closePolygon();
-    // rotate position vector (note: convert from degree to rads
-    shape.rotate2D(myAngle * PI / 180.0);
-    // move to space position
-    shape.add(myPosition);
-    // set dotted geometry
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), shape);
-}
-
-
 Position
 GNEParkingSpace::getPositionInView() const {
     return myPosition;
@@ -136,6 +116,9 @@ void
 GNEParkingSpace::drawGL(const GUIVisualizationSettings& s) const {
     // Set initial values
     const double parkingAreaExaggeration = s.addSize.getExaggeration(s, this);
+    // obtain values with exaggeration
+    const double widthExaggeration = myWidth * parkingAreaExaggeration;
+    const double lengthExaggeration = myLength * parkingAreaExaggeration;
     // first check if additional has to be drawn
     if (s.drawAdditionals(parkingAreaExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
         // check if boundary has to be drawn
@@ -156,7 +139,7 @@ GNEParkingSpace::drawGL(const GUIVisualizationSettings& s) const {
             } else {
                 GLHelper::setColor(s.stoppingPlaceSettings.parkingSpaceColorContour);
             }
-            GLHelper::drawBoxLine(Position(0, myLength + 0.05), 0, myLength + 0.1, (myWidth / 2) + 0.05);
+            GLHelper::drawBoxLine(Position(0, lengthExaggeration + 0.05), 0, lengthExaggeration + 0.1, (widthExaggeration * 0.5) + 0.05);
         }
         // Traslate matrix and draw blue innen
         glTranslated(0, 0, 0.1);
@@ -166,15 +149,28 @@ GNEParkingSpace::drawGL(const GUIVisualizationSettings& s) const {
         } else {
             GLHelper::setColor(s.stoppingPlaceSettings.parkingSpaceColor);
         }
-        GLHelper::drawBoxLine(Position(0, myLength), 0, myLength, myWidth / 2);
+        GLHelper::drawBoxLine(Position(0, lengthExaggeration), 0, lengthExaggeration, widthExaggeration * 0.5);
         // Traslate matrix and draw lock icon if isn't being drawn for selecting
-        glTranslated(0, myLength / 2, 0.1);
+        glTranslated(0, lengthExaggeration * 0.5 , 0.1);
+        // draw lock icon
         myBlockIcon.drawIcon(s, parkingAreaExaggeration);
         // pop draw matrix
         glPopMatrix();
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), parkingAreaExaggeration, myDottedGeometry);
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            // calculate shape
+            PositionVector shape;
+            // make rectangle
+            shape.push_back(Position((widthExaggeration * -0.5), 0));
+            shape.push_back(Position((widthExaggeration * +0.5), 0));
+            shape.push_back(Position((widthExaggeration * +0.5), lengthExaggeration));
+            shape.push_back(Position((widthExaggeration * -0.5), lengthExaggeration));
+            // rotate shape
+            shape.rotate2D(DEG2RAD(myAngle));
+            // move to position
+            shape.add(myPosition);
+            // draw using drawDottedContourClosedShape
+            GNEGeometry::drawDottedContourClosedShape(s, shape, 1);
         }
         // pop name
         glPopName();
@@ -331,8 +327,6 @@ GNEParkingSpace::setAttribute(SumoXMLAttr key, const std::string& value) {
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
 }
 
 

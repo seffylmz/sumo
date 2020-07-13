@@ -171,7 +171,8 @@ private:
      * @struct Connection
      * @brief A connection description.
      */
-    struct Connection : public Parameterised {
+    class Connection final : public Parameterised {
+    public:
         /// @brief The id of the target edge
         std::string toEdgeID;
         /// @brief The index of the target lane
@@ -183,7 +184,9 @@ private:
         int tlLinkIndex2;
         /// @brief Information about being definitely free to drive (on-ramps)
         bool mayDefinitelyPass;
-        /// @brief Whether the junction must be kept clear coming from this connection
+        /* @brief Whether the junction must be kept clear coming from this connection
+         * @note: The enum NBEdge::KeepClear is not needed here because data
+         *        from a .net.xml is fully specified */
         bool keepClear;
         /// @brief custom position for internal junction on this connection
         double contPos;
@@ -205,7 +208,8 @@ private:
     /** @struct LaneAttrs
      * @brief Describes the values found in a lane's definition
      */
-    struct LaneAttrs : public Parameterised {
+    class LaneAttrs final : public Parameterised {
+    public:
         /// @brief The maximum velocity allowed on this lane
         double maxSpeed;
         /// @brief This lane's shape (may be custom)
@@ -236,7 +240,8 @@ private:
     /** @struct EdgeAttrs
      * @brief Describes the values found in an edge's definition and this edge's lanes
      */
-    struct EdgeAttrs : public Parameterised {
+    class EdgeAttrs final : public Parameterised {
+    public:
         /// @brief This edge's id
         std::string id;
         /// @brief This edge's street name

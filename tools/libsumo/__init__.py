@@ -17,10 +17,30 @@
 
 from functools import wraps
 import sys
-from .libsumo import simulation
+from .libsumo import vehicle, simulation
 from .libsumo import *  # noqa
 
 _traceFile = [None]
+
+
+def isLibsumo():
+    return True
+
+
+def hasGUI():
+    return False
+
+
+def init(port):
+    print("Warning! To make your code usable with traci and libsumo, please use traci.start instead of traci.init.")
+
+
+def load(args):
+    simulation.load(args)
+
+
+def getVersion():
+    return simulation.getVersion()
 
 
 def close():
@@ -33,6 +53,7 @@ def start(args, traceFile=None):
     if traceFile is not None:
         _startTracing(traceFile, args)
     simulation.load(args[1:])
+    return simulation.getVersion()
 
 
 def setLegacyGetLeader(enabled):

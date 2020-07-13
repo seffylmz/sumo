@@ -20,7 +20,6 @@
 #include <config.h>
 
 #include "GNEClosingReroute.h"
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/dialogs/GNERerouterIntervalDialog.h>
 
@@ -69,11 +68,6 @@ GNEClosingReroute::commitGeometryMoving(GNEUndoList*) {
 void
 GNEClosingReroute::updateGeometry() {
     // This additional doesn't own a geometry
-}
-
-
-void GNEClosingReroute::updateDottedContour() {
-    // This additional doesn't own a dotted contour
 }
 
 

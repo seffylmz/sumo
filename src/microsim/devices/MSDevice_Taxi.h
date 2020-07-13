@@ -89,6 +89,14 @@ public:
     /// @brief resets counters
     static void cleanup();
 
+    static MSDispatch* getDispatchAlgorithm() {
+        return myDispatcher;
+    }
+
+    static const std::vector<MSDevice_Taxi*>& getFleet() {
+        return myFleet;
+    }
+
 public:
     /// @brief Destructor.
     ~MSDevice_Taxi();

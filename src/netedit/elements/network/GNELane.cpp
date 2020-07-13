@@ -53,6 +53,37 @@ FXIMPLEMENT(GNELane, FXDelegator, 0, 0)
 // method definitions
 // ===========================================================================
 
+// ---------------------------------------------------------------------------
+// GNELane::LaneDrawingConstants - methods
+// ---------------------------------------------------------------------------
+
+GNELane::LaneDrawingConstants::LaneDrawingConstants(const GUIVisualizationSettings& s, const GNELane* lane) :
+    selectionScale(lane->isAttributeCarrierSelected() || lane->getParentEdge()->isAttributeCarrierSelected() ? s.selectionScale : 1),
+    exaggeration(selectionScale * s.laneWidthExaggeration),
+    halfWidth2(exaggeration * (lane->getParentEdge()->getNBEdge()->getLaneWidth(lane->getIndex()) / 2 - SUMO_const_laneMarkWidth / 2)),
+    halfWidth(lane->drawUsingSelectColor() ? halfWidth2 - exaggeration * 0.3 : halfWidth2) {
+    // start drawing lane checking whether it is not too small
+    //selectionScale = lane->isAttributeCarrierSelected() || lane->getParentEdge()->isAttributeCarrierSelected() ? s.selectionScale : 1;
+    //exaggeration = selectionScale * s.laneWidthExaggeration; // * s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
+                                                             // compute lane-marking intersection points)
+    //halfWidth2 = exaggeration * (lane->getParentEdge()->getNBEdge()->getLaneWidth(lane->getIndex()) / 2 - SUMO_const_laneMarkWidth / 2);
+
+    // Draw as a normal lane, and reduce width to make sure that a selected edge can still be seen
+    //halfWidth =  lane->drawUsingSelectColor() ? halfWidth2 - exaggeration * 0.3 : halfWidth2;
+}
+
+
+GNELane::LaneDrawingConstants::LaneDrawingConstants() :
+    selectionScale(0),
+    exaggeration(0),
+    halfWidth2(0),
+    halfWidth(0) {
+}
+
+// ---------------------------------------------------------------------------
+// GNELane - methods
+// ---------------------------------------------------------------------------
+
 GNELane::GNELane(GNEEdge* edge, const int index) :
     GNENetworkElement(edge->getNet(), edge->getNBEdge()->getLaneID(index), GLO_LANE, SUMO_TAG_LANE,
         {}, {}, {}, {}, {}, {}, {}, {},     // Parents
@@ -63,6 +94,7 @@ GNELane::GNELane(GNEEdge* edge, const int index) :
     mySpecialColorValue(-1),
     myLane2laneConnections(this) {
 }
+
 
 GNELane::GNELane() :
     GNENetworkElement(nullptr, "dummyConstructorGNELane", GLO_LANE, SUMO_TAG_LANE,
@@ -97,6 +129,12 @@ GNELane::getShapeLengths() const {
 }
 
 
+const GNEGeometry::DottedGeometry&
+GNELane::getDottedLaneGeometry() const {
+    return myDottedLaneGeometry;
+}
+
+
 void
 GNELane::updateGeometry() {
     // Clear texture containers
@@ -108,6 +146,10 @@ GNELane::updateGeometry() {
     myLaneGeometry.updateGeometry(myParentEdge->getNBEdge()->getLaneShape(myIndex));
     // update connections
     myLane2laneConnections.updateLane2laneConnection();
+    // update dotted lane geometry
+    if (myNet->getViewNet()) {
+        myDottedLaneGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), this);
+    }
     // update shapes parents associated with this lane
     for (const auto &shape : getParentShapes()) {
         shape->updateGeometry();
@@ -119,18 +161,30 @@ GNELane::updateGeometry() {
     // update additionals children associated with this lane
     for (const auto &additional : getParentAdditionals()) {
         additional->updateGeometry();
+        additional->updatePartialGeometry(this);
     }
     // update additionals parents associated with this lane
     for (const auto &additional : getChildAdditionals()) {
         additional->updateGeometry();
+        additional->updatePartialGeometry(this);
     }
     // update partial demand elements parents associated with this lane
     for (const auto &demandElement : getParentDemandElements()) {
+        demandElement->updateGeometry();
         demandElement->updatePartialGeometry(this);
     }
-    // update partial demand elements children associated with this lane and invalidate path
+    // update partial demand elements children associated with this lane
     for (const auto &demandElement : getChildDemandElements()) {
+        demandElement->updateGeometry();
         demandElement->updatePartialGeometry(this);
+    }
+    // Update geometry of parent generic datas that have this edge as parent
+    for (const auto& additionalParent : getParentGenericDatas()) {
+        additionalParent->updateGeometry();
+    }
+    // Update geometry of additionals generic datas vinculated to this edge
+    for (const auto& childAdditionals : getChildGenericDatas()) {
+        childAdditionals->updateGeometry();
     }
     // in Move mode, connections aren't updated
     if (myNet->getViewNet() && myNet->getViewNet()->getEditModes().networkEditMode != NetworkEditMode::NETWORK_MOVE) {
@@ -156,8 +210,6 @@ GNELane::updateGeometry() {
             }
         }
     }
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
 }
 
 
@@ -340,37 +392,25 @@ GNELane::drawLane2LaneConnections() const {
 
 void
 GNELane::drawGL(const GUIVisualizationSettings& s) const {
+    // get lane drawing constants
+    LaneDrawingConstants laneDrawingConstants(s, this);
+    // get lane color
+    const RGBColor color = setLaneColor(s);
     // Push draw matrix 1
     glPushMatrix();
     // Push name
     glPushName(getGlID());
-    // push GL Name of genericData
-    for (const auto& genericData : myParentEdge->getChildGenericDataElements()) {
-        if (genericData->isGenericDataVisible()) {
-            glPushName(genericData->getGlID());
-        }
-    }
     // Traslate to front
     glTranslated(0, 0, myParentEdge->getNBEdge()->getLength() < 1 ? GLO_JUNCTION + 1 : getType());
-    const RGBColor color = setLaneColor(s);
-    // start drawing lane checking whether it is not too small
-    const double selectionScale = isAttributeCarrierSelected() || myParentEdge->isAttributeCarrierSelected() ? s.selectionScale : 1;
-    const double exaggeration = selectionScale * s.laneWidthExaggeration; // * s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
     // XXX apply usefull scale values
     //exaggeration *= s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
     // recognize full transparency and simply don't draw
-    if ((color.alpha() == 0) || ((s.scale * exaggeration) < s.laneMinSize)) {
+    if ((color.alpha() == 0) || ((s.scale * laneDrawingConstants.exaggeration) < s.laneMinSize)) {
         // Pop draw matrix 1
         glPopMatrix();
         // Pop Lane Name
         glPopName();
-        // pop GL Name of generic datas
-        for (const auto& genericData : myParentEdge->getChildGenericDataElements()) {
-            if (genericData->isGenericDataVisible()) {
-                glPopName();
-            }
-        }
-    } else if ((s.scale * exaggeration) < 1.) {
+    } else if ((s.scale * laneDrawingConstants.exaggeration) < 1.) {
         // draw as lines, depending of myShapeColors
         if (myShapeColors.size() > 0) {
             GLHelper::drawLine(myLaneGeometry.getShape(), myShapeColors);
@@ -381,16 +421,6 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         glPopMatrix();
         // Pop Lane Name
         glPopName();
-        // pop GL Name of generic datas
-        for (const auto& genericData : myParentEdge->getChildGenericDataElements()) {
-            if (genericData->isGenericDataVisible()) {
-                glPopName();
-                if (myIndex == 0) {
-                    // draw attribute in first lane
-                    genericData->drawAttribute(myLaneGeometry.getShape());
-                }
-            }
-        }
         // draw parents
         for (const auto& additionalParent : getParentAdditionals()) {
             if (additionalParent->getTagProperty().getTag() == SUMO_TAG_VSS) {
@@ -404,10 +434,7 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         }
         // draw child additional
         for (const auto& additional : getChildAdditionals()) {
-            //draw partial E2 detectors
-            if (additional->getTagProperty().getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
-                drawPartialE2DetectorPlan(s, additional, nullptr);
-            } else if (!additional->getTagProperty().isPlacedInRTree()) {
+            if (!additional->getTagProperty().isPlacedInRTree()) {
                 // check that ParkingAreas aren't draw two times
                 additional->drawGL(s);
             }
@@ -421,10 +448,6 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
     } else {
         // we draw the lanes with reduced width so that the lane markings below are visible
         // (this avoids artifacts at geometry corners without having to
-        // compute lane-marking intersection points)
-        const double halfWidth2 = exaggeration * (myParentEdge->getNBEdge()->getLaneWidth(myIndex) / 2 - SUMO_const_laneMarkWidth / 2);
-        // Draw as a normal lane, and reduce width to make sure that a selected edge can still be seen
-        const double halfWidth =  drawUsingSelectColor() ? halfWidth2 - exaggeration * 0.3 : halfWidth2;
         const bool spreadSuperposed = s.spreadSuperposed && drawAsRailway(s) && myParentEdge->getNBEdge()->isBidiRail();
         // Check if lane has to be draw as railway and if isn't being drawn for selecting
         if (drawAsRailway(s) && (!s.drawForRectangleSelection || spreadSuperposed)) {
@@ -433,14 +456,14 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
             // draw as railway: assume standard gauge of 1435mm when lane width is not set
             // draw foot width 150mm, assume that distance between rail feet inner sides is reduced on both sides by 39mm with regard to the gauge
             // assume crosstie length of 181% gauge (2600mm for standard gauge)
-            double halfGauge = 0.5 * (width == SUMO_const_laneWidth ?  1.4350 : width) * exaggeration;
+            double halfGauge = 0.5 * (width == SUMO_const_laneWidth ?  1.4350 : width) * laneDrawingConstants.exaggeration;
             if (spreadSuperposed) {
                 shape.move2side(halfGauge * 0.8);
                 halfGauge *= 0.4;
                 //std::cout << "spreadSuperposed " << getID() << " old=" << myLaneGeometry.getShape() << " new=" << shape << "\n";
             }
-            const double halfInnerFeetWidth = halfGauge - 0.039 * exaggeration;
-            const double halfRailWidth = halfInnerFeetWidth + 0.15 * exaggeration;
+            const double halfInnerFeetWidth = halfGauge - 0.039 * laneDrawingConstants.exaggeration;
+            const double halfRailWidth = halfInnerFeetWidth + 0.15 * laneDrawingConstants.exaggeration;
             const double halfCrossTieWidth = halfGauge * 1.81;
             // Draw lane geometry
             GNEGeometry::drawLaneGeometry(myNet->getViewNet(), shape, myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), myShapeColors, halfRailWidth);
@@ -453,27 +476,27 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
             // Set current color back
             GLHelper::setColor(current);
             // Draw crossties
-            GLHelper::drawCrossTies(shape, myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), 0.26 * exaggeration, 0.6 * exaggeration, halfCrossTieWidth, s.drawForRectangleSelection);
+            GLHelper::drawCrossTies(shape, myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), 0.26 * laneDrawingConstants.exaggeration, 0.6 * laneDrawingConstants.exaggeration, halfCrossTieWidth, s.drawForRectangleSelection);
         } else {
-            GNEGeometry::drawLaneGeometry(myNet->getViewNet(), myLaneGeometry.getShape(), myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), myShapeColors, halfWidth);
+            GNEGeometry::drawLaneGeometry(myNet->getViewNet(), myLaneGeometry.getShape(), myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), myShapeColors, laneDrawingConstants.halfWidth);
         }
-        if (halfWidth != halfWidth2 && !spreadSuperposed) {
+        if (laneDrawingConstants.halfWidth != laneDrawingConstants.halfWidth2 && !spreadSuperposed) {
             // draw again to show the selected edge
             GLHelper::setColor(s.colorSettings.selectedEdgeColor);
             glTranslated(0, 0, -.1);
-            GNEGeometry::drawLaneGeometry(myNet->getViewNet(), myLaneGeometry.getShape(), myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), {}, halfWidth2);
-        }
-        // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GLHelper::drawShapeDottedContourAroundShape(s, getType(), myParentEdge->getNBEdge()->getLaneStruct(myIndex).shape, halfWidth);
+            GNEGeometry::drawLaneGeometry(myNet->getViewNet(), myLaneGeometry.getShape(), myLaneGeometry.getShapeRotations(), myLaneGeometry.getShapeLengths(), {}, laneDrawingConstants.halfWidth2);
         }
         // Pop draw matrix 1
         glPopMatrix();
+        // check if dotted contour has to be drawn
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedContourLane(s, myDottedLaneGeometry, laneDrawingConstants.halfWidth, true, true);
+        }
         // only draw details depending of the scale and if isn't being drawn for selecting
         if ((s.scale >= 10) && !s.drawForRectangleSelection && !s.drawForPositionSelection) {
             // if exaggeration is 1, draw drawMarkings
-            if (s.laneShowBorders && exaggeration == 1 && !drawAsRailway(s)) {
-                drawMarkings(s, exaggeration);
+            if (s.laneShowBorders && laneDrawingConstants.exaggeration == 1 && !drawAsRailway(s)) {
+                drawMarkings(s, laneDrawingConstants.exaggeration);
             }
             // draw ROWs only if target junction has a valid logic)
             if (s.showLinkDecals && myParentEdge->getSecondParentJunction()->isLogicValid() && s.scale > 3) {
@@ -487,7 +510,7 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
                 } else {
                     glColor3d(0.3, 0.3, 0.3);
                 }
-                drawDirectionIndicators(exaggeration, spreadSuperposed);
+                drawDirectionIndicators(laneDrawingConstants.exaggeration, spreadSuperposed);
             }
             if (s.drawLinkJunctionIndex.show) {
                 drawLinkNo(s);
@@ -498,7 +521,7 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         }
         // If there are texture of restricted lanes to draw, check if icons can be drawn
         if (!s.drawForRectangleSelection && !s.drawForPositionSelection && !s.disableLaneIcons &&
-                (myLaneRestrictedTexturePositions.size() > 0) && s.drawDetail(s.detailSettings.laneTextures, exaggeration)) {
+                (myLaneRestrictedTexturePositions.size() > 0) && s.drawDetail(s.detailSettings.laneTextures, laneDrawingConstants.exaggeration)) {
             // Declare default width of icon (3)
             double iconWidth = 1;
             // Obtain width of icon, if width of lane is different
@@ -534,16 +557,6 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         }
         // Pop Lane Name
         glPopName();
-        // pop GL Name of generic datas
-        for (const auto& genericData : myParentEdge->getChildGenericDataElements()) {
-            if (genericData->isGenericDataVisible()) {
-                glPopName();
-                if (myIndex == 0) {
-                    // draw attribute in first lane
-                    genericData->drawAttribute(myLaneGeometry.getShape());
-                }
-            }
-        }
         // draw parents
         for (const auto& VSS : getParentAdditionals()) {
             if (VSS->getTagProperty().getTag() == SUMO_TAG_VSS) {
@@ -557,10 +570,7 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         }
         // draw child additional
         for (const auto& additional : getChildAdditionals()) {
-            //draw partial E2 detectors
-            if (additional->getTagProperty().getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
-                drawPartialE2DetectorPlan(s, additional, nullptr);
-            } else if (!additional->getTagProperty().isPlacedInRTree()) {
+            if (!additional->getTagProperty().isPlacedInRTree()) {
                 // check that ParkingAreas aren't draw two times
                 additional->drawGL(s);
             }
@@ -571,9 +581,112 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
                 demandElement->drawGL(s);
             }
         }
-        // draw child path elements
-        for (const auto &demandElement : myPathDemandElements) {
-            demandElement->drawLanePathChildren(s, this);
+        // draw child path additionals
+        for (const auto &tag : myPathAdditionalElements) {
+            // search first selected element
+            const GNEAdditional* selectedElement = nullptr;
+            for (const GNEAdditional* const element : tag.second) {
+                if (element->isAttributeCarrierSelected()) {
+                    selectedElement = element;
+                    break;
+                }
+            }
+            // continue depending of selectedElement
+            if (selectedElement != nullptr) {
+                // draw selected element with offset
+                selectedElement->drawLanePathChildren(s, this, 0.1);
+                // if we're drawing for position or rectangle selection, then draw all elements
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    for (const GNEAdditional* const element : tag.second) {
+                        if (element != selectedElement) {
+                            element->drawLanePathChildren(s, this, 0);
+                        }
+                    }
+                }
+            } else {
+                // if we're drawing for position or rectangle selection, then draw all elements
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    for (const GNEAdditional* const element : tag.second) {
+                        element->drawLanePathChildren(s, this, 0);
+                    }
+                } else if (tag.second.size() > 0)  {
+                    tag.second.front()->drawLanePathChildren(s, this, 0);
+                }
+            }
+        }
+        // draw child path demand elements
+        for (const auto &tag : myPathDemandElements) {
+            // search first selected element
+            const GNEDemandElement* selectedElement = nullptr;
+            for (const GNEDemandElement* const element : tag.second) {
+                if (element->isAttributeCarrierSelected()) {
+                    selectedElement = element;
+                    break;
+                }
+            }
+            // continue depending of selectedElement
+            if (selectedElement) {
+                // draw selected element with offset
+                selectedElement->drawLanePathChildren(s, this, 0.1);
+                // if we're drawing for position or rectangle selection, then draw all elements
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    for (const GNEDemandElement* const element : tag.second) {
+                        if (element != selectedElement) {
+                            element->drawLanePathChildren(s, this, 0);
+                        }
+                    }
+                }
+            } else {
+                // if we're drawing for position or rectangle selection, then draw all elements
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    for (const GNEDemandElement* const element : tag.second) {
+                        element->drawLanePathChildren(s, this, 0);
+                    }
+                } else if (tag.second.size() > 0) {
+                    tag.second.front()->drawLanePathChildren(s, this, 0);
+                }
+            }
+        }
+        // draw child path generic datas
+        for (const auto &tag : myPathGenericDatas) {
+            // filter visible generic datas
+            std::vector<GNEGenericData*> visibleGenericDatas;
+            visibleGenericDatas.reserve(tag.second.size());
+            for (const auto & genericData : tag.second) {
+                if (genericData->isGenericDataVisible()) {
+                    visibleGenericDatas.push_back(genericData);
+                }
+            }
+            // search first selected element
+            const GNEGenericData* selectedElement = nullptr;
+            for (const GNEGenericData* const element : visibleGenericDatas) {
+                if (element->isAttributeCarrierSelected()) {
+                    selectedElement = element;
+                    break;
+                }
+            }
+            // continue depending of selectedElement
+            if (selectedElement) {
+                // draw selected element with offset
+                selectedElement->drawLanePathChildren(s, this, 0.1);
+                // if we're drawing for position or rectangle selection, then draw all elements
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    for (const GNEGenericData* const element : visibleGenericDatas) {
+                        if (element != selectedElement) {
+                            element->drawLanePathChildren(s, this, 0);
+                        }
+                    }
+                }
+            } else {
+                // if we're drawing for position or rectangle selection, then draw all elements
+                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
+                    for (const GNEGenericData* const element : visibleGenericDatas) {
+                        element->drawLanePathChildren(s, this, 0);
+                    }
+                } else if (visibleGenericDatas.size() > 0)  {
+                    visibleGenericDatas.front()->drawLanePathChildren(s, this, 0);
+                }
+            }
         }
     }
 }
@@ -848,38 +961,69 @@ GNELane::isAttributeEnabled(SumoXMLAttr key) const {
 
 void
 GNELane::addPathAdditionalElement(GNEAdditional* additionalElement) {
+    // get tag
+    SumoXMLTag tag = additionalElement->getTagProperty().getTag();
     // avoid insert duplicated path element childs
-    if (std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement) == myPathAdditionalElements.end()) {
-        myPathAdditionalElements.push_back(additionalElement);
+    if (std::find(myPathAdditionalElements[tag].begin(), myPathAdditionalElements[tag].end(), additionalElement) == myPathAdditionalElements[tag].end()) {
+        myPathAdditionalElements[tag].push_back(additionalElement);
     }
 }
 
 
 void
 GNELane::removePathAdditionalElement(GNEAdditional* additionalElement) {
+    // get tag
+    SumoXMLTag tag = additionalElement->getTagProperty().getTag();
     // search and remove pathElementChild
-    auto it = std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement);
-    if (it != myPathAdditionalElements.end()) {
-        myPathAdditionalElements.erase(it);
+    auto it = std::find(myPathAdditionalElements[tag].begin(), myPathAdditionalElements[tag].end(), additionalElement);
+    if (it != myPathAdditionalElements[tag].end()) {
+        myPathAdditionalElements[tag].erase(it);
     }
 }
 
 
 void
 GNELane::addPathDemandElement(GNEDemandElement* demandElement) {
+    // get tag
+    SumoXMLTag tag = demandElement->getTagProperty().getTag();
     // avoid insert duplicated path element childs
-    if (std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement) == myPathDemandElements.end()) {
-        myPathDemandElements.push_back(demandElement);
+    if (std::find(myPathDemandElements[tag].begin(), myPathDemandElements[tag].end(), demandElement) == myPathDemandElements[tag].end()) {
+        myPathDemandElements[tag].push_back(demandElement);
     }
 }
 
 
 void
 GNELane::removePathDemandElement(GNEDemandElement* demandElement) {
+    // get tag
+    SumoXMLTag tag = demandElement->getTagProperty().getTag();
     // search and remove pathElementChild
-    auto it = std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement);
-    if (it != myPathDemandElements.end()) {
-        myPathDemandElements.erase(it);
+    auto it = std::find(myPathDemandElements[tag].begin(), myPathDemandElements[tag].end(), demandElement);
+    if (it != myPathDemandElements[tag].end()) {
+        myPathDemandElements[tag].erase(it);
+    }
+}
+
+
+void
+GNELane::addPathGenericData(GNEGenericData* genericData) {
+    // get tag
+    SumoXMLTag tag = genericData->getTagProperty().getTag();
+    // avoid insert duplicated path element childs
+    if (std::find(myPathGenericDatas[tag].begin(), myPathGenericDatas[tag].end(), genericData) == myPathGenericDatas[tag].end()) {
+        myPathGenericDatas[tag].push_back(genericData);
+    }
+}
+
+
+void
+GNELane::removePathGenericData(GNEGenericData* genericData) {
+    // get tag
+    SumoXMLTag tag = genericData->getTagProperty().getTag();
+    // search and remove pathElementChild
+    auto it = std::find(myPathGenericDatas[tag].begin(), myPathGenericDatas[tag].end(), genericData);
+    if (it != myPathGenericDatas[tag].end()) {
+        myPathGenericDatas[tag].erase(it);
     }
 }
 
@@ -888,14 +1032,26 @@ void
 GNELane::invalidatePathElements() {
     // make a copy of myPathAdditionalElements
     auto copyOfPathAdditionalElements = myPathAdditionalElements;
-    for (const auto& additionalElement : copyOfPathAdditionalElements) {
-        // note: Additional elements use update geometry
-        additionalElement->updateGeometry();
+    for (const auto& tag : copyOfPathAdditionalElements) {
+        for (const auto& additionalElement : tag.second) {
+            // note: currently additional elements don't use compute/invalidate paths
+            additionalElement->updateGeometry();
+        }
     }
     // make a copy of myPathDemandElements
     auto copyOfPathDemandElements = myPathDemandElements;
-    for (const auto& demandElement : copyOfPathDemandElements) {
-        demandElement->invalidatePath();
+    for (const auto& tag : copyOfPathDemandElements) {
+        for (const auto& demandElement : tag.second) {
+            demandElement->invalidatePath();
+        }
+    }
+    // make a copy of myPathGenericDatas
+    auto copyOfPathGenericDatas = myPathGenericDatas;
+    for (const auto& tag : copyOfPathGenericDatas) {
+        for (const auto& genericData : tag.second) {
+            // note: currently generic datas don't use compute/invalidate paths
+            genericData->updateGeometry();
+        }
     }
 }
 
@@ -906,68 +1062,6 @@ GNELane::setSpecialColor(const RGBColor* color, double colorValue) {
     mySpecialColorValue = colorValue;
 }
 
-
-void
-GNELane::drawPartialE2DetectorPlan(const GUIVisualizationSettings& s, const GNEAdditional* E2Detector, const GNEJunction* junction) const {
-    // calculate E2Detector width
-    const double E2DetectorWidth = s.addSize.getExaggeration(s, E2Detector);
-    // check if E2 can be drawn
-    if (s.drawAdditionals(E2DetectorWidth) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
-        // obtain color
-        RGBColor E2DetectorColor;
-        if (E2Detector->drawUsingSelectColor()) {
-            E2DetectorColor = s.colorSettings.selectedRouteColor;
-        } else {
-            E2DetectorColor = s.detectorSettings.E2Color;
-        }
-        // Start drawing adding an gl identificator
-        glPushName(E2Detector->getGlID());
-        // Add a draw matrix
-        glPushMatrix();
-        // Start with the drawing of the area traslating matrix to origin
-        glTranslated(0, 0, E2Detector->getType());
-        // draw E2Detector
-        if (junction) {
-            // iterate over segments
-            for (const auto& segment : E2Detector->getAdditionalSegmentGeometry()) {
-                // draw partial segment
-                if (segment.getJunction() == junction) {
-                    // Set E2Detector color (needed due drawShapeDottedContour)
-                    GLHelper::setColor(E2DetectorColor);
-                    // draw box lines
-                    GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, E2DetectorWidth);
-                    // check if shape dotted contour has to be drawn
-                    if (myNet->getViewNet()->getDottedAC() == E2Detector) {
-                        GLHelper::drawShapeDottedContourAroundShape(s, getType(), segment.getShape(), E2DetectorWidth);
-                    }
-                }
-            }
-        } else {
-            // iterate over segments
-            for (const auto& segment : E2Detector->getAdditionalSegmentGeometry()) {
-                // draw partial segment
-                if (segment.getLane() == this) {
-                    // Set E2Detector color (needed due drawShapeDottedContour)
-                    GLHelper::setColor(E2DetectorColor);
-                    // draw box lines
-                    GNEGeometry::drawSegmentGeometry(myNet->getViewNet(), segment, E2DetectorWidth);
-                    // check if shape dotted contour has to be drawn
-                    if (myNet->getViewNet()->getDottedAC() == E2Detector) {
-                        GLHelper::drawShapeDottedContourAroundShape(s, getType(), segment.getShape(), E2DetectorWidth);
-                    }
-                }
-            }
-        }
-        // Pop last matrix
-        glPopMatrix();
-        // Draw name if isn't being drawn for selecting
-        if (!s.drawForRectangleSelection) {
-            drawName(getCenteringBoundary().getCenter(), s.scale, s.addName);
-        }
-        // Pop name
-        glPopName();
-    }
-}
 
 // ===========================================================================
 // private
@@ -1023,23 +1117,17 @@ GNELane::setAttribute(SumoXMLAttr key, const std::string& value) {
 }
 
 
-void
-GNELane::updateDottedContour() {
-    //
-}
-
-
 RGBColor
 GNELane::setLaneColor(const GUIVisualizationSettings& s) const {
     // declare a RGBColor variable
     RGBColor color;
     // get inspected AC
-    const GNEAttributeCarrier *inspectedAC = myNet->getViewNet()->getDottedAC();
+    const GNEAttributeCarrier *inspectedAC = myNet->getViewNet()->getInspectedAttributeCarrier();
     // we need to draw lanes with a special color if we're inspecting a Trip or Flow and this lane belongs to a via's edge.
     if (inspectedAC && (inspectedAC->isAttributeCarrierSelected() == false) &&
         ((inspectedAC->getTagProperty().getTag() == SUMO_TAG_TRIP) || (inspectedAC->getTagProperty().getTag() == SUMO_TAG_FLOW))) {
         // obtain attribute "via"
-        std::vector<std::string> viaEdges = parse<std::vector<std::string> >(myNet->getViewNet()->getDottedAC()->getAttribute(SUMO_ATTR_VIA));
+        std::vector<std::string> viaEdges = parse<std::vector<std::string> >(myNet->getViewNet()->getInspectedAttributeCarrier()->getAttribute(SUMO_ATTR_VIA));
         // iterate over viaEdges
         for (const auto& edge : viaEdges) {
             // check if parent edge is in the via edges
@@ -1064,10 +1152,6 @@ GNELane::setLaneColor(const GUIVisualizationSettings& s) const {
         if (!setFunctionalColor(c.getActive(), color) && !setMultiColor(s, c, color)) {
             color = c.getScheme().getColor(getColorValue(s, c.getActive()));
         }
-    }
-    // check if we're in data mode
-    if (myNet->getViewNet()->getEditModes().isCurrentSupermodeData() && s.laneColorer.getActive() != 16) {
-        color = myParentEdge->getGenericDataColor(s);
     }
     // special color for conflicted candidate edges
     if (myParentEdge->isConflictedCandidate()) {
@@ -1296,9 +1380,9 @@ GNELane::drawDirectionIndicators(double exaggeration, bool spreadSuperposed) con
 void
 GNELane::drawVSSSymbol(const GUIVisualizationSettings& s, GNEAdditional* vss) const {
     // Obtain exaggeration of the draw
-    const double exaggeration = s.addSize.getExaggeration(s, vss);
+    const double VSSExaggeration = s.addSize.getExaggeration(s, vss);
     // first check if additional has to be drawn
-    if (s.drawAdditionals(exaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
+    if (s.drawAdditionals(VSSExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
         // obtain lanePos and route
         const Position& lanePos = vss->getChildPosition(this);
         const double laneRot = vss->getChildRotation(this);
@@ -1309,7 +1393,7 @@ GNELane::drawVSSSymbol(const GUIVisualizationSettings& s, GNEAdditional* vss) co
         glTranslated(lanePos.x(), lanePos.y(), vss->getType());
         glRotated(-1 * laneRot, 0, 0, 1);
         glTranslated(0, -1.5, 0);
-        glScaled(exaggeration, exaggeration, 1);
+        glScaled(VSSExaggeration, VSSExaggeration, 1);
         // draw circle
         int noPoints = 9;
         if (s.scale > 25) {
@@ -1336,11 +1420,11 @@ GNELane::drawVSSSymbol(const GUIVisualizationSettings& s, GNEAdditional* vss) co
         // Pop VSS name
         glPopName();
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == vss) {
-            GLHelper::drawShapeDottedContourRectangle(s, getType(), lanePos, 2.6, 2.6, -1 * laneRot, 0, -1.5);
+        if (myNet->getViewNet()->getInspectedAttributeCarrier() == vss) {
+            // GLHelper::drawShapeDottedContourRectangle(s, getType(), lanePos, 2.6, 2.6, -1 * laneRot, 0, -1.5);
         }
         // Draw connections
-        vss->drawChildConnections(s, getType());
+        vss->drawChildConnections(s, getType(), VSSExaggeration);
     }
 }
 

@@ -966,6 +966,20 @@ MSVehicle::Stop::write(OutputDevice& dev) const {
     dev.closeTag();
 }
 
+void
+MSVehicle::Stop::initPars(const SUMOVehicleParameter::Stop& stopPar) {
+    busstop = MSNet::getInstance()->getStoppingPlace(stopPar.busstop, SUMO_TAG_BUS_STOP);
+    containerstop = MSNet::getInstance()->getStoppingPlace(stopPar.containerstop, SUMO_TAG_CONTAINER_STOP);
+    parkingarea = static_cast<MSParkingArea*>(MSNet::getInstance()->getStoppingPlace(stopPar.parkingarea, SUMO_TAG_PARKING_AREA));
+    chargingStation = MSNet::getInstance()->getStoppingPlace(stopPar.chargingStation, SUMO_TAG_CHARGING_STATION);
+    overheadWireSegment = MSNet::getInstance()->getStoppingPlace(stopPar.overheadWireSegment, SUMO_TAG_OVERHEAD_WIRE_SEGMENT);
+    duration = stopPar.duration;
+    triggered = stopPar.triggered;
+    containerTriggered = stopPar.containerTriggered;
+    joinTriggered = stopPar.joinTriggered || stopPar.join != "";
+    numExpectedPerson = (int)stopPar.awaitedPersons.size();
+    numExpectedContainer = (int)stopPar.awaitedContainers.size();
+}
 
 /* -------------------------------------------------------------------------
  * MSVehicle-methods
@@ -1066,7 +1080,7 @@ MSVehicle::hasValidRouteStart(std::string& msg) {
             }
         } else {
             if ((*myCurrEdge)->allowedLanes(getVClass()) == nullptr) {
-                msg = "Vehicle '" + getID() + "' is not allowed to depart on any lane of its first edge.";
+                msg = "Vehicle '" + getID() + "' is not allowed to depart on any lane of edge '" + (*myCurrEdge)->getID() + "'.";
                 myRouteValidity |= ROUTE_START_INVALID_PERMISSIONS;
                 return false;
             }
@@ -1135,7 +1149,7 @@ MSVehicle::replaceRoute(const MSRoute* newRoute, const std::string& info, bool o
         }
 #ifdef DEBUG_REPLACE_ROUTE
         if (DEBUG_COND) {
-            std::cout << "  replaceRoute on " << (*myCurrEdge)->getID() << " lane=" << myLane->getID() << "\n";
+            std::cout << "  replaceRoute on " << (*myCurrEdge)->getID() << " lane=" << myLane->getID() << " stopsFromScratch=" << stopsFromScratch << "\n";
         }
 #endif
         for (std::list<Stop>::iterator iter = myStops.begin(); iter != myStops.end();) {
@@ -1529,15 +1543,7 @@ MSVehicle::addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& error
         errorMsg = "Vehicle '" + myParameter->id + "' is not allowed to stop on lane '" + stopPar.lane + "'.";
         return false;
     }
-    stop.busstop = MSNet::getInstance()->getStoppingPlace(stopPar.busstop, SUMO_TAG_BUS_STOP);
-    stop.containerstop = MSNet::getInstance()->getStoppingPlace(stopPar.containerstop, SUMO_TAG_CONTAINER_STOP);
-    stop.parkingarea = static_cast<MSParkingArea*>(MSNet::getInstance()->getStoppingPlace(stopPar.parkingarea, SUMO_TAG_PARKING_AREA));
-    stop.chargingStation = MSNet::getInstance()->getStoppingPlace(stopPar.chargingStation, SUMO_TAG_CHARGING_STATION);
-    stop.overheadWireSegment = MSNet::getInstance()->getStoppingPlace(stopPar.overheadWireSegment, SUMO_TAG_OVERHEAD_WIRE_SEGMENT);
-    stop.duration = stopPar.duration;
-    stop.triggered = stopPar.triggered;
-    stop.containerTriggered = stopPar.containerTriggered;
-    stop.joinTriggered = stopPar.joinTriggered || stopPar.join != "";
+    stop.initPars(stopPar);
     if (stopPar.until != -1) {
         // !!! it would be much cleaner to invent a constructor for stops which takes "until" as an argument
         const_cast<SUMOVehicleParameter::Stop&>(stop.pars).until += untilOffset;
@@ -1546,8 +1552,6 @@ MSVehicle::addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& error
         const_cast<SUMOVehicleParameter::Stop&>(stop.pars).arrival += untilOffset;
     }
     stop.collision = collision;
-    stop.numExpectedPerson = (int)stopPar.awaitedPersons.size();
-    stop.numExpectedContainer = (int)stopPar.awaitedContainers.size();
     std::string stopType = "stop";
     std::string stopID = "";
     if (stop.busstop != nullptr) {
@@ -1636,7 +1640,7 @@ MSVehicle::addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& error
     //if (!stop.parking && (myCurrEdge == stop.edge && myState.myPos > stop.endPos - getCarFollowModel().brakeGap(myState.mySpeed))) {
     const double endPosOffset = stop.lane->getEdge().isInternal() ? (*stop.edge)->getLength() : 0;
     const double distToStop = stop.pars.endPos + endPosOffset - myState.myPos;
-    if (myCurrEdge == stop.edge && distToStop < getCarFollowModel().brakeGap(myState.mySpeed)) {
+    if (myCurrEdge == stop.edge && distToStop + POSITION_EPS < getCarFollowModel().brakeGap(myState.mySpeed)) {
         if (collision) {
             if (distToStop < getCarFollowModel().brakeGap(myState.mySpeed, getCarFollowModel().getEmergencyDecel(), 0)) {
                 double vNew = getCarFollowModel().maximumSafeStopSpeed(distToStop, getSpeed(), false, 0);
@@ -1817,7 +1821,7 @@ bool
 MSVehicle::isStoppedInRange(const double pos, const double tolerance) const {
     if (isStopped()) {
         const Stop& stop = myStops.front();
-        if (stop.pars.endPos - stop.pars.startPos <= MIN_STOP_LENGTH) {
+        if (stop.pars.endPos - stop.pars.startPos <= MIN_STOP_LENGTH + NUMERICAL_EPS) {
             return stop.pars.startPos - tolerance <= pos && stop.pars.endPos + tolerance >= pos;
         }
         return stop.pars.startPos <= pos && stop.pars.endPos >= pos;
@@ -5579,6 +5583,9 @@ MSVehicle::fixPosition() {
 
 std::pair<const MSLane*, double>
 MSVehicle::getLanePosAfterDist(double distance) const {
+    if (distance == 0) {
+        return std::make_pair(myLane, getPositionOnLane());
+    }
     const std::vector<const MSLane*> lanes = getUpcomingLanesUntil(distance);
     distance += getPositionOnLane();
     for (const MSLane* lane : lanes) {
@@ -6138,56 +6145,29 @@ MSVehicle::rerouteParkingArea(const std::string& parkingAreaID, std::string& err
 }
 
 bool
-MSVehicle::addTraciStop(const MSLane* const lane, const double startPos, const double endPos, const SUMOTime duration, const SUMOTime until,
-                        const bool parking, const bool triggered, const bool containerTriggered, std::string& errorMsg) {
+MSVehicle::addTraciStop(SUMOVehicleParameter::Stop stop, std::string& errorMsg) {
     //if the stop exists update the duration
     for (std::list<Stop>::iterator iter = myStops.begin(); iter != myStops.end(); iter++) {
-        if (iter->lane == lane && fabs(iter->pars.endPos - endPos) < POSITION_EPS) {
+        if (iter->lane->getID() == stop.lane && fabs(iter->pars.endPos - stop.endPos) < POSITION_EPS) {
             // update existing stop
-            if (duration == 0 && until < 0 && !iter->reached) {
+            if (stop.duration == 0 && stop.until < 0 && !iter->reached) {
                 myStops.erase(iter);
                 // XXX also erase from myParameter->stops ?
                 updateBestLanes(true);
             } else {
-                iter->duration = duration;
-                iter->triggered = triggered;
-                iter->containerTriggered = containerTriggered;
-                const_cast<SUMOVehicleParameter::Stop&>(iter->pars).until = until;
-                const_cast<SUMOVehicleParameter::Stop&>(iter->pars).parking = parking;
+                iter->duration = stop.duration;
+                iter->triggered = stop.triggered;
+                iter->containerTriggered = stop.containerTriggered;
+                const_cast<SUMOVehicleParameter::Stop&>(iter->pars).until = stop.until;
+                const_cast<SUMOVehicleParameter::Stop&>(iter->pars).parking = stop.parking;
             }
             return true;
         }
     }
-    SUMOVehicleParameter::Stop newStop;
-    newStop.lane = lane->getID();
-    newStop.startPos = startPos;
-    newStop.endPos = endPos;
-    newStop.duration = duration;
-    newStop.until = until;
-    newStop.triggered = triggered;
-    newStop.containerTriggered = containerTriggered;
-    newStop.parking = parking;
-    newStop.index = STOP_INDEX_FIT;
-    newStop.parametersSet = STOP_START_SET | STOP_END_SET;
-    if (triggered) {
-        newStop.parametersSet |= STOP_TRIGGER_SET;
-    }
-    if (containerTriggered) {
-        newStop.parametersSet |= STOP_CONTAINER_TRIGGER_SET;
-    }
-    if (parking) {
-        newStop.parametersSet |= STOP_PARKING_SET;
-    }
-    if (duration >= 0) {
-        newStop.parametersSet |= STOP_DURATION_SET;
-    }
-    if (until >= 0) {
-        newStop.parametersSet |= STOP_UNTIL_SET;
-    }
-    const bool result = addStop(newStop, errorMsg);
+    const bool result = addStop(stop, errorMsg);
     if (result) {
         /// XXX handle stops added out of order
-        myParameter->stops.push_back(newStop);
+        myParameter->stops.push_back(stop);
     }
     if (myLane != nullptr) {
         updateBestLanes(true);
@@ -6197,90 +6177,68 @@ MSVehicle::addTraciStop(const MSLane* const lane, const double startPos, const d
 
 
 bool
-MSVehicle::addTraciStopAtStoppingPlace(const std::string& stopId, const SUMOTime duration, const SUMOTime until, const bool parking,
-                                       const bool triggered, const bool containerTriggered, const SumoXMLTag stoppingPlaceType, std::string& errorMsg) {
-    //if the stop exists update the duration
-    for (std::list<Stop>::iterator iter = myStops.begin(); iter != myStops.end(); iter++) {
-        Named* stop = nullptr;
-        switch (stoppingPlaceType) {
-            case SUMO_TAG_BUS_STOP:
-                stop = iter->busstop;
-                break;
-            case SUMO_TAG_CONTAINER_STOP:
-                stop = iter->containerstop;
-                break;
-            case SUMO_TAG_CHARGING_STATION:
-                stop = iter->chargingStation;
-                break;
-            case SUMO_TAG_OVERHEAD_WIRE_SEGMENT:
-                stop = iter->overheadWireSegment;
-                break;
-            case SUMO_TAG_PARKING_AREA:
-                stop = iter->parkingarea;
-                break;
-            default:
-                throw ProcessError("Invalid stopping place type '" + toString(stoppingPlaceType) + "'");
-        }
-        if (stop != nullptr && stop->getID() == stopId) {
-            if (duration == 0 && !iter->reached) {
-                myStops.erase(iter);
-                updateBestLanes(true);
-            } else {
-                iter->duration = duration;
-            }
-            return true;
-        }
-    }
-
-    SUMOVehicleParameter::Stop newStop;
-    switch (stoppingPlaceType) {
-        case SUMO_TAG_BUS_STOP:
-            newStop.busstop = stopId;
-            break;
-        case SUMO_TAG_CONTAINER_STOP:
-            newStop.containerstop = stopId;
-            break;
-        case SUMO_TAG_CHARGING_STATION:
-            newStop.chargingStation = stopId;
-            break;
-        case SUMO_TAG_OVERHEAD_WIRE_SEGMENT:
-            newStop.overheadWireSegment = stopId;
-            break;
-        case SUMO_TAG_PARKING_AREA:
-            newStop.parkingarea = stopId;
-            break;
-        default:
-            throw ProcessError("Invalid stopping place type '" + toString(stoppingPlaceType) + "'");
-    }
-    MSStoppingPlace* bs = MSNet::getInstance()->getStoppingPlace(stopId, stoppingPlaceType);
-    if (bs == nullptr) {
-        errorMsg = "The " + toString(stoppingPlaceType) + " '" + stopId + "' is not known for vehicle '" + getID() + "'";
+MSVehicle::replaceStop(int nextStopIndex, SUMOVehicleParameter::Stop stop, const std::string& info, std::string& errorMsg) {
+    const int n = (int)myStops.size();
+    if (nextStopIndex < 0 || nextStopIndex >= n) {
+        errorMsg = ("Invalid nextStopIndex '" + toString(nextStopIndex) + "' for " + toString(n) + " remaining stops");
         return false;
     }
-    newStop.duration = duration;
-    newStop.until = until;
-    newStop.triggered = triggered;
-    newStop.containerTriggered = containerTriggered;
-    newStop.parking = parking;
-    newStop.index = STOP_INDEX_FIT;
-    newStop.lane = bs->getLane().getID();
-    newStop.endPos = bs->getEndLanePosition();
-    newStop.startPos = bs->getBeginLanePosition();
-    if (triggered) {
-        newStop.parametersSet |= STOP_TRIGGER_SET;
+    const SUMOTime t = MSNet::getInstance()->getCurrentTimeStep();
+    MSLane* stopLane = MSLane::dictionary(stop.lane);
+    MSEdge* stopEdge = &stopLane->getEdge();
+
+    if (!stopLane->allowsVehicleClass(getVClass())) {
+        errorMsg = ("Disallowed stop lane '" + stopLane->getID() + "'");
+        return false;
     }
-    if (containerTriggered) {
-        newStop.parametersSet |= STOP_CONTAINER_TRIGGER_SET;
+
+    const ConstMSEdgeVector& oldEdges = getRoute().getEdges();
+    std::vector<Stop> stops(myStops.begin(), myStops.end());
+    MSRouteIterator itStart = nextStopIndex == 0 ? getCurrentRouteEdge() : stops[nextStopIndex - 1].edge;
+    double startPos = nextStopIndex == 0 ? getPositionOnLane() : stops[nextStopIndex - 1].pars.endPos;
+    MSRouteIterator itEnd = nextStopIndex == n - 1 ? oldEdges.end() - 1 : stops[nextStopIndex + 1].edge;
+    auto endPos = nextStopIndex == n - 1 ? getArrivalPos() : stops[nextStopIndex + 1].pars.endPos;
+    SUMOAbstractRouter<MSEdge, SUMOVehicle>& router = getInfluencer().getRouterTT(getRNGIndex(), getVClass());
+
+    ConstMSEdgeVector toNewStop;
+    router.compute(*itStart, startPos, stopEdge, stop.endPos, this, t, toNewStop, true);
+    if (toNewStop.size() == 0) {
+        errorMsg = "No route found from edge '" + (*itStart)->getID() + "' to stop edge '" + stopEdge->getID() + "'";
+        return false;
     }
-    if (parking) {
-        newStop.parametersSet |= STOP_PARKING_SET;
+
+    ConstMSEdgeVector fromNewStop;
+    router.compute(stopEdge, stop.endPos, *itEnd, endPos, this, t, fromNewStop, true);
+    if (fromNewStop.size() == 0) {
+        errorMsg = "No route found from stop edge '" + stopEdge->getID() + "' to edge '" + (*itEnd)->getID() + "'";
+        return false;
     }
-    const bool result = addStop(newStop, errorMsg);
-    if (myLane != nullptr) {
-        updateBestLanes(true);
+
+    auto itStop = myStops.begin();
+    std::advance(itStop, nextStopIndex);
+    Stop& replacedStop = *itStop;
+    const_cast<SUMOVehicleParameter::Stop&>(replacedStop.pars) = stop;
+    replacedStop.initPars(stop);
+    replacedStop.edge = myRoute->end(); // will be patched in replaceRoute
+    replacedStop.lane = stopLane;
+
+    ConstMSEdgeVector newEdges;
+    newEdges.insert(newEdges.end(), oldEdges.begin(), itStart);
+    newEdges.insert(newEdges.end(), toNewStop.begin(), toNewStop.end() - 1);
+    newEdges.insert(newEdges.end(), fromNewStop.begin(), fromNewStop.end() - 1);
+    newEdges.insert(newEdges.end(), itEnd, oldEdges.end());
+
+    const double routeCost = router.recomputeCosts(newEdges, this, t);
+    const double previousCost = router.recomputeCosts(oldEdges, this, t);
+    const double savings = previousCost - routeCost;
+    if (!hasDeparted()) {
+        // stops will be rebuilt from scratch so we must patch the stops in myParameter
+        const_cast<SUMOVehicleParameter*>(myParameter)->stops[nextStopIndex] = stop;
     }
-    return result;
+    replaceRouteEdges(newEdges, routeCost, savings, info, !hasDeparted(), false, false);
+    return true;
 }
+
 
 bool
 MSVehicle::resumeFromStopping() {
@@ -6323,6 +6281,7 @@ MSVehicle::resumeFromStopping() {
         if (myStops.front().collision && MSLane::getCollisionAction() == MSLane::COLLISION_ACTION_WARN) {
             myCollisionImmunity = TIME2STEPS(5); // leave the conflict area
         }
+        myPastStops.push_back(myStops.front().pars);
         myStops.pop_front();
         // do not count the stopping time towards gridlock time.
         // Other outputs use an independent counter and are not affected.
@@ -6351,14 +6310,19 @@ MSVehicle::getNextStopParameter() const {
     return nullptr;
 }
 
-void
-MSVehicle::abortNextStop() {
-    if (hasStops()) {
-        if (isStopped()) {
+bool
+MSVehicle::abortNextStop(int nextStopIndex) {
+    if (hasStops() && nextStopIndex < (int)myStops.size()) {
+        if (nextStopIndex == 0 && isStopped()) {
             resumeFromStopping();
         } else {
-            myStops.erase(myStops.begin());
+            auto stopIt = myStops.begin();
+            std::advance(stopIt, nextStopIndex);
+            myStops.erase(stopIt);
         }
+        return true;
+    } else {
+        return false;
     }
 }
 

@@ -48,12 +48,6 @@
 
 
 // ===========================================================================
-// static members
-// ===========================================================================
-
-const double GNEJunction::BUBBLE_RADIUS(4);
-
-// ===========================================================================
 // method definitions
 // ===========================================================================
 
@@ -62,7 +56,7 @@ GNEJunction::GNEJunction(GNENet* net, NBNode* nbn, bool loaded) :
         {}, {}, {}, {}, {}, {}, {}, {},     // Parents
         {}, {}, {}, {}, {}, {}, {}, {}),    // Children
     myNBNode(nbn),
-    myMaxSize(1),
+    myMaxDrawingSize(1),
     myAmCreateEdgeSource(false),
     myLogicStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
     myAmResponsible(false),
@@ -100,18 +94,15 @@ GNEJunction::getJunctionShape() const {
 void
 GNEJunction::updateGeometry() {
     updateGeometryAfterNetbuild(true);
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
 }
 
 
 void
 GNEJunction::updateGeometryAfterNetbuild(bool rebuildNBNodeCrossings) {
-    myMaxSize = MAX2(getCenteringBoundary().getWidth(), getCenteringBoundary().getHeight());
+    // recalc max drawing size
+    myMaxDrawingSize = MAX2(getCenteringBoundary().getWidth(), getCenteringBoundary().getHeight());
     rebuildGNECrossings(rebuildNBNodeCrossings);
     checkMissingConnections();
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
 }
 
 
@@ -290,45 +281,51 @@ GNEJunction::drawGL(const GUIVisualizationSettings& s) const {
     if (s.drawBoundaries) {
         GLHelper::drawBoundary(getCenteringBoundary());
     }
-    // declare variable for exaggeration
-    double junctionExaggeration = isAttributeCarrierSelected() ? s.selectionScale : 1;
-    junctionExaggeration *= s.junctionSize.getExaggeration(s, this, 4);
+    // declare variables
+    const Position mousePosition = myNet->getViewNet()->getPositionInformation();
+    const double junctionExaggeration = s.junctionSize.getExaggeration(s, this, 4);
+    const double bubbleRadius = s.neteditSizeSettings.junctionBubbleRadius * junctionExaggeration;
+    // declare draw shape flag
+    const bool drawShape = (myNBNode->getShape().size() > 0) && s.drawJunctionShape;
+    // declare draw bubble flag
+    bool drawBubble = true;
+    if (!s.drawJunctionShape) {
+        // don't draw bubble if it was disabled in GUIVisualizationSettings
+        drawBubble = false;
+    }
+    if (myNBNode->getShape().area() > 4) {
+        // don't draw if shape area is greather than 4
+        drawBubble = false;
+    }
+    if (!myNet->getViewNet()->getEditModes().isCurrentSupermodeNetwork()) {
+        // only draw bubbles in network mode
+        drawBubble = false;
+    }
+    if (myNet->getViewNet()->showJunctionAsBubbles()) {
+        // force draw bubbles if we enabled option in checkbox of viewNet
+        drawBubble = true;
+    }
     // only continue if exaggeration is greather than 0
     if (junctionExaggeration > 0) {
-        // declare values for circles
-        const double circleWidth = BUBBLE_RADIUS * junctionExaggeration;
-        const double circleWidthSquared = circleWidth * circleWidth;
-        // declare variable for mouse position
-        const Position mousePosition = myNet->getViewNet()->getPositionInformation();
+        // push junction name
+        glPushName(getGlID());
+        // push layer matrix
+        glPushMatrix();
+        // translate to GLO_JUNCTION
+        glTranslated(0, 0, GLO_JUNCTION);
         // push name
-        if (s.scale * junctionExaggeration * myMaxSize < 1.) {
+        if (s.scale * junctionExaggeration * myMaxDrawingSize < 1.) {
             // draw something simple so that selection still works
-            glPushName(getGlID());
             GLHelper::drawBoxLine(myNBNode->getPosition(), 0, 1, 1);
-            glPopName();
         } else {
-            // node shape has been computed and is valid for drawing
-            glPushName(getGlID());
-            // declare flag for drawing junction shape
-            const bool drawShape = (myNBNode->getShape().size() > 0) && s.drawJunctionShape;
-            // declare flag for drawing junction as bubbles
-            bool drawBubble = (!drawShape || (myNBNode->getShape().area() < 4)) && s.drawJunctionShape;
-            // check if show junctions as bubbles checkbox is enabled
-            if (myNet->getViewNet()->showJunctionAsBubbles()) {
-                drawBubble = true;
-            }
-            // in supermode demand Bubble musn't be drawn
-            if (myNet->getViewNet()->getEditModes().isCurrentSupermodeDemand()) {
-                drawBubble = false;
-            }
             // check if shape has to be drawn
             if (drawShape) {
                 // set shape color
-                RGBColor junctionShapeColor = setColor(s, false);
+                const RGBColor junctionShapeColor = setColor(s, false);
                 // recognize full transparency and simply don't draw
                 if (junctionShapeColor.alpha() != 0) {
-                    glPushMatrix();
-                    glTranslated(0, 0, getType());
+                    // set color
+                    GLHelper::setColor(junctionShapeColor);
                     // obtain junction Shape
                     PositionVector junctionShape = myNBNode->getShape();
                     // close junction shape
@@ -343,39 +340,40 @@ GNEJunction::drawGL(const GUIVisualizationSettings& s) const {
                         if (junctionShape.around(mousePosition)) {
                             // push matrix
                             glPushMatrix();
-                            glTranslated(mousePosition.x(), mousePosition.y(), GLO_JUNCTION);
+                            // move to mouse position
+                            glTranslated(mousePosition.x(), mousePosition.y(), 1);
+                            // draw a simple circle
                             GLHelper::drawFilledCircle(1, s.getCircleResolution());
+                            // pop matrix
                             glPopMatrix();
                         }
-                    } else if ((s.scale * junctionExaggeration * myMaxSize) < 40.) {
+                    } else if ((s.scale * junctionExaggeration * myMaxDrawingSize) < 40.) {
+                        // draw shape
                         GLHelper::drawFilledPoly(junctionShape, true);
                     } else {
+                        // draw shape with high detail
                         GLHelper::drawFilledPolyTesselated(junctionShape, true);
                     }
-                    glPopMatrix();
                 }
-                // draw edgeRelDatas
-                drawPathGenericDataElementChilds(s);
             }
             // check if bubble has to be drawn
             if (drawBubble) {
                 // set bubble color
-                RGBColor bubbleColor = setColor(s, true);
+                const RGBColor bubbleColor = setColor(s, true);
                 // recognize full transparency and simply don't draw
                 if (bubbleColor.alpha() != 0) {
-                    glPushMatrix();
-                    // move matrix to
-                    glTranslated(myNBNode->getPosition().x(), myNBNode->getPosition().y(), getType() + 0.05);
+                    // check if mouse is in bubble
+                    const bool mouseInBubble = (mousePosition.distanceSquaredTo2D(myNBNode->getPosition()) <= (bubbleRadius * bubbleRadius));
                     // only draw filled circle if we aren't in draw for selecting mode, or if distance to center is enough)
-                    if (!s.drawForPositionSelection || (mousePosition.distanceSquaredTo2D(myNBNode->getPosition()) <= (circleWidthSquared + 2))) {
-                        GLHelper::drawFilledCircle(circleWidth, s.getCircleResolution());
+                    if (!s.drawForPositionSelection || mouseInBubble) {
+                        // set color
+                        GLHelper::setColor(bubbleColor);
+                        // move matrix junction center
+                        glTranslated(myNBNode->getPosition().x(), myNBNode->getPosition().y(), 1);
+                        // draw filled circle
+                        GLHelper::drawFilledCircle(bubbleRadius, s.getCircleResolution());
                     }
-                    glPopMatrix();
                 }
-            }
-            // check if dotted contour has to be drawn
-            if (myNet->getViewNet()->getDottedAC() == this) {
-                GNEGeometry::drawShapeDottedContour(s, getType(), junctionExaggeration, myDottedGeometry);
             }
             // draw TLS
             drawTLSIcon(s);
@@ -390,24 +388,25 @@ GNEJunction::drawGL(const GUIVisualizationSettings& s) const {
             if (!s.drawForRectangleSelection && myNet->getViewNet()->getNetworkViewOptions().editingElevation()) {
                 glPushMatrix();
                 // Translate to center of junction
-                glTranslated(myNBNode->getPosition().x(), myNBNode->getPosition().y(), getType() + 1);
+                glTranslated(myNBNode->getPosition().x(), myNBNode->getPosition().y(), 1);
                 // draw Z value
                 GLHelper::drawText(toString(myNBNode->getPosition().z()), Position(), GLO_MAX - 5, s.junctionID.scaledSize(s.scale), s.junctionID.color);
                 glPopMatrix();
             }
-            // name must be removed from selection stack before drawing crossings
+            // pop layer Matrix
+            glPopMatrix();
+            // pop junction name
             glPopName();
-            // draw crossings only if junction isn't being moved
-            if (!myMovingGeometryBoundary.isInitialised()) {
-                for (const auto& i : myGNECrossings) {
-                    i->drawGL(s);
-                }
-            }
             // draw Junction childs
-            drawJunctionChilds(s);
-            // draw child path elements
-            for (const auto &demandElement : myPathDemandElements) {
-                demandElement->drawJunctionPathChildren(s, this);
+            drawJunctionChildren(s);
+            // check if dotted contour has to be drawn
+            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+                if (drawShape) {
+                    GNEGeometry::drawDottedContourClosedShape(s, myNBNode->getShape(), junctionExaggeration);
+                }
+                if (drawBubble) {
+                    GNEGeometry::drawDottedContourCircle(s, myNBNode->getCenter(), s.neteditSizeSettings.junctionBubbleRadius, junctionExaggeration);
+                }
             }
         }
     }
@@ -961,38 +960,69 @@ GNEJunction::markConnectionsDeprecated(bool includingNeighbours) {
 
 void
 GNEJunction::addPathAdditionalElement(GNEAdditional* additionalElement) {
+    // get tag
+    SumoXMLTag tag = additionalElement->getTagProperty().getTag();
     // avoid insert duplicated path element childs
-    if (std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement) == myPathAdditionalElements.end()) {
-        myPathAdditionalElements.push_back(additionalElement);
+    if (std::find(myPathAdditionalElements[tag].begin(), myPathAdditionalElements[tag].end(), additionalElement) == myPathAdditionalElements[tag].end()) {
+        myPathAdditionalElements[tag].push_back(additionalElement);
     }
 }
 
 
 void
 GNEJunction::removePathAdditionalElement(GNEAdditional* additionalElement) {
+    // get tag
+    SumoXMLTag tag = additionalElement->getTagProperty().getTag();
     // search and remove pathElementChild
-    auto it = std::find(myPathAdditionalElements.begin(), myPathAdditionalElements.end(), additionalElement);
-    if (it != myPathAdditionalElements.end()) {
-        myPathAdditionalElements.erase(it);
+    auto it = std::find(myPathAdditionalElements[tag].begin(), myPathAdditionalElements[tag].end(), additionalElement);
+    if (it != myPathAdditionalElements[tag].end()) {
+        myPathAdditionalElements[tag].erase(it);
     }
 }
 
 
 void
 GNEJunction::addPathDemandElement(GNEDemandElement* demandElement) {
+    // get tag
+    SumoXMLTag tag = demandElement->getTagProperty().getTag();
     // avoid insert duplicated path element childs
-    if (std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement) == myPathDemandElements.end()) {
-        myPathDemandElements.push_back(demandElement);
+    if (std::find(myPathDemandElements[tag].begin(), myPathDemandElements[tag].end(), demandElement) == myPathDemandElements[tag].end()) {
+        myPathDemandElements[tag].push_back(demandElement);
     }
 }
 
 
 void
 GNEJunction::removePathDemandElement(GNEDemandElement* demandElement) {
+    // get tag
+    SumoXMLTag tag = demandElement->getTagProperty().getTag();
     // search and remove pathElementChild
-    auto it = std::find(myPathDemandElements.begin(), myPathDemandElements.end(), demandElement);
-    if (it != myPathDemandElements.end()) {
-        myPathDemandElements.erase(it);
+    auto it = std::find(myPathDemandElements[tag].begin(), myPathDemandElements[tag].end(), demandElement);
+    if (it != myPathDemandElements[tag].end()) {
+        myPathDemandElements[tag].erase(it);
+    }
+}
+
+
+void
+GNEJunction::addPathGenericData(GNEGenericData* genericData) {
+    // get tag
+    SumoXMLTag tag = genericData->getTagProperty().getTag();
+    // avoid insert duplicated path element childs
+    if (std::find(myPathGenericDatas[tag].begin(), myPathGenericDatas[tag].end(), genericData) == myPathGenericDatas[tag].end()) {
+        myPathGenericDatas[tag].push_back(genericData);
+    }
+}
+
+
+void
+GNEJunction::removePathGenericData(GNEGenericData* genericData) {
+    // get tag
+    SumoXMLTag tag = genericData->getTagProperty().getTag();
+    // search and remove pathElementChild
+    auto it = std::find(myPathGenericDatas[tag].begin(), myPathGenericDatas[tag].end(), genericData);
+    if (it != myPathGenericDatas[tag].end()) {
+        myPathGenericDatas[tag].erase(it);
     }
 }
 
@@ -1001,14 +1031,26 @@ void
 GNEJunction::invalidatePathElements() {
     // make a copy of myPathAdditionalElements
     auto copyOfPathAdditionalElements = myPathAdditionalElements;
-    for (const auto& additionalElement : copyOfPathAdditionalElements) {
-        // note: currently additional elements don't use compute/invalidate paths
-        additionalElement->updateGeometry();
+    for (const auto& tag : copyOfPathAdditionalElements) {
+        for (const auto& additionalElement : tag.second) {
+            // note: currently additional elements don't use compute/invalidate paths
+            additionalElement->updateGeometry();
+        }
     }
     // make a copy of myPathDemandElements
     auto copyOfPathDemandElements = myPathDemandElements;
-    for (const auto& demandElement : copyOfPathDemandElements) {
-        demandElement->invalidatePath();
+    for (const auto& tag : copyOfPathDemandElements) {
+        for (const auto& demandElement : tag.second) {
+            demandElement->invalidatePath();
+        }
+    }
+    // make a copy of myPathGenericDatas
+    auto copyOfPathGenericDatas = myPathGenericDatas;
+    for (const auto& tag : copyOfPathGenericDatas) {
+        for (const auto& genericData : tag.second) {
+            // note: currently generic datas don't use compute/invalidate paths
+            genericData->updateGeometry();
+        }
     }
 }
 
@@ -1294,7 +1336,7 @@ GNEJunction::drawTLSIcon(const GUIVisualizationSettings& s) const {
             (myNBNode->isTLControlled()) && !myAmTLSSelected && !s.drawForRectangleSelection) {
         glPushMatrix();
         Position pos = myNBNode->getPosition();
-        glTranslated(pos.x(), pos.y(), getType() + 0.1);
+        glTranslated(pos.x(), pos.y(), 2);
         glColor3d(1, 1, 1);
         const double halfWidth = 32 / s.scale;
         const double halfHeight = 64 / s.scale;
@@ -1305,80 +1347,114 @@ GNEJunction::drawTLSIcon(const GUIVisualizationSettings& s) const {
 
 
 void
-GNEJunction::drawJunctionChilds(const GUIVisualizationSettings& s) const {
+GNEJunction::drawJunctionChildren(const GUIVisualizationSettings& s) const {
+    // draw crossings only if junction isn't being moved
+    if (!myMovingGeometryBoundary.isInitialised()) {
+        for (const auto& crossing : myGNECrossings) {
+            crossing->drawGL(s);
+        }
+    }
     // draw connections and route elements connections (Only for incoming edges)
     for (const auto& incomingEdge : myGNEIncomingEdges) {
-        // first draw connections
         for (const auto& connection : incomingEdge->getGNEConnections()) {
             connection->drawGL(s);
         }
-        // then draw E2 multilane detectors
-        for (const auto& lane : incomingEdge->getLanes()) {
-            for (const auto& additional : lane->getChildAdditionals()) {
-                if (additional->getTagProperty().getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
-                    lane->drawPartialE2DetectorPlan(s, additional, this);
+    }
+
+    // draw child demand elements
+    for (const auto& demandElement : getChildDemandElements()) {
+        if (!demandElement->getTagProperty().isPlacedInRTree()) {
+            demandElement->drawGL(s);
+        }
+    }
+    // declare JunctionPathElementMarker
+    GNEPathElements::JunctionPathElementMarker junctionPathElementMarker;
+    // draw child path additionals
+    for (const auto &tag : myPathAdditionalElements) {
+        // search first selected element
+        const GNEAdditional* selectedElement = nullptr;
+        for (const GNEAdditional* const element : tag.second) {
+            if (element->isAttributeCarrierSelected()) {
+                selectedElement = element;
+                break;
+            }
+        }
+        // continue depending of selectedElement
+        if (selectedElement) {
+            // draw selected element with offset
+            selectedElement->drawJunctionPathChildren(s, this, 0.1, junctionPathElementMarker);
+            // draw rest of elements
+            for (const GNEAdditional* const element : tag.second) {
+                if (element != selectedElement) {
+                    element->drawJunctionPathChildren(s, this, 0, junctionPathElementMarker);
                 }
+            }
+        } else {
+            // draw all children
+            for (const auto& element : tag.second) {
+                element->drawJunctionPathChildren(s, this, 0, junctionPathElementMarker);
             }
         }
     }
-}
-
-
-void
-GNEJunction::drawPathGenericDataElementChilds(const GUIVisualizationSettings& s) const {
-    // iterate over incoming edges
-    for (const auto& incomingEdge : myGNEIncomingEdges) {
-        for (const auto& genericData : incomingEdge->getChildGenericDataElements()) {
-            // check if incomingEdge correspond to edgeRel from edge
-            if ((genericData->getTagProperty().getTag() == SUMO_TAG_EDGEREL) &&
-                    (genericData->getAttribute(SUMO_ATTR_FROM) == incomingEdge->getID()) &&
-                    genericData->isGenericDataVisible()) {
-                // get To edge
-                const GNEEdge* edgeTo = genericData->getParentEdges().back();
-                // get the four points
-                const Position positionA = incomingEdge->getBackDownShapePosition();
-                const Position positionB = incomingEdge->getBackUpShapePosition();
-                const Position positionC = edgeTo->getFrontUpShapePosition();
-                const Position positionD = edgeTo->getFrontDownShapePosition();
-                // push name
-                glPushName(genericData->getGlID());
-                // push matrix
-                glPushMatrix();
-                // set color
-                if (genericData->isAttributeCarrierSelected()) {
-                    GLHelper::setColor(s.colorSettings.selectedEdgeDataColor);
-                } else {
-                    GLHelper::setColor(genericData->getColor());
+    // draw child path demand elements
+    for (const auto &tag : myPathDemandElements) {
+        // search first selected element
+        const GNEDemandElement* selectedElement = nullptr;
+        for (const GNEDemandElement* const element : tag.second) {
+            if (element->isAttributeCarrierSelected()) {
+                selectedElement = element;
+                break;
+            }
+        }
+        // continue depending of selectedElement
+        if (selectedElement) {
+            // draw selected element with offset
+            selectedElement->drawJunctionPathChildren(s, this, 0.1, junctionPathElementMarker);
+            // draw rest of elements
+            for (const GNEDemandElement* const element : tag.second) {
+                if (element != selectedElement) {
+                    element->drawJunctionPathChildren(s, this, 0, junctionPathElementMarker);
                 }
-                // draw shape
-                glPushMatrix();
-                glTranslated(0, 0, genericData->getType());
-                glBegin(GL_QUADS);
-                glVertex2d(positionA.x(), positionA.y());
-                glVertex2d(positionB.x(), positionB.y());
-                glVertex2d(positionC.x(), positionC.y());
-                glVertex2d(positionD.x(), positionD.y());
-                glEnd();
-                // pop matrix
-                glPopMatrix();
-                // pop name
-                glPopName();
-                /*
-                // iterate over edges
-                for (int i = 0; i < (genericData->getPathEdges().size()-1); i++) {
-                if (genericData->isGenericDataVisible() && (genericData->getPathEdges().at(i) == this)) {
-                    // obtain lanes edge
-                    PositionVector laneShapeFromA = myLanes.front()->getLaneShape();
-                    laneShapeFromA.move2side(myLanes.front()->getParentEdge()->getNBEdge()->getLaneWidth(myLanes.front()->getIndex()) / 2);
-                    PositionVector laneShapeFromB = myLanes.back()->getLaneShape();
-                    laneShapeFromB.move2side(-1*myLanes.back()->getParentEdge()->getNBEdge()->getLaneWidth(myLanes.back()->getIndex()) / 2);
-                    PositionVector laneShapeToA = genericData->getPathEdges().at(i + 1)->getLanes().front()->getLaneShape();
-                    laneShapeToA.move2side(genericData->getPathEdges().at(i + 1)->getLanes().front()->getParentEdge()->getNBEdge()->getLaneWidth(genericData->getPathEdges().at(i + 1)->getLanes().front()->getIndex()) / 2);
-                    PositionVector laneShapeToB = genericData->getPathEdges().at(i + 1)->getLanes().back()->getLaneShape();
-                    laneShapeToB.move2side(-1 * genericData->getPathEdges().at(i + 1)->getLanes().back()->getParentEdge()->getNBEdge()->getLaneWidth(genericData->getPathEdges().at(i + 1)->getLanes().back()->getIndex()) / 2);
-
+            }
+        } else {
+            // draw all children
+            for (const GNEDemandElement* const element : tag.second) {
+                element->drawJunctionPathChildren(s, this, 0, junctionPathElementMarker);
+            }
+        }
+    }
+    // draw child path generic datas
+    for (const auto &tag : myPathGenericDatas) {
+        // filter visible generic datas
+        std::vector<GNEGenericData*> visibleGenericDatas;
+        visibleGenericDatas.reserve(tag.second.size());
+        for (const auto & genericData : tag.second) {
+            if (genericData->isGenericDataVisible()) {
+                visibleGenericDatas.push_back(genericData);
+            }
+        }
+        // search first selected element
+        const GNEGenericData* selectedElement = nullptr;
+        for (const GNEGenericData* const element : visibleGenericDatas) {
+            if (element->isAttributeCarrierSelected()) {
+                selectedElement = element;
+                break;
+            }
+        }
+        // continue depending of selectedElement
+        if (selectedElement) {
+            // draw selected element with offset
+            selectedElement->drawJunctionPathChildren(s, this, 0.1, junctionPathElementMarker);
+            // draw rest of elements
+            for (const GNEGenericData* const element : visibleGenericDatas) {
+                if (element != selectedElement) {
+                    element->drawJunctionPathChildren(s, this, 0, junctionPathElementMarker);
                 }
-                */
+            }
+        } else {
+            // draw all children
+            for (const GNEGenericData* const element : visibleGenericDatas) {
+                element->drawJunctionPathChildren(s, this, 0, junctionPathElementMarker);
             }
         }
     }
@@ -1470,21 +1546,6 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
-    }
-}
-
-
-void
-GNEJunction::updateDottedContour() {
-    // obtain junction shape
-    PositionVector shape = myNBNode->getShape();
-    // check if we have to calculate buuble or shape
-    if (shape.area() < 4) {
-        updateDottedGeometry(GNEGeometry::getVertexCircleAroundPosition(myNBNode->getPosition(), 4, 32));
-    } else {
-        // close polygon
-        shape.closePolygon();
-        updateDottedGeometry(shape);
     }
 }
 
@@ -1604,23 +1665,27 @@ GNEJunction::moveJunctionGeometry(const Position& pos) {
 
 RGBColor
 GNEJunction::setColor(const GUIVisualizationSettings& s, bool bubble) const {
+    // get active scheme
     const int scheme = s.junctionColorer.getActive();
+    // set default color
     RGBColor color = s.junctionColorer.getScheme().getColor(getColorValue(s, scheme));
-    if (bubble && scheme == 0 && !myColorForMissingConnections) {
+    // set special bubble color
+    if (bubble && (scheme == 0) && !myColorForMissingConnections) {
         color = s.junctionColorer.getScheme().getColor(1);
     }
     // override with special colors (unless the color scheme is based on selection)
     if (drawUsingSelectColor() && scheme != 1) {
         color = s.colorSettings.selectionColor;
     }
+    // set special color if we're creating a new edge
     if (myAmCreateEdgeSource) {
-        color = RGBColor(0, 255, 0);
+        color = RGBColor::GREEN;
     }
     // overwritte color if we're in data mode
     if (myNet->getViewNet()->getEditModes().isCurrentSupermodeData()) {
         color = s.junctionColorer.getScheme().getColor(6);
     }
-    GLHelper::setColor(color);
+    // return color
     return color;
 }
 

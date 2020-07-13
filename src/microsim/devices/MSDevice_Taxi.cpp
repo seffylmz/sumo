@@ -31,7 +31,9 @@
 #include <microsim/MSVehicle.h>
 #include <microsim/MSEdge.h>
 #include "MSDispatch.h"
+#include "MSDispatch_Greedy.h"
 #include "MSDispatch_GreedyShared.h"
+#include "MSDispatch_TraCI.h"
 #include "MSRoutingEngine.h"
 #include "MSDevice_Taxi.h"
 
@@ -86,6 +88,9 @@ MSDevice_Taxi::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>
             // (see MSStageDriving::isWaitingFor)
             const_cast<SUMOVehicleParameter&>(v.getParameter()).line = TAXI_SERVICE;
         }
+        if (v.getVClass() != SVC_TAXI) {
+            WRITE_WARNING("Vehicle '" + v.getID() + "' with device.taxi should have vClass taxi instead of '" + toString(v.getVClass()) + "'");
+        }
     }
 }
 
@@ -103,6 +108,8 @@ MSDevice_Taxi::initDispatch() {
         myDispatcher = new MSDispatch_GreedyClosest(params.getParametersMap());
     } else if (algo == "greedyShared") {
         myDispatcher = new MSDispatch_GreedyShared(params.getParametersMap());
+    } else if (algo == "traci") {
+        myDispatcher = new MSDispatch_TraCI(params.getParametersMap());
     } else {
         throw ProcessError("Dispatch algorithm '" + algo + "' is not known");
     }
@@ -190,6 +197,7 @@ MSDevice_Taxi::dispatch(const Reservation& res) {
 void
 MSDevice_Taxi::dispatchShared(const std::vector<const Reservation*> reservations) {
     if (isEmpty()) {
+        SUMOTime t = MSNet::getInstance()->getCurrentTimeStep();
         if (MSGlobals::gUseMesoSim) {
             throw ProcessError("Dispatch for meso not yet implemented");
         }
@@ -222,12 +230,12 @@ MSDevice_Taxi::dispatchShared(const std::vector<const Reservation*> reservations
             std::string error;
             myHolder.addStop(stop, error);
             if (error != "") {
-                WRITE_WARNINGF("Could not add taxi stop for vehicle '%' to %. time=% error=%", myHolder.getID(), stop.actType, SIMTIME, error)
+                WRITE_WARNINGF("Could not add taxi stop for vehicle '%' to %. time=% error=%", myHolder.getID(), stop.actType, time2string(t), error)
             }
         }
         SUMOAbstractRouter<MSEdge, SUMOVehicle>& router = MSRoutingEngine::getRouterTT(myHolder.getRNGIndex(), myHolder.getVClass());
         // SUMOAbstractRouter<MSEdge, SUMOVehicle>& router = myHolder.getInfluencer().getRouterTT(veh->getRNGIndex())
-        myHolder.reroute(MSNet::getInstance()->getCurrentTimeStep(), "taxi:dispatch", router, false);
+        myHolder.reroute(t, "taxi:dispatch", router, false);
     } else {
         throw ProcessError("Dispatch for busy taxis not yet implemented");
     }
@@ -326,6 +334,14 @@ MSDevice_Taxi::customerArrived(const MSTransportable* person) {
     myCustomers.erase(person);
     if (myHolder.getPersonNumber() == 0) {
         myState = EMPTY;
+        MSVehicle* veh = static_cast<MSVehicle*>(&myHolder);
+        if (veh->getStops().size() > 1) {
+            WRITE_WARNINGF("All customers left vehicle '%' at time % but there are % remaining stops",
+                           veh->getID(), time2string(MSNet::getInstance()->getCurrentTimeStep()), veh->getStops().size() - 1);
+            while (veh->getStops().size() > 1) {
+                veh->abortNextStop(1);
+            }
+        }
     }
 }
 

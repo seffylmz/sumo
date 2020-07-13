@@ -29,12 +29,10 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/additional/GNETAZ.h>
 #include <netedit/frames/data/GNETAZRelDataFrame.h>
 
 #include "GNETAZRelData.h"
 #include "GNEDataInterval.h"
-#include "GNEDataSet.h"
 
 
 // ===========================================================================
@@ -64,13 +62,17 @@ GNETAZRelData::getColor() const {
 
 bool 
 GNETAZRelData::isGenericDataVisible() const {
+    // first check if we're in supermode data
+    if (!myNet->getViewNet()->getEditModes().isCurrentSupermodeData()) {
+        return false;
+    }
     // obtain pointer to TAZ data frame (only for code legibly)
     const GNETAZRelDataFrame* TAZRelDataFrame = myNet->getViewNet()->getViewParent()->getTAZRelDataFrame();
     // get current data edit mode
     DataEditMode dataMode = myNet->getViewNet()->getEditModes().dataEditMode;
     // check if we have to filter generic data
     if ((dataMode == DataEditMode::DATA_INSPECT) || (dataMode == DataEditMode::DATA_DELETE) || (dataMode == DataEditMode::DATA_SELECT)) {
-        return true;
+        return isVisibleInspectDeleteSelect();
     } else if (TAZRelDataFrame->shown()) {
         // check interval
         if ((TAZRelDataFrame->getIntervalSelector()->getDataInterval() != nullptr) &&
@@ -94,17 +96,6 @@ GNETAZRelData::isGenericDataVisible() const {
 void
 GNETAZRelData::updateGeometry() {
     // nothing to update
-}
-
-
-void
-GNETAZRelData::updateDottedContour() {
-    // just update geometry of parent TAZs
-    for (const auto& TAZ : getParentTAZElements()) {
-        if (TAZ->getDottedGeometry().isGeometryDeprecated()) {
-            TAZ->updateDottedContour();
-        }
-    }
 }
 
 
@@ -147,6 +138,24 @@ GNETAZRelData::getGenericDataProblem() const {
 void
 GNETAZRelData::fixGenericDataProblem() {
     throw InvalidArgument(getTagStr() + " cannot fix any problem");
+}
+
+
+void 
+GNETAZRelData::drawGL(const GUIVisualizationSettings& /*s*/) const {
+    // Nothing to draw
+}
+
+
+void 
+GNETAZRelData::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
+    //
+}
+
+
+void 
+GNETAZRelData::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/, const double /*offsetFront*/) const {
+    //
 }
 
 
@@ -273,8 +282,8 @@ GNETAZRelData::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case GNE_ATTR_PARAMETERS:
             setParametersStr(value);
-            // mark interval parent as deprecated
-            myDataIntervalParent->markAttributeColorsDeprecated();
+            // update attribute colors
+            myDataIntervalParent->getDataSetParent()->updateAttributeColors();
             break;
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");

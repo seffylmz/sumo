@@ -59,9 +59,6 @@ public:
     /// @brief update pre-computed geometry information
     void updateGeometry();
 
-    /// @brief update dotted contour
-    void updateDottedContour();
-
     /// @brief Returns position of additional in view
     Position getPositionInView() const;
 
@@ -163,6 +160,9 @@ protected:
 
     /// @brief flag for block shape
     bool myBlockShape;
+
+    /// @brief geometry for lenghts/rotations
+    GNEGeometry::Geometry myTAZGeometry;
 
 private:
     /// @brief hint size of vertex

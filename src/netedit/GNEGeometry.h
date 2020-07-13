@@ -105,6 +105,9 @@ struct GNEGeometry {
         /// @brief update geometry (using a new shape, rotations and lenghts)
         void updateGeometry(const Geometry &geometry);
 
+        /// @brief scale geometry
+        void scaleGeometry(const double scale);
+
         /// @brief get Position
         const Position& getPosition() const;
 
@@ -119,6 +122,9 @@ struct GNEGeometry {
 
         /// @brief The lengths of the single shape parts
         const std::vector<double>& getShapeLengths() const;
+
+        /// @brief check if position is over a shape geometry point
+        int getGeometryPointIndex(const Position& position, const double radius) const;
 
     private:
         /// @brief clear geometry
@@ -152,68 +158,99 @@ struct GNEGeometry {
         Geometry& operator=(const Geometry& other) = delete;
     };
 
-    /// @brief struct for pack all variables related with DottedGeometry of stop
-    struct DottedGeometry {
+    /// @brief class for pack all variables related with DottedGeometry color
+    class DottedGeometryColor {
+
+    public:
+        /// @brief constructor
+        DottedGeometryColor(const GUIVisualizationSettings& settings);
+
+        /// @brief get color (and change flag)
+        const RGBColor &getColor();
+
+        /// @brief change color
+        void changeColor();
+
+        /// @brief rest Dotted Geometry Color
+        void reset();
+
+    private:
+        /// @brief pointer to GUIVisualizationSettings
+        const GUIVisualizationSettings& mySettings;
+
+        /// @brief flag to get color
+        bool myColorFlag;
+
+        /// @brief Invalidated assignment operator
+        DottedGeometryColor& operator=(const DottedGeometryColor& other) = delete;
+    };
+
+    /// @brief class for pack all variables related with DottedGeometry
+    class DottedGeometry {
+
+    public:
+        /// @brief dotted geometry segment
+        struct Segment {
+            /// @brief default constructor
+            Segment();
+            
+            /// @brief constructor for a given shape
+            Segment(PositionVector newShape);
+
+            /// @brief shape
+            PositionVector shape;
+
+            /// @brief rotations
+            std::vector<double> rotations;
+
+            /// @brief lengths
+            std::vector<double> lengths;
+
+            /// @brief drawing offset (-1 or 1 only)
+            double offset;
+        };
+
         /// @brief constructor
         DottedGeometry();
 
-        /// @brief update DottedGeometry (using an existent shape)
-        void updateDottedGeometry(const GUIVisualizationSettings& s, const PositionVector& contourShape);
+        /// @brief constructor for shapes
+        DottedGeometry(const GUIVisualizationSettings& s, PositionVector shape, const bool closeShape);
 
-        /// @brief update DottedGeometry (using an line shape and a width)
-        void updateDottedGeometry(const GUIVisualizationSettings& s, const PositionVector& lineShape, const double width);
+        /// @brief constructor for extremes
+        DottedGeometry(const GUIVisualizationSettings& s,
+                       const DottedGeometry &topDottedGeometry, const bool drawFirstExtrem, 
+                       const DottedGeometry &botDottedGeometry, const bool drawLastExtrem);
 
-        /// @brief update DottedGeometry (using a position, rotation, width and height)
-        void updateDottedGeometry(const GUIVisualizationSettings& s, const Position& position, const double rotation, const double width, const double height);
+        /// @brief update DottedGeometry (using lane shape)
+        void updateDottedGeometry(const GUIVisualizationSettings& s, const GNELane *lane);
 
-        /// @brief mark dotted geometry deprecated
-        void markDottedGeometryDeprecated();
+        /// @brief update DottedGeometry (using shape)
+        void updateDottedGeometry(const GUIVisualizationSettings& s, PositionVector shape, const bool closeShape);
 
-        /// @brief check if geometry is deprecated
-        bool isGeometryDeprecated() const;
+        /// @brief draw dottedShape
+        void drawDottedGeometry(DottedGeometryColor &dottedGeometryColor) const;
 
-        /// @brief get Centroid
-        const Position& getCentroid() const;
+        /// @brief move shape to side
+        void moveShapeToSide(const double value);
 
-        /// @brief get rotation
-        double getRotation() const;
+        /// @brief get width
+        double getWidth() const;
 
-        /// @brief The shape of the additional element
-        const PositionVector& getShape() const;
+        /// @brief change default width
+        void setWidth(const double width);
 
-        /// @brief The rotations of the single shape parts
-        const std::vector<double>& getShapeRotations() const;
-
-        /// @brief The lengths of the single shape parts
-        const std::vector<double>& getShapeLengths() const;
-
-        /// @brief The colors of the single shape parts
-        const std::vector<RGBColor>& getShapeColors() const;
+        /// @brief invert offset of all segments
+        void invertOffset();
 
     private:
         /// @brief calculate shape rotations and lengths
         void calculateShapeRotationsAndLengths();
 
-        /// @brief shape's centroid
-        Position myCentroid;
-
-        /// @brief shape's rotation (only used in certain dotted contours)
-        double myRotation;
+        /// @brief geometry width
+        double myWidth;
 
         /// @brief dotted element shape (note: It's centered in 0,0 due scaling)
-        PositionVector myShape;
-
-        /// @brief The rotations of the dotted shape
-        std::vector<double> myShapeRotations;
-
-        /// @brief The lengths of the dotted shape
-        std::vector<double> myShapeLengths;
-
-        /// @brief The colors  of the dotted shape
-        std::vector<RGBColor> myShapeColors;
-
-        /// @brief flag to mark dotted geometry depreciated
-        bool myDottedGeometryDeprecated;
+        std::vector<DottedGeometry::Segment> myDottedGeometrySegments;
 
         /// @brief Invalidated assignment operator
         DottedGeometry& operator=(const DottedGeometry& other) = delete;
@@ -250,7 +287,7 @@ struct GNEGeometry {
             /// @brief get lane/lane2lane shape lengths
             const std::vector<double>& getShapeLengths() const;
 
-            /// @brief lane
+            /// @brief lane (only for lane segments)
             const GNELane* getLane() const;
 
             /// @brief junction
@@ -258,6 +295,9 @@ struct GNEGeometry {
 
             /// @brief valid
             bool getValid() const;
+
+            /// @brief return true if this is a lane segment (i.e. myNextLane is nullptr)
+            bool isLaneSegment() const;
 
         protected:
             /// @brief lane
@@ -380,15 +420,18 @@ struct GNEGeometry {
         /// @brief check if exist a lane2lane geometry for the given tolane 
         bool exist(const GNELane* toLane) const;
 
-        /// @brief get getLane2laneGeometry 
+        /// @brief get lane2lane geometry 
         const GNEGeometry::Geometry& getLane2laneGeometry(const GNELane* toLane) const;
+
+        /// @brief get lane2lane dotted geometry 
+        const GNEGeometry::DottedGeometry& getLane2laneDottedGeometry(const GNELane* toLane) const;
 
     protected:
         /// @brief from lane
         const GNELane* myFromLane;
 
         /// @brief connection shape
-        std::map<const GNELane*, GNEGeometry::Geometry> myConnectionsMap;
+        std::map<const GNELane*, std::pair<GNEGeometry::Geometry, GNEGeometry::DottedGeometry> > myConnectionsMap;
 
     private:
         /// @brief constructor
@@ -453,11 +496,34 @@ struct GNEGeometry {
     /// @brief draw geometry
     static void drawGeometry(const GNEViewNet* viewNet, const Geometry& geometry, const double width);
 
+    /// @brief draw geometry points
+    static void drawGeometryPoints(const GUIVisualizationSettings& s, const GNEViewNet* viewNet, const Geometry& geometry, 
+        const RGBColor &geometryPointColor, const RGBColor &textColor, const double radius, const double exaggeration);
+
+    /// @brief draw moving hint
+    static void drawMovingHint(const GUIVisualizationSettings& s, const GNEViewNet* viewNet, const Geometry& geometry, 
+        const RGBColor &hintColor, const double radius, const double exaggeration);
+
     /// @brief draw geometry segment
     static void drawSegmentGeometry(const GNEViewNet* viewNet, const SegmentGeometry::Segment& segment, const double width);
 
-    /// @brief draw a dotted contour around the given Non closed shape with certain width
-    static void drawShapeDottedContour(const GUIVisualizationSettings& s, const double typeLayer, const double exaggeration, const DottedGeometry& dottedGeometry);
+    /// @brief draw dotted contour for the given dottedGeometry (used by lanes, routes, etc.)
+    static void drawDottedContourLane(const GUIVisualizationSettings& s, const DottedGeometry &dottedGeometry, const double width, const bool drawFirstExtrem, const bool drawLastExtrem);
+
+    /// @brief draw dotted contour for the given dottedGeometries (used by edges)
+    static void drawDottedContourEdge(const GUIVisualizationSettings& s, const GNEEdge* edge, const bool drawFrontExtreme, const bool drawBackExtreme);
+
+    /// @brief draw dotted contour for the given closed shape (used by Juctions, shapes and TAZs)
+    static void drawDottedContourClosedShape(const GUIVisualizationSettings& s, const PositionVector &shape, const double exaggeration);
+
+    /// @brief draw dotted contour for the given shape (used by additionals)
+    static void drawDottedContourShape(const GUIVisualizationSettings& s, const PositionVector &shape, const double width, const double exaggeration);
+
+    /// @brief draw dotted contour for the given Position and radius (used by Juctions and POIs)
+    static void drawDottedContourCircle(const GUIVisualizationSettings& s, const Position &pos, const double radius, const double exaggeration);
+
+    /// @brief draw dotted squared contour (used by additionals and demand elements)
+    static void drawDottedSquaredShape(const GUIVisualizationSettings& s, const Position &pos, const double width, const double height, const double rot, const double exaggeration);
 
     /// @brief get a circle around the given position
     static PositionVector getVertexCircleAroundPosition(const Position& pos, const double width, const int steps = 8);

@@ -122,6 +122,11 @@ MSStage::getDeparted() const {
     return myDeparted;
 }
 
+SUMOTime
+MSStage::getArrived() const {
+    return myArrived;
+}
+
 const std::string
 MSStage::setArrived(MSNet* /* net */, MSTransportable* /* transportable */, SUMOTime now) {
     myArrived = now;
@@ -275,16 +280,12 @@ MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now
                 vehPar->departPos = myDepartPos;
                 vehPar->parametersSet |= VEHPARS_DEPARTPOS_SET;
             }
-            if (isTaxi) {
-                vehicle = MSDevice_Taxi::getTaxi();
+            MSVehicleType* type = vehControl.getVType(vehPar->vtypeid);
+            if (type->getVehicleClass() != SVC_IGNORING && (myOrigin->getPermissions() & type->getVehicleClass()) == 0 && !isTaxi) {
+                WRITE_WARNING("Ignoring vehicle type '" + type->getID() + "' when routing person '" + transportable->getID() + "' because it is not allowed on the start edge.");
             } else {
-                MSVehicleType* type = vehControl.getVType(vehPar->vtypeid);
-                if (type->getVehicleClass() != SVC_IGNORING && (myOrigin->getPermissions() & type->getVehicleClass()) == 0) {
-                    WRITE_WARNING("Ignoring vehicle type '" + type->getID() + "' when routing person '" + transportable->getID() + "' because it is not allowed on the start edge.");
-                } else {
-                    const MSRoute* const routeDummy = new MSRoute(vehPar->id, ConstMSEdgeVector({ myOrigin }), false, nullptr, std::vector<SUMOVehicleParameter::Stop>());
-                    vehicle = vehControl.buildVehicle(vehPar, routeDummy, type, !MSGlobals::gCheckRoutes);
-                }
+                const MSRoute* const routeDummy = new MSRoute(vehPar->id, ConstMSEdgeVector({ myOrigin }), false, nullptr, std::vector<SUMOVehicleParameter::Stop>());
+                vehicle = vehControl.buildVehicle(vehPar, routeDummy, type, !MSGlobals::gCheckRoutes);
             }
         }
         bool carUsed = false;
@@ -369,7 +370,7 @@ MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now
                 return "No connection found between edge '" + myOrigin->getID() + "' and edge '" + (myDestinationStop != nullptr ? myDestinationStop->getID() : myDestination->getID()) + "' for person '" + transportable->getID() + "'.";
             }
         }
-        if (vehicle != nullptr && !isTaxi && !carUsed) {
+        if (vehicle != nullptr && (isTaxi || !carUsed)) {
             vehControl.deleteVehicle(vehicle, true);
         }
     }
@@ -471,15 +472,25 @@ MSStageWaiting::tripInfoOutput(OutputDevice& os, const MSTransportable* const) c
 void
 MSStageWaiting::routeOutput(const bool /* isPerson */, OutputDevice& os, const bool) const {
     if (myType != MSStageType::WAITING_FOR_DEPART) {
-        // lane index is arbitrary
-        os.openTag("stop").writeAttr(SUMO_ATTR_LANE, getDestination()->getID() + "_0");
+        os.openTag("stop");
+        std::string comment = "";
+        if (myDestinationStop != nullptr) {
+            os.writeAttr(SUMO_ATTR_BUS_STOP, myDestinationStop->getID());
+            if (myDestinationStop->getMyName() != "") {
+                comment =  " <!-- " + StringUtils::escapeXML(myDestinationStop->getMyName(), true) + " -->";
+            }
+        } else {
+            // lane index is arbitrary
+            os.writeAttr(SUMO_ATTR_LANE, getDestination()->getID() + "_0");
+            os.writeAttr(SUMO_ATTR_ENDPOS, getArrivalPos());
+        }
         if (myWaitingDuration >= 0) {
             os.writeAttr(SUMO_ATTR_DURATION, time2string(myWaitingDuration));
         }
         if (myWaitingUntil >= 0) {
             os.writeAttr(SUMO_ATTR_UNTIL, time2string(myWaitingUntil));
         }
-        os.closeTag();
+        os.closeTag(comment);
     }
 }
 

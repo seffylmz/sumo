@@ -956,6 +956,34 @@ NBNode::computeLogic2(bool checkLaneFoes) {
     }
 }
 
+void
+NBNode::computeKeepClear() {
+    if (hasConflict()) {
+        if (!myKeepClear) {
+            for (NBEdge* incoming : myIncomingEdges) {
+                std::vector<NBEdge::Connection>& connections = incoming->getConnections();
+                for (NBEdge::Connection& c : connections) {
+                    c.keepClear = KEEPCLEAR_FALSE;
+                }
+            }
+        } else if (geometryLike() && myCrossings.size() == 0 && !isTLControlled()) {
+            int linkIndex = 0;
+            for (NBEdge* incoming : myIncomingEdges) {
+                std::vector<NBEdge::Connection>& connections = incoming->getConnections();
+                for (NBEdge::Connection& c : connections) {
+                    if (c.keepClear == KEEPCLEAR_UNSPECIFIED && myRequest->hasConflictAtLink(linkIndex)) {
+                        const LinkState linkState = getLinkState(incoming, c.toEdge, c.fromLane, c.toLane, c.mayDefinitelyPass, c.tlID);
+                        if (linkState == LINKSTATE_MAJOR) {
+                            c.keepClear = KEEPCLEAR_FALSE;
+                        }
+                    }
+                }
+                linkIndex++;
+            }
+        }
+    }
+}
+
 
 bool
 NBNode::writeLogic(OutputDevice& into) const {

@@ -67,8 +67,14 @@ private:
      */
     GNEGenericData* myGenericData;
 
+    /// @brief data set parent
+    GNEDataSet* myDataSetParent;
+
     /// @brief data interval parent
     GNEDataInterval* myDataIntervalParent;
+
+    /// @brief reference to path vector
+    const std::vector<GNEPathElements::PathElement>& myPath;
 };
 
 /****************************************************************************/

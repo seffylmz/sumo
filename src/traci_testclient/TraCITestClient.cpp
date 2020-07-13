@@ -645,6 +645,8 @@ TraCITestClient::readAndReportTypeDependent(tcpip::Storage& inMsg, int valueData
 void
 TraCITestClient::testAPI() {
     answerLog << "testAPI:\n";
+    const auto& version = getVersion();
+    answerLog << "  getVersion: " << version.first << ", " << version.second << "\n";
     answerLog << "  setOrder:\n";
     setOrder(0);
     // edge
@@ -831,6 +833,7 @@ TraCITestClient::testAPI() {
     answerLog << "    moveToXY, simStep:\n";
     vehicle.moveToXY("0", "dummy", 0, 2231.61, 498.29, 90, 1);
     simulationStep();
+    // simulationStep(1);
     answerLog << "    getRoadID: " << vehicle.getRoadID("0") << "\n";
     answerLog << "    getLaneID: " << vehicle.getLaneID("0") << "\n";
     vehicle.changeTarget("0", "e_o0");
@@ -858,6 +861,10 @@ TraCITestClient::testAPI() {
     answerLog << "    getLaneChangeState (right): " << state.first << ", " << state.second << "\n";
     vehicle.rerouteTraveltime("0");
     vehicle.setSpeedFactor("0", 0.8);
+    vehicle.setSpeedMode("0", 0);
+    answerLog << "    getSpeedMode after change: " << vehicle.getSpeedMode("0") << "\n";
+    vehicle.setLaneChangeMode("0", 0);
+    answerLog << "    getLaneChangeMode after change: " << vehicle.getLaneChangeMode("0") << "\n";
     answerLog << "    remove:\n";
     vehicle.remove("0");
     answerLog << "    getIDCount: " << vehicle.getIDCount() << "\n";
@@ -1024,9 +1031,9 @@ TraCITestClient::testAPI() {
                      new libsumo::TraCIPhase(3, "GGGGGGG", 3, 3),
                      new libsumo::TraCIPhase(3, "yyyyyyy", 3, 3)
     });
-    trafficlights.setCompleteRedYellowGreenDefinition("n_m4", logic);
+    trafficlights.setProgramLogic("n_m4", logic);
 
-    std::vector<libsumo::TraCILogic> logics = trafficlights.getCompleteRedYellowGreenDefinition("n_m4");
+    std::vector<libsumo::TraCILogic> logics = trafficlights.getAllProgramLogics("n_m4");
     answerLog << "    completeDefinition:\n";
     for (int i = 0; i < (int)logics.size(); ++i) {
         answerLog << "      subID=" << logics[i].programID << " type=" << logics[i].type << " phase=" << logics[i].currentPhaseIndex << "\n";

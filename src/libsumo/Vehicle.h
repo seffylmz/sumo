@@ -26,6 +26,7 @@
 #include <libsumo/TraCIDefs.h>
 #include <libsumo/VehicleType.h>
 #include <libsumo/TraCIConstants.h>
+#include <utils/vehicle/SUMOVehicleParameter.h>
 
 
 // ===========================================================================
@@ -107,6 +108,7 @@ public:
     static double getSecureGap(const std::string& vehicleID, double speed, double leaderSpeed, double leaderMaxDecel, const std::string& leaderID = "");
     static double getStopSpeed(const std::string& vehicleID, double speed, double gap);
     static double getStopDelay(const std::string& vehicleID);
+    static std::vector<std::string> getTaxiFleet(int taxiState = 0);
     /// @}
 
     LIBSUMO_VEHICLE_TYPE_GETTER
@@ -115,6 +117,16 @@ public:
     /// @{
 
     static void setStop(const std::string& vehicleID,
+                        const std::string& edgeID,
+                        double pos = 1.,
+                        int laneIndex = 0,
+                        double duration = INVALID_DOUBLE_VALUE,
+                        int flags = STOP_DEFAULT,
+                        double startPos = INVALID_DOUBLE_VALUE,
+                        double until = INVALID_DOUBLE_VALUE);
+
+    static void replaceStop(const std::string& vehicleID,
+                        int nextStopIndex,
                         const std::string& edgeID,
                         double pos = 1.,
                         int laneIndex = 0,
@@ -176,6 +188,7 @@ public:
     static void setVia(const std::string& vehicleID, const std::vector<std::string>& via);
     static void setParameter(const std::string& vehicleID, const std::string& param, const std::string& value);
     static void highlight(const std::string& vehicleID, const TraCIColor& col = TraCIColor(255, 0, 0, 255), double size = -1, const int alphaMax = -1, const double duration = -1, const int type = 0);
+    static void dispatchTaxi(const std::string& vehicleID,  const std::vector<std::string>& reservations);
     /// @}
 
     LIBSUMO_VEHICLE_TYPE_SETTER
@@ -223,6 +236,10 @@ private:
     static bool isVisible(const SUMOVehicle* veh);
 
     static bool isOnInit(const std::string& vehicleID);
+
+    static SUMOVehicleParameter::Stop buildStopParameters(const std::string& edgeOrStoppingPlaceID,
+            double pos, int laneIndex, double startPos, int flags, double duration, double until);
+
 
 private:
     static SubscriptionResults mySubscriptionResults;

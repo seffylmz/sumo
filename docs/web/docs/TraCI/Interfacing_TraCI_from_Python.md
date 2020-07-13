@@ -41,7 +41,7 @@ following example is a modification of
 [tutorial/traci_tls](../Tutorials/TraCI4Traffic_Lights.md)):
 
 First you compose the command line to start either
-[SUMO](../SUMO.md) or [SUMO-GUI](../SUMO-GUI.md) (leaving out
+[sumo](../sumo.md) or [sumo-gui](../sumo-gui.md) (leaving out
 the option  which was needed before 0.28.0):
 
 ```
@@ -189,15 +189,19 @@ of traci.StepListener) i.e.
 
 ```
  class ExampleListener(traci.StepListener):
-    def step(self, t=0):
-        # do something at every simulaton step
-        print("ExampleListener called at time %s ms." % t)
+    def step(self, t):
+        # do something after every call to simulationStep
+        print("ExampleListener called with parameter %s." % t)
         # indicate that the step listener should stay active in the next step
         return True
        
  listener = ExampleListener()
  traci.addStepListener(listener)
 ```
+Please note that the listener is not activated for every simulation step
+but for every call to simulationStep (which may perform multiple steps up to the given time *t*).
+Furthermore the parameter *t* is not the current simulation time but exactly
+the (optional) parameter passed to the simulationStep call (which is 0 by default).
 
 !!! caution
     A TraCI StepListener cannot be used in the case that one traci client controls several SUMO-instances.

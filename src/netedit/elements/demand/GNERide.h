@@ -131,9 +131,6 @@ public:
     /// @brief update pre-computed geometry information
     void updateGeometry();
 
-    /// @brief update dotted contour
-    void updateDottedContour();
-
     /// @brief compute path
     void computePath();
 
@@ -178,15 +175,17 @@ public:
     /**@brief Draws partial object
     * @param[in] s The settings for the current view (may influence drawing)
     * @param[in] lane lane in which draw partial
+    * @param[in] drawGeometry flag to enable/disable draw geometry (lines, boxLines, etc.)
     */
-    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const;
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const;
 
     /**@brief Draws partial object (junction)
      * @param[in] s The settings for the current view (may influence drawing)
      * @param[in] fromLane from GNELane
      * @param[in] toLane to GNELane
+     * @param[in] offsetFront offset for drawing element front (needed for selected elements)
      */
-    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const;
+    void drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const;
     /// @}
 
     /// @brief inherited from GNEAttributeCarrier

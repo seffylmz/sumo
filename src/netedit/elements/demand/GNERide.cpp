@@ -260,11 +260,6 @@ GNERide::updateGeometry() {
     }
 }
 
-void
-GNERide::updateDottedContour() {
-    //
-}
-
 
 void
 GNERide::computePath() {
@@ -365,16 +360,16 @@ GNERide::drawGL(const GUIVisualizationSettings& /*s*/) const {
 
 
 void
-GNERide::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane) const {
+GNERide::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const {
     // draw person plan over lane
-    drawPersonPlanPartialLane(s, lane, s.widthSettings.ride, s.colorSettings.ride);
+    drawPersonPlanPartialLane(s, lane, offsetFront, s.widthSettings.ride, s.colorSettings.ride);
 }
 
 
 void 
-GNERide::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane) const {
+GNERide::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const {
     // draw person plan over junction
-    drawPersonPlanPartialJunction(s, fromLane, toLane, s.widthSettings.ride, s.colorSettings.ride);
+    drawPersonPlanPartialJunction(s, fromLane, toLane, offsetFront, s.widthSettings.ride, s.colorSettings.ride);
 }
 
 

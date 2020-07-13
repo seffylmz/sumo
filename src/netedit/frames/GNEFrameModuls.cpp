@@ -1344,7 +1344,7 @@ GNEFrameModuls::AttributeCarrierHierarchy::showAttributeCarrierChildren(GNEAttri
                         showAttributeCarrierChildren(i, edgeItem);
                     }
                     // show data elements
-                    for (const auto& i : edge->getChildGenericDataElements()) {
+                    for (const auto& i : edge->getChildGenericDatas()) {
                         showAttributeCarrierChildren(i, edgeItem);
                     }
                 }
@@ -1963,6 +1963,11 @@ GNEFrameModuls::OverlappedInspection::onCmdShowList(FXObject*, FXSelector, void*
     } else {
         myOverlappedElementList->show();
     }
+    if (myOverlappedElementList->getNumItems() <= 10) {
+        myOverlappedElementList->setHeight(23 * myOverlappedElementList->getNumItems());
+    } else {
+        myOverlappedElementList->setHeight(230);
+    }
     myOverlappedElementList->recalc();
     // recalc and update frame
     recalc();
@@ -2028,9 +2033,7 @@ GNEFrameModuls::OverlappedInspection::buildFXElements() {
     // Create next Item Button
     myNextElement = new FXButton(frameButtons, "", GUIIconSubSys::getIcon(GUIIcon::BIGARROWRIGHT), this, MID_GNE_OVERLAPPED_NEXT, GUIDesignButtonIconRectangular);
     // Create list of overlapped elements (by default hidden)
-    myOverlappedElementList = new FXList(this, this, MID_GNE_OVERLAPPED_ITEMSELECTED, GUIDesignListSingleElement);
-    // disable vertical scrolling
-    myOverlappedElementList->setScrollStyle(VSCROLLING_OFF);
+    myOverlappedElementList = new FXList(this, this, MID_GNE_OVERLAPPED_ITEMSELECTED, GUIDesignListFixedHeight);
     // by default list of overlapped elements is hidden)
     myOverlappedElementList->hide();
     // Create help button
@@ -2864,23 +2867,12 @@ GNEFrameModuls::PathLegend::hidePathLegendModul() {
 // ---------------------------------------------------------------------------
 
 FXLabel*
-GNEFrameModuls::buildRainbow(FXComposite* parent, std::vector<RGBColor>& scaleColors) {
+GNEFrameModuls::buildRainbow(FXComposite* parent) {
     // create label for color information
     FXLabel* label = new FXLabel(parent, "Scale: Min -> Max", nullptr, GUIDesignLabelCenterThick);
-    // fill scale colors (10)
-    scaleColors.push_back(RGBColor(232, 35,  0));
-    scaleColors.push_back(RGBColor(255, 165, 0));
-    scaleColors.push_back(RGBColor(255, 255, 0));
-    scaleColors.push_back(RGBColor(28,  215, 0));
-    scaleColors.push_back(RGBColor(0,   181, 100));
-    scaleColors.push_back(RGBColor(0,   255, 191));
-    scaleColors.push_back(RGBColor(178, 255, 255));
-    scaleColors.push_back(RGBColor(0,   112, 184));
-    scaleColors.push_back(RGBColor(56,  41,  131));
-    scaleColors.push_back(RGBColor(127, 0,   255));
     // create frame for color scale
     FXHorizontalFrame* horizontalFrameColors = new FXHorizontalFrame(parent, GUIDesignAuxiliarHorizontalFrame);
-    for (const auto& color : scaleColors) {
+    for (const auto& color : GNEViewNetHelper::getRainbowScaledColors()) {
         FXLabel* colorLabel = new FXLabel(horizontalFrameColors, "", nullptr, GUIDesignLabelLeft);
         colorLabel->setBackColor(MFXUtils::getFXColor(color));
     }

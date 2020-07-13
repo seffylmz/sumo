@@ -86,7 +86,7 @@ public:
         return nullptr;
     }
 
-    double getArrivalPos() const {
+    virtual double getArrivalPos() const {
         return myArrivalPos;
     }
 
@@ -132,6 +132,9 @@ public:
 
     /// get departure time of stage
     SUMOTime getDeparted() const;
+
+    /// get arrival time of stage
+    SUMOTime getArrived() const;
 
     /// logs end of the step
     void setDeparted(SUMOTime now);

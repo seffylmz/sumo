@@ -20,6 +20,7 @@
 #include <config.h>
 
 #include <netedit/GNENet.h>
+#include <netedit/elements/network/GNEJunction.h>
 #include <netedit/elements/network/GNEEdge.h>
 #include <netedit/elements/demand/GNEDemandElement.h>
 #include <netedit/frames/demand/GNEVehicleTypeFrame.h>
@@ -56,8 +57,9 @@ GNEChange_DemandElement::~GNEChange_DemandElement() {
             myDemandElement->getNet()->getAttributeCarriers()->deleteDemandElement(myDemandElement);
             // remove element from path
             for (const auto& pathElement : myPath) {
-                if (pathElement.getLane()) {
-                    pathElement.getLane()->removePathDemandElement(myDemandElement);
+                pathElement.getLane()->removePathDemandElement(myDemandElement);
+                if (pathElement.getJunction()) {
+                    pathElement.getJunction()->removePathDemandElement(myDemandElement);
                 }
             }
             // remove demand element from parents and children
@@ -81,8 +83,9 @@ GNEChange_DemandElement::undo() {
         myDemandElement->getNet()->getAttributeCarriers()->deleteDemandElement(myDemandElement);
         // remove element from path
         for (const auto& pathElement : myPath) {
-            if (pathElement.getLane()) {
-                pathElement.getLane()->removePathDemandElement(myDemandElement);
+            pathElement.getLane()->removePathDemandElement(myDemandElement);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathDemandElement(myDemandElement);
             }
         }
         // remove demand element from parents and children
@@ -96,6 +99,8 @@ GNEChange_DemandElement::undo() {
         }
         // insert demand element into net
         myDemandElement->getNet()->getAttributeCarriers()->insertDemandElement(myDemandElement);
+        // compute demand element path
+        myDemandElement->computePath();
         // add demand element in parents and children
         addElementInParentsAndChildren(myDemandElement);
     }
@@ -123,6 +128,8 @@ GNEChange_DemandElement::redo() {
         }
         // insert demand element into net
         myDemandElement->getNet()->getAttributeCarriers()->insertDemandElement(myDemandElement);
+        // compute demand element path
+        myDemandElement->computePath();
         // add demand element in parents and children
         addElementInParentsAndChildren(myDemandElement);
     } else {
@@ -136,8 +143,9 @@ GNEChange_DemandElement::redo() {
         myDemandElement->getNet()->getAttributeCarriers()->deleteDemandElement(myDemandElement);
         // remove element from path
         for (const auto& pathElement : myPath) {
-            if (pathElement.getLane()) {
-                pathElement.getLane()->removePathDemandElement(myDemandElement);
+            pathElement.getLane()->removePathDemandElement(myDemandElement);
+            if (pathElement.getJunction()) {
+                pathElement.getJunction()->removePathDemandElement(myDemandElement);
             }
         }
         // remove demand element from parents and children

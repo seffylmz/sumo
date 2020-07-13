@@ -259,7 +259,20 @@ GNEDeleteFrame::removeAttributeCarrier(const GNEViewNetHelper::ObjectsUnderCurso
             } else if (objectsUnderCursor.getTAZElementFront() && (objectsUnderCursor.getTAZElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
                 myViewNet->getNet()->deleteTAZElement(objectsUnderCursor.getTAZElementFront(), myViewNet->getUndoList());
             } else if (objectsUnderCursor.getDemandElementFront() && (objectsUnderCursor.getDemandElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
+                // we need an special check for person plans
+                if (objectsUnderCursor.getDemandElementFront()->getTagProperty().isPersonPlan()) {
+                    // get person plarent
+                    GNEDemandElement* personParent = objectsUnderCursor.getDemandElementFront()->getParentDemandElements().front();
+                    // if this is the last person plan element, remove person instead person plan
+                    if (personParent->getChildDemandElements().size() == 1) {
+                        myViewNet->getNet()->deleteDemandElement(personParent, myViewNet->getUndoList());
+                    } else {
+                        myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
+                    }
+                } else {
+                    // just remove demand element
+                    myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
+                }
             } else if (objectsUnderCursor.getGenericDataElementFront() && (objectsUnderCursor.getGenericDataElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
                 myViewNet->getNet()->deleteGenericData(objectsUnderCursor.getGenericDataElementFront(), myViewNet->getUndoList());
             }
@@ -388,7 +401,7 @@ GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEAttributeCar
     myDemandElementParents(hierarchicalParent->getParentDemandElements().size()),
     myDemandElementChilds(hierarchicalChild->getChildDemandElements().size()),
     myGenericDataParents(hierarchicalParent->getParentGenericDatas().size()),
-    myGenericDataChilds(hierarchicalChild->getChildGenericDataElements().size()) {
+    myGenericDataChilds(hierarchicalChild->getChildGenericDatas().size()) {
     // add the number of subodinated elements of additionals, shapes, demand elements and generic datas
     for (const auto& additional : hierarchicalParent->getParentAdditionals()) {
         addValuesFromSubordinatedElements(this, additional);
@@ -411,7 +424,7 @@ GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEAttributeCar
     for (const auto& additional : hierarchicalChild->getChildDemandElements()) {
         addValuesFromSubordinatedElements(this, additional);
     }
-    for (const auto& genericData : hierarchicalChild->getChildGenericDataElements()) {
+    for (const auto& genericData : hierarchicalChild->getChildGenericDatas()) {
         addValuesFromSubordinatedElements(this, genericData);
     }
 }

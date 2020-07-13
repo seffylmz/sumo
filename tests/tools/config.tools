@@ -117,6 +117,7 @@ str:test.str
 gpsdat:gpsdat.txt
 gpx:output.gpx
 kml:output.kml
+geojson:output.geojson
 match:match.txt
 dualog:dua.log
 image:image.svg
@@ -168,6 +169,7 @@ output:Simulation.*started with{REPLACE Simulation started with}
 output:Retrying in
 output:00000 *${REPLACE 00000}
 dualog:uration:.*ms
+dualog:uration:.*s
 dualog:Real time factor
 dualog:UPS
 dualog:(.*ms)

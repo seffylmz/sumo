@@ -65,17 +65,6 @@ GNERerouter::updateGeometry() {
 
     // update connection positions
     myChildConnections.update();
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNERerouter::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(), myPosition, 0,
-                                          myNet->getViewNet()->getVisualisationSettings().additionalSettings.rerouterSize,
-                                          myNet->getViewNet()->getVisualisationSettings().additionalSettings.rerouterSize);
 }
 
 
@@ -173,14 +162,12 @@ GNERerouter::drawGL(const GUIVisualizationSettings& s) const {
         // Show Lock icon
         myBlockIcon.drawIcon(s, rerouterExaggeration, 0.4);
         // Draw child connections
-        drawChildConnections(s, getType());
+        drawChildConnections(s, getType(), rerouterExaggeration);
         // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), rerouterExaggeration, myDottedGeometry);
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedSquaredShape(s, myPosition, s.additionalSettings.rerouterSize, s.additionalSettings.rerouterSize, 0, rerouterExaggeration);
             // draw shape dotte contour aroud alld connections between child and parents
-            for (auto i : myChildConnections.connectionPositions) {
-                GLHelper::drawShapeDottedContourAroundShape(s, getType(), i, 0);
-            }
+            drawChildDottedConnections(s, rerouterExaggeration);
         }
         // Draw name
         drawName(getPositionInView(), s.scale, s.addName);

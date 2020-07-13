@@ -25,15 +25,8 @@ import math
 import colorsys
 import socket
 import random
-from collections import defaultdict
-from .statistics import Statistics, geh, uMax, uMin
-
-
-def round(value):  # to round in Python 3 like in Python 2
-    if value < 0:
-        return math.ceil(value - 0.5)
-    else:
-        return math.floor(value + 0.5)
+# needed for backward compatibility
+from .statistics import Statistics, geh, uMax, uMin, round  # noqa
 
 
 def benchmark(func):
@@ -57,6 +50,7 @@ class working_dir:
     """
     temporarily change working directory using 'with' statement
     """
+
     def __init__(self, dir):
         self.dir = dir
         self.origdir = os.getcwd()

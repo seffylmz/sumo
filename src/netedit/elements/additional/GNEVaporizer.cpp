@@ -21,8 +21,6 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNELane.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/images/GUITextureSubSys.h>
 #include <utils/gui/globjects/GLIncludes.h>
@@ -66,19 +64,6 @@ GNEVaporizer::updateGeometry() {
 
     // Set block icon rotation, and using their rotation for logo
     myBlockIcon.setRotation(firstLane);
-
-    // mark dotted geometry deprecated
-    myDottedGeometry.markDottedGeometryDeprecated();
-}
-
-
-void
-GNEVaporizer::updateDottedContour() {
-    myDottedGeometry.updateDottedGeometry(myNet->getViewNet()->getVisualisationSettings(),
-                                          myAdditionalGeometry.getPosition(),
-                                          myAdditionalGeometry.getRotation(),
-                                          myNet->getViewNet()->getVisualisationSettings().additionalSettings.vaporizerSize,
-                                          myNet->getViewNet()->getVisualisationSettings().additionalSettings.vaporizerSize);
 }
 
 
@@ -201,12 +186,12 @@ GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
         myBlockIcon.drawIcon(s, vaporizerExaggeration, 0.4);
         // draw name
         drawName(getPositionInView(), s.scale, s.addName);
-        // check if dotted contour has to be drawn
-        if (myNet->getViewNet()->getDottedAC() == this) {
-            GNEGeometry::drawShapeDottedContour(s, getType(), vaporizerExaggeration, myDottedGeometry);
-        }
         // pop name
         glPopName();
+        // check if dotted contour has to be drawn
+        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedSquaredShape(s, myAdditionalGeometry.getPosition(), 1, 1, myAdditionalGeometry.getRotation(), vaporizerExaggeration);
+        }
     }
 }
 

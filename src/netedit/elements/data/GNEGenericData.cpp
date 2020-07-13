@@ -24,7 +24,6 @@
 #include <netedit/GNEViewParent.h>
 #include <netedit/elements/data/GNEGenericData.h>
 #include <netedit/frames/data/GNEEdgeDataFrame.h>
-#include <netedit/frames/data/GNEEdgeRelDataFrame.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <utils/gui/globjects/GLIncludes.h>
@@ -32,7 +31,6 @@
 
 #include "GNEGenericData.h"
 #include "GNEDataInterval.h"
-#include "GNEDataSet.h"
 
 
 // ===========================================================================
@@ -66,6 +64,7 @@ GNEGenericData::GNEGenericData(const SumoXMLTag tag, const GUIGlObjectType type,
     Parameterised(ParameterisedAttrType::DOUBLE, parameters),
     GNEHierarchicalParentElements(this, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
     GNEHierarchicalChildElements(this, junctionChildren, edgeChildren, laneChildren, additionalChildren, shapeChildren, TAZElementChildren, demandElementChildren, genericDataChildren),
+    GNEPathElements(this),
     myDataIntervalParent(dataIntervalParent) {
 }
 
@@ -90,105 +89,6 @@ GNEGenericData::getDataIntervalParent() const {
     return myDataIntervalParent;
 }
 
-/*
-const RGBColor&
-GNEGenericData::getColor() const {
-    // first check if we're in supermode demand
-    if (myDataIntervalParent->getNet()->getViewNet()->getEditModes().isCurrentSupermodeData()) {
-        // case for edgeDatas
-        if (myTagProperty.getTag() == SUMO_TAG_MEANDATA_EDGE) {
-            // obtain pointer to edge data frame (only for code legibly)
-            const GNEEdgeDataFrame* edgeDataFrame = myDataIntervalParent->getNet()->getViewNet()->getViewParent()->getEdgeDataFrame();
-            // check if we have to filter generic data
-            if (edgeDataFrame->shown()) {
-                // get interval
-                const GNEDataInterval* dataInterval = edgeDataFrame->getIntervalSelector()->getDataInterval();
-                // get filtered attribute (can be empty)
-                const std::string filteredAttribute = edgeDataFrame->getAttributeSelector()->getFilteredAttribute();
-                // check interval
-                if (dataInterval && (dataInterval == myDataIntervalParent) && (filteredAttribute.size() > 0)) {
-                    // get maximum and minimum value
-                    const double minimumValue = dataInterval->getMinimumParameterValue(filteredAttribute);
-                    const double maximumValue = dataInterval->getMaximumParameterValue(filteredAttribute);
-                    const double colorValue = getParametersMap().count(filteredAttribute) > 0 ? parse<double>(getParametersMap().at(filteredAttribute)) : 0;
-                    // return scaled color
-                    return edgeDataFrame->getAttributeSelector()->getScaledColor(minimumValue, maximumValue, colorValue);
-                }
-            }
-        } else if (myTagProperty.getTag() == SUMO_TAG_EDGEREL) {
-            // obtain pointer to edge data frame (only for code legibly)
-            const GNEEdgeRelDataFrame* edgeRelDataFrame = myDataIntervalParent->getNet()->getViewNet()->getViewParent()->getEdgeRelDataFrame();
-            // check if we have to filter generic data
-            if (edgeRelDataFrame->shown()) {
-                // get interval
-                const GNEDataInterval* dataInterval = edgeRelDataFrame->getIntervalSelector()->getDataInterval();
-                // get filtered attribute (can be empty)
-                const std::string filteredAttribute = edgeRelDataFrame->getAttributeSelector()->getFilteredAttribute();
-                // check interval
-                if (dataInterval && (dataInterval == myDataIntervalParent) && (filteredAttribute.size() > 0)) {
-                    // get maximum and minimum value
-                    const double minimumValue = dataInterval->getMinimumParameterValue(filteredAttribute);
-                    const double maximumValue = dataInterval->getMaximumParameterValue(filteredAttribute);
-                    const double colorValue = getParametersMap().count(filteredAttribute) > 0 ? parse<double>(getParametersMap().at(filteredAttribute)) : 0;
-                    // return scaled color
-                    return edgeRelDataFrame->getAttributeSelector()->getScaledColor(minimumValue, maximumValue, colorValue);
-                }
-            }
-        }
-    }
-    // return specific color
-    return getSpecificColor();
-}
-
-
-bool
-GNEGenericData::isGenericDataVisible() const {
-    // get pointer to ViewNet
-    GNEViewNet* viewNet = myDataIntervalParent->getNet()->getViewNet();
-    // first check if we're in supermode demand
-    if (viewNet->getEditModes().isCurrentSupermodeData()) {
-        // check if we're in common mode
-        if ((viewNet->getEditModes().dataEditMode == DataEditMode::DATA_INSPECT) ||
-                (viewNet->getEditModes().dataEditMode == DataEditMode::DATA_DELETE) ||
-                (viewNet->getEditModes().dataEditMode == DataEditMode::DATA_SELECT)) {
-            // obtain dataset, begin, end and attribute
-            const std::string genericDataType = viewNet->getIntervalBar().getGenericDataTypeStr();
-            const std::string dataSet = viewNet->getIntervalBar().getDataSetStr();
-            const std::string begin = viewNet->getIntervalBar().getBeginStr();
-            const std::string end = viewNet->getIntervalBar().getEndStr();
-            const std::string attribute = viewNet->getIntervalBar().getAttributeStr();
-            // chek genericData Type
-            if (!genericDataType.empty() && (myTagProperty.getTagStr() != genericDataType)) {
-                return false;
-            }
-            // chek data set
-            if (!dataSet.empty() && myDataIntervalParent->getDataSetParent()->getID() != dataSet) {
-                return false;
-            }
-            // chek begin
-            if (!begin.empty() && parse<double>(begin) < myDataIntervalParent->getAttributeDouble(SUMO_ATTR_BEGIN)) {
-                return false;
-            }
-            // chek end
-            if (!end.empty() && parse<double>(end) > myDataIntervalParent->getAttributeDouble(SUMO_ATTR_END)) {
-                return false;
-            }
-            // check attribute
-            if (!attribute.empty() && getParametersMap().count(attribute) == 0) {
-                return false;
-            }
-            // all checks ok, then return true
-            return true;
-        } else {
-            // return specific function output
-            return isVisible();
-        }
-    } else {
-        // no supermode data
-        return false;
-    }
-}
-*/
 
 void
 GNEGenericData::drawAttribute(const PositionVector& shape) const {
@@ -278,9 +178,49 @@ GNEGenericData::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView& /* p
 }
 
 
-void
-GNEGenericData::drawGL(const GUIVisualizationSettings& /*s*/) const {
-    // currently unused
+void 
+GNEGenericData::drawFilteredAttribute(const GUIVisualizationSettings& s, const PositionVector &laneShape, const std::string &attribute) const {
+    if (getParametersMap().count(attribute) > 0) {
+        const Position pos = laneShape.positionAtOffset2D(laneShape.length2D() * 0.5);
+        const double rot = laneShape.rotationDegreeAtOffset(laneShape.length2D() * 0.5);
+        // Add a draw matrix for details
+        glPushMatrix();
+        // draw value
+        GLHelper::drawText(getParameter(attribute), pos, GLO_MAX - 1, 2, RGBColor::BLACK, s.getTextAngle(rot + 90));
+        // pop draw matrix
+        glPopMatrix();
+    }
+}
+
+
+bool 
+GNEGenericData::isVisibleInspectDeleteSelect() const {
+    // get toolbar
+    const GNEViewNetHelper::IntervalBar& toolBar = myNet->getViewNet()->getIntervalBar();
+    // declare flag
+    bool draw = true;
+    // check filter by generic data type
+    if ((toolBar.getGenericDataTypeStr().size() > 0) && (toolBar.getGenericDataTypeStr() != myTagProperty.getTagStr())) {
+        draw = false;
+    }
+    // check filter by data set
+    if ((toolBar.getDataSetStr().size() > 0) && (toolBar.getDataSetStr() != myDataIntervalParent->getID())) {
+        draw = false;
+    }
+    // check filter by begin
+    if ((toolBar.getBeginStr().size() > 0) && (parse<double>(toolBar.getBeginStr()) > myDataIntervalParent->getAttributeDouble(SUMO_ATTR_BEGIN))) {
+        draw = false;
+    }
+    // check filter by end
+    if ((toolBar.getEndStr().size() > 0) && (parse<double>(toolBar.getEndStr()) < myDataIntervalParent->getAttributeDouble(SUMO_ATTR_END))) {
+        draw = false;
+    }
+    // check filter by attribute
+    if ((toolBar.getAttributeStr().size() > 0) && (getParametersMap().count(toolBar.getAttributeStr()) == 0)) {
+        draw = false;
+    }
+    // return flag
+    return draw;
 }
 
 /****************************************************************************/
