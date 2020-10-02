@@ -1,3 +1,13 @@
+# tests which train gets to drive in case of a link conflict: two trains want to enter a section but only one of them can do so at the same time
+priority
+
+# test railSignalConstraints
+constraints
+insertionConstraints
+
+# switch from block signaling to moving block
+end_block_mode
+
 # a forking rail line without a signal at the fork. a warning should appear
 fork_without_signal
 
@@ -37,7 +47,7 @@ inserted_behind_signal
 single_incoming_lane
 
 # Two trains approaching conflicting block simultaneously causing a head-on conflict
-stopped_conflict
+halting_conflict
 
 # switches for a bidirectional section guarded by extra rail signal nodes
 indirect_guard
@@ -79,3 +89,9 @@ indirect_guard_check_route
 
 # driveway computation should end when hitting a buffer stop
 siding_deadend
+
+# two stopped trains on parallel tracks must enter the same section
+stopped_link_conflict
+
+# a stopped train on parallel track should not block a train without stop from entering the subsequent section
+stopped_link_conflict2

@@ -44,17 +44,17 @@ public:
 
     /**@brief add additional element
      * @param objectsUnderCursor collection of objects under cursor after click over view
-     * @param keyPressed key pressed during click
+     * @param mouseButtonKeyPressed key pressed during click
      * @return true if additional was sucesfully added
      */
-    bool addTAZRelationData(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed);
+    bool addTAZRelationData(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::MouseButtonKeyPressed& mouseButtonKeyPressed);
 
     /// @brief clear TAZ selection
     void clearTAZSelection();
 
 protected:
     /// @brief first selected TAZ Element
-    GNETAZElement *myFirstTAZElement;
+    GNETAZElement* myFirstTAZElement;
 
 private:
     /// @brief Invalidated copy constructor.

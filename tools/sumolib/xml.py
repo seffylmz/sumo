@@ -118,11 +118,16 @@ def compound_object(element_name, attrnames, warn=False):
                 return self.__dict__[name]
             raise AttributeError
 
+        def getAttributeSecure(self, name, default=None):
+            if self.hasAttribute(name):
+                return self.__dict__[name]
+            return default
+
         def setAttribute(self, name, value):
-            if name not in self._fields:
+            if name not in self._original_fields:
                 self._original_fields.append(name)
                 self._fields.append(_prefix_keyword(name, warn))
-            self.__dict__[name] = value
+            self.__dict__[_prefix_keyword(name, warn)] = value
 
         def hasChild(self, name):
             return name in self._child_dict
@@ -210,6 +215,9 @@ def compound_object(element_name, attrnames, warn=False):
 
         def __repr__(self):
             return str(self)
+
+        def __lt__(self, other):
+            return str(self) < str(other)
 
     return CompoundObject
 

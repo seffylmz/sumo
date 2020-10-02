@@ -21,6 +21,7 @@
 
 #include <utils/gui/images/GUITextureSubSys.h>
 #include <utils/gui/div/GLHelper.h>
+#include <netedit/changes/GNEChange_Additional.h>
 #include <netedit/changes/GNEChange_Attribute.h>
 #include <netedit/dialogs/GNEVariableSpeedSignDialog.h>
 #include <netedit/GNEViewNet.h>
@@ -29,17 +30,19 @@
 #include <utils/gui/globjects/GLIncludes.h>
 
 #include "GNEVariableSpeedSign.h"
+#include "GNEVariableSpeedSignSymbol.h"
 
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNEVariableSpeedSign::GNEVariableSpeedSign(const std::string& id, GNENet* net, const Position& pos, const std::vector<GNELane*>& lanes, const std::string& name, bool blockMovement) :
+GNEVariableSpeedSign::GNEVariableSpeedSign(const std::string& id, GNENet* net, const Position& pos, const std::string& name, bool blockMovement) :
     GNEAdditional(id, net, GLO_VSS, SUMO_TAG_VSS, name, blockMovement,
-    {}, {}, {}, {}, {}, {}, {}, {},     // Parents
-    {}, {}, lanes, {}, {}, {}, {}, {}), // Children
+        {}, {}, {}, {}, {}, {}, {}, {}),
     myPosition(pos) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
@@ -47,39 +50,45 @@ GNEVariableSpeedSign::~GNEVariableSpeedSign() {
 }
 
 
+GNEMoveOperation* 
+GNEVariableSpeedSign::getMoveOperation(const double /*shapeOffset*/) {
+    if (myBlockMovement) {
+        // element blocked, then nothing to move
+        return nullptr;
+    } else {
+        // return move operation for additional placed in view
+        return new GNEMoveOperation(this, myPosition);
+    }
+}
+
+
 void
 GNEVariableSpeedSign::updateGeometry() {
-    // Set block icon position
-    myBlockIcon.position = myPosition;
-
-    // Set block icon offset
-    myBlockIcon.offset = Position(-0.5, -0.5);
-
-    // Set block icon rotation, and using their rotation for draw logo
-    myBlockIcon.setRotation();
-
-    // update child connections
-    myChildConnections.update();
+    // update additional geometry
+    myAdditionalGeometry.updateGeometry(myPosition, 0);
+    // Update Hierarchical connections geometry
+    myHierarchicalConnections.update();
 }
 
 
-Position
-GNEVariableSpeedSign::getPositionInView() const {
-    return myPosition;
-}
-
-
-Boundary
-GNEVariableSpeedSign::getCenteringBoundary() const {
-    // Return Boundary depending if myMovingGeometryBoundary is initialised (important for move geometry)
-    if (myMove.movingGeometryBoundary.isInitialised()) {
-        return myMove.movingGeometryBoundary;
-    } else {
-        Boundary b;
-        b.add(myPosition);
-        b.grow(5);
-        return b;
+void 
+GNEVariableSpeedSign::updateCenteringBoundary(const bool updateGrid) {
+    // remove additional from grid
+    if (updateGrid) {
+        myNet->removeGLObjectFromGrid(this);
     }
+    // update geometry
+    updateGeometry();
+    // add shape boundary
+    myBoundary = myAdditionalGeometry.getShape().getBoxBoundary();
+    // grow
+    myBoundary.grow(10);
+    // add additional into RTREE again
+    if (updateGrid) {
+        myNet->addGLObjectIntoGrid(this);
+    }
+    // Update Hierarchical connections geometry
+    myHierarchicalConnections.update();
 }
 
 
@@ -93,26 +102,6 @@ void
 GNEVariableSpeedSign::openAdditionalDialog() {
     // Open VSS dialog
     GNEVariableSpeedSignDialog(this);
-}
-
-
-void
-GNEVariableSpeedSign::moveGeometry(const Position& offset) {
-    // restore old position, apply offset and update Geometry
-    myPosition = myMove.originalViewPosition;
-    myPosition.add(offset);
-    // filtern position using snap to active grid
-    myPosition = myNet->getViewNet()->snapToActiveGrid(myPosition);
-    updateGeometry();
-}
-
-
-void
-GNEVariableSpeedSign::commitGeometryMoving(GNEUndoList* undoList) {
-    // commit new position allowing undo/redo
-    undoList->p_begin("position of " + getTagStr());
-    undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(myPosition), toString(myMove.originalViewPosition)));
-    undoList->p_end();
 }
 
 
@@ -132,44 +121,61 @@ GNEVariableSpeedSign::drawGL(const GUIVisualizationSettings& s) const {
         if (s.drawBoundaries) {
             GLHelper::drawBoundary(getCenteringBoundary());
         }
-        // Start drawing adding an gl identificator
+        // push name
         glPushName(getGlID());
-        // Add a draw matrix for drawing logo
+        // push layer matrix
         glPushMatrix();
-        glTranslated(myPosition.x(), myPosition.y(), getType());
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_VSS);
+        // push texture matrix
+        glPushMatrix();
+        // translate to position
+        glTranslated(myPosition.x(), myPosition.y(), 0);
         // scale
         glScaled(VSSExaggeration, VSSExaggeration, 1);
         // Draw icon depending of variable speed sign is or if isn't being drawn for selecting
         if (!s.drawForRectangleSelection && s.drawDetail(s.detailSettings.laneTextures, VSSExaggeration)) {
+            // set white color
             glColor3d(1, 1, 1);
+            // rotate
             glRotated(180, 0, 0, 1);
+            // draw texture
             if (drawUsingSelectColor()) {
                 GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_VARIABLESPEEDSIGNSELECTED), s.additionalSettings.VSSSize);
             } else {
                 GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_VARIABLESPEEDSIGN), s.additionalSettings.VSSSize);
             }
         } else {
+            // set white color
             GLHelper::setColor(RGBColor::WHITE);
+            // just draw a withe square
             GLHelper::drawBoxLine(Position(0, s.additionalSettings.VSSSize), 0, 2 * s.additionalSettings.VSSSize, s.additionalSettings.VSSSize);
         }
-        // Pop draw icon matrix
+        // Pop texture matrix
         glPopMatrix();
-        // Show Lock icon
-        myBlockIcon.drawIcon(s, VSSExaggeration, 0.4);
-        // Draw child connections
-        drawChildConnections(s, getType(), VSSExaggeration);
-        // Draw name if isn't being drawn for selecting
-        if (!s.drawForRectangleSelection) {
-            drawName(getPositionInView(), s.scale, s.addName);
-        }
-        // check if dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
-            GNEGeometry::drawDottedSquaredShape(s, myPosition, s.additionalSettings.VSSSize, s.additionalSettings.VSSSize, 0, VSSExaggeration);
-            // draw shape dotte contour aroud alld connections between child and parents
-            drawChildDottedConnections(s, VSSExaggeration);
-        }
+        // draw lock icon
+        GNEViewNetHelper::LockIcon::drawLockIcon(this, myAdditionalGeometry, VSSExaggeration, -0.5, -0.5, false, 0.4);
+        // Pop layer matrix
+        glPopMatrix();
         // Pop name
         glPopName();
+        // push connection matrix
+        glPushMatrix();
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_VSS, -0.1);
+        // Draw child connections
+        drawHierarchicalConnections(s, this, VSSExaggeration);
+        // Pop connection matrix
+        glPopMatrix();
+        // draw additional name
+        drawAdditionalName(s);
+        // check if dotted contour has to be drawn
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
+            GNEGeometry::drawDottedSquaredShape(GNEGeometry::DottedContourType::INSPECT, s, myPosition, s.additionalSettings.VSSSize, s.additionalSettings.VSSSize, 0, 0, 0, VSSExaggeration);
+        }
+        if (s.drawDottedContour() || (myNet->getViewNet()->getFrontAttributeCarrier() == this)) {
+            GNEGeometry::drawDottedSquaredShape(GNEGeometry::DottedContourType::FRONT, s, myPosition, s.additionalSettings.VSSSize, s.additionalSettings.VSSSize, 0, 0, 0, VSSExaggeration);
+        }
     }
 }
 
@@ -179,8 +185,15 @@ GNEVariableSpeedSign::getAttribute(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_ID:
             return getID();
-        case SUMO_ATTR_LANES:
-            return parseIDs(getChildLanes());
+        case SUMO_ATTR_LANES: {
+            std::vector<std::string> lanes;
+            for (const auto& VSSSymbol : getChildAdditionals()) {
+                if (VSSSymbol->getTagProperty().isSymbol()) {
+                    lanes.push_back(VSSSymbol->getAttribute(SUMO_ATTR_LANE));
+                }
+            }
+            return toString(lanes);
+        }
         case SUMO_ATTR_POSITION:
             return toString(myPosition);
         case SUMO_ATTR_NAME:
@@ -209,16 +222,12 @@ GNEVariableSpeedSign::setAttribute(SumoXMLAttr key, const std::string& value, GN
         return; //avoid needless changes, later logic relies on the fact that attributes have changed
     }
     switch (key) {
-        case SUMO_ATTR_ID: {
-            // change ID of Rerouter Interval
-            undoList->p_add(new GNEChange_Attribute(this, key, value));
-            // Change IDs of all steps
-            for (const auto &step : getChildAdditionals()) {
-                step->setAttribute(SUMO_ATTR_ID, generateAdditionalChildID(SUMO_TAG_STEP), undoList);
-            }
-            break;
-        }
+        // special case  for lanes due VSS Symbols
         case SUMO_ATTR_LANES:
+            // rebuild VSS Symbols
+            rebuildVSSSymbols(value, undoList);
+            break;
+        case SUMO_ATTR_ID:
         case SUMO_ATTR_POSITION:
         case SUMO_ATTR_NAME:
         case GNE_ATTR_BLOCK_MOVEMENT:
@@ -240,11 +249,7 @@ GNEVariableSpeedSign::isValid(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_POSITION:
             return canParse<Position>(value);
         case SUMO_ATTR_LANES:
-            if (value.empty()) {
-                return false;
-            } else {
-                return canParse<std::vector<GNELane*> >(myNet, value, false);
-            }
+            return canParse<std::vector<GNELane*> >(myNet, value, false);
         case SUMO_ATTR_NAME:
             return SUMOXMLDefinitions::isValidAttribute(value);
         case GNE_ATTR_BLOCK_MOVEMENT:
@@ -283,16 +288,15 @@ GNEVariableSpeedSign::getHierarchyName() const {
 void
 GNEVariableSpeedSign::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
+        case SUMO_ATTR_LANES:
+            throw InvalidArgument(getTagStr() + " cannot be edited");
         case SUMO_ATTR_ID:
             myNet->getAttributeCarriers()->updateID(this, value);
             break;
-        case SUMO_ATTR_LANES:
-            changeChildLanes(this, value);
-            break;
         case SUMO_ATTR_POSITION:
-            myNet->removeGLObjectFromGrid(this);
             myPosition = parse<Position>(value);
-            myNet->addGLObjectIntoGrid(this);
+            // update boundary
+            updateCenteringBoundary(true);
             break;
         case SUMO_ATTR_NAME:
             myAdditionalName = value;
@@ -315,5 +319,41 @@ GNEVariableSpeedSign::setAttribute(SumoXMLAttr key, const std::string& value) {
     }
 }
 
+
+void 
+GNEVariableSpeedSign::setMoveShape(const GNEMoveResult& moveResult) {
+    // update position
+    myPosition = moveResult.shapeToUpdate.front();
+    // update geometry
+    updateGeometry();
+}
+
+
+void 
+GNEVariableSpeedSign::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
+    undoList->p_begin("position of " + getTagStr());
+    undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(moveResult.shapeToUpdate.front())));
+    undoList->p_end();
+}
+
+
+void
+GNEVariableSpeedSign::rebuildVSSSymbols(const std::string& value, GNEUndoList* undoList) {
+    undoList->p_begin(("change " + getTagStr() + " attribute").c_str());
+    // drop all additional children
+    while (getChildAdditionals().size() > 0) {
+        undoList->add(new GNEChange_Additional(getChildAdditionals().front(), false), true);
+    }
+    // get lane vector
+    const std::vector<GNELane*> lanes = parse<std::vector<GNELane*> >(myNet, value);
+    // create new VSS Symbols
+    for (const auto& lane : lanes) {
+        // create VSS Symbol
+        GNEAdditional* VSSSymbol = new GNEVariableSpeedSignSymbol(this, lane);
+        // add it using GNEChange_Additional
+        myNet->getViewNet()->getUndoList()->add(new GNEChange_Additional(VSSSymbol, true), true);
+    }
+    undoList->p_end();
+}
 
 /****************************************************************************/

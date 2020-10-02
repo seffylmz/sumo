@@ -56,6 +56,7 @@ public:
                  const std::string& outputFilename,
                  const SUMOTime freq, const double length,
                  const MSRouteProbe* probe,
+                 const double invalidJamThreshold,
                  const std::string& vTypes,
                  bool addLaneMeanData = true);
 
@@ -260,11 +261,11 @@ protected:
     /// @brief aggregate lane values
     virtual void updateMeanData();
 
-    /** @brief try to schedule the givne vehicle for removal. return true if it
+    /** @brief try to schedule the given vehicle for removal. return true if it
      * isn't already scheduled */
-    bool scheduleRemoval(MSVehicle* veh) {
+    bool scheduleRemoval(SUMOTrafficObject* veh) {
         return myToRemove.insert(veh->getID()).second;
-    };
+    }
 
 
     /** @brief remove any vehicles which are scheduled for removal.
@@ -327,6 +328,9 @@ protected:
 
     /// @brief whether the calibrator was active when last checking
     bool myAmActive;
+
+    /// @brief relative speed threshold for detecting and clearing invalid jam
+    double myInvalidJamThreshold;
 
     /// @brief whether the calibrator has registered an invalid jam in the last execution step
     bool myHaveInvalidJam;

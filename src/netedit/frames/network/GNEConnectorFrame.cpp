@@ -382,7 +382,7 @@ GNEConnectorFrame::~GNEConnectorFrame() {}
 void
 GNEConnectorFrame::handleLaneClick(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor) {
     // build connection
-    buildConnection(objectsUnderCursor.getLaneFront(), myViewNet->getKeyPressed().shiftKeyPressed(), myViewNet->getKeyPressed().controlKeyPressed(), true);
+    buildConnection(objectsUnderCursor.getLaneFront(), myViewNet->getMouseButtonKeyPressed().shiftKeyPressed(), myViewNet->getMouseButtonKeyPressed().controlKeyPressed(), true);
 }
 
 
@@ -415,7 +415,7 @@ GNEConnectorFrame::buildConnection(GNELane* lane, const bool mayDefinitelyPass, 
         myNumChanges = 0;
         myViewNet->getUndoList()->p_begin("modify " + toString(SUMO_TAG_CONNECTION) + "s");
     } else if (myPotentialTargets.count(lane)
-               || (allowConflict && lane->getParentEdge()->getFirstParentJunction() == myCurrentEditedLane->getParentEdge()->getSecondParentJunction())) {
+               || (allowConflict && lane->getParentEdge()->getParentJunctions().front() == myCurrentEditedLane->getParentEdge()->getParentJunctions().back())) {
         const int fromIndex = myCurrentEditedLane->getIndex();
         GNEEdge* srcEdge = myCurrentEditedLane->getParentEdge();
         GNEEdge* destEdge = lane->getParentEdge();
@@ -447,7 +447,7 @@ GNEConnectorFrame::buildConnection(GNELane* lane, const bool mayDefinitelyPass, 
                     } else {
                         lane->setSpecialColor(&myViewNet->getVisualisationSettings().candidateColorSettings.target);
                     }
-                    srcEdge->getSecondParentJunction()->invalidateTLS(myViewNet->getUndoList(), NBConnection::InvalidConnection, newNBCon);
+                    srcEdge->getParentJunctions().back()->invalidateTLS(myViewNet->getUndoList(), NBConnection::InvalidConnection, newNBCon);
                 }
                 break;
             case LaneStatus::CONNECTED:
@@ -485,17 +485,17 @@ GNEConnectorFrame::buildConnection(GNELane* lane, const bool mayDefinitelyPass, 
 void
 GNEConnectorFrame::initTargets() {
     // gather potential targets
-    NBNode* nbn = myCurrentEditedLane->getParentEdge()->getSecondParentJunction()->getNBNode();
+    NBNode* nbn = myCurrentEditedLane->getParentEdge()->getParentJunctions().back()->getNBNode();
     // get potencial targets
-    for (const auto &NBEEdge : nbn->getOutgoingEdges()) {
+    for (const auto& NBEEdge : nbn->getOutgoingEdges()) {
         GNEEdge* edge = myViewNet->getNet()->retrieveEdge(NBEEdge->getID());
-        for (const auto &lane : edge->getLanes()) {
+        for (const auto& lane : edge->getLanes()) {
             myPotentialTargets.insert(lane);
         }
     }
     // set color for existing connections
     std::vector<NBEdge::Connection> connections = myCurrentEditedLane->getParentEdge()->getNBEdge()->getConnectionsFromLane(myCurrentEditedLane->getIndex());
-    for (const auto &lane : myPotentialTargets) {
+    for (const auto& lane : myPotentialTargets) {
         switch (getLaneStatus(connections, lane)) {
             case LaneStatus::CONNECTED:
                 lane->setSpecialColor(&myViewNet->getVisualisationSettings().candidateColorSettings.target);

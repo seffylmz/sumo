@@ -366,6 +366,10 @@ public:
         return myMaxTravelTime;
     }
 
+    bool isEdgeData() const {
+        return myAmEdgeBased;
+    }
+
 
 protected:
     /** @brief Create an instance of MeanDataValues

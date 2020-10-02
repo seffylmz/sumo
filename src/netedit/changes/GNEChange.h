@@ -24,13 +24,15 @@
 #include <fx.h>
 #include <netbuild/NBEdge.h>
 #include <netbuild/NBNode.h>
-#include <netedit/elements/network/GNELane.h>
+#include <netedit/elements/GNEHierarchicalContainer.h>
+#include <netedit/elements/network/GNEJunction.h>
 #include <netedit/elements/network/GNEEdge.h>
+#include <netedit/elements/network/GNELane.h>
 #include <netedit/elements/additional/GNEAdditional.h>
 #include <netedit/elements/additional/GNEShape.h>
 #include <netedit/elements/additional/GNETAZElement.h>
 #include <netedit/elements/demand/GNEDemandElement.h>
-#include <netedit/elements/data/GNEEdgeData.h>
+#include <netedit/elements/data/GNEGenericData.h>
 #include <utils/foxtools/fxexdefs.h>
 #include <utils/geom/PositionVector.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
@@ -39,6 +41,7 @@
 // ===========================================================================
 // class declarations
 // ===========================================================================
+class GNEHierarchicalElement;
 class GNEAttributeCarrier;
 class GNEAdditional;
 class GNEDataSet;
@@ -51,8 +54,6 @@ class GNEShape;
 class GNETAZElement;
 class GNENet;
 class GNEViewNet;
-class GNEHierarchicalChildElements;
-class GNEHierarchicalParentElements;
 
 // ===========================================================================
 // class definitions
@@ -72,12 +73,11 @@ public:
     GNEChange(bool forward, const bool selectedElement);
 
     /**@brief Constructor
-     * @param[in] parents hierarchical parent elements
-     * @param[in] children hierarchical children elements
+     * @param[in] element hierarchical element
      * @param[in] forward The direction of this change
      * @param[in] selectedElement flag to mark if element is selected
      */
-    GNEChange(GNEHierarchicalParentElements* parents, GNEHierarchicalChildElements* children, bool forward, const bool selectedElement);
+    GNEChange(GNEHierarchicalElement* element, bool forward, const bool selectedElement);
 
     /// @brief Destructor
     ~GNEChange();
@@ -98,172 +98,128 @@ public:
     virtual void redo();
 
 protected:
-    /// @brief add given element into parents and children
+    /// @brief restore container (only use in undo() function)
+    void restoreHierarchicalContainers();
+
+    /// @brief add given element into parents and children (only use in redo() function)
     template<typename T>
     void addElementInParentsAndChildren(T* element) {
         // add element in parents
-        for (const auto& edge : myParentEdges) {
+        for (const auto& junction : myOriginalHierarchicalContainer.getParents<std::vector<GNEJunction*> >()) {
+            junction->addChildElement(element);
+        }
+        for (const auto& edge : myOriginalHierarchicalContainer.getParents<std::vector<GNEEdge*> >()) {
             edge->addChildElement(element);
         }
-        for (const auto& lane : myParentLanes) {
+        for (const auto& lane : myOriginalHierarchicalContainer.getParents<std::vector<GNELane*> >()) {
             lane->addChildElement(element);
         }
-        for (const auto& additional : myParentAdditionals) {
+        for (const auto& additional : myOriginalHierarchicalContainer.getParents<std::vector<GNEAdditional*> >()) {
             additional->addChildElement(element);
         }
-        for (const auto& shape : myParentShapes) {
+        for (const auto& shape : myOriginalHierarchicalContainer.getParents<std::vector<GNEShape*> >()) {
             shape->addChildElement(element);
         }
-        for (const auto& TAZElement : myParentTAZElements) {
+        for (const auto& TAZElement : myOriginalHierarchicalContainer.getParents<std::vector<GNETAZElement*> >()) {
             TAZElement->addChildElement(element);
         }
-        for (const auto& demandElement : myParentDemandElements) {
+        for (const auto& demandElement : myOriginalHierarchicalContainer.getParents<std::vector<GNEDemandElement*> >()) {
             demandElement->addChildElement(element);
         }
-        for (const auto& genericData : myParentGenericDatas) {
+        for (const auto& genericData : myOriginalHierarchicalContainer.getParents<std::vector<GNEGenericData*> >()) {
             genericData->addChildElement(element);
         }
         // add element in children
-        for (const auto& edge : myChildEdges) {
+        for (const auto& junction : myOriginalHierarchicalContainer.getChildren<std::vector<GNEJunction*> >()) {
+            junction->addParentElement(element);
+        }
+        for (const auto& edge : myOriginalHierarchicalContainer.getChildren<std::vector<GNEEdge*> >()) {
             edge->addParentElement(element);
         }
-        for (const auto& lane : myChildLanes) {
+        for (const auto& lane : myOriginalHierarchicalContainer.getChildren<std::vector<GNELane*> >()) {
             lane->addParentElement(element);
         }
-        for (const auto& additional : myChildAdditionals) {
+        for (const auto& additional : myOriginalHierarchicalContainer.getChildren<std::vector<GNEAdditional*> >()) {
             additional->addParentElement(element);
         }
-        for (const auto& shape : myChildShapes) {
+        for (const auto& shape : myOriginalHierarchicalContainer.getChildren<std::vector<GNEShape*> >()) {
             shape->addParentElement(element);
         }
-        for (const auto& TAZElement : myChildTAZElements) {
+        for (const auto& TAZElement : myOriginalHierarchicalContainer.getChildren<std::vector<GNETAZElement*> >()) {
             TAZElement->addParentElement(element);
         }
-        for (const auto& demandElement : myChildDemandElements) {
+        for (const auto& demandElement : myOriginalHierarchicalContainer.getChildren<std::vector<GNEDemandElement*> >()) {
             demandElement->addParentElement(element);
         }
-        for (const auto& genericData : myChildGenericDatas) {
+        for (const auto& genericData : myOriginalHierarchicalContainer.getChildren<std::vector<GNEGenericData*> >()) {
             genericData->addParentElement(element);
         }
     }
 
+    /// @brief remove given element from parents and children (only use in redo() function)
     template<typename T>
     void removeElementFromParentsAndChildren(T* element) {
         // Remove element from parents
-        for (const auto& edge : myParentEdges) {
+        for (const auto& junction : myOriginalHierarchicalContainer.getParents<std::vector<GNEJunction*> >()) {
+            junction->removeChildElement(element);
+        }
+        for (const auto& edge : myOriginalHierarchicalContainer.getParents<std::vector<GNEEdge*> >()) {
             edge->removeChildElement(element);
         }
-        for (const auto& lane : myParentLanes) {
+        for (const auto& lane : myOriginalHierarchicalContainer.getParents<std::vector<GNELane*> >()) {
             lane->removeChildElement(element);
         }
-        for (const auto& additional : myParentAdditionals) {
+        for (const auto& additional : myOriginalHierarchicalContainer.getParents<std::vector<GNEAdditional*> >()) {
             additional->removeChildElement(element);
         }
-        for (const auto& shape : myParentShapes) {
+        for (const auto& shape : myOriginalHierarchicalContainer.getParents<std::vector<GNEShape*> >()) {
             shape->removeChildElement(element);
         }
-        for (const auto& TAZElement : myParentTAZElements) {
+        for (const auto& TAZElement : myOriginalHierarchicalContainer.getParents<std::vector<GNETAZElement*> >()) {
             TAZElement->removeChildElement(element);
         }
-        for (const auto& demandElement : myParentDemandElements) {
+        for (const auto& demandElement : myOriginalHierarchicalContainer.getParents<std::vector<GNEDemandElement*> >()) {
             demandElement->removeChildElement(element);
         }
-        for (const auto& genericData : myParentGenericDatas) {
+        for (const auto& genericData : myOriginalHierarchicalContainer.getParents<std::vector<GNEGenericData*> >()) {
             genericData->removeChildElement(element);
         }
         // Remove element from children
-        for (const auto& edge : myChildEdges) {
+        for (const auto& junction : myOriginalHierarchicalContainer.getChildren<std::vector<GNEJunction*> >()) {
+            junction->removeParentElement(element);
+        }
+        for (const auto& edge : myOriginalHierarchicalContainer.getChildren<std::vector<GNEEdge*> >()) {
             edge->removeParentElement(element);
         }
-        for (const auto& lane : myChildLanes) {
+        for (const auto& lane : myOriginalHierarchicalContainer.getChildren<std::vector<GNELane*> >()) {
             lane->removeParentElement(element);
         }
-        for (const auto& additional : myChildAdditionals) {
+        for (const auto& additional : myOriginalHierarchicalContainer.getChildren<std::vector<GNEAdditional*> >()) {
             additional->removeParentElement(element);
         }
-        for (const auto& shape : myChildShapes) {
+        for (const auto& shape : myOriginalHierarchicalContainer.getChildren<std::vector<GNEShape*> >()) {
             shape->removeParentElement(element);
         }
-        for (const auto& TAZElement : myChildTAZElements) {
+        for (const auto& TAZElement : myOriginalHierarchicalContainer.getChildren<std::vector<GNETAZElement*> >()) {
             TAZElement->removeParentElement(element);
         }
-        for (const auto& demandElement : myChildDemandElements) {
+        for (const auto& demandElement : myOriginalHierarchicalContainer.getChildren<std::vector<GNEDemandElement*> >()) {
             demandElement->removeParentElement(element);
         }
-        for (const auto& genericData : myChildGenericDatas) {
+        for (const auto& genericData : myOriginalHierarchicalContainer.getChildren<std::vector<GNEGenericData*> >()) {
             genericData->removeParentElement(element);
         }
     }
 
-    /**@brief we group antagonistic commands (create junction/delete
-     * junction) and keep them apart by this flag
-     */
+    /// @brief we group antagonistic commands (create junction/delete junction) and keep them apart by this flag
     bool myForward;
 
     /// @brief flag for check if element is selected
     const bool mySelectedElement;
 
-    /// @brief reference to vector of parent edges
-    const std::vector<GNEEdge*>& myParentEdges;
+    /// @brief Hierarchical container with parent and children
+    const GNEHierarchicalContainer myOriginalHierarchicalContainer;
 
-    /// @brief reference to vector of parent lanes
-    const std::vector<GNELane*>& myParentLanes;
-
-    /// @brief reference to vector of parent additionals
-    const std::vector<GNEAdditional*>& myParentAdditionals;
-
-    /// @brief reference to vector of parent shapes
-    const std::vector<GNEShape*>& myParentShapes;
-
-    /// @brief reference to vector of parent TAZElements
-    const std::vector<GNETAZElement*>& myParentTAZElements;
-
-    /// @brief reference to vector of parent demand elements
-    const std::vector<GNEDemandElement*>& myParentDemandElements;
-
-    /// @brief reference to vector of parent generic datas
-    const std::vector<GNEGenericData*>& myParentGenericDatas;
-
-    /// @brief reference to vector of child edges
-    const std::vector<GNEEdge*>& myChildEdges;
-
-    /// @brief reference to vector of child lanes
-    const std::vector<GNELane*>& myChildLanes;
-
-    /// @brief reference to vector of child additional
-    const std::vector<GNEAdditional*>& myChildAdditionals;
-
-    /// @brief reference to vector of child shapes
-    const std::vector<GNEShape*>& myChildShapes;
-
-    /// @brief reference to vector of child TAZElements
-    const std::vector<GNETAZElement*>& myChildTAZElements;
-
-    /// @brief reference to vector of child demand elements
-    const std::vector<GNEDemandElement*>& myChildDemandElements;
-
-    /// @brief reference to vector of child generic datas
-    const std::vector<GNEGenericData*>& myChildGenericDatas;
-
-private:
-    /// @brief vector of empty edges
-    static const std::vector<GNEEdge*> myEmptyEdges;
-
-    /// @brief vector of empty lanes
-    static const std::vector<GNELane*> myEmptyLanes;
-
-    /// @brief vector of empty additionals
-    static const std::vector<GNEAdditional*> myEmptyAdditionals;
-
-    /// @brief vector of empty shapes
-    static const std::vector<GNEShape*> myEmptyShapes;
-
-    /// @brief vector of empty TAZ Elements
-    static const std::vector<GNETAZElement*> myEmptyTAZElements;
-
-    /// @brief vector of empty demand elements
-    static const std::vector<GNEDemandElement*> myEmptyDemandElements;
-
-    /// @brief vector of empty generic datas
-    static const std::vector<GNEGenericData*> myEmptyGenericDatas;
+    /// @brief map with hierarchical container of all parent and children elements
+    std::map<GNEHierarchicalElement*, GNEHierarchicalContainer> myHierarchicalContainers;
 };

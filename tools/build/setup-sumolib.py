@@ -21,13 +21,14 @@ from setuptools import setup, find_packages
 import os
 import version
 
-SUMO_VERSION = version.get_digit_version()
+SUMO_VERSION = version.get_pep440_version()
 package_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 setup(
     name='sumolib',
     version=SUMO_VERSION,
     url='https://sumo.dlr.de/docs/Tools/Sumolib.html',
+    download_url='https://sumo.dlr.de/download',
     author='DLR and contributors',
     author_email='sumo@dlr.de',
     license='EPL-2.0',

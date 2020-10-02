@@ -232,7 +232,7 @@ MSRouteHandler::myStartElement(int element,
                     if (!myActivePlan->empty() && myActivePlan->back()->getDestination() != from) {
                         if (myActivePlan->back()->getDestinationStop() == nullptr || &myActivePlan->back()->getDestinationStop()->getLane().getEdge() != from) {
                             throw ProcessError("Disconnected plan for person '" + myVehicleParameter->id +
-                                "' (edge '" + fromID + "' != edge '" + myActivePlan->back()->getDestination()->getID() + "').");
+                                               "' (edge '" + fromID + "' != edge '" + myActivePlan->back()->getDestination()->getID() + "').");
                         }
                     }
                     if (startVeh != nullptr && startVeh->getRoute().getEdges().front() != from) {
@@ -253,7 +253,7 @@ MSRouteHandler::myStartElement(int element,
                         throw ProcessError("The to edge '" + toID + "' within a ride of person '" + pid + "' is not known.");
                     }
                 }
-                const std::string group = attrs.getOpt<std::string>(SUMO_ATTR_GROUP, pid.c_str(), ok, pid);
+                const std::string group = attrs.getOpt<std::string>(SUMO_ATTR_GROUP, pid.c_str(), ok, getDefaultGroup(pid));
                 const std::string intendedVeh = attrs.getOpt<std::string>(SUMO_ATTR_INTENDED, nullptr, ok, "");
                 const SUMOTime intendedDepart = attrs.getOptSUMOTimeReporting(SUMO_ATTR_DEPART, nullptr, ok, -1);
                 arrivalPos = SUMOVehicleParameter::interpretEdgePos(arrivalPos, to->getLength(), SUMO_ATTR_ARRIVALPOS, "person '" + pid + "' riding to edge '" + to->getID() + "'");
@@ -468,8 +468,8 @@ MSRouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
     myActiveRouteColor = attrs.hasAttribute(SUMO_ATTR_COLOR) ? new RGBColor(attrs.get<RGBColor>(SUMO_ATTR_COLOR, myActiveRouteID.c_str(), ok)) : nullptr;
     myActiveRouteRepeat = attrs.getOpt<int>(SUMO_ATTR_REPEAT, myActiveRouteID.c_str(), ok, 0);
     myActiveRoutePeriod = attrs.getOptSUMOTimeReporting(SUMO_ATTR_CYCLETIME, myActiveRouteID.c_str(), ok,
-            // handle obsolete attribute name
-            attrs.getOptSUMOTimeReporting(SUMO_ATTR_PERIOD, myActiveRouteID.c_str(), ok, 0));
+                          // handle obsolete attribute name
+                          attrs.getOptSUMOTimeReporting(SUMO_ATTR_PERIOD, myActiveRouteID.c_str(), ok, 0));
     if (attrs.hasAttribute(SUMO_ATTR_PERIOD)) {
         WRITE_WARNING("Attribute 'period' is deprecated for route. Use 'cycleTime' instead.");
     }
@@ -565,11 +565,19 @@ MSRouteHandler::closeRoute(const bool mayBeDisconnected) {
                     if (stop.until > 0) {
                         if (myActiveRoutePeriod <= 0) {
                             const std::string description = myVehicleParameter != nullptr
-                                ?  "for " + type + " '" + myVehicleParameter->id + "'"
-                                :  "'" + myActiveRouteID + "'";
+                                                            ?  "for " + type + " '" + myVehicleParameter->id + "'"
+                                                            :  "'" + myActiveRouteID + "'";
                             throw ProcessError("Cannot repeat stops with 'until' in route " + description + " because no cycleTime is defined.");
                         }
                         stop.until += myActiveRoutePeriod * (i + 1);
+                    }
+                    if (stop.arrival > 0) {
+                        if (myActiveRoutePeriod <= 0) {
+                            const std::string description = myVehicleParameter != nullptr
+                                                            ?  "for " + type + " '" + myVehicleParameter->id + "'"
+                                                            :  "'" + myActiveRouteID + "'";
+                            throw ProcessError("Cannot repeat stops with 'arrival' in route " + description + " because no cycleTime is defined.");
+                        }
                         stop.arrival += myActiveRoutePeriod * (i + 1);
                     }
                     myActiveRouteStops.push_back(stop);
@@ -666,6 +674,7 @@ MSRouteHandler::closeRouteDistribution() {
         const bool haveSameID = MSRoute::dictionary(myCurrentRouteDistributionID, &myParsingRNG) != nullptr;
         if (MSGlobals::gStateLoaded && haveSameID) {
             delete myCurrentRouteDistribution;
+            myCurrentRouteDistribution = nullptr;
             return;
         }
         if (haveSameID) {
@@ -739,6 +748,15 @@ MSRouteHandler::closeVehicle() {
         myVehicleParameter->parametersSet |= VEHPARS_FORCE_REROUTE;
         if (myVehicleParameter->stops.size() > 0) {
             route = addVehicleStopsToImplicitRoute(route, false);
+        }
+    }
+    if (myVehicleParameter->departEdgeProcedure != DepartEdgeDefinition::DEFAULT) {
+        if ((myVehicleParameter->parametersSet & VEHPARS_FORCE_REROUTE) != 0) {
+            WRITE_WARNING("Ignoring attribute '" + toString(SUMO_ATTR_DEPARTEDGE) + "' for vehicle '" + myVehicleParameter->id + "' because the route is computed dynamically.");
+        } else if (myVehicleParameter->departEdgeProcedure == DepartEdgeDefinition::GIVEN &&
+                    myVehicleParameter->departEdge >= (int)route->getEdges().size()) {
+                throw ProcessError("Vehicle '" + myVehicleParameter->id + "' has invalid departEdge index "
+                        + toString(myVehicleParameter->departEdge) + " for route with " + toString(route->getEdges().size()) + " edges.");
         }
     }
 
@@ -830,7 +848,7 @@ MSRouteHandler::addVehicleStopsToImplicitRoute(const MSRoute* route, bool isPerm
         }
     }
     MSRoute* newRoute = new MSRoute("!" + myVehicleParameter->id, edges,
-            isPermanent, new RGBColor(route->getColor()), route->getStops());
+                                    isPermanent, new RGBColor(route->getColor()), route->getStops());
     if (!MSRoute::dictionary(newRoute->getID(), newRoute)) {
         delete newRoute;
         throw ProcessError("Could not adapt implicit route for " + std::string(isPermanent ? "flow" : "vehicle") + "  '" + myVehicleParameter->id + "'");
@@ -910,10 +928,11 @@ MSRouteHandler::closePersonFlow() {
     myActivePlan = nullptr;
 }
 
+
 void
 MSRouteHandler::addFlowPerson(SUMOTime depart, MSVehicleType* type, const std::string& baseID, int i) {
     MSTransportableControl& pc = MSNet::getInstance()->getPersonControl();
-    int quota = MSNet::getInstance()->getVehicleControl().getQuota(-1, pc.getLoadedNumber());
+    const int quota = MSNet::getInstance()->getVehicleControl().getQuota(-1, pc.getLoadedNumber());
     if (quota == 0) {
         pc.addDiscarded();
     }
@@ -933,18 +952,21 @@ MSRouteHandler::addFlowPerson(SUMOTime depart, MSVehicleType* type, const std::s
                 myActivePlan->front()->setArrivalPos(initialDepartPos);
             }
         }
-        myVehicleParameter->id = (baseID 
-                + (i >= 0 ? "." + toString(i) : "") 
-                + (j > 0 ?  "." + toString(j) : ""));
+        myVehicleParameter->id = (baseID
+                                  + (i >= 0 ? "." + toString(i) : "")
+                                  + (j > 0 ?  "." + toString(j) : ""));
         myVehicleParameter->depart = depart += MSNet::getInstance()->getInsertionControl().computeRandomDepartOffset();
         MSTransportable* person = pc.buildPerson(myVehicleParameter, type, myActivePlan, &myParsingRNG);
         if (!pc.add(person)) {
             ProcessError error("Another person with the id '" + myVehicleParameter->id + "' exists.");
             delete person;
-            throw error;
+            if (!MSGlobals::gStateLoaded) {
+                throw error;
+            }
         }
     }
 }
+
 
 void
 MSRouteHandler::closeVType() {
@@ -1322,6 +1344,7 @@ MSRouteHandler::addPersonTrip(const SUMOSAXAttributes& attrs) {
     parseWalkPositions(attrs, myVehicleParameter->id, from, to, departPos, arrivalPos, stoppingPlace, nullptr, ok);
 
     const std::string modes = attrs.getOpt<std::string>(SUMO_ATTR_MODES, id, ok, "");
+    const std::string group = attrs.getOpt<std::string>(SUMO_ATTR_GROUP, id, ok, getDefaultGroup(id));
     SVCPermissions modeSet = 0;
     std::string errorMsg;
     // try to parse person modes
@@ -1353,7 +1376,9 @@ MSRouteHandler::addPersonTrip(const SUMOSAXAttributes& attrs) {
         }
         myVehicleParameter->parametersSet |= VEHPARS_FORCE_REROUTE;
         MSStoppingPlace* fromStop = myActivePlan->empty() ? nullptr : myActivePlan->back()->getDestinationStop();
-        myActivePlan->push_back(new MSStageTrip(from, fromStop, to == nullptr ? &stoppingPlace->getLane().getEdge() : to, stoppingPlace, duration, modeSet, types, speed, walkFactor, departPosLat, attrs.hasAttribute(SUMO_ATTR_ARRIVALPOS), arrivalPos));
+        myActivePlan->push_back(new MSStageTrip(from, fromStop, to == nullptr ? &stoppingPlace->getLane().getEdge() : to,
+                    stoppingPlace, duration, modeSet, types, speed, walkFactor, group,
+                    departPosLat, attrs.hasAttribute(SUMO_ATTR_ARRIVALPOS), arrivalPos));
     }
     myActiveRoute.clear();
 }
@@ -1445,5 +1470,10 @@ void
 MSRouteHandler::addTranship(const SUMOSAXAttributes& /*attrs*/) {
 }
 
+std::string
+MSRouteHandler::getDefaultGroup(const std::string& personID) {
+    const std::string defaultGroup = OptionsCont::getOptions().getString("persontrip.default.group");
+    return defaultGroup == "" ? personID : defaultGroup;
+}
 
 /****************************************************************************/

@@ -166,9 +166,9 @@ GNEStopFrame::show() {
 
 
 bool
-GNEStopFrame::addStop(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed) {
+GNEStopFrame::addStop(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::MouseButtonKeyPressed& mouseButtonKeyPressed) {
     // check if we're selecting a new stop parent
-    if (keyPressed.shiftKeyPressed()) {
+    if (mouseButtonKeyPressed.shiftKeyPressed()) {
         if (objectsUnderCursor.getDemandElementFront() &&
                 (objectsUnderCursor.getDemandElementFront()->getTagProperty().isVehicle() || objectsUnderCursor.getDemandElementFront()->getTagProperty().getTag() == SUMO_TAG_ROUTE)) {
             myStopParentSelector->setDemandElement(objectsUnderCursor.getDemandElementFront());
@@ -202,7 +202,7 @@ GNEStopFrame::addStop(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCu
 }
 
 bool
-GNEStopFrame::getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTag stopTag, GNEViewNet* viewNet,
+GNEStopFrame::getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTag stopTag, GNEViewNet* /* viewNet */,
                                GNEFrameAttributesModuls::AttributesCreator* stopAttributes,
                                const GNEFrameAttributesModuls::NeteditAttributes* myNeteditAttributes,
                                const GNELane* lane, const GNEAdditional* stoppingPlace) {
@@ -283,8 +283,6 @@ GNEStopFrame::getStopParameter(SUMOVehicleParameter::Stop& stop, const SumoXMLTa
     }
     // declare map to keep attributes from Frames from Frame
     std::map<SumoXMLAttr, std::string> valuesMap = stopAttributes->getAttributesAndValues(false);
-    // generate ID
-    valuesMap[SUMO_ATTR_ID] = viewNet->getNet()->generateDemandElementID(stopTag);
     // add netedit values
     if (!stop.lane.empty()) {
         myNeteditAttributes->getNeteditAttributesAndValues(valuesMap, lane);

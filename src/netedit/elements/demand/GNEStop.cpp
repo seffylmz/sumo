@@ -35,17 +35,15 @@
 
 GNEStop::GNEStop(SumoXMLTag tag, GNENet* net, const SUMOVehicleParameter::Stop& stopParameter, GNEAdditional* stoppingPlace, GNEDemandElement* stopParent) :
     GNEDemandElement(stopParent, net, GLO_STOP, tag,
-        {}, {}, {}, {stoppingPlace}, {}, {}, {stopParent}, {},  // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                        // Childrens
-    SUMOVehicleParameter::Stop(stopParameter) {
+{}, {}, {}, {stoppingPlace}, {}, {}, {stopParent}, {}),
+SUMOVehicleParameter::Stop(stopParameter) {
 }
 
 
 GNEStop::GNEStop(GNENet* net, const SUMOVehicleParameter::Stop& stopParameter, GNELane* lane, GNEDemandElement* stopParent) :
     GNEDemandElement(stopParent, net, GLO_STOP, SUMO_TAG_STOP_LANE,
-        {}, {}, {lane}, {}, {}, {}, {stopParent}, {},   // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                // Childrens
-    SUMOVehicleParameter::Stop(stopParameter) {
+{}, {}, {lane}, {}, {}, {}, {stopParent}, {}),
+SUMOVehicleParameter::Stop(stopParameter) {
 }
 
 
@@ -336,12 +334,12 @@ GNEStop::drawGL(const GUIVisualizationSettings& s) const {
         }
     } else if (myNet->getViewNet()->getDemandViewOptions().showAllPersonPlans()) {
         drawPersonPlan = true;
-    } else if (myNet->getViewNet()->getInspectedAttributeCarrier() == getParentDemandElements().front()) {
+    } else if (myNet->getViewNet()->isAttributeCarrierInspected(getParentDemandElements().front())) {
         drawPersonPlan = true;
     } else if (myNet->getViewNet()->getDemandViewOptions().getLockedPerson() == getParentDemandElements().front()) {
         drawPersonPlan = true;
-    } else if (myNet->getViewNet()->getInspectedAttributeCarrier() &&
-               (myNet->getViewNet()->getInspectedAttributeCarrier()->getAttribute(GNE_ATTR_PARENT) == getAttribute(GNE_ATTR_PARENT))) {
+    } else if (!myNet->getViewNet()->getInspectedAttributeCarriers().empty() &&
+               (myNet->getViewNet()->getInspectedAttributeCarriers().front()->getAttribute(GNE_ATTR_PARENT) == getAttribute(GNE_ATTR_PARENT))) {
         drawPersonPlan = true;
     }
     // check if stop can be drawn
@@ -363,7 +361,7 @@ GNEStop::drawGL(const GUIVisualizationSettings& s) const {
         // set Color
         GLHelper::setColor(stopColor);
         // Start with the drawing of the area traslating matrix to origin
-        glTranslated(0, 0, getType());
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, getType());
         // draw depending of details
         if (s.drawDetail(s.detailSettings.stopsDetails, exaggeration) && getParentLanes().size() > 0) {
             // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
@@ -406,7 +404,7 @@ GNEStop::drawGL(const GUIVisualizationSettings& s) const {
             // Draw name if isn't being drawn for selecting
             drawName(getCenteringBoundary().getCenter(), s.scale, s.addName);
             // check if dotted contour has to be drawn
-            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
                 // draw dooted contour depending if it's placed over a lane or over a stoppingPlace
                 if (getParentLanes().size() > 0) {
                     // GLHelper::drawShapeDottedContourAroundShape(s, getType(), myDemandElementGeometry.getShape(),
@@ -431,13 +429,13 @@ GNEStop::drawGL(const GUIVisualizationSettings& s) const {
 }
 
 
-void 
+void
 GNEStop::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
     // Stops don't use drawPartialGL
 }
 
 
-void 
+void
 GNEStop::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /* fromLane */, const GNELane* /* toLane */, const double /*offsetFront*/) const {
     // Stops don't use drawPartialGL
 }
@@ -446,8 +444,6 @@ GNEStop::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /* 
 std::string
 GNEStop::getAttribute(SumoXMLAttr key) const {
     switch (key) {
-        case SUMO_ATTR_ID:
-            return getID();
         case SUMO_ATTR_DURATION:
             if (parametersSet & STOP_DURATION_SET) {
                 return time2string(duration);
@@ -465,14 +461,6 @@ GNEStop::getAttribute(SumoXMLAttr key) const {
                 return time2string(extension);
             } else {
                 return "";
-            }
-        case SUMO_ATTR_INDEX:
-            if (index == STOP_INDEX_END) {
-                return "end";
-            } else if (index == STOP_INDEX_FIT) {
-                return "fit";
-            } else {
-                return toString(index);
             }
         case SUMO_ATTR_TRIGGERED:
             // this is an special case
@@ -571,11 +559,9 @@ GNEStop::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList* un
         return; //avoid needless changes, later logic relies on the fact that attributes have changed
     }
     switch (key) {
-        case SUMO_ATTR_ID:
         case SUMO_ATTR_DURATION:
         case SUMO_ATTR_UNTIL:
         case SUMO_ATTR_EXTENSION:
-        case SUMO_ATTR_INDEX:
         case SUMO_ATTR_TRIGGERED:
         case SUMO_ATTR_CONTAINER_TRIGGERED:
         case SUMO_ATTR_EXPECTED:
@@ -608,21 +594,11 @@ GNEStop::isValid(SumoXMLAttr key, const std::string& value) {
     // declare string error
     std::string error;
     switch (key) {
-        case SUMO_ATTR_ID:
-            return isValidDemandElementID(value);
         case SUMO_ATTR_DURATION:
         case SUMO_ATTR_UNTIL:
         case SUMO_ATTR_EXTENSION:
             if (canParse<SUMOTime>(value)) {
                 return parse<SUMOTime>(value) >= 0;
-            } else {
-                return false;
-            }
-        case SUMO_ATTR_INDEX:
-            if ((value == "fit") || (value == "end")) {
-                return true;
-            } else if (canParse<int>(value)) {
-                return (parse<int>(value) >= 0);
             } else {
                 return false;
             }
@@ -877,9 +853,6 @@ GNEStop::getEndGeometryPositionOverLane() const {
 void
 GNEStop::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
-        case SUMO_ATTR_ID:
-            myNet->getAttributeCarriers()->updateID(this, value);
-            break;
         case SUMO_ATTR_DURATION:
             if (value.empty()) {
                 parametersSet &= ~STOP_DURATION_SET;
@@ -902,15 +875,6 @@ GNEStop::setAttribute(SumoXMLAttr key, const std::string& value) {
             } else {
                 extension = string2time(value);
                 parametersSet |= STOP_EXTENSION_SET;
-            }
-            break;
-        case SUMO_ATTR_INDEX:
-            if (value == "fit") {
-                index = STOP_INDEX_FIT;
-            } else if (value == "end") {
-                index = STOP_INDEX_END;
-            } else {
-                index = parse<int>(value);
             }
             break;
         case SUMO_ATTR_TRIGGERED:
@@ -963,15 +927,24 @@ GNEStop::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         // specific of Stops over stoppingPlaces
         case SUMO_ATTR_BUS_STOP:
+            replaceAdditionalParent(SUMO_TAG_BUS_STOP, value, 0);
+            updateGeometry();
+            break;
         case SUMO_ATTR_CONTAINER_STOP:
+            replaceAdditionalParent(SUMO_TAG_CONTAINER_STOP, value, 0);
+            updateGeometry();
+            break;
         case SUMO_ATTR_CHARGING_STATION:
+            replaceAdditionalParent(SUMO_TAG_CHARGING_STATION, value, 0);
+            updateGeometry();
+            break;
         case SUMO_ATTR_PARKING_AREA:
-            replaceParentAdditional(this, value, 0);
+            replaceAdditionalParent(SUMO_TAG_PARKING_AREA, value, 0);
             updateGeometry();
             break;
         // specific of Stops over lanes
         case SUMO_ATTR_LANE:
-            replaceParentLanes(this, value);
+            replaceDemandParentLanes(value);
             updateGeometry();
             break;
         case SUMO_ATTR_STARTPOS:

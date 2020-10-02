@@ -220,7 +220,7 @@ NLBuilder::build() {
         if (myOptions.isDefault("begin")) {
             myOptions.set("begin", time2string(h.getTime()));
             if (TraCIServer::getInstance() != nullptr) {
-                TraCIServer::getInstance()->setTargetTime(h.getTime());
+                TraCIServer::getInstance()->stateLoaded(h.getTime());
             }
         }
         if (MsgHandler::getErrorInstance()->wasInformed()) {
@@ -256,7 +256,8 @@ NLBuilder::init(const bool isLibsumo) {
         SystemFrame::close();
         return nullptr;
     }
-    XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+    SystemFrame::checkOptions();
+    XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"), oc.getString("xml-validation.routes"));
     if (!MSFrame::checkOptions()) {
         throw ProcessError();
     }
@@ -338,7 +339,9 @@ NLBuilder::buildNet() {
             const std::string prefix = myOptions.getString("save-state.prefix");
             const std::string suffix = myOptions.getString("save-state.suffix");
             for (std::vector<SUMOTime>::iterator i = stateDumpTimes.begin(); i != stateDumpTimes.end(); ++i) {
-                stateDumpFiles.push_back(prefix + "_" + time2string(*i) + suffix);
+                std::string timeStamp = time2string(*i);
+                std::replace(timeStamp.begin(), timeStamp.end(), ':', '-');
+                stateDumpFiles.push_back(prefix + "_" + timeStamp + suffix);
             }
         }
     } catch (IOError& e) {

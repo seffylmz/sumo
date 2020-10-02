@@ -18,17 +18,34 @@
 
 
 from setuptools import setup
+from setuptools.dist import Distribution
+from setuptools.command.install import install
 import os
 import glob
+
 import version
 
-SUMO_VERSION = version.get_digit_version()
+SUMO_VERSION = version.get_pep440_version()
 package_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 data_files = []
 for f in sorted(glob.glob(os.path.join(os.path.dirname(package_dir), 'bin', '*.dll'))):
     f = f.lower()
     if not f.endswith("d.dll") or f[:-5] + ".dll" not in data_files:
         data_files.append(f)
+
+
+class InstallPlatlib(install):
+    def finalize_options(self):
+        install.finalize_options(self)
+        if self.distribution.has_ext_modules():
+            self.install_lib = self.install_platlib
+
+
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+    def has_ext_modules(foo):
+        return True
+
 
 setup(
     name='libsumo',
@@ -53,4 +70,6 @@ setup(
     package_data={'libsumo': ['*.pyd', '*.so', '*.dylib']},
     data_files=[("", data_files)],
     install_requires=['traci>='+SUMO_VERSION],
+    cmdclass={'install': InstallPlatlib},
+    distclass=BinaryDistribution
 )

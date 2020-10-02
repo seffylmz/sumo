@@ -25,6 +25,8 @@
 // ===========================================================================
 #include <config.h>
 
+#include <netedit/elements/GNEHierarchicalElement.h>
+
 #include "GNEDataSet.h"
 
 // ===========================================================================
@@ -42,7 +44,7 @@ class GNEGenericData;
  * @class GNEDataInterval
  * @brief An Element which don't belongs to GNENet but has influency in the simulation
  */
-class GNEDataInterval : public GNEAttributeCarrier {
+class GNEDataInterval : public GNEHierarchicalElement {
 
 public:
     /**@brief Constructor
@@ -62,10 +64,10 @@ public:
     void updateAttributeColors();
 
     /// @brief all attribute colors
-    const GNEDataSet::AttributeColors &getAllAttributeColors() const;
+    const GNEDataSet::AttributeColors& getAllAttributeColors() const;
 
     /// @brief specific attribute colors
-    const std::map<SumoXMLTag, GNEDataSet::AttributeColors> &getSpecificAttributeColors() const;
+    const std::map<SumoXMLTag, GNEDataSet::AttributeColors>& getSpecificAttributeColors() const;
 
     /// @brief get ID
     const std::string& getID() const;

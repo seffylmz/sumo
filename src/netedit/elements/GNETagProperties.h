@@ -61,6 +61,8 @@ public:
         PERSONSTOP =        1 << 17, // Person stops
         // sub data elements
         GENERICDATA =       1 << 18, // Generic data (GNEEdgeData, GNELaneData...)
+        // other
+        SYMBOL =            1 << 19, // Symbol elements (VSSSymbols, RerouterSymbols...)
     };
 
     enum TagProperty {
@@ -71,32 +73,32 @@ public:
         GEOPOSITION =               1 << 4,     // Element's position can be defined using a GEO position
         GEOSHAPE =                  1 << 5,     // Element's shape acn be defined using a GEO Shape
         DIALOG =                    1 << 6,     // Element can be edited using a dialog (GNECalibratorDialog, GNERerouterDialog...)
-        PARENT =                    1 << 7,     // Element will be writed in XML as child of another element (E3Entry -> E3Detector...)
+        SLAVE =                     1 << 7,     // Element is slave and will be writed in XML without id as child of another element (E3Entry -> E3Detector...)
         MINIMUMCHILDREN =           1 << 8,     // Element will be only writed in XML if has a minimum number of children
         REPARENT =                  1 << 9,     // Element can be reparent
         SYNONYM =                   1 << 10,    // Element will be written with a different name in der XML
-        AUTOMATICSORTING =          1 << 11,    // Element sort automatic their Children (used by Additionals)
-        SELECTABLE =                1 << 12,    // Element is selectable
-        MASKSTARTENDPOS =           1 << 13,    // Element mask attributes StartPos and EndPos as "length" (Only used in the appropiate GNEFrame)
-        MASKXYZPOSITION =           1 << 14,    // Element mask attributes X, Y and Z as "Position"
-        WRITECHILDRENSEPARATE =     1 << 15,    // Element writes their children in a separated filename
-        NOPARAMETERS =              1 << 16,    // Element doesn't accept parameters "key1=value1|key2=value2|...|keyN=valueN" (by default all tags supports parameters)
-        PARAMETERSDOUBLE =          1 << 17,    // Element only accept double parameters "key1=double1|key2=double1|...|keyN=doubleN"
-        RTREE =                     1 << 18,    // Element is placed in RTREE
-        SORTINGCHILDREN =           1 << 19,    // Element can be sorted in their parent element manually (in ACHierarchy)
-        CENTERAFTERCREATION =       1 << 20,    // Camera is moved after element creation
-        PERSONPLAN_START_EDGE =     1 << 21,    // Person plan starts in an edge
-        PERSONPLAN_END_EDGE =       1 << 22,    // Person plan ends in an edge
-        PERSONPLAN_START_BUSSTOP =  1 << 23,    // Person plan starts in a busStop
-        PERSONPLAN_END_BUSSTOP =    1 << 24,    // Person plan ends in a busStop
-        EMBEDDED_ROUTE =            1 << 25,    // Element has an ebebbed route
+        SELECTABLE =                1 << 11,    // Element is selectable
+        MASKSTARTENDPOS =           1 << 12,    // Element mask attributes StartPos and EndPos as "length" (Only used in the appropiate GNEFrame)
+        MASKXYZPOSITION =           1 << 13,    // Element mask attributes X, Y and Z as "Position"
+        WRITECHILDRENSEPARATE =     1 << 14,    // Element writes their children in a separated filename
+        NOPARAMETERS =              1 << 15,    // Element doesn't accept parameters "key1=value1|key2=value2|...|keyN=valueN" (by default all tags supports parameters)
+        PARAMETERSDOUBLE =          1 << 16,    // Element only accept double parameters "key1=double1|key2=double1|...|keyN=doubleN"
+        RTREE =                     1 << 17,    // Element is placed in RTREE
+        CENTERAFTERCREATION =       1 << 18,    // Camera is moved after element creation
+        PERSONPLAN_START_EDGE =     1 << 19,    // Person plan starts in an edge
+        PERSONPLAN_END_EDGE =       1 << 20,    // Person plan ends in an edge
+        PERSONPLAN_START_BUSSTOP =  1 << 21,    // Person plan starts in a busStop
+        PERSONPLAN_END_BUSSTOP =    1 << 22,    // Person plan ends in a busStop
+        PERSONPLAN_START_STOP =     1 << 23,    // Person plan starts in a stop
+        PERSONPLAN_END_STOP =       1 << 24,    // Person plan ends in a stop
+        EMBEDDED_ROUTE =            1 << 27,    // Element has an ebebbed route
     };
 
     /// @brief default constructor
     GNETagProperties();
 
     /// @brief parameter constructor
-    GNETagProperties(SumoXMLTag tag, int tagType, int tagProperty, GUIIcon icon, SumoXMLTag parentTag = SUMO_TAG_NOTHING, SumoXMLTag tagSynonym = SUMO_TAG_NOTHING);
+    GNETagProperties(SumoXMLTag tag, int tagType, int tagProperty, GUIIcon icon, const std::vector<SumoXMLTag>& master_tag = {}, SumoXMLTag tagSynonym = SUMO_TAG_NOTHING);
 
     /// @brief destructor
     ~GNETagProperties();
@@ -134,8 +136,8 @@ public:
     /// @brief get GUI icon associated to this Tag
     GUIIcon getGUIIcon() const;
 
-    /// @brief if Tag owns a parent, return parent tag
-    SumoXMLTag getParentTag() const;
+    /// @brief get master tags
+    const std::vector<SumoXMLTag>& getMasterTags() const;
 
     /// @brief get tag synonym
     SumoXMLTag getTagSynonym() const;
@@ -200,6 +202,12 @@ public:
     /// @brief return true if tag correspond to a generic data element
     bool isGenericData() const;
 
+    /// @brief return true if tag correspond to an element slave of another element (I.e. doesn't have their own ID)
+    bool isSlave() const;
+
+    /// @brief return true if tag correspond to a symbol element
+    bool isSymbol() const;
+
     /// @brief return true if tag correspond to a drawable element
     bool isDrawable() const;
 
@@ -221,9 +229,6 @@ public:
     /// @brief return true if tag correspond to an element that can use a geo shape
     bool hasGEOShape() const;
 
-    /// @brief return true if tag correspond to an element that can had another element as parent
-    bool hasParent() const;
-
     /// @brief return true if tag correspond to an element that will be written in XML with another tag
     bool hasTagSynonym() const;
 
@@ -242,16 +247,10 @@ public:
     /// @brief return true if Tag correspond to an element that has has to be placed in RTREE
     bool isPlacedInRTree() const;
 
-    /// @brief return true if Tag correspond to an element that can be sorted within their parent
-    bool canBeSortedManually() const;
-
     /// @brief return true if tag correspond to an element that can be reparent
     bool canBeReparent() const;
 
-    /// @brief return true if tag correspond to an element that can sort their children automatic
-    bool canAutomaticSortChildren() const;
-
-    /// @brief return true if tag correspond to an element that can sort their children automatic
+    /// @brief return true if tag correspond to an element that can write their child in a different file
     bool canWriteChildrenSeparate() const;
 
     /// @brief return true if tag correspond to an element that can mask the attributes "start" and "end" position as attribute "length"
@@ -269,11 +268,17 @@ public:
     /// @brief return true if tag correspond to a person plan that starts in an edge
     bool personPlanEndEdge() const;
 
-    /// @brief return true if tag correspond to a person plan that starts in a busStop 
+    /// @brief return true if tag correspond to a person plan that starts in a busStop
     bool personPlanStartBusStop() const;
 
     /// @brief return true if tag correspond to a person plan that starts in a busStop
     bool personPlanEndBusStop() const;
+
+    /// @brief return true if tag correspond to a person plan that starts in a Stop
+    bool personPlanStartStop() const;
+
+    /// @brief return true if tag correspond to a person plan that starts in a Stop
+    bool personPlanEndStop() const;
 
     /// @brief return true if tag correspond to an element that owns a embebbed route
     bool embebbedRoute() const;
@@ -300,8 +305,8 @@ private:
     /// @brief icon associated to this Tag
     GUIIcon myIcon;
 
-    /// @brief parent tag
-    SumoXMLTag myParentTag;
+    /// @brief vector with master tags (used by slave elements)
+    std::vector<SumoXMLTag> myMasterTags;
 
     /// @brief Tag written in XML (If is SUMO_TAG_NOTHING), original Tag name will be written)
     SumoXMLTag myTagSynonym;

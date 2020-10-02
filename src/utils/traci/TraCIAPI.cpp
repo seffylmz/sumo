@@ -40,7 +40,8 @@
 TraCIAPI::TraCIAPI()
     : edge(*this), gui(*this), inductionloop(*this),
       junction(*this), lane(*this), lanearea(*this), multientryexit(*this),
-      person(*this), poi(*this), polygon(*this), route(*this),
+      person(*this), poi(*this), polygon(*this),
+      rerouter(*this), route(*this), routeprobe(*this),
       simulation(*this), trafficlights(*this),
       vehicle(*this), vehicletype(*this),
       mySocket(nullptr) {
@@ -53,7 +54,9 @@ TraCIAPI::TraCIAPI()
     myDomains[libsumo::RESPONSE_SUBSCRIBE_PERSON_VARIABLE] = &person;
     myDomains[libsumo::RESPONSE_SUBSCRIBE_POI_VARIABLE] = &poi;
     myDomains[libsumo::RESPONSE_SUBSCRIBE_POLYGON_VARIABLE] = &polygon;
+    myDomains[libsumo::RESPONSE_SUBSCRIBE_REROUTER_VARIABLE] = &rerouter;
     myDomains[libsumo::RESPONSE_SUBSCRIBE_ROUTE_VARIABLE] = &route;
+    myDomains[libsumo::RESPONSE_SUBSCRIBE_ROUTEPROBE_VARIABLE] = &routeprobe;
     myDomains[libsumo::RESPONSE_SUBSCRIBE_SIM_VARIABLE] = &simulation;
     myDomains[libsumo::RESPONSE_SUBSCRIBE_TL_VARIABLE] = &trafficlights;
     myDomains[libsumo::RESPONSE_SUBSCRIBE_VEHICLE_VARIABLE] = &vehicle;
@@ -2412,6 +2415,24 @@ TraCIAPI::VehicleScope::getLeader(const std::string& vehicleID, double dist) con
 }
 
 
+std::pair<std::string, double>
+TraCIAPI::VehicleScope::getFollower(const std::string& vehicleID, double dist) const {
+    tcpip::Storage content;
+    content.writeByte(libsumo::TYPE_DOUBLE);
+    content.writeDouble(dist);
+    myParent.createCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::VAR_FOLLOWER, vehicleID, &content);
+    if (myParent.processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
+        myParent.myInput.readInt(); // components
+        myParent.myInput.readUnsignedByte();
+        const std::string leaderID = myParent.myInput.readString();
+        myParent.myInput.readUnsignedByte();
+        const double gap = myParent.myInput.readDouble();
+        return std::make_pair(leaderID, gap);
+    }
+    return std::make_pair("", libsumo::INVALID_DOUBLE_VALUE);
+}
+
+
 std::pair<int, int>
 TraCIAPI::VehicleScope::getLaneChangeState(const std::string& vehicleID, int direction) const {
     tcpip::Storage content;
@@ -2795,6 +2816,15 @@ TraCIAPI::VehicleScope::setSpeed(const std::string& vehicleID, double speed) con
 }
 
 void
+TraCIAPI::VehicleScope::setPreviousSpeed(const std::string& vehicleID, double prevspeed) const {
+    tcpip::Storage content;
+    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
+    content.writeDouble(prevspeed);
+    myParent.createCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_PREV_SPEED, vehicleID, &content);
+    myParent.processSet(libsumo::CMD_SET_VEHICLE_VARIABLE);
+}
+
+void
 TraCIAPI::VehicleScope::setLaneChangeMode(const std::string& vehicleID, int mode) const {
     tcpip::Storage content;
     content.writeByte(libsumo::TYPE_INTEGER);
@@ -2851,6 +2881,15 @@ TraCIAPI::VehicleScope::setSpeedFactor(const std::string& vehicleID, double fact
     content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
     content.writeDouble(factor);
     myParent.createCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_SPEED_FACTOR, vehicleID, &content);
+    myParent.processSet(libsumo::CMD_SET_VEHICLE_VARIABLE);
+}
+
+void
+TraCIAPI::VehicleScope::setMinGap(const std::string& vehicleID, double minGap) const {
+    tcpip::Storage content;
+    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
+    content.writeDouble(minGap);
+    myParent.createCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_MINGAP, vehicleID, &content);
     myParent.processSet(libsumo::CMD_SET_VEHICLE_VARIABLE);
 }
 
@@ -3124,6 +3163,11 @@ TraCIAPI::PersonScope::getLength(const std::string& personID) const {
 std::string
 TraCIAPI::PersonScope::getRoadID(const std::string& personID) const {
     return getString(libsumo::VAR_ROAD_ID, personID);
+}
+
+std::string
+TraCIAPI::PersonScope::getLaneID(const std::string& personID) const {
+    return getString(libsumo::VAR_LANE_ID, personID);
 }
 
 std::string

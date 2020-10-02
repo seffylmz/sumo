@@ -97,11 +97,17 @@ private:
     /// @brief current lane being loaded
     MSLane* myCurrentLane;
 
+    /// @brief current link being loaded
+    MSLink* myCurrentLink;
+
     /// @brief que index
     int myQueIndex;
 
-    /// @brief cached attrs (used when loading vehicles)
+    /// @brief cached attrs (used when loading vehicles or transportables)
     SUMOSAXAttributes* myAttrs;
+
+    /// @brief cached attrs for delayed loading of MSVehicleControl state
+    SUMOSAXAttributes* myVCAttrs;
 
     /// @brief cached device attrs (used when loading vehicles)
     std::vector<SUMOSAXAttributes*> myDeviceAttrs;
@@ -114,6 +120,9 @@ private:
 
     /// @brief vehicles that shall be removed when loading state
     std::set<std::string> myVehiclesToRemove;
+
+    /// @brief vehicles that were removed when loading state
+    int myRemoved;
 
 private:
     /// @brief save the state of random number generators

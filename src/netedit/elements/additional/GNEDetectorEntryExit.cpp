@@ -33,13 +33,14 @@
 // ===========================================================================
 
 GNEDetectorEntryExit::GNEDetectorEntryExit(SumoXMLTag entryExitTag, GNENet* net, GNEAdditional* parent, GNELane* lane, double pos, bool friendlyPos, bool blockMovement) :
-    GNEDetector(parent, net, GLO_DET_ENTRY, entryExitTag, pos, 0, "", "", friendlyPos, blockMovement, {
-    lane
-}) {
-    //check that this is a TAZ Source OR a TAZ Sink
+    GNEDetector(parent, net, GLO_DET_ENTRY, entryExitTag, pos, "", "", "", friendlyPos, blockMovement, 
+        {lane}) {
+    // check that this is a Entry/Exit
     if ((entryExitTag != SUMO_TAG_DET_ENTRY) && (entryExitTag != SUMO_TAG_DET_EXIT)) {
         throw InvalidArgument("Invalid E3 Child Tag");
     }
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
@@ -85,47 +86,11 @@ GNEDetectorEntryExit::fixAdditionalProblem() {
 
 
 void
-GNEDetectorEntryExit::moveGeometry(const Position& offset) {
-    // Calculate new position using old position
-    Position newPosition = myMove.originalViewPosition;
-    newPosition.add(offset);
-    // filtern position using snap to active grid
-    newPosition = myNet->getViewNet()->snapToActiveGrid(newPosition);
-    const bool storeNegative = myPositionOverLane < 0;
-    myPositionOverLane = getParentLanes().front()->getLaneShape().nearest_offset_to_point2D(newPosition, false);
-    if (storeNegative) {
-        myPositionOverLane -= getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength();
-    }
-    // Update geometry
-    updateGeometry();
-}
-
-
-void
-GNEDetectorEntryExit::commitGeometryMoving(GNEUndoList* undoList) {
-    // commit new position allowing undo/redo
-    undoList->p_begin("position of " + getTagStr());
-    undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(myPositionOverLane), myMove.firstOriginalLanePosition));
-    undoList->p_end();
-}
-
-
-void
 GNEDetectorEntryExit::updateGeometry() {
     // update geometry
     myAdditionalGeometry.updateGeometry(getParentLanes().front(), getGeometryPositionOverLane());
-
-    // Set block icon position
-    myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
-
-    // Set offset of the block icon
-    myBlockIcon.offset = Position(-1, 0);
-
-    // Set block icon rotation, and using their rotation for logo
-    myBlockIcon.setRotation(getParentLanes().front());
-
     // update E3 parent children
-    getParentAdditionals().at(0)->updateChildConnections();
+    getParentAdditionals().at(0)->updateHierarchicalConnections();
 }
 
 
@@ -137,9 +102,10 @@ GNEDetectorEntryExit::drawGL(const GUIVisualizationSettings& s) const {
     if (s.drawAdditionals(entryExitExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
         // Start drawing adding gl identificator
         glPushName(getGlID());
-        // Push detector matrix
+        // Push layer matrix
         glPushMatrix();
-        glTranslated(0, 0, getType());
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_DET_ENTRY);
         // Set color
         if (drawUsingSelectColor()) {
             GLHelper::setColor(s.colorSettings.selectedAdditionalColor);
@@ -151,8 +117,10 @@ GNEDetectorEntryExit::drawGL(const GUIVisualizationSettings& s) const {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         // Push polygon matrix
         glPushMatrix();
-        glTranslated(myAdditionalGeometry.getPosition().x(), myAdditionalGeometry.getPosition().y(), 0);
-        glRotated(myAdditionalGeometry.getRotation(), 0, 0, 1);
+        glTranslated(myAdditionalGeometry.getShape().front().x(), myAdditionalGeometry.getShape().front().y(), 0);
+        // rotate over lane
+        GNEGeometry::rotateOverLane(myAdditionalGeometry.getShapeRotations().front() - 90);
+        // scale
         glScaled(entryExitExaggeration, entryExitExaggeration, 1);
         // draw details if isn't being drawn for selecting
         if (!s.drawForRectangleSelection) {
@@ -186,16 +154,14 @@ GNEDetectorEntryExit::drawGL(const GUIVisualizationSettings& s) const {
         }
         // Pop polygon matrix
         glPopMatrix();
-        // Pop detector matrix
-        glPopMatrix();
         // Check if the distance is enought to draw details
         if (!s.drawForRectangleSelection && s.drawDetail(s.detailSettings.detectorDetails, entryExitExaggeration)) {
             // Push matrix
             glPushMatrix();
             // Traslate to center of detector
-            glTranslated(myAdditionalGeometry.getShape().getLineCenter().x(), myAdditionalGeometry.getShape().getLineCenter().y(), getType() + 0.1);
-            // Rotate depending of myBlockIcon.rotation
-            glRotated(myBlockIcon.rotation, 0, 0, -1);
+            glTranslated(myAdditionalGeometry.getShape().front().x(), myAdditionalGeometry.getShape().front().y(), getType() + 0.1);
+            // rotate over lane
+            GNEGeometry::rotateOverLane(myAdditionalGeometry.getShapeRotations().front() + 180);
             //move to logo position
             glTranslated(1.9, 0, 0);
             // scale
@@ -205,15 +171,15 @@ GNEDetectorEntryExit::drawGL(const GUIVisualizationSettings& s) const {
                 GLHelper::setColor(s.detectorSettings.E3EntryColor);
                 GLHelper::drawBoxLine(Position(0, 1), 0, 2, 1);
             } else if (drawUsingSelectColor()) {
-                GLHelper::drawText("E3", Position(), .1, 2.8, s.colorSettings.selectedAdditionalColor);
+                GLHelper::drawText("E3", Position(), .1, 2.8, s.colorSettings.selectedAdditionalColor, 180);
             } else if (myTagProperty.getTag() == SUMO_TAG_DET_ENTRY) {
-                GLHelper::drawText("E3", Position(), .1, 2.8, s.detectorSettings.E3EntryColor);
+                GLHelper::drawText("E3", Position(), .1, 2.8, s.detectorSettings.E3EntryColor, 180);
             } else if (myTagProperty.getTag() == SUMO_TAG_DET_EXIT) {
-                GLHelper::drawText("E3", Position(), .1, 2.8, s.detectorSettings.E3ExitColor);
+                GLHelper::drawText("E3", Position(), .1, 2.8, s.detectorSettings.E3ExitColor, 180);
             }
             //move to logo position
             glTranslated(1.7, 0, 0);
-            // Rotate depending of myBlockIcon.rotation
+            // rotate 90º lane
             glRotated(90, 0, 0, 1);
             // draw Entry or Exit text if isn't being drawn for selecting
             if (s.drawForRectangleSelection || s.drawForPositionSelection) {
@@ -221,28 +187,30 @@ GNEDetectorEntryExit::drawGL(const GUIVisualizationSettings& s) const {
                 GLHelper::drawBoxLine(Position(0, 1), 0, 2, 1);
             } else if (drawUsingSelectColor()) {
                 if (myTagProperty.getTag() == SUMO_TAG_DET_ENTRY) {
-                    GLHelper::drawText("Entry", Position(), .1, 1, s.colorSettings.selectedAdditionalColor);
+                    GLHelper::drawText("Entry", Position(), .1, 1, s.colorSettings.selectedAdditionalColor, 180);
                 } else if (myTagProperty.getTag() == SUMO_TAG_DET_EXIT) {
-                    GLHelper::drawText("Exit", Position(), .1, 1, s.colorSettings.selectedAdditionalColor);
+                    GLHelper::drawText("Exit", Position(), .1, 1, s.colorSettings.selectedAdditionalColor, 180);
                 }
             } else {
                 if (myTagProperty.getTag() == SUMO_TAG_DET_ENTRY) {
-                    GLHelper::drawText("Entry", Position(), .1, 1, s.detectorSettings.E3EntryColor);
+                    GLHelper::drawText("Entry", Position(), .1, 1, s.detectorSettings.E3EntryColor, 180);
                 } else if (myTagProperty.getTag() == SUMO_TAG_DET_EXIT) {
-                    GLHelper::drawText("Exit", Position(), .1, 1, s.detectorSettings.E3ExitColor);
+                    GLHelper::drawText("Exit", Position(), .1, 1, s.detectorSettings.E3ExitColor, 180);
                 }
             }
             // pop matrix
             glPopMatrix();
-            // draw lock icon
-            myBlockIcon.drawIcon(s, entryExitExaggeration, 0.4);
         }
+        // draw lock icon
+        GNEViewNetHelper::LockIcon::drawLockIcon(this, myAdditionalGeometry, entryExitExaggeration, 0, 0, true, 0.4);
+        // Pop layer matrix
+        glPopMatrix();
         // Draw name if isn't being drawn for selecting
         if (!s.drawForRectangleSelection) {
             drawName(getPositionInView(), s.scale, s.addName);
         }
         // check if dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
             // GNEGeometry::drawShapeDottedContour(s, getType(), entryExitExaggeration, myDottedGeometry);
         }
         // pop gl identificator
@@ -255,7 +223,7 @@ std::string
 GNEDetectorEntryExit::getAttribute(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_ID:
-            return getID();
+            return getParentAdditionals().front()->getID();
         case SUMO_ATTR_LANE:
             return getParentLanes().front()->getID();
         case SUMO_ATTR_POSITION:
@@ -282,7 +250,6 @@ GNEDetectorEntryExit::setAttribute(SumoXMLAttr key, const std::string& value, GN
         return; //avoid needless changes, later logic relies on the fact that attributes have changed
     }
     switch (key) {
-        case SUMO_ATTR_ID:
         case SUMO_ATTR_LANE:
         case SUMO_ATTR_POSITION:
         case SUMO_ATTR_FRIENDLY_POS:
@@ -301,8 +268,6 @@ GNEDetectorEntryExit::setAttribute(SumoXMLAttr key, const std::string& value, GN
 bool
 GNEDetectorEntryExit::isValid(SumoXMLAttr key, const std::string& value) {
     switch (key) {
-        case SUMO_ATTR_ID:
-            return isValidAdditionalID(value);
         case SUMO_ATTR_LANE:
             return (myNet->retrieveLane(value, false) != nullptr);
         case SUMO_ATTR_POSITION:
@@ -332,11 +297,8 @@ GNEDetectorEntryExit::isAttributeEnabled(SumoXMLAttr /* key */) const {
 void
 GNEDetectorEntryExit::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
-        case SUMO_ATTR_ID:
-            myNet->getAttributeCarriers()->updateID(this, value);
-            break;
         case SUMO_ATTR_LANE:
-            replaceParentLanes(this, value);
+            replaceAdditionalParentLanes(value);
             break;
         case SUMO_ATTR_POSITION:
             myPositionOverLane = parse<double>(value);
@@ -348,7 +310,7 @@ GNEDetectorEntryExit::setAttribute(SumoXMLAttr key, const std::string& value) {
             myBlockMovement = parse<bool>(value);
             break;
         case GNE_ATTR_PARENT:
-            replaceParentAdditional(this, value, 0);
+            replaceAdditionalParent(SUMO_TAG_E3DETECTOR, value, 0);
             break;
         case GNE_ATTR_SELECTED:
             if (parse<bool>(value)) {

@@ -154,9 +154,9 @@ value is also shown in the table.
 <td><p><a href="https://sumo.dlr.de/pydoc/traci._vehicle.html#VehicleDomain-getRoutingMode">getRoutingMode</a></p></td>
 </tr>
 <tr class="even">
-<td><p>TaxiFleet </p></td>
-<td><p>stingList</p></td>
-<td><p>Return the list of all taxis with the given mode:(0 : empty, 1 : pickup,2 : occupied)</p></td>
+<td><p>TaxiFleet (0x20)</p></td>
+<td><p>stringList</p></td>
+<td><p>Return the list of all taxis with the given mode:(-1: all, 0 : empty, 1 : pickup,2 : occupied, 3: pickup+occupied). Note: vehicles that are in state pickup+occupied (due to ride sharing) will also be returned when requesting mode 1 or 2</p></td>
 <td><p><a href="https://sumo.dlr.de/pydoc/traci._vehicle.html#VehicleDomain-getTaxiFleet">getTaxiFleet</a></p></td>
 </tr>
 <tr class="odd">
@@ -628,7 +628,7 @@ Each value is a bitset with the following meaning:
 - 2^9: blocked by left leader
 - 2^10: blocked by left follower
 - 2^11: blocked by right leader
-- 2^12: bloecked by right follower
+- 2^12: blocked by right follower
 - 2^13: overlapping
 - 2^14: insufficient space
 - 2^15: sublane
@@ -695,6 +695,21 @@ call](../TraCI/GenericParameters.md#get_parameter).
   seconds)
 - device.rerouting.edge:EDGE_ID (returns assumed travel time for
   rerouting where EDGE_ID is the id of a network edge)
+- device.driverstate.awareness
+- device.driverstate.errorState
+- device.driverstate.errorTimeScale
+- device.driverstate.errorNoiseIntensity
+- device.driverstate.minAwareness
+- device.driverstate.initialAwareness
+- device.driverstate.errorTimeScaleCoefficient
+- device.driverstate.errorNoiseIntensityCoefficient
+- device.driverstate.speedDifferenceErrorCoefficient
+- device.driverstate.headwayErrorCoefficient
+- device.driverstate.speedDifferenceChangePerceptionThreshold
+- device.driverstate.headwayChangePerceptionThreshold
+- device.driverstate.maximalReactionTime
+- device.driverstate.originalReactionTime
+- device.driverstate.actionStepLength
 - device.example.customValue1 (return the value of option **--device.example.parameter**)
 - device.example.customValue2 (return the value of vehicle parameter
   *example*)
@@ -703,7 +718,7 @@ call](../TraCI/GenericParameters.md#get_parameter).
   whether a device with DEVICENAME is equipped)
 
 !!! caution
-    If the vehicles does not carry the respective device an error is returned when retrieving parameters with the **device**. prefix. This happens when requestion *device.person.IDList* for a vehicle that has not carried any persons up to that point. Either check for existence or handle the error (i.e. by catching TraCIException in the python client).
+    If the vehicles does not carry the respective device an error is returned when retrieving parameters with the **device**. prefix. This happens when requesting *device.person.IDList* for a vehicle that has not carried any persons up to that point. Either check for existence or handle the error (i.e. by catching TraCIException in the python client).
 
 ### Supported LaneChangeModel Parameters
 

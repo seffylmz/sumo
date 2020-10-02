@@ -44,23 +44,22 @@
 // ---------------------------------------------------------------------------
 
 GNETAZRelData::GNETAZRelData(GNEDataInterval* dataIntervalParent, GNETAZElement* fromTAZ, GNETAZElement* toTAZ,
-        const std::map<std::string, std::string>& parameters) :
+                             const std::map<std::string, std::string>& parameters) :
     GNEGenericData(SUMO_TAG_TAZREL, GLO_TAZRELDATA, dataIntervalParent, parameters,
-        {}, {}, {}, {}, {}, {fromTAZ, toTAZ}, {}, {},   // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}) {               // Children
+{}, {}, {}, {}, {}, {fromTAZ, toTAZ}, {}, {}) {
 }
 
 
 GNETAZRelData::~GNETAZRelData() {}
 
 
-const RGBColor& 
+const RGBColor&
 GNETAZRelData::getColor() const {
     return RGBColor::ORANGE;
 }
 
 
-bool 
+bool
 GNETAZRelData::isGenericDataVisible() const {
     // first check if we're in supermode data
     if (!myNet->getViewNet()->getEditModes().isCurrentSupermodeData()) {
@@ -76,12 +75,12 @@ GNETAZRelData::isGenericDataVisible() const {
     } else if (TAZRelDataFrame->shown()) {
         // check interval
         if ((TAZRelDataFrame->getIntervalSelector()->getDataInterval() != nullptr) &&
-            (TAZRelDataFrame->getIntervalSelector()->getDataInterval() != myDataIntervalParent)) {
+                (TAZRelDataFrame->getIntervalSelector()->getDataInterval() != myDataIntervalParent)) {
             return false;
         }
         // check attribute
         if ((TAZRelDataFrame->getAttributeSelector()->getFilteredAttribute().size() > 0) &&
-            (getParametersMap().count(TAZRelDataFrame->getAttributeSelector()->getFilteredAttribute()) == 0)) {
+                (getParametersMap().count(TAZRelDataFrame->getAttributeSelector()->getFilteredAttribute()) == 0)) {
             return false;
         }
         // all checks ok, then return true
@@ -141,19 +140,19 @@ GNETAZRelData::fixGenericDataProblem() {
 }
 
 
-void 
+void
 GNETAZRelData::drawGL(const GUIVisualizationSettings& /*s*/) const {
     // Nothing to draw
 }
 
 
-void 
+void
 GNETAZRelData::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
     //
 }
 
 
-void 
+void
 GNETAZRelData::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/, const double /*offsetFront*/) const {
     //
 }
@@ -265,12 +264,12 @@ GNETAZRelData::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
         case SUMO_ATTR_FROM: {
             // change first TAZ
-            replaceFirstParentTAZElement(this, myNet->retrieveTAZElement(SUMO_TAG_TAZ, value));
+            replaceFirstParentTAZElement(SUMO_TAG_TAZ, value);
             break;
         }
         case SUMO_ATTR_TO: {
             // change last TAZ
-            replaceLastParentTAZElement(this, myNet->retrieveTAZElement(SUMO_TAG_TAZ, value));
+            replaceLastParentTAZElement(SUMO_TAG_TAZ, value);
             break;
         }
         case GNE_ATTR_SELECTED:

@@ -25,18 +25,12 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Shape.h>
-#include <netedit/elements/additional/GNEAdditional.h>
 #include <netedit/elements/additional/GNEPOI.h>
 #include <netedit/elements/additional/GNEPoly.h>
-#include <netedit/elements/additional/GNETAZElement.h>
 #include <netedit/elements/data/GNEDataInterval.h>
-#include <netedit/elements/data/GNEDataSet.h>
-#include <netedit/elements/data/GNEGenericData.h>
 #include <netedit/elements/demand/GNEVehicleType.h>
 #include <netedit/elements/network/GNEConnection.h>
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/elements/network/GNEJunction.h>
-#include <netedit/elements/network/GNELane.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
 #include <utils/router/DijkstraRouter.h>
 
@@ -50,28 +44,28 @@ GNENetHelper::AttributeCarriers::AttributeCarriers(GNENet* net) :
     myNet(net),
     myAllowUndoShapes(true) {
     // fill additionals with tags
-    auto listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::ADDITIONALELEMENT, false);
-    for (const auto& additionalTag : listOfTags) {
-        myAdditionals.insert(std::make_pair(additionalTag, std::map<std::string, GNEAdditional*>()));
+    auto additionalTags = GNEAttributeCarrier::getAllowedTagsByCategory(GNETagProperties::TagType::ADDITIONALELEMENT, false);
+    for (const auto& additionalTag : additionalTags) {
+        myAdditionals.insert(std::make_pair(additionalTag.first, std::map<std::string, GNEAdditional*>()));
     }
     // fill shapes with tags
-    listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::SHAPE, false);
-    for (const auto& shapeTag : listOfTags) {
-        myShapes.insert(std::make_pair(shapeTag, std::map<std::string, GNEShape*>()));
+    auto shapeTags = GNEAttributeCarrier::getAllowedTagsByCategory(GNETagProperties::TagType::SHAPE, false);
+    for (const auto& shapeTag : shapeTags) {
+        myShapes.insert(std::make_pair(shapeTag.first, std::map<std::string, GNEShape*>()));
     }
     // fill TAZElements with tags
-    listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::TAZELEMENT, false);
-    for (const auto& TAZElementTag : listOfTags) {
-        myTAZElements.insert(std::make_pair(TAZElementTag, std::map<std::string, GNETAZElement*>()));
+    auto TAZElementTags = GNEAttributeCarrier::getAllowedTagsByCategory(GNETagProperties::TagType::TAZELEMENT, false);
+    for (const auto& TAZElementTag : TAZElementTags) {
+        myTAZElements.insert(std::make_pair(TAZElementTag.first, std::map<std::string, GNETAZElement*>()));
     }
     // fill demand elements with tags
-    listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::DEMANDELEMENT, false);
-    for (const auto& demandTag : listOfTags) {
-        myDemandElements.insert(std::make_pair(demandTag, std::map<std::string, GNEDemandElement*>()));
+    auto demandElementTags = GNEAttributeCarrier::getAllowedTagsByCategory(GNETagProperties::TagType::DEMANDELEMENT, false);
+    for (const auto& demandElementTag : demandElementTags) {
+        myDemandElements.insert(std::make_pair(demandElementTag.first, std::map<std::string, GNEDemandElement*>()));
     }
-    listOfTags = GNEAttributeCarrier::allowedTagsByCategory(GNETagProperties::TagType::STOP, false);
-    for (const auto& stopTag : listOfTags) {
-        myDemandElements.insert(std::make_pair(stopTag, std::map<std::string, GNEDemandElement*>()));
+    auto stopTags = GNEAttributeCarrier::getAllowedTagsByCategory(GNETagProperties::TagType::STOP, false);
+    for (const auto& stopTag : stopTags) {
+        myDemandElements.insert(std::make_pair(stopTag.first, std::map<std::string, GNEDemandElement*>()));
     }
 }
 
@@ -212,8 +206,8 @@ GNENetHelper::AttributeCarriers::registerEdge(GNEEdge* edge) {
     // add edge into grid
     myNet->addGLObjectIntoGrid(edge);
     // Add references into GNEJunctions
-    edge->getFirstParentJunction()->addOutgoingGNEEdge(edge);
-    edge->getSecondParentJunction()->addIncomingGNEEdge(edge);
+    edge->getParentJunctions().front()->addOutgoingGNEEdge(edge);
+    edge->getParentJunctions().back()->addIncomingGNEEdge(edge);
     return edge;
 }
 
@@ -376,12 +370,6 @@ GNENetHelper::AttributeCarriers::getDemandElements() const {
 }
 
 
-const std::map<std::string, GNEDemandElement*>&
-GNENetHelper::AttributeCarriers::getVehicleDepartures() const {
-    return myVehicleDepartures;
-}
-
-
 void
 GNENetHelper::AttributeCarriers::clearDemandElements() {
     // clear elements in grid
@@ -413,20 +401,6 @@ GNENetHelper::AttributeCarriers::addDefaultVTypes() {
     GNEVehicleType* defaultPersonType = new GNEVehicleType(myNet, DEFAULT_PEDTYPE_ID, SVC_PEDESTRIAN, SUMO_TAG_PTYPE);
     myDemandElements.at(defaultPersonType->getTagProperty().getTag()).insert(std::make_pair(defaultPersonType->getID(), defaultPersonType));
     defaultPersonType->incRef("GNENet::DEFAULT_PEDTYPE_ID");
-}
-
-
-void
-GNENetHelper::AttributeCarriers::updateDemandElementBegin(const std::string& oldBegin, GNEDemandElement* demandElement) {
-    if (myVehicleDepartures.count(oldBegin + "_" + demandElement->getID()) == 0) {
-        throw ProcessError(demandElement->getTagStr() + " with old begin='" + oldBegin + "' doesn't exist");
-    } else {
-        // remove an insert demand element again into vehicleDepartures container
-        if (demandElement->getTagProperty().isVehicle()) {
-            myVehicleDepartures.erase(oldBegin + "_" + demandElement->getID());
-            myVehicleDepartures.insert(std::make_pair(demandElement->getBegin() + "_" + demandElement->getID(), demandElement));
-        }
-    }
 }
 
 
@@ -482,9 +456,9 @@ GNENetHelper::AttributeCarriers::insertJunction(GNEJunction* junction) {
 
 void
 GNENetHelper::AttributeCarriers::deleteSingleJunction(GNEJunction* junction) {
-    // remove it from Inspector Frame and AttributeCarrierHierarchy
-    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(junction);
-    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(junction);
+    // remove it from inspected elements and HierarchicalElementTree
+    myNet->getViewNet()->removeFromAttributeCarrierInspected(junction);
+    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(junction);
     // Remove from grid and container
     myNet->removeGLObjectFromGrid(junction);
     myJunctions.erase(junction->getMicrosimID());
@@ -532,9 +506,9 @@ GNENetHelper::AttributeCarriers::insertEdge(GNEEdge* edge) {
 
 void
 GNENetHelper::AttributeCarriers::deleteSingleEdge(GNEEdge* edge) {
-    // remove it from Inspector Frame and AttributeCarrierHierarchy
-    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(edge);
-    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(edge);
+    // remove it from inspected elements and HierarchicalElementTree
+    myNet->getViewNet()->removeFromAttributeCarrierInspected(edge);
+    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(edge);
     // remove edge from visual grid and container
     myNet->removeGLObjectFromGrid(edge);
     myEdges.erase(edge->getMicrosimID());
@@ -543,8 +517,8 @@ GNENetHelper::AttributeCarriers::deleteSingleEdge(GNEEdge* edge) {
     edge->decRef("GNENet::deleteSingleEdge");
     edge->setResponsible(true);
     // Remove refrences from GNEJunctions
-    edge->getFirstParentJunction()->removeOutgoingGNEEdge(edge);
-    edge->getSecondParentJunction()->removeIncomingGNEEdge(edge);
+    edge->getParentJunctions().front()->removeOutgoingGNEEdge(edge);
+    edge->getParentJunctions().back()->removeIncomingGNEEdge(edge);
 }
 
 
@@ -576,7 +550,7 @@ GNENetHelper::AttributeCarriers::updateEdgeID(GNEAttributeCarrier* AC, const std
 
 
 bool
-GNENetHelper::AttributeCarriers::additionalExist(GNEAdditional* additional) const {
+GNENetHelper::AttributeCarriers::additionalExist(const GNEAdditional* additional) const {
     // first check that additional pointer is valid
     if (additional) {
         return myAdditionals.at(additional->getTagProperty().getTag()).find(additional->getID()) !=
@@ -589,42 +563,51 @@ GNENetHelper::AttributeCarriers::additionalExist(GNEAdditional* additional) cons
 
 void
 GNENetHelper::AttributeCarriers::insertAdditional(GNEAdditional* additional) {
-    // Check if additional element exists before insertion
-    if (!additionalExist(additional)) {
-        myAdditionals.at(additional->getTagProperty().getTag()).insert(std::make_pair(additional->getID(), additional));
-        // add element in grid
-        myNet->addGLObjectIntoGrid(additional);
-        // update geometry after insertion of additionals if myUpdateGeometryEnabled is enabled
-        if (myNet->isUpdateGeometryEnabled()) {
-            additional->updateGeometry();
+    // check if additional is a slave
+    if (!additional->getTagProperty().isSlave()) {
+        // check if previously was inserted
+        if (!additionalExist(additional)) {
+            // insert additional
+            myAdditionals.at(additional->getTagProperty().getTag()).insert(std::make_pair(additional->getID(), additional));
+        } else {
+            throw ProcessError(additional->getTagStr() + " with ID='" + additional->getID() + "' already exist");
         }
-        // additionals has to be saved
-        myNet->requireSaveAdditionals(true);
-    } else {
-        throw ProcessError(additional->getTagStr() + " with ID='" + additional->getID() + "' already exist");
     }
+    // add element in grid
+    if (additional->getTagProperty().isPlacedInRTree()) {
+        myNet->addGLObjectIntoGrid(additional);
+    }
+    // update geometry after insertion of additionals if myUpdateGeometryEnabled is enabled
+    if (myNet->isUpdateGeometryEnabled()) {
+        additional->updateGeometry();
+    }
+    // additionals has to be saved
+    myNet->requireSaveAdditionals(true);
 }
 
 
-bool
+void
 GNENetHelper::AttributeCarriers::deleteAdditional(GNEAdditional* additional) {
-    // first check that additional pointer is valid
-    if (additionalExist(additional)) {
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(additional);
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(additional);
-        // obtain demand element and erase it from container
-        auto it = myAdditionals.at(additional->getTagProperty().getTag()).find(additional->getID());
-        myAdditionals.at(additional->getTagProperty().getTag()).erase(it);
-        // remove element from grid
-        myNet->removeGLObjectFromGrid(additional);
-        // additionals has to be saved
-        myNet->requireSaveAdditionals(true);
-        // additional removed, then return true
-        return true;
-    } else {
-        throw ProcessError("Invalid additional pointer");
+    // check if additional is a slave
+    if (!additional->getTagProperty().isSlave()) {
+        // check if previously was inserted
+        if (additionalExist(additional)) {
+            // remove it from inspected elements and HierarchicalElementTree
+            myNet->getViewNet()->removeFromAttributeCarrierInspected(additional);
+            myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(additional);
+            // obtain additional iterator and erase it from container
+            auto it = myAdditionals.at(additional->getTagProperty().getTag()).find(additional->getID());
+            myAdditionals.at(additional->getTagProperty().getTag()).erase(it);
+        } else {
+            throw ProcessError("Invalid additional pointer");
+        }
     }
+    // remove element from grid
+    if (additional->getTagProperty().isPlacedInRTree()) {
+        myNet->removeGLObjectFromGrid(additional);
+    }
+    // additionals has to be saved
+    myNet->requireSaveAdditionals(true);
 }
 
 
@@ -650,7 +633,7 @@ GNENetHelper::AttributeCarriers::updateAdditionalID(GNEAttributeCarrier* AC, con
 
 
 bool
-GNENetHelper::AttributeCarriers::shapeExist(GNEShape* shape) const {
+GNENetHelper::AttributeCarriers::shapeExist(const GNEShape* shape) const {
     // first check that shape pointer is valid
     if (shape) {
         return myShapes.at(shape->getTagProperty().getTag()).find(shape->getID()) !=
@@ -680,13 +663,13 @@ GNENetHelper::AttributeCarriers::insertShape(GNEShape* shape) {
 }
 
 
-bool
+void
 GNENetHelper::AttributeCarriers::deleteShape(GNEShape* shape) {
     // first check that shape pointer is valid
     if (shapeExist(shape)) {
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(shape);
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(shape);
+        // remove it from inspected elements and HierarchicalElementTree
+        myNet->getViewNet()->removeFromAttributeCarrierInspected(shape);
+        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(shape);
         // obtain demand element and erase it from container
         auto it = myShapes.at(shape->getTagProperty().getTag()).find(shape->getID());
         myShapes.at(shape->getTagProperty().getTag()).erase(it);
@@ -694,8 +677,6 @@ GNENetHelper::AttributeCarriers::deleteShape(GNEShape* shape) {
         myNet->removeGLObjectFromGrid(shape);
         // shapes has to be saved
         myNet->requireSaveAdditionals(true);
-        // shape removed, then return true
-        return true;
     } else {
         throw ProcessError("Invalid shape pointer");
     }
@@ -724,11 +705,11 @@ GNENetHelper::AttributeCarriers::updateShapeID(GNEAttributeCarrier* AC, const st
 
 
 bool
-GNENetHelper::AttributeCarriers::TAZElementExist(GNETAZElement* TAZElement) const {
+GNENetHelper::AttributeCarriers::TAZElementExist(const GNETAZElement* TAZElement) const {
     // first check that TAZElement pointer is valid
     if (TAZElement) {
         return myTAZElements.at(TAZElement->getTagProperty().getTag()).find(TAZElement->getID()) !=
-            myTAZElements.at(TAZElement->getTagProperty().getTag()).end();
+               myTAZElements.at(TAZElement->getTagProperty().getTag()).end();
     } else {
         throw ProcessError("Invalid TAZElement pointer");
     }
@@ -754,13 +735,13 @@ GNENetHelper::AttributeCarriers::insertTAZElement(GNETAZElement* TAZElement) {
 }
 
 
-bool
+void
 GNENetHelper::AttributeCarriers::deleteTAZElement(GNETAZElement* TAZElement) {
     // first check that TAZElement pointer is valid
     if (TAZElementExist(TAZElement)) {
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(TAZElement);
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(TAZElement);
+        // remove it from inspected elements and HierarchicalElementTree
+        myNet->getViewNet()->removeFromAttributeCarrierInspected(TAZElement);
+        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(TAZElement);
         // obtain demand element and erase it from container
         auto it = myTAZElements.at(TAZElement->getTagProperty().getTag()).find(TAZElement->getID());
         myTAZElements.at(TAZElement->getTagProperty().getTag()).erase(it);
@@ -768,8 +749,6 @@ GNENetHelper::AttributeCarriers::deleteTAZElement(GNETAZElement* TAZElement) {
         myNet->removeGLObjectFromGrid(TAZElement);
         // TAZElements has to be saved
         myNet->requireSaveAdditionals(true);
-        // TAZElement removed, then return true
-        return true;
     } else {
         throw ProcessError("Invalid TAZElement pointer");
     }
@@ -798,7 +777,7 @@ GNENetHelper::AttributeCarriers::updateTAZElementID(GNEAttributeCarrier* AC, con
 
 
 bool
-GNENetHelper::AttributeCarriers::demandElementExist(GNEDemandElement* demandElement) const {
+GNENetHelper::AttributeCarriers::demandElementExist(const GNEDemandElement* demandElement) const {
     // first check that demandElement pointer is valid
     if (demandElement) {
         return myDemandElements.at(demandElement->getTagProperty().getTag()).find(demandElement->getID()) !=
@@ -811,59 +790,48 @@ GNENetHelper::AttributeCarriers::demandElementExist(GNEDemandElement* demandElem
 
 void
 GNENetHelper::AttributeCarriers::insertDemandElement(GNEDemandElement* demandElement) {
-    // Check if demandElement element exists before insertion
-    if (!demandElementExist(demandElement)) {
-        // insert in demandElements container
-        myDemandElements.at(demandElement->getTagProperty().getTag()).insert(std::make_pair(demandElement->getID(), demandElement));
-        // also insert in vehicleDepartures container if it's either a vehicle or a person
-        if (demandElement->getTagProperty().isVehicle() || demandElement->getTagProperty().isPerson()) {
-            if (myVehicleDepartures.count(demandElement->getBegin() + "_" + demandElement->getID()) != 0) {
-                throw ProcessError(demandElement->getTagStr() + " with departure ='" + demandElement->getBegin() + "_" + demandElement->getID() + "' already inserted");
-            } else {
-                myVehicleDepartures.insert(std::make_pair(demandElement->getBegin() + "_" + demandElement->getID(), demandElement));
-            }
+    // check if demandElement is a slave
+    if (!demandElement->getTagProperty().isSlave()) {
+        // Check if demandElement element exists before insertion
+        if (!demandElementExist(demandElement)) {
+            // insert in demandElements container
+            myDemandElements.at(demandElement->getTagProperty().getTag()).insert(std::make_pair(demandElement->getID(), demandElement));
+        } else {
+            throw ProcessError(demandElement->getTagStr() + " with ID='" + demandElement->getID() + "' already exist");
         }
-        // add element in grid
-        myNet->addGLObjectIntoGrid(demandElement);
-        // update geometry after insertion of demandElements if myUpdateGeometryEnabled is enabled
-        if (myNet->isUpdateGeometryEnabled()) {
-            demandElement->updateGeometry();
-        }
-        // demandElements has to be saved
-        myNet->requireSaveDemandElements(true);
-    } else {
-        throw ProcessError(demandElement->getTagStr() + " with ID='" + demandElement->getID() + "' already exist");
     }
+    // add element in grid
+    myNet->addGLObjectIntoGrid(demandElement);
+    // update geometry after insertion of demandElements if myUpdateGeometryEnabled is enabled
+    if (myNet->isUpdateGeometryEnabled()) {
+        demandElement->updateGeometry();
+    }
+    // demandElements has to be saved
+    myNet->requireSaveDemandElements(true);
+
 }
 
 
-bool
+void
 GNENetHelper::AttributeCarriers::deleteDemandElement(GNEDemandElement* demandElement) {
-    // first check that demandElement pointer is valid
-    if (demandElementExist(demandElement)) {
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(demandElement);
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(demandElement);
-        // obtain demand element and erase it from container
-        auto it = myDemandElements.at(demandElement->getTagProperty().getTag()).find(demandElement->getID());
-        myDemandElements.at(demandElement->getTagProperty().getTag()).erase(it);
-        // also remove fromvehicleDepartures container if it's either a vehicle or a person
-        if (demandElement->getTagProperty().isVehicle() || demandElement->getTagProperty().isPerson()) {
-            if (myVehicleDepartures.count(demandElement->getBegin() + "_" + demandElement->getID()) == 0) {
-                throw ProcessError(demandElement->getTagStr() + " with departure ='" + demandElement->getBegin() + "_" + demandElement->getID() + "' doesn't exist");
-            } else {
-                myVehicleDepartures.erase(demandElement->getBegin() + "_" + demandElement->getID());
-            }
+    // check if demandElement is a slave
+    if (!demandElement->getTagProperty().isSlave()) {
+        // first check that demandElement pointer is valid
+        if (demandElementExist(demandElement)) {
+            // remove it from inspected elements and HierarchicalElementTree
+            myNet->getViewNet()->removeFromAttributeCarrierInspected(demandElement);
+            myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(demandElement);
+            // obtain demand element and erase it from container
+            auto it = myDemandElements.at(demandElement->getTagProperty().getTag()).find(demandElement->getID());
+            myDemandElements.at(demandElement->getTagProperty().getTag()).erase(it);
+        } else {
+            throw ProcessError("Invalid demandElement pointer");
         }
-        // remove element from grid
-        myNet->removeGLObjectFromGrid(demandElement);
-        // demandElements has to be saved
-        myNet->requireSaveDemandElements(true);
-        // demandElement removed, then return true
-        return true;
-    } else {
-        throw ProcessError("Invalid demandElement pointer");
     }
+    // remove element from grid
+    myNet->removeGLObjectFromGrid(demandElement);
+    // demandElements has to be saved
+    myNet->requireSaveDemandElements(true);
 }
 
 
@@ -877,7 +845,7 @@ GNENetHelper::AttributeCarriers::updateDemandElementID(GNEAttributeCarrier* AC, 
         // retrieve demand element
         GNEDemandElement* demandElement = myDemandElements.at(AC->getTagProperty().getTag()).at(AC->getID());
         // get embebbed route
-        GNEDemandElement *embebbedRoute = nullptr;
+        GNEDemandElement* embebbedRoute = nullptr;
         if (demandElement->getTagProperty().embebbedRoute()) {
             embebbedRoute = demandElement->getChildDemandElements().back();
         }
@@ -886,14 +854,6 @@ GNENetHelper::AttributeCarriers::updateDemandElementID(GNEAttributeCarrier* AC, 
         // remove embebbed route from container
         if (embebbedRoute) {
             myDemandElements.at(GNE_TAG_ROUTE_EMBEDDED).erase(embebbedRoute->getID());
-        }
-        // if is vehicle, remove it from vehicleDepartures
-        if (demandElement->getTagProperty().isVehicle()) {
-            if (myVehicleDepartures.count(demandElement->getBegin() + "_" + demandElement->getID()) == 0) {
-                throw ProcessError(demandElement->getTagStr() + " with ID='" + demandElement->getID() + "' doesn't exist in AttributeCarriers.vehicleDepartures");
-            } else {
-                myVehicleDepartures.erase(demandElement->getBegin() + "_" + demandElement->getID());
-            }
         }
         // set new ID in demand
         demandElement->setMicrosimID(newID);
@@ -905,10 +865,6 @@ GNENetHelper::AttributeCarriers::updateDemandElementID(GNEAttributeCarrier* AC, 
             embebbedRoute->setMicrosimID(embebbedRoute->getID());
             myDemandElements.at(GNE_TAG_ROUTE_EMBEDDED).insert(std::make_pair(embebbedRoute->getID(), embebbedRoute));
         }
-        // if is vehicle, add it into vehicleDepartures
-        if (demandElement->getTagProperty().isVehicle()) {
-            myVehicleDepartures.insert(std::make_pair(demandElement->getBegin() + "_" + demandElement->getID(), demandElement));
-        }
         // myDemandElements has to be saved
         myNet->requireSaveDemandElements(true);
     }
@@ -916,10 +872,10 @@ GNENetHelper::AttributeCarriers::updateDemandElementID(GNEAttributeCarrier* AC, 
 
 
 bool
-GNENetHelper::AttributeCarriers::dataSetExist(GNEDataSet* dataSet) const {
+GNENetHelper::AttributeCarriers::dataSetExist(const GNEDataSet* dataSet) const {
     // first check that dataSet pointer is valid
     if (dataSet) {
-        for (const auto &dataset : myDataSets) {
+        for (const auto& dataset : myDataSets) {
             if (dataset.second == dataSet) {
                 return true;
             }
@@ -947,21 +903,19 @@ GNENetHelper::AttributeCarriers::insertDataSet(GNEDataSet* dataSet) {
 }
 
 
-bool
+void
 GNENetHelper::AttributeCarriers::deleteDataSet(GNEDataSet* dataSet) {
     // first check that dataSet pointer is valid
     if (dataSetExist(dataSet)) {
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(dataSet);
-        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(dataSet);
+        // remove it from inspected elements and HierarchicalElementTree
+        myNet->getViewNet()->removeFromAttributeCarrierInspected(dataSet);
+        myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(dataSet);
         // obtain demand element and erase it from container
         myDataSets.erase(myDataSets.find(dataSet->getID()));
         // dataSets has to be saved
         myNet->requireSaveDataElements(true);
         // update interval toolbar
         myNet->getViewNet()->getIntervalBar().updateIntervalBar();
-        // dataSet removed, then return true
-        return true;
     } else {
         throw ProcessError("Invalid dataSet pointer");
     }
@@ -1029,7 +983,8 @@ GNENetHelper::PathCalculator::calculatePath(const SUMOVehicleClass vClass, const
     if (partialEdges.size() == 0) {
         // partial edges empty, then return a empty vector
         return solution;
-    } if (partialEdges.size() == 1) {
+    }
+    if (partialEdges.size() == 1) {
         // if there is only one partialEdges, route has only one edge
         solution.push_back(partialEdges.front());
     } else {
@@ -1099,7 +1054,7 @@ GNENetHelper::PathCalculator::calculateReachability(const SUMOVehicleClass vClas
         traveltime += edge->getNBEdge()->getLength() / MIN2(edge->getNBEdge()->getSpeed(), defaultMaxSpeed);
         std::vector<GNEEdge*> sucessors;
         // get sucessor edges
-        for (const auto& sucessorEdge : edge->getSecondParentJunction()->getGNEOutgoingEdges()) {
+        for (const auto& sucessorEdge : edge->getParentJunctions().back()->getGNEOutgoingEdges()) {
             // check if edge is connected with sucessor edge
             if (consecutiveEdgesConnected(vClass, edge, sucessorEdge)) {
                 sucessors.push_back(sucessorEdge);
@@ -1131,7 +1086,7 @@ GNENetHelper::PathCalculator::consecutiveEdgesConnected(const SUMOVehicleClass v
         return true;
     } else {
         // iterate over connections of from edge
-        for (const auto &fromLane : from->getLanes()) {
+        for (const auto& fromLane : from->getLanes()) {
             for (const auto& fromConnection : from->getGNEConnections()) {
                 // within from loop, iterate ove to lanes
                 for (const auto& toLane : to->getLanes()) {
@@ -1140,8 +1095,8 @@ GNENetHelper::PathCalculator::consecutiveEdgesConnected(const SUMOVehicleClass v
                         const NBEdge::Lane NBFromLane = from->getNBEdge()->getLaneStruct(fromLane->getIndex());
                         const NBEdge::Lane NBToLane = to->getNBEdge()->getLaneStruct(toLane->getIndex());
                         // check vClass
-                        if (((NBFromLane.permissions & vClass) == vClass) && 
-                            ((NBToLane.permissions & vClass) == vClass)) {
+                        if (((NBFromLane.permissions & vClass) == vClass) &&
+                                ((NBToLane.permissions & vClass) == vClass)) {
                             return true;
                         }
                     }
@@ -1153,15 +1108,15 @@ GNENetHelper::PathCalculator::consecutiveEdgesConnected(const SUMOVehicleClass v
 }
 
 
-bool 
+bool
 GNENetHelper::PathCalculator::busStopConnected(const GNEAdditional* busStop, const GNEEdge* edge) const {
     if (busStop->getTagProperty().getTag() != SUMO_TAG_BUS_STOP) {
         return false;
     }
     // check if busstop is placed over a pedestrian lane
     if ((busStop->getParentLanes().front()->getParentEdge() == edge) &&
-        (edge->getNBEdge()->getLaneStruct(busStop->getParentLanes().front()->getIndex()).permissions & SVC_PEDESTRIAN) != 0) {
-        // busStop is placed over an lane that supports pedestrians, then return true 
+            (edge->getNBEdge()->getLaneStruct(busStop->getParentLanes().front()->getIndex()).permissions & SVC_PEDESTRIAN) != 0) {
+        // busStop is placed over an lane that supports pedestrians, then return true
         return true;
     }
     // obtain a list with all edge lanes that supports pedestrians
@@ -1172,10 +1127,10 @@ GNENetHelper::PathCalculator::busStopConnected(const GNEAdditional* busStop, con
         }
     }
     // check if exist an access between busStop and pedestrian lanes
-    for (const auto &access : busStop->getChildAdditionals()) {
+    for (const auto& access : busStop->getChildAdditionals()) {
         // check that child is an access
         if (access->getTagProperty().getTag() == SUMO_TAG_ACCESS) {
-            for (const auto &lane : pedestrianLanes) {
+            for (const auto& lane : pedestrianLanes) {
                 if (access->getParentLanes().front() == lane) {
                     // found, then return true
                     return true;

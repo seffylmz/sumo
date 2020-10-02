@@ -181,6 +181,8 @@ enum {
     MID_HOTKEY_F9_EDIT_VIEWSCHEME,
     /// @brief open options menu
     MID_HOTKEY_F10_OPTIONSMENU,
+    /// @brief set/clear front element
+    MID_HOTKEY_F11_FRONTELEMENT,
     /// @brief open about dialog
     MID_HOTKEY_F12_ABOUT,
     /// @}
@@ -331,6 +333,8 @@ enum {
     MID_LOCATESTOP,
     /// @brief Locate person - button
     MID_LOCATEPERSON,
+    /// @brief Locate container - button
+    MID_LOCATECONTAINER,
     /// @brief Locate TLS - button
     MID_LOCATETLS,
     /// @brief Locate addtional structure - button
@@ -735,13 +739,21 @@ enum {
     MID_GNE_EDGEPATH_FINISH,
     /// @brief remove last inserted element in path
     MID_GNE_EDGEPATH_REMOVELAST,
-    /// @brief enable or disable show ppath candidates
+    /// @brief enable or disable show path candidates
     MID_GNE_EDGEPATH_SHOWCANDIDATES,
-    /// @brief In AttributeCarrierHierarchy list, show child menu
+    /// @brief abort lane path creation
+    MID_GNE_LANEPATH_ABORT,
+    /// @brief finish lane path creation
+    MID_GNE_LANEPATH_FINISH,
+    /// @brief remove last inserted element in path
+    MID_GNE_LANEPATH_REMOVELAST,
+    /// @brief enable or disable show path candidates
+    MID_GNE_LANEPATH_SHOWCANDIDATES,
+    /// @brief In HierarchicalElementTree list, show child menu
     MID_GNE_ACHIERARCHY_SHOWCHILDMENU,
-    /// @brief In AttributeCarrierHierarchy list, move element to up
+    /// @brief In HierarchicalElementTree list, move element to up
     MID_GNE_ACHIERARCHY_MOVEUP,
-    /// @brief In AttributeCarrierHierarchy list, move element to down
+    /// @brief In HierarchicalElementTree list, move element to down
     MID_GNE_ACHIERARCHY_MOVEDOWN,
     /// @brief start drawing polygon
     MID_GNE_STARTDRAWING,
@@ -757,6 +769,8 @@ enum {
     MID_GNE_OVERLAPPED_SHOWLIST,
     /// @brief list item selected in overlapped modul
     MID_GNE_OVERLAPPED_ITEMSELECTED,
+    /// @brief mark item as front element
+    MID_GNE_MARKFRONTELEMENT,
     /// @}
 
     /// @name GNESelectorFrame messages

@@ -40,8 +40,12 @@ def parse_args():
     argParser.add_argument("-o", "--output-file", dest="outFile", help="The geojson output file name")
     argParser.add_argument("-l", "--lanes", action="store_true", default=False,
                            help="Export lane geometries instead of edge geometries")
+    argParser.add_argument("--junctions", action="store_true", default=False,
+                           help="Export junction geometries")
     argParser.add_argument("-i", "--internal", action="store_true", default=False,
                            help="Export internal geometries")
+    argParser.add_argument("-j", "--junction-coordinates", dest="junctionCoords", action="store_true", default=False,
+                           help="Append junction coordinates to edge shapes")
     argParser.add_argument("--edgedata-timeline", action="store_true", default=False, dest="edgedataTimeline",
                            help="exports all time intervals (by default only the first is exported)")
 
@@ -59,7 +63,7 @@ def getGeometries(options, net):
             for lane in edge.getLanes():
                 yield lane.getID(), lane.getShape(), lane.getWidth()
         else:
-            yield edge.getID(), edge.getShape(), sum([l.getWidth() for l in edge.getLanes()])
+            yield edge.getID(), edge.getShape(options.junctionCoords), sum([l.getWidth() for l in edge.getLanes()])
 
 
 if __name__ == "__main__":
@@ -115,6 +119,23 @@ if __name__ == "__main__":
         }
 
         features.append(feature)
+
+    if options.junctions:
+        for junction in net.getNodes():
+            lonLatGeometry = [net.convertXY2LonLat(x, y) for x, y in junction.getShape()]
+            feature = {}
+            feature["type"] = "Feature"
+            feature["properties"] = {
+                "element": 'junction',
+                "id": junction.getID(),
+            }
+            feature["properties"]["name"] = net.getEdge(edgeID).getName()
+
+            feature["geometry"] = {
+                "type": "LineString",
+                "coordinates": [[x, y] for x, y in lonLatGeometry]
+            }
+            features.append(feature)
 
     geojson = {}
     geojson["type"] = "FeatureCollection"

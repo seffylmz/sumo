@@ -170,6 +170,10 @@ MSTransportableControl::checkWaiting(MSNet* net, const SUMOTime time) {
     }
 }
 
+void
+MSTransportableControl::forceDeparture() {
+    myRunningNumber++;
+}
 
 void
 MSTransportableControl::addWaiting(const MSEdge* const edge, MSTransportable* transportable) {
@@ -372,6 +376,26 @@ MSTransportableControl::buildPerson(const SUMOVehicleParameter* pars, MSVehicleT
 MSTransportable*
 MSTransportableControl::buildContainer(const SUMOVehicleParameter* pars, MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan) const {
     return new MSTransportable(pars, vtype, plan, false);
+}
+
+
+void
+MSTransportableControl::saveState(OutputDevice& out) {
+    std::ostringstream oss;
+    oss << myRunningNumber << " " << myLoadedNumber << " " << myEndedNumber << " " << myWaitingForDepartureNumber << " " << myArrivedNumber << " " << myDiscardedNumber;
+    oss << " " << myJammedNumber << " " << myWaitingForVehicleNumber << " " << myWaitingUntilNumber << " " << myHaveNewWaiting;
+    out.writeAttr(SUMO_ATTR_STATE, oss.str());
+    for (const auto it : myTransportables) {
+        it.second->saveState(out);
+    }
+}
+
+
+void
+MSTransportableControl::loadState(const std::string& state) {
+    std::istringstream iss(state);
+    iss >> myRunningNumber >> myLoadedNumber >> myEndedNumber >> myWaitingForDepartureNumber >> myArrivedNumber >> myDiscardedNumber;
+    iss >> myJammedNumber >> myWaitingForVehicleNumber >> myWaitingUntilNumber >> myHaveNewWaiting;
 }
 
 

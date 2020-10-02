@@ -43,6 +43,8 @@ set(netedit_elements_additional_SRCS
    GNEDetectorEntryExit.cpp
    GNERerouter.h
    GNERerouter.cpp
+   GNERerouterSymbol.h
+   GNERerouterSymbol.cpp
    GNERouteProbe.h
    GNERouteProbe.cpp
    GNEVaporizer.h
@@ -53,6 +55,8 @@ set(netedit_elements_additional_SRCS
    GNECalibratorFlow.cpp
    GNEVariableSpeedSign.h
    GNEVariableSpeedSign.cpp
+   GNEVariableSpeedSignSymbol.h
+   GNEVariableSpeedSignSymbol.cpp
    GNEVariableSpeedSignStep.h
    GNEVariableSpeedSignStep.cpp
    GNEClosingLaneReroute.h

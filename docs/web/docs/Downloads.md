@@ -45,12 +45,12 @@ Includes sources, tests and docs but no binaries. Download as:
 ## Linux binaries
 
 The community maintains several repositories notably at the 
-open build service.
-- <https://build.opensuse.org/project/show/home:behrisch>
+[open build service](https://build.opensuse.org/project/show/home:behrisch).
 For a detailed list of repositories see below.
 
 Furthermore there are a debian and an ubuntu
 launchpad project as well as an archlinux package:
+
 - <https://salsa.debian.org/science-team/sumo.git>
 - <https://launchpad.net/~sumo>
 - <https://aur.archlinux.org/packages/sumo/>
@@ -73,7 +73,6 @@ try one of the build service repositories here too, e.g.
 At the moment there is no documentation included in the packages. The
 repositories include a nightly build as well (called sumo_nightly).
 
-- [openSUSE Leap 42.1 repository](http://download.opensuse.org/repositories/home:/behrisch/openSUSE_42.1/)
 - [openSUSE Leap 42.2 repository](http://download.opensuse.org/repositories/home:/behrisch/openSUSE_Leap_42.2/)
 - [openSUSE Leap 42.3 repository](http://download.opensuse.org/repositories/home:/behrisch/openSUSE_Leap_42.3/)
 - [openSUSE Leap 15.0 repository](http://download.opensuse.org/repositories/home:/behrisch/openSUSE_Leap_15.0/)
@@ -85,13 +84,10 @@ repositories include a nightly build as well (called sumo_nightly).
 - [Fedora 31 repository](http://download.opensuse.org/repositories/home:/behrisch/Fedora_31/)
 - [Fedora 32 repository](http://download.opensuse.org/repositories/home:/behrisch/Fedora_32/)
 - [Fedora Rawhide repository](http://download.opensuse.org/repositories/home:/behrisch/Fedora_Rawhide/)
+- [CentOS 7 repository](http://download.opensuse.org/repositories/home:/behrisch/CentOS_7/)
+- [CentOS 8 repository](http://download.opensuse.org/repositories/home:/behrisch/CentOS_8/)
 
-There are [more Linux RPM
-repositories](https://build.opensuse.org/repositories/home:behrisch) but
-in a less well maintained state (CentOS and Scientific missing gdal
-support for instance) because the opensuse build service does not
-provide the necessary packages any longer. Ubuntu and Debian users
-please see the [repository information](#repositories).
+Ubuntu, Debian and Arch users please see the community repositories above.
 
 ## macOS binaries
 
@@ -141,6 +137,7 @@ packages can be obtained:
 <li>Windows installer, 32bit: <a class="no-arrow-link" href="https://sumo.dlr.de/daily/sumo-win32-git.msi">https://sumo.dlr.de/daily/sumo-win32-git.msi </a><span class="badge badge-pill badge-light"><?php getFileDate("sumo-win32-git.msi","d");?></span> <span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-win32-git.msi","d");?></span></li>
 <li>Windows installer, 64bit: <a class="no-arrow-link" href="https://sumo.dlr.de/daily/sumo-win64-git.msi">https://sumo.dlr.de/daily/sumo-win64-git.msi </a><span class="badge badge-pill badge-light"><?php getFileDate("sumo-win64-git.msi","d");?></span> <span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-win64-git.msi","d");?></span></li>
 <li>Windows 64bit with GDAL, FFmpeg, OSG, GL2PS, SWIG: <a class="no-arrow-link" href="https://sumo.dlr.de/daily/sumo-win64extra-git.zip">https://sumo.dlr.de/daily/sumo-win64extra-git.zip </a><span class="badge badge-pill badge-light"><?php getFileDate("sumo-win64extra-git.zip","d");?></span> <span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-win64extra-git.zip","d");?></span></li>
+<li>Windows 64bit debug version: <a class="no-arrow-link" href="https://sumo.dlr.de/daily/sumo-win64Debug-git.zip">https://sumo.dlr.de/daily/sumo-win64Debug-git.zip </a><span class="badge badge-pill badge-light"><?php getFileDate("sumo-win64Debug-git.zip","d");?></span> <span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-win64Debug-git.zip","d");?></span></li>
 </ul>
 
 The Linux [repositories](#repositories) contain a nightly build as well.

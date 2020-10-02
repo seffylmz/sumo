@@ -111,7 +111,7 @@ NBFrame::fillOptions(bool forNetgen) {
 
     /// @todo not working for netgen
     oc.doRegister("reserved-ids", new Option_FileName());
-    oc.addDescription("reserved-ids", "Processing", "Ensures that generated ids do not included any of the typed IDs from FILE (SUMO-GUI selection file format)");
+    oc.addDescription("reserved-ids", "Processing", "Ensures that generated ids do not included any of the typed IDs from FILE (sumo-gui selection file format)");
 
     if (!forNetgen) {
         oc.doRegister("dismiss-vclasses", new Option_Bool(false));
@@ -154,7 +154,7 @@ NBFrame::fillOptions(bool forNetgen) {
 
         oc.doRegister("geometry.remove.keep-edges.input-file", new Option_FileName());
         oc.addDescription("geometry.remove.keep-edges.input-file", "Processing",
-                          "Ensure that the edges in FILE are not modified (Each id on a single line. Selection files from SUMO-GUI are also supported)");
+                          "Ensure that the edges in FILE are not modified (Each id on a single line. Selection files from sumo-gui are also supported)");
 
         oc.doRegister("geometry.remove.min-length", new Option_Float(0));
         oc.addDescription("geometry.remove.min-length", "Processing",
@@ -295,6 +295,10 @@ NBFrame::fillOptions(bool forNetgen) {
         oc.doRegister("junctions.join-exclude", new Option_StringVector());
         oc.addDescription("junctions.join-exclude", "Junctions", "Interprets STR[] as list of junctions to exclude from joining");
 
+        oc.doRegister("junctions.join-same", new Option_Bool(false));
+        oc.addDescription("junctions.join-same", "Junctions",
+                "Joins junctions that have the same coordinates even if not connected");
+
         oc.doRegister("speed.offset", new Option_Float(0));
         oc.addDescription("speed.offset", "Processing", "Modifies all edge speeds by adding FLOAT");
 
@@ -306,7 +310,7 @@ NBFrame::fillOptions(bool forNetgen) {
 
         oc.doRegister("edges.join-tram-dist", new Option_Float(-1));
         oc.addDescription("edges.join-tram-dist", "Processing",
-                "Joins tram edges into road lanes with similar geometry (within FLOAT distance)");
+                          "Joins tram edges into road lanes with similar geometry (within FLOAT distance)");
     }
 
     oc.doRegister("junctions.corner-detail", new Option_Integer(5));
@@ -548,10 +552,10 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addDescription("keep-edges.explicit", "Edge Removal", "Only keep edges in STR[] or those which are kept due to other keep-edges or remove-edges options");
 
     oc.doRegister("keep-edges.input-file", new Option_FileName());
-    oc.addDescription("keep-edges.input-file", "Edge Removal", "Only keep edges in FILE (Each id on a single line. Selection files from SUMO-GUI are also supported) or those which are kept due to other keep-edges or remove-edges options");
+    oc.addDescription("keep-edges.input-file", "Edge Removal", "Only keep edges in FILE (Each id on a single line. Selection files from sumo-gui are also supported) or those which are kept due to other keep-edges or remove-edges options");
 
     oc.doRegister("remove-edges.input-file", new Option_FileName());
-    oc.addDescription("remove-edges.input-file", "Edge Removal", "Remove edges in FILE. (Each id on a single line. Selection files from SUMO-GUI are also supported)");
+    oc.addDescription("remove-edges.input-file", "Edge Removal", "Remove edges in FILE. (Each id on a single line. Selection files from sumo-gui are also supported)");
 
     if (!forNetgen) {
         oc.doRegister("keep-edges.postload", new Option_Bool(false));
@@ -683,8 +687,10 @@ NBFrame::checkOptions() {
             oc.set("junctions.small-radius", oc.getValueString("default.junctions.radius"));
         }
     }
-    if (oc.getString("tls.layout") != "opposites" && oc.getString("tls.layout") != "incoming") {
-        WRITE_ERROR("tls.layout must be 'opposites' or 'incoming'");
+    if (oc.getString("tls.layout") != "opposites"
+            && oc.getString("tls.layout") != "incoming"
+            && oc.getString("tls.layout") != "alternateOneWay") {
+        WRITE_ERROR("tls.layout must be 'opposites', 'incoming' or 'alternateOneWay'");
         ok = false;
     }
     if (!oc.isDefault("default.right-of-way") &&

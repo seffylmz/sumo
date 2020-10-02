@@ -123,10 +123,11 @@ public:
 
     };
 
-    /** @struct Crossing
+    /** @class Crossing
      * @brief A definition of a pedestrian crossing
      */
-    struct Crossing : public Parameterised {
+    class Crossing final : public Parameterised {
+    public:
         /// @brief constructor
         Crossing(const NBNode* _node, const EdgeVector& _edges, double _width, bool _priority, int _customTLIndex, int _customTLIndex2, const PositionVector& _customShape);
         /// @brief The parent node of this crossing
@@ -374,7 +375,7 @@ public:
     void computeLogic2(bool checkLaneFoes);
 
     /// @brief compute keepClear status for all connections
-    void computeKeepClear(); 
+    void computeKeepClear();
 
     /// @brief writes the XML-representation of the logic as a bitset-logic XML representation
     bool writeLogic(OutputDevice& into) const;
@@ -462,6 +463,13 @@ public:
     /// @brief return whether the given laneToLane connection is a right turn which must yield to a bicycle crossings
     static bool rightTurnConflict(const NBEdge* from, const NBEdge* to, int fromLane,
                                   const NBEdge* prohibitorFrom, const NBEdge* prohibitorTo, int prohibitorFromLane);
+
+    /// @brief whether one of multple connections from the same edge targeting the same lane must yield
+    bool mergeConflictYields(const NBEdge* from, int fromLane, int fromLaneFoe, NBEdge* to, int toLane) const;
+
+    /// @brief whether multple connections from the same edge target the same lane
+    bool mergeConflict(const NBEdge* from, const NBEdge::Connection& con,
+                       const NBEdge* prohibitorFrom, const NBEdge::Connection& prohibitorCon, bool foes) const;
 
     /// @brief return whether the given laneToLane connection originate from the same edge and are in conflict due to turning across each other
     bool turnFoes(const NBEdge* from, const NBEdge* to, int fromLane,
@@ -651,7 +659,7 @@ public:
     bool crossingBetween(const NBEdge* e1, const NBEdge* e2) const;
 
     /// @brief return true if the given pedestrian paths are connected at another junction within dist
-    bool alreadyConnectedPaths(const NBEdge* e1, const NBEdge* e2, double dist) const; 
+    bool alreadyConnectedPaths(const NBEdge* e1, const NBEdge* e2, double dist) const;
 
     /// @brief get prohibitions (BLocked connections)
     const NBConnectionProhibits& getProhibitions() {

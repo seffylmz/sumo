@@ -199,9 +199,6 @@ RORouteHandler::myStartElement(int element,
                 if (from == nullptr) {
                     throw ProcessError("The from edge '" + fromID + "' within a ride of person '" + pid + "' is not known.");
                 }
-                if (!plan.empty() && plan.back()->getDestination() != from) {
-                    throw ProcessError("Disconnected plan for person '" + myVehicleParameter->id + "' (" + fromID + "!=" + plan.back()->getDestination()->getID() + ").");
-                }
             } else if (plan.empty()) {
                 throw ProcessError("The start edge for person '" + pid + "' is not known.");
             }
@@ -450,8 +447,8 @@ RORouteHandler::closeRoute(const bool mayBeDisconnected) {
                 if (stop.until > 0) {
                     if (myActiveRoutePeriod <= 0) {
                         const std::string description = myVehicleParameter != nullptr
-                            ?  "for vehicle '" + myVehicleParameter->id + "'"
-                            :  "'" + myActiveRouteID + "'";
+                                                        ?  "for vehicle '" + myVehicleParameter->id + "'"
+                                                        :  "'" + myActiveRouteID + "'";
                         throw ProcessError("Cannot repeat stops with 'until' in route " + description + " because no cycleTime is defined.");
                     }
                     stop.until += myActiveRoutePeriod * (i + 1);

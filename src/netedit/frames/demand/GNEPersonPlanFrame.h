@@ -49,10 +49,10 @@ public:
 
     /**@brief add person plan element
      * @param objectsUnderCursor collection of objects under cursor after click over view
-     * @param keyPressed key pressed during click
+     * @param mouseButtonKeyPressed key pressed during click
      * @return true if element was sucesfully added
      */
-    bool addPersonPlanElement(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::KeyPressed &keyPressed);
+    bool addPersonPlanElement(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor, const GNEViewNetHelper::MouseButtonKeyPressed& mouseButtonKeyPressed);
 
     /// @brief get path creator modul
     GNEFrameModuls::PathCreator* getPathCreator() const;
@@ -81,5 +81,5 @@ private:
     GNEFrameModuls::PathCreator* myPathCreator;
 
     /// @brief Person Hierarchy
-    GNEFrameModuls::AttributeCarrierHierarchy* myPersonHierarchy;
+    GNEFrameModuls::HierarchicalElementTree* myPersonHierarchy;
 };

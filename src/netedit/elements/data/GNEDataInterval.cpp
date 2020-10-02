@@ -43,10 +43,10 @@
 // ---------------------------------------------------------------------------
 
 GNEDataInterval::GNEDataInterval(GNEDataSet* dataSetParent, const double begin, const double end) :
-    GNEAttributeCarrier(SUMO_TAG_DATAINTERVAL, dataSetParent->getNet()),
-    myDataSetParent(dataSetParent),
-    myBegin(begin),
-    myEnd(end) {
+    GNEHierarchicalElement(dataSetParent->getNet(), SUMO_TAG_DATAINTERVAL, {}, {}, {}, {}, {}, {}, {}, {}),
+                       myDataSetParent(dataSetParent),
+                       myBegin(begin),
+myEnd(end) {
 }
 
 
@@ -70,14 +70,14 @@ GNEDataInterval::updateGenericDataIDs() {
 }
 
 
-void 
+void
 GNEDataInterval::updateAttributeColors() {
     // first clear both container
     myAllAttributeColors.clear();
     mySpecificAttributeColors.clear();
     // iterate over generic data children
-    for (const auto &genericData : myGenericDataChildren) {
-        for (const auto &param : genericData->getParametersMap()) {
+    for (const auto& genericData : myGenericDataChildren) {
+        for (const auto& param : genericData->getParametersMap()) {
             // check if value can be parsed
             if (canParse<double>(param.second)) {
                 // parse param value
@@ -178,9 +178,9 @@ GNEDataInterval::removeGenericDataChild(GNEGenericData* genericData) {
     if (it != myGenericDataChildren.end()) {
         // remove generic data child
         myGenericDataChildren.erase(it);
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myDataSetParent->getNet()->getViewNet()->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(genericData);
-        myDataSetParent->getNet()->getViewNet()->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(genericData);
+        // remove it from inspected ACs and HierarchicalElementTree
+        myDataSetParent->getNet()->getViewNet()->removeFromAttributeCarrierInspected(genericData);
+        myDataSetParent->getNet()->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(genericData);
         // update colors
         genericData->getDataIntervalParent()->getDataSetParent()->updateAttributeColors();
     } else {

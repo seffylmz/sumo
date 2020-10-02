@@ -86,7 +86,11 @@ MSDevice_Vehroutes::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDev
     if (maxRoutes < std::numeric_limits<int>::max()) {
         return new MSDevice_Vehroutes(v, "vehroute_" + v.getID(), maxRoutes);
     }
-    if (OptionsCont::getOptions().isSet("vehroute-output")) {
+    if (mySkipPTLines && v.getParameter().line != "") {
+        return nullptr;
+    }
+    OptionsCont& oc = OptionsCont::getOptions();
+    if (equippedByDefaultAssignmentOptions(oc, "vehroute", v, oc.isSet("vehroute-output"))) {
         if (myLastRouteOnly) {
             maxRoutes = 0;
         }
@@ -104,7 +108,10 @@ MSDevice_Vehroutes::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDev
 void
 MSDevice_Vehroutes::StateListener::vehicleStateChanged(const SUMOVehicle* const vehicle, MSNet::VehicleState to, const std::string& info) {
     if (to == MSNet::VEHICLE_STATE_NEWROUTE) {
-        myDevices[vehicle]->addRoute(info);
+        const auto& deviceEntry = myDevices.find(vehicle);
+        if (deviceEntry != myDevices.end()) {
+            deviceEntry->second->addRoute(info);
+        }
     }
 }
 
@@ -127,8 +134,8 @@ MSDevice_Vehroutes::MSDevice_Vehroutes(SUMOVehicle& holder, const std::string& i
 
 
 MSDevice_Vehroutes::~MSDevice_Vehroutes() {
-    for (std::vector<RouteReplaceInfo>::iterator i = myReplacedRoutes.begin(); i != myReplacedRoutes.end(); ++i) {
-        (*i).route->release();
+    for (const RouteReplaceInfo& rri : myReplacedRoutes) {
+        rri.route->release();
     }
     myCurrentRoute->release();
     myStateListener.myDevices.erase(&myHolder);
@@ -268,9 +275,6 @@ MSDevice_Vehroutes::generateOutput(OutputDevice* /*tripinfoOut*/) const {
 
 void
 MSDevice_Vehroutes::writeOutput(const bool hasArrived) const {
-    if (mySkipPTLines && myHolder.getParameter().line != "") {
-        return;
-    }
     OutputDevice& routeOut = OutputDevice::getDeviceByOption("vehroute-output");
     OutputDevice_String od(1);
     SUMOVehicleParameter tmp = myHolder.getParameter();

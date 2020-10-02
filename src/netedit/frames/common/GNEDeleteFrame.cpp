@@ -207,80 +207,72 @@ GNEDeleteFrame::removeAttributeCarrier(const GNEViewNetHelper::ObjectsUnderCurso
     if (objectsUnderCursor.getAttributeCarrierFront()) {
         // disable update geometry
         myViewNet->getNet()->disableUpdateGeometry();
-        // obtain clicked position
-        Position clickedPosition = myViewNet->getPositionInformation();
-        // first check if we'll only delete a geometry point
-        if (myDeleteOptions->deleteOnlyGeometryPoints() && !ignoreOptions) {
-            // check type of of object under cursor object with geometry points
-            if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
-                if (objectsUnderCursor.getEdgeFront()->getEdgeVertexIndex(clickedPosition, false) != -1) {
-                    objectsUnderCursor.getEdgeFront()->deleteEdgeGeometryPoint(clickedPosition);
-                }
-            } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_POLY) {
-                if (objectsUnderCursor.getPolyFront()->getVertexIndex(clickedPosition, false) != -1) {
-                    objectsUnderCursor.getPolyFront()->deleteGeometryPoint(clickedPosition);
-                }
-            } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_TAZ) {
-/*
-                if (objectsUnderCursor.getTAZElementFront()->getVertexIndex(clickedPosition, false) != -1) {
-                    objectsUnderCursor.getTAZElementFront()->deleteGeometryPoint(clickedPosition);
-                }
-*/
+        // get clicked position
+        const Position clickedPosition = myViewNet->getPositionInformation();
+        // check type of of object under cursor object
+        if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_JUNCTION) {
+            // Check if junction can be deleted
+            if (ignoreOptions || SubordinatedElements(objectsUnderCursor.getJunctionFront()).checkElements(myDeleteOptions)) {
+                myViewNet->getNet()->deleteJunction(objectsUnderCursor.getJunctionFront(), myViewNet->getUndoList());
             }
-        } else {
-            // check type of of object under cursor object
-            if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_JUNCTION) {
-                // Check if junction can be deleted
-                if (ignoreOptions || SubordinatedElements(objectsUnderCursor.getJunctionFront()).checkElements(myDeleteOptions)) {
-                    myViewNet->getNet()->deleteJunction(objectsUnderCursor.getJunctionFront(), myViewNet->getUndoList());
-                }
-            } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
-                // check if click was over a geometry point or over a shape's edge
-                if (objectsUnderCursor.getEdgeFront()->getEdgeVertexIndex(clickedPosition, false) != -1) {
-                    objectsUnderCursor.getEdgeFront()->deleteEdgeGeometryPoint(clickedPosition);
-                } else if (ignoreOptions || SubordinatedElements(objectsUnderCursor.getEdgeFront()).checkElements(myDeleteOptions)) {
-                    // if all ok, then delete edge
-                    myViewNet->getNet()->deleteEdge(objectsUnderCursor.getEdgeFront(), myViewNet->getUndoList(), false);
-                }
-            } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_LANE) {
-                // Check if edge can be deleted
-                if (ignoreOptions || SubordinatedElements(objectsUnderCursor.getLaneFront()).checkElements(myDeleteOptions)) {
-                    // if all ok, then delete lane
-                    myViewNet->getNet()->deleteLane(objectsUnderCursor.getLaneFront(), myViewNet->getUndoList(), false);
-                }
-            } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_CROSSING) {
-                myViewNet->getNet()->deleteCrossing(objectsUnderCursor.getCrossingFront(), myViewNet->getUndoList());
-            } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
-                myViewNet->getNet()->deleteConnection(objectsUnderCursor.getConnectionFront(), myViewNet->getUndoList());
-            } else if (objectsUnderCursor.getAttributeCarrierFront() && (objectsUnderCursor.getAdditionalFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                myViewNet->getNet()->deleteAdditional(objectsUnderCursor.getAdditionalFront(), myViewNet->getUndoList());
-            } else if (objectsUnderCursor.getShapeFront() && (objectsUnderCursor.getShapeFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                myViewNet->getNet()->deleteShape(objectsUnderCursor.getShapeFront(), myViewNet->getUndoList());
-            } else if (objectsUnderCursor.getTAZElementFront() && (objectsUnderCursor.getTAZElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                myViewNet->getNet()->deleteTAZElement(objectsUnderCursor.getTAZElementFront(), myViewNet->getUndoList());
-            } else if (objectsUnderCursor.getDemandElementFront() && (objectsUnderCursor.getDemandElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                // we need an special check for person plans
-                if (objectsUnderCursor.getDemandElementFront()->getTagProperty().isPersonPlan()) {
-                    // get person plarent
-                    GNEDemandElement* personParent = objectsUnderCursor.getDemandElementFront()->getParentDemandElements().front();
-                    // if this is the last person plan element, remove person instead person plan
-                    if (personParent->getChildDemandElements().size() == 1) {
-                        myViewNet->getNet()->deleteDemandElement(personParent, myViewNet->getUndoList());
-                    } else {
-                        myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
-                    }
+        } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
+            if (ignoreOptions || SubordinatedElements(objectsUnderCursor.getEdgeFront()).checkElements(myDeleteOptions)) {
+                // if all ok, then delete edge
+                myViewNet->getNet()->deleteEdge(objectsUnderCursor.getEdgeFront(), myViewNet->getUndoList(), false);
+            }
+        } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_LANE) {
+            // Check if edge can be deleted
+            if (ignoreOptions || SubordinatedElements(objectsUnderCursor.getLaneFront()).checkElements(myDeleteOptions)) {
+                // if all ok, then delete lane
+                myViewNet->getNet()->deleteLane(objectsUnderCursor.getLaneFront(), myViewNet->getUndoList(), false);
+            }
+        } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_CROSSING) {
+            myViewNet->getNet()->deleteCrossing(objectsUnderCursor.getCrossingFront(), myViewNet->getUndoList());
+        } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_CONNECTION) {
+            myViewNet->getNet()->deleteConnection(objectsUnderCursor.getConnectionFront(), myViewNet->getUndoList());
+        } else if (objectsUnderCursor.getAttributeCarrierFront() && (objectsUnderCursor.getAdditionalFront() == objectsUnderCursor.getAttributeCarrierFront())) {
+            myViewNet->getNet()->deleteAdditional(objectsUnderCursor.getAdditionalFront(), myViewNet->getUndoList());
+        } else if (objectsUnderCursor.getShapeFront() && (objectsUnderCursor.getShapeFront() == objectsUnderCursor.getAttributeCarrierFront())) {
+            myViewNet->getNet()->deleteShape(objectsUnderCursor.getShapeFront(), myViewNet->getUndoList());
+        } else if (objectsUnderCursor.getTAZElementFront() && (objectsUnderCursor.getTAZElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
+            myViewNet->getNet()->deleteTAZElement(objectsUnderCursor.getTAZElementFront(), myViewNet->getUndoList());
+        } else if (objectsUnderCursor.getDemandElementFront() && (objectsUnderCursor.getDemandElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
+            // we need an special check for person plans
+            if (objectsUnderCursor.getDemandElementFront()->getTagProperty().isPersonPlan()) {
+                // get person plarent
+                GNEDemandElement* personParent = objectsUnderCursor.getDemandElementFront()->getParentDemandElements().front();
+                // if this is the last person plan element, remove person instead person plan
+                if (personParent->getChildDemandElements().size() == 1) {
+                    myViewNet->getNet()->deleteDemandElement(personParent, myViewNet->getUndoList());
                 } else {
-                    // just remove demand element
                     myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
                 }
-            } else if (objectsUnderCursor.getGenericDataElementFront() && (objectsUnderCursor.getGenericDataElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
-                myViewNet->getNet()->deleteGenericData(objectsUnderCursor.getGenericDataElementFront(), myViewNet->getUndoList());
+            } else {
+                // just remove demand element
+                myViewNet->getNet()->deleteDemandElement(objectsUnderCursor.getDemandElementFront(), myViewNet->getUndoList());
             }
+        } else if (objectsUnderCursor.getGenericDataElementFront() && (objectsUnderCursor.getGenericDataElementFront() == objectsUnderCursor.getAttributeCarrierFront())) {
+            myViewNet->getNet()->deleteGenericData(objectsUnderCursor.getGenericDataElementFront(), myViewNet->getUndoList());
         }
-        // enable update geometry
-        myViewNet->getNet()->enableUpdateGeometry();
-        // update view to show changes
-        myViewNet->updateViewNet();
+    }
+    // enable update geometry
+    myViewNet->getNet()->enableUpdateGeometry();
+    // update view to show changes
+    myViewNet->updateViewNet();
+}
+
+
+void 
+GNEDeleteFrame::removeGeometryPoint(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor) {
+    // get clicked position
+    const Position clickedPosition = myViewNet->getPositionInformation();
+    // check type of of object under cursor object with geometry points
+    if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().isNetworkElement()) {
+        objectsUnderCursor.getNetworkElementFront()->removeGeometryPoint(clickedPosition, myViewNet->getUndoList());
+    } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_POLY) {
+        objectsUnderCursor.getPolyFront()->removeGeometryPoint(clickedPosition, myViewNet->getUndoList());
+    } else if (objectsUnderCursor.getAttributeCarrierFront()->getTagProperty().getTag() == SUMO_TAG_TAZ) {
+        objectsUnderCursor.getTAZFront()->removeGeometryPoint(clickedPosition, myViewNet->getUndoList());
     }
 }
 
@@ -295,16 +287,16 @@ GNEDeleteFrame::getDeleteOptions() const {
 // ---------------------------------------------------------------------------
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEJunction* junction) :
-    SubordinatedElements(junction, junction->getNet()->getViewNet(), junction, junction) {
+    SubordinatedElements(junction, junction->getNet()->getViewNet(), junction) {
     // add the number of subodinated elements of child edges
-    for (const auto& edge : junction->getGNEEdges()) {
+    for (const auto& edge : junction->getChildEdges()) {
         addValuesFromSubordinatedElements(this, edge);
     }
 }
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEEdge* edge) :
-    SubordinatedElements(edge, edge->getNet()->getViewNet(), edge, edge) {
+    SubordinatedElements(edge, edge->getNet()->getViewNet(), edge) {
     // add the number of subodinated elements of child lanes
     for (const auto& lane : edge->getLanes()) {
         addValuesFromSubordinatedElements(this, lane);
@@ -313,7 +305,7 @@ GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEEdge* edge) 
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNELane* lane) :
-    SubordinatedElements(lane, lane->getNet()->getViewNet(), lane, lane) {
+    SubordinatedElements(lane, lane->getNet()->getViewNet(), lane) {
 }
 
 
@@ -388,43 +380,42 @@ GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEAttributeCar
 
 
 GNEDeleteFrame::SubordinatedElements::SubordinatedElements(const GNEAttributeCarrier* attributeCarrier, GNEViewNet* viewNet,
-        const GNEHierarchicalParentElements* hierarchicalParent,
-        const GNEHierarchicalChildElements* hierarchicalChild) :
+        const GNEHierarchicalElement* hierarchicalElement) :
     myAttributeCarrier(attributeCarrier),
     myViewNet(viewNet),
-    myAdditionalParents(hierarchicalParent->getParentAdditionals().size()),
-    myAdditionalChilds(hierarchicalChild->getChildAdditionals().size()),
-    myTAZParents(hierarchicalParent->getParentTAZElements().size()),
-    myTAZChilds(hierarchicalChild->getChildTAZElements().size()),
-    myShapeParents(hierarchicalParent->getParentShapes().size()),
-    myShapeChilds(hierarchicalChild->getChildShapes().size()),
-    myDemandElementParents(hierarchicalParent->getParentDemandElements().size()),
-    myDemandElementChilds(hierarchicalChild->getChildDemandElements().size()),
-    myGenericDataParents(hierarchicalParent->getParentGenericDatas().size()),
-    myGenericDataChilds(hierarchicalChild->getChildGenericDatas().size()) {
+    myAdditionalParents(hierarchicalElement->getParentAdditionals().size()),
+    myAdditionalChilds(hierarchicalElement->getChildAdditionals().size()),
+    myTAZParents(hierarchicalElement->getParentTAZElements().size()),
+    myTAZChilds(hierarchicalElement->getChildTAZElements().size()),
+    myShapeParents(hierarchicalElement->getParentShapes().size()),
+    myShapeChilds(hierarchicalElement->getChildShapes().size()),
+    myDemandElementParents(hierarchicalElement->getParentDemandElements().size()),
+    myDemandElementChilds(hierarchicalElement->getChildDemandElements().size()),
+    myGenericDataParents(hierarchicalElement->getParentGenericDatas().size()),
+    myGenericDataChilds(hierarchicalElement->getChildGenericDatas().size()) {
     // add the number of subodinated elements of additionals, shapes, demand elements and generic datas
-    for (const auto& additional : hierarchicalParent->getParentAdditionals()) {
+    for (const auto& additional : hierarchicalElement->getParentAdditionals()) {
         addValuesFromSubordinatedElements(this, additional);
     }
-    for (const auto& shape : hierarchicalParent->getParentShapes()) {
+    for (const auto& shape : hierarchicalElement->getParentShapes()) {
         addValuesFromSubordinatedElements(this, shape);
     }
-    for (const auto& demandElement : hierarchicalParent->getParentDemandElements()) {
+    for (const auto& demandElement : hierarchicalElement->getParentDemandElements()) {
         addValuesFromSubordinatedElements(this, demandElement);
     }
-    for (const auto& genericData : hierarchicalParent->getParentGenericDatas()) {
+    for (const auto& genericData : hierarchicalElement->getParentGenericDatas()) {
         addValuesFromSubordinatedElements(this, genericData);
     }
-    for (const auto& additional : hierarchicalChild->getChildAdditionals()) {
+    for (const auto& additional : hierarchicalElement->getChildAdditionals()) {
         addValuesFromSubordinatedElements(this, additional);
     }
-    for (const auto& shape : hierarchicalChild->getChildShapes()) {
+    for (const auto& shape : hierarchicalElement->getChildShapes()) {
         addValuesFromSubordinatedElements(this, shape);
     }
-    for (const auto& additional : hierarchicalChild->getChildDemandElements()) {
+    for (const auto& additional : hierarchicalElement->getChildDemandElements()) {
         addValuesFromSubordinatedElements(this, additional);
     }
-    for (const auto& genericData : hierarchicalChild->getChildGenericDatas()) {
+    for (const auto& genericData : hierarchicalElement->getChildGenericDatas()) {
         addValuesFromSubordinatedElements(this, genericData);
     }
 }

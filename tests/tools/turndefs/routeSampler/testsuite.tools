@@ -4,7 +4,16 @@ output-styles
 
 # test loading data with multiple intervals
 intervals
+
+# sample routes by probabilites or counts
+weighted
 verbose
+
+# save configuration file
+save_config
+
+# save configuration file template
+save_template
 
 # using edgedata as input
 edgedata
@@ -36,6 +45,13 @@ small_input_noSampling_optimize
 
 # input contains duplicate routes. optimize it.
 small_input_duplicates_noSampling
+
+# use linear programming to optimize route usage
+# Many routes do not pass any counting locations and should not appear in the result
+optimize_few_detectors
+
+# use linear programming to optimize route usage , prefer fewer vehicles
+optimize_minimize-vehs
 
 # define multi-edge sequence restrictions
 via

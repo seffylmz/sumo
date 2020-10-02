@@ -270,10 +270,10 @@ public:
     void mergeJunctions(GNEJunction* moved, GNEJunction* target, GNEUndoList* undoList);
 
     /// @brief select all roundabout edges and junctions for the current roundabout
-    void selectRoundabout(GNEJunction* junction, GNEUndoList* undoList); 
+    void selectRoundabout(GNEJunction* junction, GNEUndoList* undoList);
 
     /// @brief transform the given junction into a roundabout
-    void createRoundabout(GNEJunction* junction, GNEUndoList* undoList); 
+    void createRoundabout(GNEJunction* junction, GNEUndoList* undoList);
 
     /**@brief get junction by id
      * @param[in] id The id of the desired junction
@@ -336,6 +336,16 @@ public:
      * @param[in] onlySelected Whether to return only selected edges
      */
     std::vector<GNEEdge*> retrieveEdges(bool onlySelected = false);
+
+    /**@brief return edges with junction angle between 0º and 179º
+     * @param[in] onlySelected Whether to return only selected edges
+     */
+    std::vector<GNEEdge*> retrieve000180AngleEdges(bool onlySelected = false) const;
+
+    /**@brief return edges with junction angle between 180º and 365º
+     * @param[in] onlySelected Whether to return only selected edges
+     */
+    std::vector<GNEEdge*> retrieve180360AngleEdges(bool onlySelected = false) const;
 
     /**@brief return all lanes
      * @param[in] onlySelected Whether to return only selected lanes
@@ -637,19 +647,6 @@ public:
      * @param[in] onlySelected Whether to return only selected shapes
      */
     std::vector<GNEShape*> retrieveShapes(bool onlySelected = false) const;
-
-    /**@brief Builds a special polygon used for edit Junctions's shapes
-     * @param[in] networkElement GNENetworkElement to be edited
-     * @param[in] shape shape to be edited
-     * @param[in] fill enable or disable fill polygon
-     * @param[in] col The color for drawing the polygon
-     * @throw processError if shape is empty
-     * @return created GNEPoly
-     */
-    GNEPoly* addPolygonForEditShapes(GNENetworkElement* networkElement, const PositionVector& shape, bool fill, RGBColor col);
-
-    /// @brief remove Polygon for edit shapes
-    void removePolygonForEditShapes(GNEPoly* polygon);
 
     /// @brief generate Shape ID
     std::string generateShapeID(SumoXMLTag shapeTag) const;

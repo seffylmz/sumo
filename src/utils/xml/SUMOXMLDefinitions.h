@@ -234,6 +234,18 @@ enum SumoXMLTag {
     SUMO_TAG_WALKINGAREA,
     /// @brief Information on vClass specific stop offsets at lane end
     SUMO_TAG_STOPOFFSET,
+    /// @brief Constraints on switching a rail signal
+    SUMO_TAG_RAILSIGNAL_CONSTRAINTS,
+    /// @brief Predecessor constraint on switching a rail signal
+    SUMO_TAG_PREDECESSOR,
+    /// @brief Predecessor constraint on insertion before rail signal
+    SUMO_TAG_INSERTION_PREDECESSOR,
+    /// @brief Saved state for constraint tracker
+    SUMO_TAG_RAILSIGNAL_CONSTRAINT_TRACKER,
+    /// @brief Link information for state-saving
+    SUMO_TAG_LINK,
+    /// @brief Link-approaching vehicle information for state-saving
+    SUMO_TAG_APPROACHING,
 
     SUMO_TAG_WAY,
     SUMO_TAG_ND,
@@ -320,6 +332,7 @@ enum SumoXMLTag {
     SUMO_TAG_ACTORCONFIG,
     SUMO_TAG_MOTIONSTATE,
     SUMO_TAG_OD_PAIR,
+    SUMO_TAG_TRANSPORTABLES,
 
     /// @brief ActivityGen Tags
     AGEN_TAG_GENERAL,
@@ -359,6 +372,16 @@ enum SumoXMLTag {
     /// @brief parameters
     AGEN_TAG_PARAM,
 
+    /// @name NETEDIT internal elements
+    /// @{
+    /// @brief internal lane
+    GNE_TAG_INTERNAL_LANE,
+    /// @brief Rerouter Symbol
+    GNE_TAG_REROUTER_SYMBOL,
+    /// @brief VSS Symbol
+    GNE_TAG_VSS_SYMBOL,
+    /// @}
+
     /// @name Persons plans (used by Netedit)
     /// @{
     /// @brief description of a vehicle with an embedded route (used in NETEDIT)
@@ -372,20 +395,35 @@ enum SumoXMLTag {
     // person trips
     GNE_TAG_PERSONTRIP_EDGE_EDGE,
     GNE_TAG_PERSONTRIP_EDGE_BUSSTOP,
+    GNE_TAG_PERSONTRIP_EDGE_STOP,
     GNE_TAG_PERSONTRIP_BUSSTOP_EDGE,
     GNE_TAG_PERSONTRIP_BUSSTOP_BUSSTOP,
+    GNE_TAG_PERSONTRIP_BUSSTOP_STOP,
+    GNE_TAG_PERSONTRIP_STOP_EDGE,
+    GNE_TAG_PERSONTRIP_STOP_BUSSTOP,
+    GNE_TAG_PERSONTRIP_STOP_STOP,
     // walks
     GNE_TAG_WALK_EDGE_EDGE,
+    GNE_TAG_WALK_EDGE_BUSSTOP,
+    GNE_TAG_WALK_EDGE_STOP,
     GNE_TAG_WALK_BUSSTOP_EDGE,
     GNE_TAG_WALK_BUSSTOP_BUSSTOP,
-    GNE_TAG_WALK_EDGE_BUSSTOP,
+    GNE_TAG_WALK_BUSSTOP_STOP,
+    GNE_TAG_WALK_STOP_EDGE,
+    GNE_TAG_WALK_STOP_BUSSTOP,
+    GNE_TAG_WALK_STOP_STOP,
     GNE_TAG_WALK_EDGES,
     GNE_TAG_WALK_ROUTE,
     // rides
     GNE_TAG_RIDE_EDGE_EDGE,
     GNE_TAG_RIDE_EDGE_BUSSTOP,
+    GNE_TAG_RIDE_EDGE_STOP,
     GNE_TAG_RIDE_BUSSTOP_EDGE,
     GNE_TAG_RIDE_BUSSTOP_BUSSTOP,
+    GNE_TAG_RIDE_BUSSTOP_STOP,
+    GNE_TAG_RIDE_STOP_EDGE,
+    GNE_TAG_RIDE_STOP_BUSSTOP,
+    GNE_TAG_RIDE_STOP_STOP,
     // person stops
     GNE_TAG_PERSONSTOP_BUSSTOP,
     GNE_TAG_PERSONSTOP_EDGE,
@@ -513,6 +551,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_DEPARTPOS,
     SUMO_ATTR_DEPARTPOS_LAT,
     SUMO_ATTR_DEPARTSPEED,
+    SUMO_ATTR_DEPARTEDGE,
     SUMO_ATTR_ARRIVALLANE,
     SUMO_ATTR_ARRIVALPOS,
     SUMO_ATTR_ARRIVALPOS_LAT,
@@ -745,6 +784,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_JM_IGNORE_FOE_SPEED,
     SUMO_ATTR_JM_IGNORE_FOE_PROB,
     SUMO_ATTR_JM_SIGMA_MINOR,
+    SUMO_ATTR_JM_STOPLINE_GAP,
     SUMO_ATTR_JM_TIMEGAP_MINOR,
     /// @}
 
@@ -801,6 +841,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_DURATION,
     SUMO_ATTR_UNTIL,
     SUMO_ATTR_ARRIVAL,
+    SUMO_ATTR_ACTUALARRIVAL,
     SUMO_ATTR_EXTENSION,
     SUMO_ATTR_ROUTEPROBE,
     /// @}
@@ -1036,7 +1077,10 @@ enum SumoXMLAttr {
     SUMO_ATTR_ORIGIN,
     SUMO_ATTR_DESTINATION,
     SUMO_ATTR_VISIBLE,
-
+    SUMO_ATTR_LIMIT,
+    SUMO_ATTR_ARRIVALTIME,
+    SUMO_ATTR_ARRIVALTIMEBRAKING,
+    SUMO_ATTR_ARRIVALSPEEDBRAKING,
 
     /// @name ActivityGen Tags
     /// @{
@@ -1155,6 +1199,12 @@ enum SumoXMLAttr {
     GNE_ATTR_FROM_BUSSTOP,
     /// @brief to busStop (used by personPlans)
     GNE_ATTR_TO_BUSSTOP,
+    /// @brief from stop (used by personPlans)
+    GNE_ATTR_FROM_STOP,
+    /// @brief to stop (used by personPlans)
+    GNE_ATTR_TO_STOP,
+    /// @brief neighboring lane, simplified lane attr instead of child element
+    GNE_ATTR_OPPOSITE,
 
     // @}
 
@@ -1325,20 +1375,20 @@ enum LinkState {
  * used in netbuild (formerly NBMMLDirection) and MSLink
  */
 enum class LinkDirection {
+    /// @brief The link is a (hard) right direction
+    RIGHT = 0,
+    /// @brief The link is a partial right direction
+    PARTRIGHT,
     /// @brief The link is a straight direction
-    STRAIGHT = 0,
+    STRAIGHT,
+    /// @brief The link is a partial left direction
+    PARTLEFT,
+    /// @brief The link is a (hard) left direction
+    LEFT,
     /// @brief The link is a 180 degree turn
     TURN,
     /// @brief The link is a 180 degree turn (left-hand network)
     TURN_LEFTHAND,
-    /// @brief The link is a (hard) left direction
-    LEFT,
-    /// @brief The link is a (hard) right direction
-    RIGHT,
-    /// @brief The link is a partial left direction
-    PARTLEFT,
-    /// @brief The link is a partial right direction
-    PARTRIGHT,
     /// @brief The link has no direction (is a dead end link)
     NODIR
 };
@@ -1601,9 +1651,6 @@ public:
 
     /// @brief whether the given string is a valid key for a parameter
     static bool isValidParameterKey(const std::string& value);
-
-    /// @brief whether the given string is a valid value for a parameter
-    static bool isValidParameterValue(const std::string& value);
 
     /// @brief return the junction id when given an edge of type internal, crossing or WalkingArea
     static std::string getJunctionIDFromInternalEdge(const std::string internalEdge);

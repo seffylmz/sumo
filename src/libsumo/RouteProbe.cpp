@@ -21,7 +21,9 @@
 
 #include <microsim/MSNet.h>
 #include <microsim/MSEdge.h>
-#include <microsim/trigger/MSLaneSpeedTrigger.h>
+#include <microsim/MSRoute.h>
+#include <microsim/output/MSDetectorControl.h>
+#include <microsim/output/MSRouteProbe.h>
 #include <libsumo/TraCIConstants.h>
 #include "Helper.h"
 #include "RouteProbe.h"
@@ -41,18 +43,41 @@ ContextSubscriptionResults RouteProbe::myContextSubscriptionResults;
 std::vector<std::string>
 RouteProbe::getIDList() {
     std::vector<std::string> ids;
-    //for (auto& item : MSNet::getInstance()->getStoppingPlaces(SUMO_TAG_BUS_STOP)) {
-    //    ids.push_back(item.first);
-    //}
-    //std::sort(ids.begin(), ids.end());
+    MSNet::getInstance()->getDetectorControl().getTypedDetectors(SUMO_TAG_ROUTEPROBE).insertIDs(ids);
     return ids;
 }
+
 
 int
 RouteProbe::getIDCount() {
     return (int)getIDList().size();
 }
 
+std::string
+RouteProbe::getEdgeID(const std::string& probeID) {
+    MSRouteProbe* rp = getRouteProbe(probeID);
+    return rp->getEdge()->getID();
+}
+
+std::string
+RouteProbe::sampleLastRouteID(const std::string& probeID) {
+    MSRouteProbe* rp = getRouteProbe(probeID);
+    const MSRoute* route = rp->sampleRoute(true);
+    if (route == nullptr) {
+        throw TraCIException("RouteProbe '" + probeID + "' did not collect any routes yet");
+    }
+    return route->getID();
+}
+
+std::string
+RouteProbe::sampleCurrentRouteID(const std::string& probeID) {
+    MSRouteProbe* rp = getRouteProbe(probeID);
+    const MSRoute* route = rp->sampleRoute(false);
+    if (route == nullptr) {
+        throw TraCIException("RouteProbe '" + probeID + "' did not collect any routes yet");
+    }
+    return route->getID();
+}
 
 std::string
 RouteProbe::getParameter(const std::string& /* probeID */, const std::string& /* param */) {
@@ -63,7 +88,7 @@ LIBSUMO_GET_PARAMETER_WITH_KEY_IMPLEMENTATION(RouteProbe)
 
 void
 RouteProbe::setParameter(const std::string& /* probeID */, const std::string& /* key */, const std::string& /* value */) {
-    //MSRouteProbe* r = const_cast<MSRouteProbe*>(getRouteProbe(probeID));
+    //MSRouteProbe* rp = getRouteProbe(probeID);
     //r->setParameter(key, value);
 }
 
@@ -73,11 +98,11 @@ LIBSUMO_SUBSCRIPTION_IMPLEMENTATION(RouteProbe, ROUTEPROBE)
 
 MSRouteProbe*
 RouteProbe::getRouteProbe(const std::string& id) {
-    MSRouteProbe* s = nullptr;
-    if (s == nullptr) {
-        throw TraCIException("RouteProbe '" + id + "' is not known");
+    MSRouteProbe* rp = dynamic_cast<MSRouteProbe*>(MSNet::getInstance()->getDetectorControl().getTypedDetectors(SUMO_TAG_ROUTEPROBE).get(id));
+    if (rp == nullptr) {
+        throw TraCIException("Lane area detector '" + id + "' is not known");
     }
-    return s;
+    return rp;
 }
 
 
@@ -94,6 +119,12 @@ RouteProbe::handleVariable(const std::string& objID, const int variable, Variabl
             return wrapper->wrapStringList(objID, variable, getIDList());
         case ID_COUNT:
             return wrapper->wrapInt(objID, variable, getIDCount());
+        case VAR_ROAD_ID:
+            return wrapper->wrapString(objID, variable, getEdgeID(objID));
+        case VAR_SAMPLE_LAST:
+            return wrapper->wrapString(objID, variable, sampleLastRouteID(objID));
+        case VAR_SAMPLE_CURRENT:
+            return wrapper->wrapString(objID, variable, sampleCurrentRouteID(objID));
         default:
             return false;
     }

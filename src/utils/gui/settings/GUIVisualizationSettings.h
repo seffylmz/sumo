@@ -165,6 +165,9 @@ struct GUIVisualizationColorSettings {
     /// @brief color for child connections between parents and child elements
     static const RGBColor childConnections;
 
+    /// @brief color for edited shapes (Junctions, crossings and connections)
+    static const RGBColor editShape;
+
     /// @brief color for crossings
     static const RGBColor crossing;
 
@@ -219,8 +222,20 @@ struct GUIVisualizationNeteditSizeSettings {
     /// @brief junction buuble radius
     static const double junctionBubbleRadius;
 
+    /// @brief moving junction geometry point radius
+    static const double junctionGeometryPointRadius;
+
+    /// @brief moving edge geometry point radius
+    static const double edgeGeometryPointRadius;
+
+    /// @brief moving connection geometry point radius
+    static const double connectionGeometryPointRadius;
+
+    /// @brief moving crossing geometry point radius
+    static const double crossingGeometryPointRadius;
+
     /// @brief moving geometry point radius
-    static const double movingGeometryPointRadius;
+    static const double polygonGeometryPointRadius;
 
     /// @brief polygon contour width
     static const double polygonContourWidth;
@@ -378,11 +393,17 @@ struct GUIVisualizationDottedContourSettings {
     /// @brief length of dotted contour segments
     static const double segmentLength;
 
-    /// @brief first color of dotted contour
-    static const RGBColor firstColor;
+    /// @brief first color of dotted inspected contour
+    static const RGBColor firstInspectedColor;
 
-    /// @brief second color of dotted contour
-    static const RGBColor secondColor;
+    /// @brief second color of dotted inspectedcontour
+    static const RGBColor secondInspectedColor;
+
+    /// @brief first color of dotted front contour
+    static const RGBColor firstFrontColor;
+
+    /// @brief second color of dotted front contour
+    static const RGBColor secondFrontColor;
 };
 
 
@@ -535,7 +556,7 @@ public:
     bool drawDottedContour() const;
 
     /// @brief check if moving geometry point can be draw
-    bool drawMovingGeometryPoint(double exaggeration) const;
+    bool drawMovingGeometryPoint(const double exaggeration, const double radius) const;
 
     /// @brief The name of this setting
     std::string name;
@@ -624,7 +645,7 @@ public:
     std::string edgeParam, laneParam;
     /// @brief key for coloring by vehicle parameter
     std::string vehicleParam;
-    /// @brief key for rendering textual parameter
+    /// @brief key for rendering vehicle textual parameter
     std::string vehicleTextParam;
 
     /// @brief key for coloring by edgeData
@@ -755,6 +776,12 @@ public:
     // Setting bundles for optional drawing poi types
     GUIVisualizationTextSettings poiType;
 
+    // Setting bundles for optional drawing poi text
+    GUIVisualizationTextSettings poiText;
+
+    /// @brief key for rendering poi textual parameter
+    std::string poiTextParam;
+
     /// @brief The polygon colorer
     GUIColorer polyColorer;
 
@@ -786,8 +813,8 @@ public:
     /// @brief enable or disable draw boundaries
     bool drawBoundaries;
 
-    /// @brief the current selection scaling in NETEDIT (temporary)
-    double selectionScale;
+    /// @brief the current selection scaling in NETEDIT (set in SelectorFrame)
+    double selectorFrameScale;
 
     /// @brief whether drawing is performed for the purpose of selecting objects with a single click
     bool drawForPositionSelection;

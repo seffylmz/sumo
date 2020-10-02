@@ -78,7 +78,7 @@ form:
 
 ## Differentiated Probabilities
 
-To destinguish the set of source and sink edges (or their probabilities
+To distinguish the set of source and sink edges (or their probabilities
 respectively) use the following definition:
 
 ```
@@ -104,7 +104,7 @@ destination lists are normalized after loading.
 
 ## Creating TAZ files
 
-- TAZ definitions can be created direclty in
+- TAZ definitions can be created directly in
   [netedit](../../netedit.md#taz_traffic_analysis_zones)
 - TAZ definitions can be created by drawing polygons in
   [netedit](../../netedit.md#pois_and_polygons), then using the tool
@@ -275,7 +275,7 @@ separated by ','. Each time and probability field is made up of two
 values, an integer time being the simulation time in seconds and a
 floating point number describing the probability. These two values are
 separated using a ':'. At least two values must be supplied making the
-definition of a timeline in this case being decribeable by the following
+definition of a timeline in this case being describable by the following
 BNF-formula:
 
 ```
@@ -413,6 +413,6 @@ trip ids.
 
 <div style="border:1px solid #909090; min-height: 35px;" align="right">
 <span style="float: right; margin-top: -5px;"><a href="http://cordis.europa.eu/fp7/home_en.html"><img src="../../images/FP7-small.gif" alt="Seventh Framework Programme"></a>
-<a href="http://amitran.eu/"><img src="../../images/AMITRAN-small.png" alt="AMITRAN project"></a></span>
+<a href="https://trimis.ec.europa.eu/project/assessment-methodologies-ict-multimodal-transport-user-behaviour-co2-reduction"><img src="../../images/AMITRAN-small.png" alt="AMITRAN project"></a></span>
 <span style="">This part of SUMO was developed, reworked, or extended within the project 
-<a href="http://amitran.eu/">"AMITRAN"</a>, co-funded by the European Commission within the <a href="http://cordis.europa.eu/fp7/home_en.html">Seventh Framework Programme</a>.</span></div>
+<a href="https://trimis.ec.europa.eu/project/assessment-methodologies-ict-multimodal-transport-user-behaviour-co2-reduction">"AMITRAN"</a>, co-funded by the European Commission within the <a href="https://cordis.europa.eu/about/archives">Seventh Framework Programme</a>.</span></div>

@@ -832,6 +832,9 @@ TRACI_CONST int VAR_SLOPE = 0x36;
 // speed (get: vehicle)
 TRACI_CONST int VAR_SPEED = 0x40;
 
+// adapt previous speed (set: vehicle)
+TRACI_CONST int VAR_PREV_SPEED = 0x3c;
+
 // lateral speed (get: vehicle)
 TRACI_CONST int VAR_SPEED_LAT = 0x32;
 
@@ -909,6 +912,9 @@ TRACI_CONST int VAR_ROUTE_ID = 0x53;
 
 // edges (get: routes, vehicles)
 TRACI_CONST int VAR_EDGES = 0x54;
+
+// lanes (get: variablespeedsign)
+TRACI_CONST int VAR_LANES = 0x30;
 
 // update bestLanes (set: vehicle)
 TRACI_CONST int VAR_UPDATE_BESTLANES = 0x6a;
@@ -1041,6 +1047,9 @@ TRACI_CONST int VAR_BUS_STOP_WAITING_IDS = 0xef;
 
 // current leader together with gap (get: vehicle)
 TRACI_CONST int VAR_LEADER = 0x68;
+
+// current leader together with gap (get: vehicle)
+TRACI_CONST int VAR_FOLLOWER = 0x78;
 
 // edge index in current route (get: vehicle)
 TRACI_CONST int VAR_ROUTE_INDEX = 0x69;
@@ -1241,6 +1250,12 @@ TRACI_CONST int REMOVE_STAGE = 0xc5;
 // retrieve taxi reservation (person)
 TRACI_CONST int VAR_TAXI_RESERVATIONS = 0xc6;
 
+// sample last route (routeprobe)
+TRACI_CONST int VAR_SAMPLE_LAST = 0x20;
+
+// sample current route (routeprobe)
+TRACI_CONST int VAR_SAMPLE_CURRENT = 0x21;
+
 // zoom
 TRACI_CONST int VAR_VIEW_ZOOM = 0xa0;
 
@@ -1252,6 +1267,9 @@ TRACI_CONST int VAR_VIEW_SCHEMA = 0xa2;
 
 // view by boundary
 TRACI_CONST int VAR_VIEW_BOUNDARY = 0xa3;
+
+// select/deselect object (gui)
+TRACI_CONST int VAR_SELECT = 0xa4;
 
 // screenshot
 TRACI_CONST int VAR_SCREENSHOT = 0xa5;

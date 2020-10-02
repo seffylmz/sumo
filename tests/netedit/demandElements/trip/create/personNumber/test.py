@@ -34,44 +34,44 @@ netedit.supermodeDemand()
 # go to vehicle mode
 netedit.vehicleMode()
 
-# select trip
-netedit.changeElement("trip")
+# disable select trip due this is the first vehicle in the list
+# netedit.changeElement("trip")
 
 # set invalid personNumber
-netedit.changeDefaultValue(15, "dummycontainerNumber")
+netedit.changeDefaultValue(14, "dummycontainerNumber")
 
 # try to create trip
-netedit.leftClick(referencePosition, 274, 414)
+netedit.leftClick(referencePosition, 274, 416)
 netedit.leftClick(referencePosition, 280, 60)
 
 # press enter to create trip
 netedit.typeEnter()
 
 # set invalid personNumber
-netedit.changeDefaultValue(15, "-12")
+netedit.changeDefaultValue(14, "-12")
 
 # try to create trip
-netedit.leftClick(referencePosition, 274, 414)
+netedit.leftClick(referencePosition, 274, 416)
 netedit.leftClick(referencePosition, 280, 60)
 
 # press enter to create trip
 netedit.typeEnter()
 
 # set invalid personNumber
-netedit.changeDefaultValue(15, "3.5")
+netedit.changeDefaultValue(14, "3.5")
 
 # try to create trip
-netedit.leftClick(referencePosition, 274, 414)
+netedit.leftClick(referencePosition, 274, 416)
 netedit.leftClick(referencePosition, 280, 60)
 
 # press enter to create trip
 netedit.typeEnter()
 
 # set valid personNumber
-netedit.changeDefaultValue(15, "13")
+netedit.changeDefaultValue(14, "13")
 
 # create trip
-netedit.leftClick(referencePosition, 274, 414)
+netedit.leftClick(referencePosition, 274, 416)
 netedit.leftClick(referencePosition, 280, 60)
 
 # press enter to create trip

@@ -94,7 +94,6 @@ public:
 
     /** @brief Initialises the tls with information about incoming lanes
      * @param[in] nb The detector builder
-     * @param[in] edgeContinuations Information about edge predecessors/successors
      * @exception ProcessError If something fails on initialisation
      */
     virtual void init(NLDetectorBuilder& nb);
@@ -289,7 +288,7 @@ public:
      *
      * @return The time spent in the current phase
      */
-    SUMOTime getSpentDuration() const;
+    SUMOTime getSpentDuration(SUMOTime simStep = -1) const;
     /// @}
 
 

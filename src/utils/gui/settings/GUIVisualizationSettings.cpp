@@ -60,6 +60,7 @@ const RGBColor SUMO_color_DEADEND(0, 0, 0);
 
 const RGBColor GUIVisualizationColorSettings::SUMO_color_DEADEND_SHOW(255, 0, 255);
 const RGBColor GUIVisualizationColorSettings::childConnections(255, 235, 0);
+const RGBColor GUIVisualizationColorSettings::editShape(0, 200, 0);
 const RGBColor GUIVisualizationColorSettings::crossing(25, 25, 25);
 const RGBColor GUIVisualizationColorSettings::crossingPriority(229, 229, 229);
 const RGBColor GUIVisualizationColorSettings::crossingInvalid(255, 25, 25);
@@ -85,7 +86,11 @@ const RGBColor GUIVisualizationCandidateColorSettings::conflict(255, 255, 0, 255
 // -------------------------------------------------------------------------
 
 const double GUIVisualizationNeteditSizeSettings::junctionBubbleRadius(4);
-const double GUIVisualizationNeteditSizeSettings::movingGeometryPointRadius(1.2);
+const double GUIVisualizationNeteditSizeSettings::junctionGeometryPointRadius(1);
+const double GUIVisualizationNeteditSizeSettings::edgeGeometryPointRadius(1.2);
+const double GUIVisualizationNeteditSizeSettings::connectionGeometryPointRadius(0.8);
+const double GUIVisualizationNeteditSizeSettings::crossingGeometryPointRadius(1);
+const double GUIVisualizationNeteditSizeSettings::polygonGeometryPointRadius(1.2);
 const double GUIVisualizationNeteditSizeSettings::polygonContourWidth(0.3);
 const double GUIVisualizationNeteditSizeSettings::polylineWidth(1);
 
@@ -155,8 +160,10 @@ const RGBColor GUIVisualizationStoppingPlaceSettings::parkingSpaceColor(255, 200
 
 const double GUIVisualizationDottedContourSettings::segmentWidth(0.2);
 const double GUIVisualizationDottedContourSettings::segmentLength(2);
-const RGBColor GUIVisualizationDottedContourSettings::firstColor(235, 235, 235);
-const RGBColor GUIVisualizationDottedContourSettings::secondColor(20, 20, 20);
+const RGBColor GUIVisualizationDottedContourSettings::firstInspectedColor(235, 235, 235);
+const RGBColor GUIVisualizationDottedContourSettings::secondInspectedColor(20, 20, 20);
+const RGBColor GUIVisualizationDottedContourSettings::firstFrontColor(0, 0, 235);
+const RGBColor GUIVisualizationDottedContourSettings::secondFrontColor(0, 255, 0);
 
 // -------------------------------------------------------------------------
 // widths of certain NETEDIT objects
@@ -279,13 +286,21 @@ GUIVisualizationSizeSettings::GUIVisualizationSizeSettings(double _minSize, doub
 
 double
 GUIVisualizationSizeSettings::getExaggeration(const GUIVisualizationSettings& s, const GUIGlObject* o, double factor) const {
+    // declare exaggeration final
+    double exaggerationFinal;
     /// @note should look normal-sized at zoom 1000
     if (constantSize && (!constantSizeSelected || (o == nullptr) || gSelected.isSelected(o))) {
-        return MAX2((double)exaggeration, exaggeration * factor / s.scale);
+        exaggerationFinal = MAX2((double)exaggeration, exaggeration * factor / s.scale);
     } else if (!constantSizeSelected || (o == nullptr) || gSelected.isSelected(o)) {
-        return exaggeration;
+        exaggerationFinal  = exaggeration;
     } else {
-        return 1;
+        exaggerationFinal = 1;
+    }
+    // add selectorFrameScale
+    if ((o != nullptr) && gSelected.isSelected(o)) {
+        return (exaggerationFinal * s.selectorFrameScale);
+    } else {
+        return exaggerationFinal;
     }
 }
 
@@ -435,6 +450,8 @@ GUIVisualizationSettings::GUIVisualizationSettings(bool _netedit) :
     addFullName(false, 60, RGBColor(255, 0, 128, 255)),
     poiSize(0), poiName(false, 50, RGBColor(255, 0, 128, 255)),
     poiType(false, 60, RGBColor(255, 0, 128, 255)),
+    poiText(false, 80, RGBColor(140, 0, 255, 255)),
+    poiTextParam("PARAM_TEXT"),
     polySize(0), polyName(false, 50, RGBColor(255, 0, 128, 255)),
     polyType(false, 60, RGBColor(255, 0, 128, 255)),
     showSizeLegend(true),
@@ -442,7 +459,7 @@ GUIVisualizationSettings::GUIVisualizationSettings(bool _netedit) :
     showVehicleColorLegend(false),
     gaming(false),
     drawBoundaries(false),
-    selectionScale(1.),
+    selectorFrameScale(1.),
     drawForPositionSelection(false),
     drawForRectangleSelection(false),
     forceDrawForPositionSelection(false),
@@ -1518,9 +1535,11 @@ GUIVisualizationSettings::save(OutputDevice& dev) const {
     dev.closeTag();
     // pois
     dev.openTag(SUMO_TAG_VIEWSETTINGS_POIS);
+    dev.writeAttr("poiTextParam", poiTextParam);
     poiSize.print(dev, "poi");
     poiName.print(dev, "poiName");
     poiType.print(dev, "poiType");
+    poiText.print(dev, "poiText");
     poiColorer.save(dev);
     dev.closeTag();
     // polys
@@ -1788,6 +1807,12 @@ GUIVisualizationSettings::operator==(const GUIVisualizationSettings& v2) {
     if (poiType != v2.poiType) {
         return false;
     }
+    if (poiText != v2.poiText) {
+        return false;
+    }
+    if (poiTextParam != v2.poiTextParam) {
+        return false;
+    }
     if (polySize != v2.polySize) {
         return false;
     }
@@ -1909,7 +1934,7 @@ GUIVisualizationSettings::getCircleResolution() const {
 }
 
 
-bool 
+bool
 GUIVisualizationSettings::drawDottedContour() const {
     if (drawForPositionSelection || drawForRectangleSelection) {
         return false;
@@ -1919,9 +1944,9 @@ GUIVisualizationSettings::drawDottedContour() const {
 }
 
 
-bool 
-GUIVisualizationSettings::drawMovingGeometryPoint(const double exaggeration) const {
-    return (scale * neteditSizeSettings.movingGeometryPointRadius * exaggeration > 10);
+bool
+GUIVisualizationSettings::drawMovingGeometryPoint(const double exaggeration, const double radius) const {
+    return (scale * radius * exaggeration > 10);
 }
 
 /****************************************************************************/

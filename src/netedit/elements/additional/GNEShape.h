@@ -20,18 +20,25 @@
 #pragma once
 #include <config.h>
 
-#include <netedit/elements/GNEHierarchicalParentElements.h>
-#include <netedit/elements/GNEHierarchicalChildElements.h>
+#include <netedit/GNEMoveElement.h>
+#include <netedit/elements/GNEAttributeCarrier.h>
+#include <netedit/elements/GNEHierarchicalElement.h>
+#include <utils/gui/globjects/GUIGlObject.h>
 
 
 // ===========================================================================
 // class definitions
 // ===========================================================================
 
-class GNEShape : public GNEAttributeCarrier, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements {
+class GNEShape : public GUIGlObject, public GNEHierarchicalElement, public GNEMoveElement {
 
 public:
     /**@brief Constructor.
+     * @param[in] id Gl-id of the shape element (Must be unique)
+     * @param[in] net pointer to GNENet of this shape element belongs
+     * @param[in] type GUIGlObjectType of shape
+     * @param[in] tag Type of xml tag that define the shape element
+     * @param[in] block movement enable or disable additional movement
      * @param[in] net The net to inform about gui updates
      * @param[in] tag sumo xml tag of the element
      * @param[in] movementBlocked if movement of POI is blocked
@@ -43,41 +50,33 @@ public:
      * @param[in] TAZElementParents vector of TAZElement parents
      * @param[in] demandElementParents vector of demand element parents
      * @param[in] genericDataParents vector of generic data parents
-     * @param[in] junctionChildren vector of junction children
-     * @param[in] edgeChildren vector of edge children
-     * @param[in] laneChildren vector of lane children
-     * @param[in] additionalChildren vector of additional children
-     * @param[in] shapeChildren vector of shape children
-     * @param[in] TAZElementChildren vector of TAZElement children
-     * @param[in] demandElementChildren vector of demandElement children
-     * @param[in] genericDataChildren vector of genericData children
      */
-    GNEShape(GNENet* net, SumoXMLTag tag, bool movementBlocked,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren);
+    GNEShape(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, bool movementBlocked,
+             const std::vector<GNEJunction*>& junctionParents,
+             const std::vector<GNEEdge*>& edgeParents,
+             const std::vector<GNELane*>& laneParents,
+             const std::vector<GNEAdditional*>& additionalParents,
+             const std::vector<GNEShape*>& shapeParents,
+             const std::vector<GNETAZElement*>& TAZElementParents,
+             const std::vector<GNEDemandElement*>& demandElementParents,
+             const std::vector<GNEGenericData*>& genericDataParents);
 
     /// @brief Destructor
     virtual ~GNEShape();
 
+    /**@brief get move operation for the given shapeOffset
+    * @note returned GNEMoveOperation can be nullptr
+    */
+    virtual GNEMoveOperation* getMoveOperation(const double shapeOffset) = 0;
+
+    /// @brief remove geometry point in the clicked position
+    virtual void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList) = 0;
+
     /// @brief get ID (all shapes have one)
-    virtual const std::string& getID() const = 0;
+    const std::string& getID() const;
 
     /// @brief get GUIGlObject associated with this AttributeCarrier
-    virtual GUIGlObject* getGUIGlObject() = 0;
+    GUIGlObject* getGUIGlObject();
 
     /// @brief gererate a new ID for an element child
     virtual std::string generateChildID(SumoXMLTag childTag) = 0;
@@ -111,10 +110,13 @@ public:
     virtual void updateGeometry() = 0;
 
     /// @brief Returns position of additional in view
-    virtual Position getPositionInView() const = 0;
+    Position getPositionInView() const;
 
     /// @brief Returns the boundary to which the view shall be centered in order to show the object
-    virtual Boundary getCenteringBoundary() const = 0;
+    Boundary getCenteringBoundary() const;
+
+    /// @brief update centering boundary (implies change in RTREE)
+    virtual void updateCenteringBoundary(const bool updateGrid) = 0;
 
     /// @}
 
@@ -195,15 +197,24 @@ public:
     /// @}
 
 protected:
-    /// @brief boundary used during moving of elements
-    Boundary myMovingGeometryBoundary;
+    /// @brief object boundary
+    Boundary myBoundary;
 
     /// @brief flag to block movement
     bool myBlockMovement;
 
+    /// @brief replace shape parent lanes
+    void replaceShapeParentLanes(const std::string& value);
+
 private:
     /// @brief set attribute after validation
     virtual void setAttribute(SumoXMLAttr key, const std::string& value) = 0;
+
+    /// @brief set move shape
+    virtual void setMoveShape(const GNEMoveResult& moveResult) = 0;
+
+    /// @brief commit move shape
+    virtual void commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) = 0;
 
     /// @brief method for enabling the attribute and nothing else (used in GNEChange_EnableAttribute)
     void setEnabledAttribute(const int enabledAttributes);

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 22.04.2020 11:07:20 by Eclipse SUMO netedit Version v1_5_0+1230-5308a0e38c
+<!-- generated on 04.09.2020 13:45:37 by Eclipse SUMO netedit Version v1_6_0+1978-66ee23b95e
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\input_net.net.xml"/>
+        <sumo-net-file value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\input_net.net.xml"/>
     </input>
 
     <output>
-        <output-file value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\net.net.xml"/>
+        <output-file value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\net.net.xml"/>
     </output>
 
     <processing>
@@ -31,27 +31,27 @@
     </pedestrian>
 
     <netedit>
-        <additional-files value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\additionals.xml"/>
-        <additionals-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\additionals.xml"/>
-        <route-files value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\routes.xml"/>
-        <demandelements-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\routes.xml"/>
-        <data-files value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\datas.xml"/>
-        <dataelements-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\datas.xml"/>
+        <additional-files value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\additionals.xml"/>
+        <additionals-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\additionals.xml"/>
+        <route-files value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\routes.xml"/>
+        <demandelements-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\routes.xml"/>
+        <data-files value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\datas.xml"/>
+        <dataelements-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\datas.xml"/>
     </netedit>
 
     <visualisation>
-        <gui-settings-file value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\gui-settings.xml"/>
+        <gui-settings-file value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\gui-settings.xml"/>
         <window-size value="700,500"/>
         <window-pos value="50,50"/>
         <gui-testing value="true"/>
         <gui-testing-debug value="true"/>
-        <gui-testing.setting-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\guisettingsoutput.xml"/>
+        <gui-testing.setting-output value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\guisettingsoutput.xml"/>
     </visualisation>
 
     <report>
         <no-warnings value="true"/>
         <aggregate-warnings value="5"/>
-        <error-log value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.4_from_22Apr103902.5360\netedit.gui\bugs\grid\ticket3278\log.txt"/>
+        <error-log value="C:\Users\alva_pa\.texttest\tmp\netedit.gui.04Sep134508.1112\netedit.gui\bugs\grid\ticket3278\log.txt"/>
     </report>
 
 </configuration>

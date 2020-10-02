@@ -115,7 +115,7 @@ public:
 
     /* @brief proceeds to the next step of the route,
      * @return Whether the transportables plan continues  */
-    virtual bool proceed(MSNet* net, SUMOTime time);
+    virtual bool proceed(MSNet* net, SUMOTime time, const bool vehicleArrived = false);
 
     virtual void checkAccess(const MSStage* const prior, const bool isDisembark = true) {
         UNUSED_PARAMETER(prior);
@@ -134,7 +134,7 @@ public:
     }
 
     /// @brief returns the associated RNG
-    std::mt19937* getRNG() const; 
+    std::mt19937* getRNG() const;
 
     /// Returns the desired departure time.
     SUMOTime getDesiredDepart() const;
@@ -155,6 +155,11 @@ public:
     /// @brief Returns the current edge
     const MSEdge* getEdge() const {
         return (*myStep)->getEdge();
+    }
+
+    /// @brief Returns the current lane (may be nullptr)
+    const MSLane* getLane() const {
+        return (*myStep)->getLane();
     }
 
     /// @brief Returns the departure edge
@@ -317,6 +322,14 @@ public:
     inline const std::vector<MSTransportableDevice*>& getDevices() const {
         return myDevices;
     }
+
+    /** @brief Saves the current state into the given stream
+     */
+    void saveState(OutputDevice& out);
+
+    /** @brief Reconstructs the current state
+     */
+    void loadState(const std::string& state);
 
 protected:
     /// the plan of the transportable

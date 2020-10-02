@@ -39,7 +39,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_DemandElement, GNEChange, nullptr, 0)
 // ===========================================================================
 
 GNEChange_DemandElement::GNEChange_DemandElement(GNEDemandElement* demandElement, bool forward) :
-    GNEChange(demandElement, demandElement, forward, demandElement->isAttributeCarrierSelected()),
+    GNEChange(demandElement, forward, demandElement->isAttributeCarrierSelected()),
     myDemandElement(demandElement),
     myPath(demandElement->getPath()) {
     myDemandElement->incRef("GNEChange_DemandElement");
@@ -62,8 +62,6 @@ GNEChange_DemandElement::~GNEChange_DemandElement() {
                     pathElement.getJunction()->removePathDemandElement(myDemandElement);
                 }
             }
-            // remove demand element from parents and children
-            removeElementFromParentsAndChildren(myDemandElement);
         }
         delete myDemandElement;
     }
@@ -88,8 +86,8 @@ GNEChange_DemandElement::undo() {
                 pathElement.getJunction()->removePathDemandElement(myDemandElement);
             }
         }
-        // remove demand element from parents and children
-        removeElementFromParentsAndChildren(myDemandElement);
+        // restore container
+        restoreHierarchicalContainers();
     } else {
         // show extra information for tests
         WRITE_DEBUG("Adding " + myDemandElement->getTagStr() + " '" + myDemandElement->getID() + "' in GNEChange_DemandElement");
@@ -101,16 +99,16 @@ GNEChange_DemandElement::undo() {
         myDemandElement->getNet()->getAttributeCarriers()->insertDemandElement(myDemandElement);
         // compute demand element path
         myDemandElement->computePath();
-        // add demand element in parents and children
-        addElementInParentsAndChildren(myDemandElement);
+        // restore container
+        restoreHierarchicalContainers();
     }
     // update vehicle type selector if demand element is a VType and vehicle type Frame is shown
     if ((myDemandElement->getTagProperty().getTag() == SUMO_TAG_VTYPE) && myDemandElement->getNet()->getViewNet()->getViewParent()->getVehicleTypeFrame()->shown()) {
         myDemandElement->getNet()->getViewNet()->getViewParent()->getVehicleTypeFrame()->getVehicleTypeSelector()->refreshVehicleTypeSelector();
     }
     // update stack labels
-    if (myParentEdges.size() > 0) {
-        myParentEdges.front()->updateVehicleStackLabels();
+    if (myOriginalHierarchicalContainer.getParents<std::vector<GNEEdge*> >().size() > 0) {
+        myOriginalHierarchicalContainer.getParents<std::vector<GNEEdge*> >().front()->updateVehicleStackLabels();
     }
     // Requiere always save elements
     myDemandElement->getNet()->requireSaveDemandElements(true);
@@ -156,8 +154,8 @@ GNEChange_DemandElement::redo() {
         myDemandElement->getNet()->getViewNet()->getViewParent()->getVehicleTypeFrame()->getVehicleTypeSelector()->refreshVehicleTypeSelector();
     }
     // update stack labels
-    if (myParentEdges.size() > 0) {
-        myParentEdges.front()->updateVehicleStackLabels();
+    if (myOriginalHierarchicalContainer.getParents<std::vector<GNEEdge*> >().size() > 0) {
+        myOriginalHierarchicalContainer.getParents<std::vector<GNEEdge*> >().front()->updateVehicleStackLabels();
     }
     // Requiere always save elements
     myDemandElement->getNet()->requireSaveDemandElements(true);

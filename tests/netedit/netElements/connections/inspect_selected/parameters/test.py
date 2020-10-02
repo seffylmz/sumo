@@ -44,10 +44,10 @@ netedit.selectionInvert()
 netedit.inspectMode()
 
 # inspect selected connections
-netedit.leftClick(referencePosition, 250, 138)
+netedit.leftClick(referencePosition, 223, 170)
 
 # check parameters
-netedit.checkParameters(referencePosition, 7, True)
+netedit.checkParameters(referencePosition, 12, True)
 
 # save network
 netedit.saveNetwork(referencePosition)

@@ -44,7 +44,7 @@ public:
      * @param[in] block movement enable or disable additional movement
      * @param[in] parentLanes vector of parent lanes
      */
-    GNEDetector(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, double pos, SUMOTime freq, const std::string& filename,
+    GNEDetector(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, double pos, const std::string& freq, const std::string& filename,
                 const std::string& vehicleTypes, const std::string& name, bool friendlyPos, bool blockMovement, const std::vector<GNELane*>& parentLanes);
 
     /**@brief Constructor.
@@ -60,11 +60,16 @@ public:
      * @param[in] block movement enable or disable additional movement
      * @param[in] parentLanes vector of parent lanes
      */
-    GNEDetector(GNEAdditional* additionalParent, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, double pos, SUMOTime freq, const std::string& filename,
+    GNEDetector(GNEAdditional* additionalParent, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, double pos, const std::string& freq, const std::string& filename,
                 const std::string& name, bool friendlyPos, bool blockMovement, const std::vector<GNELane*>& parentLanes);
 
     /// @brief Destructor
     ~GNEDetector();
+
+    /**@brief get move operation for the given shapeOffset
+    * @note returned GNEMoveOperation can be nullptr
+    */
+    GNEMoveOperation* getMoveOperation(const double shapeOffset);    
 
     /// @name members and functions relative to write additionals into XML
     /// @{
@@ -89,24 +94,11 @@ public:
 
     /// @name Functions related with geometry of element
     /// @{
-    /**@brief change the position of the element geometry without saving in undoList
-     * @param[in] offset Position used for calculate new position of geometry without updating RTree
-     */
-    virtual void moveGeometry(const Position& offset) = 0;
-
-    /**@brief commit geometry changes in the attributes of an element after use of moveGeometry(...)
-     * @param[in] undoList The undoList on which to register changes
-     */
-    virtual void commitGeometryMoving(GNEUndoList* undoList) = 0;
-
     /// @brief update pre-computed geometry information
     virtual void updateGeometry() = 0;
 
-    /// @brief Returns position of additional in view
-    Position getPositionInView() const;
-
-    /// @brief Returns the boundary to which the view shall be centered in order to show the object
-    Boundary getCenteringBoundary() const;
+    /// @brief update centering boundary (implies change in RTREE)
+    void updateCenteringBoundary(const bool updateGrid);
 
     /// @brief split geometry
     void splitEdgeGeometry(const double splitPosition, const GNENetworkElement* originalElement, const GNENetworkElement* newElement, GNEUndoList* undoList);
@@ -171,7 +163,7 @@ protected:
     double myPositionOverLane;
 
     /// @brief The aggregation period the values the detector collects shall be summed up.
-    SUMOTime myFreq;
+    std::string myFreq;
 
     /// @brief The path to the output file
     std::string myFilename;
@@ -182,9 +174,22 @@ protected:
     /// @brief Flag for friendly position
     bool myFriendlyPosition;
 
+    /// @brief draw E1 shape
+    void drawE1Shape(const GUIVisualizationSettings& s, const double exaggeration, const double scaledWidth,
+                     const RGBColor& mainColor, const RGBColor& secondColor) const;
+
+    /// @brief draw detector Logo
+    void drawDetectorLogo(const GUIVisualizationSettings& s, const double exaggeration, const std::string& logo, const RGBColor& textColor) const;
+
 private:
     /// @brief set attribute after validation
     virtual void setAttribute(SumoXMLAttr key, const std::string& value) = 0;
+
+    /// @brief set move shape
+    void setMoveShape(const GNEMoveResult& moveResult);
+
+    /// @brief commit move shape
+    void commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList);
 
     /// @brief Invalidate return position of additional
     const Position& getPosition() const = delete;

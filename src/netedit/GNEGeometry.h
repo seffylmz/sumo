@@ -46,14 +46,14 @@ class GNEAdditional;
 class GNEDemandElement;
 class GNEJunction;
 class GNEViewNet;
-class GNEHierarchicalParentElements;
+class GNEHierarchicalElement;
 
 // ===========================================================================
 // class definitions
 // ===========================================================================
 
 struct GNEGeometry {
-    
+
     /// @brief struct for variables used in Geometry extremes
     struct ExtremeGeometry {
         /// @brief constructor
@@ -80,6 +80,9 @@ struct GNEGeometry {
         Geometry();
 
         /// @brief parameter constructor
+        Geometry(const PositionVector& shape);
+
+        /// @brief parameter constructor
         Geometry(const PositionVector& shape, const std::vector<double>& shapeRotations, const std::vector<double>& shapeLengths);
 
         /**@brief update geometry shape
@@ -87,8 +90,8 @@ struct GNEGeometry {
          * @param extremeGeometry ExtremeGeometry used to cut/adjust shape
          */
         void updateGeometry(const PositionVector& shape, double startPos = -1, double endPos = -1,
-            const Position& extraFirstPosition = Position::INVALID,
-            const Position& extraLastPosition = Position::INVALID);
+                            const Position& extraFirstPosition = Position::INVALID,
+                            const Position& extraLastPosition = Position::INVALID);
 
         /// @brief update position and rotation
         void updateGeometry(const Position& position, const double rotation);
@@ -103,16 +106,10 @@ struct GNEGeometry {
         void updateGeometry(const GNEAdditional* additional);
 
         /// @brief update geometry (using a new shape, rotations and lenghts)
-        void updateGeometry(const Geometry &geometry);
+        void updateGeometry(const Geometry& geometry);
 
         /// @brief scale geometry
         void scaleGeometry(const double scale);
-
-        /// @brief get Position
-        const Position& getPosition() const;
-
-        /// @brief get rotation
-        double getRotation() const;
 
         /// @brief The shape of the additional element
         const PositionVector& getShape() const;
@@ -123,21 +120,12 @@ struct GNEGeometry {
         /// @brief The lengths of the single shape parts
         const std::vector<double>& getShapeLengths() const;
 
-        /// @brief check if position is over a shape geometry point
-        int getGeometryPointIndex(const Position& position, const double radius) const;
-
     private:
         /// @brief clear geometry
         void clearGeometry();
 
         /// @brief calculate shape rotations and lengths
         void calculateShapeRotationsAndLengths();
-
-        /// @brief get single position
-        Position myPosition;
-
-        /// @brief get single rotation
-        double myRotation;
 
         /// @brief element shape
         PositionVector myShape;
@@ -149,13 +137,20 @@ struct GNEGeometry {
         std::vector<double> myShapeLengths;
 
         /// @brief lane (to use lane geometry)
-        const GNELane *myLane;
+        const GNELane* myLane;
 
         /// @brief additional (to use additional geometry)
-        const GNEAdditional *myAdditional;
+        const GNEAdditional* myAdditional;
 
         /// @brief Invalidated assignment operator
         Geometry& operator=(const Geometry& other) = delete;
+    };
+
+    /// @enum for dotted cotour type
+    enum class DottedContourType {
+        INSPECT,
+        FRONT,
+        MOVE
     };
 
     /// @brief class for pack all variables related with DottedGeometry color
@@ -165,8 +160,11 @@ struct GNEGeometry {
         /// @brief constructor
         DottedGeometryColor(const GUIVisualizationSettings& settings);
 
-        /// @brief get color (and change flag)
-        const RGBColor &getColor();
+        /// @brief get inspected color (and change flag)
+        const RGBColor& getInspectedColor();
+
+        /// @brief get front color (and change flag)
+        const RGBColor& getFrontColor();
 
         /// @brief change color
         void changeColor();
@@ -193,7 +191,7 @@ struct GNEGeometry {
         struct Segment {
             /// @brief default constructor
             Segment();
-            
+
             /// @brief constructor for a given shape
             Segment(PositionVector newShape);
 
@@ -218,17 +216,20 @@ struct GNEGeometry {
 
         /// @brief constructor for extremes
         DottedGeometry(const GUIVisualizationSettings& s,
-                       const DottedGeometry &topDottedGeometry, const bool drawFirstExtrem, 
-                       const DottedGeometry &botDottedGeometry, const bool drawLastExtrem);
+                       const DottedGeometry& topDottedGeometry, const bool drawFirstExtrem,
+                       const DottedGeometry& botDottedGeometry, const bool drawLastExtrem);
 
         /// @brief update DottedGeometry (using lane shape)
-        void updateDottedGeometry(const GUIVisualizationSettings& s, const GNELane *lane);
+        void updateDottedGeometry(const GUIVisualizationSettings& s, const GNELane* lane);
 
         /// @brief update DottedGeometry (using shape)
         void updateDottedGeometry(const GUIVisualizationSettings& s, PositionVector shape, const bool closeShape);
 
-        /// @brief draw dottedShape
-        void drawDottedGeometry(DottedGeometryColor &dottedGeometryColor) const;
+        /// @brief draw inspected dottedShape
+        void drawInspectedDottedGeometry(DottedGeometryColor& dottedGeometryColor) const;
+
+        /// @brief draw front inspected dottedShape
+        void drawFrontDottedGeometry(DottedGeometryColor& dottedGeometryColor) const;
 
         /// @brief move shape to side
         void moveShapeToSide(const double value);
@@ -267,13 +268,13 @@ struct GNEGeometry {
             Segment(const GNELane* lane, const bool valid);
 
             /// @brief parameter constructor for segments which geometry will be storaged in segment
-            Segment(const GNELane* lane, const Geometry &geometry, const bool valid);
+            Segment(const GNELane* lane, const Geometry& geometry, const bool valid);
 
             /// @brief parameter constructor for lane2lane connections
             Segment(const GNELane* lane, const GNELane* nextLane, const bool valid);
 
             /// @brief update segment using geometry
-            void update(const Geometry &geometry);
+            void update(const Geometry& geometry);
 
             /// @brief update segment using lane
             void update(const GNELane* lane);
@@ -358,13 +359,13 @@ struct GNEGeometry {
         void insertLaneSegment(const GNELane* lane, const bool valid);
 
         /// @brief insert custom segment
-        void insertCustomSegment(const GNELane* lane, const Geometry &geometry, const bool valid);
+        void insertCustomSegment(const GNELane* lane, const Geometry& geometry, const bool valid);
 
         /// @brief insert entire lane2lane segment (used to avoid unnecessary calculation in calculatePartialShapeRotationsAndLengths)
         void insertLane2LaneSegment(const GNELane* currentLane, const GNELane* nextLane, const bool valid);
 
         /// @brief update custom segment
-        void updateCustomSegment(const int segmentIndex, const Geometry &geometry);
+        void updateCustomSegment(const int segmentIndex, const Geometry& geometry);
 
         /// @brief update lane2Lane segment (used to avoid unnecessary calculation in calculatePartialShapeRotationsAndLengths)
         void updateLane2LaneSegment(const int segmentIndex, const GNELane* lane, const GNELane* nextLane);
@@ -417,13 +418,13 @@ struct GNEGeometry {
         /// @brief update
         void updateLane2laneConnection();
 
-        /// @brief check if exist a lane2lane geometry for the given tolane 
+        /// @brief check if exist a lane2lane geometry for the given tolane
         bool exist(const GNELane* toLane) const;
 
-        /// @brief get lane2lane geometry 
+        /// @brief get lane2lane geometry
         const GNEGeometry::Geometry& getLane2laneGeometry(const GNELane* toLane) const;
 
-        /// @brief get lane2lane dotted geometry 
+        /// @brief get lane2lane dotted geometry
         const GNEGeometry::DottedGeometry& getLane2laneDottedGeometry(const GNELane* toLane) const;
 
     protected:
@@ -441,26 +442,62 @@ struct GNEGeometry {
         Lane2laneConnection& operator=(const Lane2laneConnection& other) = delete;
     };
 
-    /// @brief struct for pack all variables and functions relative to connections between hierarchical element and their children
-    struct ParentConnections {
+    /// @brief class to pack all variables and functions relative to connections between hierarchical element and their children
+    class HierarchicalConnections {
+
+    private:
+        /// @brief connection geometry
+        class ConnectionGeometry {
+
+        public:
+            /// @brief parameter constructor
+            ConnectionGeometry(GNELane* lane);
+
+            /// @brief get lane
+            const GNELane* getLane() const;
+
+            /// @brief get position
+            const Position& getPosition() const;
+
+            /// @brief get rotation
+            double getRotation() const;
+
+        private:
+            /// @brief lane
+            GNELane* myLane;
+
+            /// @brief position
+            Position myPosition;
+
+            /// @brief rotation
+            double myRotation;
+
+            /// @brief default constructor
+            ConnectionGeometry();
+        };
+
+    public:
         /// @brief constructor
-        ParentConnections(GNEHierarchicalParentElements* hierarchicalElement);
+        HierarchicalConnections(GNEHierarchicalElement* hierarchicalElement);
 
         /// @brief update Connection's geometry
         void update();
 
         /// @brief draw connections between Parent and childrens
-        void draw(const GUIVisualizationSettings& s, const GUIGlObjectType parentType) const;
+        void drawConnection(const GUIVisualizationSettings& s, const GNEAttributeCarrier* AC, const double exaggeration) const;
+
+        /// @brief draw dotted connections between Parent and childrens
+        void drawDottedConnection(const DottedContourType type, const GUIVisualizationSettings& s, const double exaggeration) const;
 
         /// @brief position and rotation of every symbol over lane
-        std::vector<std::pair<Position, double> > symbolsPositionAndRotation;
+        std::vector<ConnectionGeometry> symbolsPositionAndRotation;
 
-        /// @brief Matrix with the Vertex's positions of connections between parents an their children
-        std::vector<PositionVector> connectionPositions;
+        /// @brief geometry connections between parents an their children
+        std::vector<GNEGeometry::Geometry> connectionsGeometries;
 
     private:
         /// @brief pointer to hierarchical element parent
-        GNEHierarchicalParentElements* myHierarchicalElement;
+        GNEHierarchicalElement* myHierarchicalElement;
     };
 
     /// @brief return angle between two points (used in geometric calculations)
@@ -477,17 +514,17 @@ struct GNEGeometry {
      * @brief path list of pathElements (lanes)
      * @param extremeGeometry ExtremeGeometry used to cut/adjust shape
      */
-    static void calculateLaneGeometricPath(GNEGeometry::SegmentGeometry& segmentGeometry, 
-        const std::vector<GNEPathElements::PathElement>& path,
-        GNEGeometry::ExtremeGeometry &extremeGeometry);
+    static void calculateLaneGeometricPath(GNEGeometry::SegmentGeometry& segmentGeometry,
+                                           const std::vector<GNEPathElements::PathElement>& path,
+                                           GNEGeometry::ExtremeGeometry& extremeGeometry);
 
     /**@brief calculate route between edges
      * @brief segmentGeometry segment geometry to be updated
      * @brief lane GNELane that called this function
      * @param extremeGeometry ExtremeGeometry used to cut/adjust shape
      */
-    static void updateGeometricPath(GNEGeometry::SegmentGeometry& segmentGeometry, const GNELane* lane, 
-        GNEGeometry::ExtremeGeometry &extremeGeometry);
+    static void updateGeometricPath(GNEGeometry::SegmentGeometry& segmentGeometry, const GNELane* lane,
+                                    GNEGeometry::ExtremeGeometry& extremeGeometry);
 
     /// @brief draw lane geometry (use their own function due colors)
     static void drawLaneGeometry(const GNEViewNet* viewNet, const PositionVector& shape, const std::vector<double>& rotations,
@@ -497,36 +534,40 @@ struct GNEGeometry {
     static void drawGeometry(const GNEViewNet* viewNet, const Geometry& geometry, const double width);
 
     /// @brief draw geometry points
-    static void drawGeometryPoints(const GUIVisualizationSettings& s, const GNEViewNet* viewNet, const Geometry& geometry, 
-        const RGBColor &geometryPointColor, const RGBColor &textColor, const double radius, const double exaggeration);
+    static void drawGeometryPoints(const GUIVisualizationSettings& s, const GNEViewNet* viewNet, const PositionVector& shape,
+                                   const RGBColor& geometryPointColor, const RGBColor& textColor, const double radius, const double exaggeration);
 
     /// @brief draw moving hint
-    static void drawMovingHint(const GUIVisualizationSettings& s, const GNEViewNet* viewNet, const Geometry& geometry, 
-        const RGBColor &hintColor, const double radius, const double exaggeration);
+    static void drawMovingHint(const GUIVisualizationSettings& s, const GNEViewNet* viewNet, const PositionVector& shape,
+                               const RGBColor& hintColor, const double radius, const double exaggeration);
 
     /// @brief draw geometry segment
     static void drawSegmentGeometry(const GNEViewNet* viewNet, const SegmentGeometry::Segment& segment, const double width);
 
     /// @brief draw dotted contour for the given dottedGeometry (used by lanes, routes, etc.)
-    static void drawDottedContourLane(const GUIVisualizationSettings& s, const DottedGeometry &dottedGeometry, const double width, const bool drawFirstExtrem, const bool drawLastExtrem);
+    static void drawDottedContourLane(const DottedContourType type, const GUIVisualizationSettings& s, const DottedGeometry& dottedGeometry, const double width, const bool drawFirstExtrem, const bool drawLastExtrem);
 
     /// @brief draw dotted contour for the given dottedGeometries (used by edges)
-    static void drawDottedContourEdge(const GUIVisualizationSettings& s, const GNEEdge* edge, const bool drawFrontExtreme, const bool drawBackExtreme);
+    static void drawDottedContourEdge(const DottedContourType type, const GUIVisualizationSettings& s, const GNEEdge* edge, const bool drawFrontExtreme, const bool drawBackExtreme);
 
     /// @brief draw dotted contour for the given closed shape (used by Juctions, shapes and TAZs)
-    static void drawDottedContourClosedShape(const GUIVisualizationSettings& s, const PositionVector &shape, const double exaggeration);
+    static void drawDottedContourClosedShape(const DottedContourType type, const GUIVisualizationSettings& s, const PositionVector& shape, const double exaggeration);
 
     /// @brief draw dotted contour for the given shape (used by additionals)
-    static void drawDottedContourShape(const GUIVisualizationSettings& s, const PositionVector &shape, const double width, const double exaggeration);
+    static void drawDottedContourShape(const DottedContourType type, const GUIVisualizationSettings& s, const PositionVector& shape, const double width, const double exaggeration);
 
     /// @brief draw dotted contour for the given Position and radius (used by Juctions and POIs)
-    static void drawDottedContourCircle(const GUIVisualizationSettings& s, const Position &pos, const double radius, const double exaggeration);
+    static void drawDottedContourCircle(const DottedContourType type, const GUIVisualizationSettings& s, const Position& pos, const double radius, const double exaggeration);
 
     /// @brief draw dotted squared contour (used by additionals and demand elements)
-    static void drawDottedSquaredShape(const GUIVisualizationSettings& s, const Position &pos, const double width, const double height, const double rot, const double exaggeration);
+    static void drawDottedSquaredShape(const DottedContourType type, const GUIVisualizationSettings& s, const Position& pos,
+                                       const double width, const double height, const double offsetX, const double offsetY, const double rot, const double exaggeration);
 
     /// @brief get a circle around the given position
     static PositionVector getVertexCircleAroundPosition(const Position& pos, const double width, const int steps = 8);
+
+    /// @brief rotate over lane (used by Lock icons, detector logos, etc.)
+    static void rotateOverLane(const double rot);
 
 private:
     /// @brief Storage for precomputed sin/cos-values describing a circle

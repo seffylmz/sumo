@@ -19,10 +19,6 @@
 /****************************************************************************/
 #include <config.h>
 
-#include <netedit/elements/data/GNEGenericData.h>
-#include <netedit/elements/demand/GNEDemandElement.h>
-#include <netedit/elements/network/GNELane.h>
-#include <netedit/elements/network/GNEJunction.h>
 #include <netedit/GNENet.h>
 
 #include "GNEPathElements.h"
@@ -42,29 +38,29 @@ GNEPathElements::PathElement::PathElement(GNELane* lane) :
 }
 
 
-void 
+void
 GNEPathElements::PathElement::updateNextLane(GNELane* lane) {
     myNextLane = lane;
 }
 
 
-GNEJunction* 
+GNEJunction*
 GNEPathElements::PathElement::getJunction() const {
     if (myNextLane) {
-        return myLane->getParentEdge()->getSecondParentJunction();
+        return myLane->getParentEdge()->getParentJunctions().back();
     } else {
         return nullptr;
     }
 }
 
 
-GNELane* 
+GNELane*
 GNEPathElements::PathElement::getLane() const {
     return myLane;
 }
 
 
-GNELane* 
+GNELane*
 GNEPathElements::PathElement::getNextLane() const {
     return myNextLane;
 }
@@ -73,32 +69,6 @@ GNEPathElements::PathElement::getNextLane() const {
 GNEPathElements::PathElement::PathElement():
     myLane(nullptr),
     myNextLane(nullptr) {
-}
-
-// ---------------------------------------------------------------------------
-// GNEPathElements::PathElement - methods
-// ---------------------------------------------------------------------------
-
-GNEPathElements::JunctionPathElementMarker::JunctionPathElementMarker() {}
-
-
-bool 
-GNEPathElements::JunctionPathElementMarker::exist(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement) {
-    if (myContainer.count(tag) == 0) {
-        return false;
-    } else if (myContainer.at(tag).count(pathElement.getLane()) == 0) {
-        return false;
-    } else if (myContainer.at(tag).at(pathElement.getLane()).count(pathElement.getNextLane()) == 0) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
-
-void 
-GNEPathElements::JunctionPathElementMarker::mark(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement) {
-    myContainer[tag][pathElement.getLane()].insert(pathElement.getNextLane());
 }
 
 // ---------------------------------------------------------------------------
@@ -135,11 +105,11 @@ GNEPathElements::getPath() const {
 }
 
 
-void 
+void
 GNEPathElements::drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane, const double offset) const {
     // additionals
     if (myAdditionalElement) {
-        for (const auto &pathElement : myPathElements) {
+        for (const auto& pathElement : myPathElements) {
             if (pathElement.getLane() == lane) {
                 myAdditionalElement->drawPartialGL(s, lane, offset);
             }
@@ -147,7 +117,7 @@ GNEPathElements::drawLanePathChildren(const GUIVisualizationSettings& s, const G
     }
     // demand elements
     if (myDemandElement) {
-        for (const auto &pathElement : myPathElements) {
+        for (const auto& pathElement : myPathElements) {
             if (pathElement.getLane() == lane) {
                 myDemandElement->drawPartialGL(s, lane, offset);
             }
@@ -155,7 +125,7 @@ GNEPathElements::drawLanePathChildren(const GUIVisualizationSettings& s, const G
     }
     // generic datas (only in supermode Data)
     if (myGenericData && myGenericData->isGenericDataVisible()) {
-        for (const auto &pathElement : myPathElements) {
+        for (const auto& pathElement : myPathElements) {
             if (pathElement.getLane() == lane) {
                 myGenericData->drawPartialGL(s, lane, offset);
             }
@@ -164,50 +134,29 @@ GNEPathElements::drawLanePathChildren(const GUIVisualizationSettings& s, const G
 }
 
 
-void 
-GNEPathElements::drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction, const double offset, GNEPathElements::JunctionPathElementMarker &junctionPathElementMarker) const {
+void
+GNEPathElements::drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction, const double offset) const {
     // additionals
     if (myAdditionalElement) {
-        for (const auto &pathElement : myPathElements) {
+        for (const auto& pathElement : myPathElements) {
             if (pathElement.getJunction() == junction) {
-                // always draw in position/rectangle selection
-                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
-                    myAdditionalElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
-                } else if (!junctionPathElementMarker.exist( myAdditionalElement->getTagProperty().getTag(), pathElement)) {
-                    myAdditionalElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
-                    // register/mark path element
-                    junctionPathElementMarker.mark(myAdditionalElement->getTagProperty().getTag(), pathElement);
-                }
+                myAdditionalElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
             }
         }
     }
     // demand elements
     if (myDemandElement) {
-        for (const auto &pathElement : myPathElements) {
+        for (const auto& pathElement : myPathElements) {
             if (pathElement.getJunction() == junction) {
-                // always draw in position/rectangle selection
-                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
-                    myDemandElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
-                } else if (!junctionPathElementMarker.exist(myDemandElement->getTagProperty().getTag(), pathElement)) {
-                    myDemandElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
-                    // register/mark path element
-                    junctionPathElementMarker.mark(myDemandElement->getTagProperty().getTag(), pathElement);
-                }
+                myDemandElement->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
             }
         }
     }
     // generic datas
     if (myGenericData && myGenericData->isGenericDataVisible()) {
-        for (const auto &pathElement : myPathElements) {
+        for (const auto& pathElement : myPathElements) {
             if (pathElement.getJunction() == junction) {
-                // always draw in position/rectangle selection
-                if (s.drawForPositionSelection || s.drawForRectangleSelection) {
-                    myGenericData->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
-                } else if (!junctionPathElementMarker.exist(myGenericData->getTagProperty().getTag(), pathElement)) {
-                    myGenericData->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
-                    // register/mark path element
-                    junctionPathElementMarker.mark(myGenericData->getTagProperty().getTag(), pathElement);
-                }
+                myGenericData->drawPartialGL(s, pathElement.getLane(), pathElement.getNextLane(), offset);
             }
         }
     }
@@ -253,14 +202,14 @@ GNEPathElements::calculatePathLanes(SUMOVehicleClass vClass, const bool allowedV
 }
 
 
-void 
+void
 GNEPathElements::calculateConsecutivePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, const std::vector<GNEEdge*>& edges) {
     // remove path elements from lanes and junctions
     removeElements();
     // set new paht lanes
     myPathElements.clear();
     // use edges as path elements
-    for (const auto &edge : edges) {
+    for (const auto& edge : edges) {
         if (allowedVClass) {
             myPathElements.push_back(edge->getLaneByAllowedVClass(vClass));
         } else {
@@ -274,14 +223,14 @@ GNEPathElements::calculateConsecutivePathLanes(SUMOVehicleClass vClass, const bo
 }
 
 
-void 
+void
 GNEPathElements::calculateConsecutivePathLanes(const std::vector<GNELane*>& lanes) {
     // remove path elements from lanes and junctions
     removeElements();
     // set new route lanes
     myPathElements.clear();
     // use edges as path elements
-    for (const auto &lane : lanes) {
+    for (const auto& lane : lanes) {
         myPathElements.push_back(lane);
     }
     // update path elements
@@ -325,8 +274,8 @@ GNEPathElements::resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClas
 }
 
 
-void 
-GNEPathElements::calculateGenericDataLanePath(const std::vector<GNEEdge*> &edges) {
+void
+GNEPathElements::calculateGenericDataLanePath(const std::vector<GNEEdge*>& edges) {
     // only for demand elements
     if (myGenericData) {
         // remove path elements from lanes and junctions
@@ -334,8 +283,8 @@ GNEPathElements::calculateGenericDataLanePath(const std::vector<GNEEdge*> &edges
         // clear path
         myPathElements.clear();
         // iterate over edge lanes and add it
-        for (const auto &edge : edges) {
-            for (const auto &lane : edge->getLanes()) {
+        for (const auto& edge : edges) {
+            for (const auto& lane : edge->getLanes()) {
                 myPathElements.push_back(lane);
             }
         }
@@ -347,7 +296,7 @@ GNEPathElements::calculateGenericDataLanePath(const std::vector<GNEEdge*> &edges
 }
 
 
-void 
+void
 GNEPathElements::addElements() {
     // additionals
     if (myAdditionalElement) {
@@ -417,22 +366,22 @@ GNEPathElements::removeElements() {
 }
 
 
-void 
+void
 GNEPathElements::updatePathElements() {
     // update next lanes
-    for (auto i = myPathElements.begin(); i != (myPathElements.end()-1); i++) {
-        i->updateNextLane((i+1)->getLane());
+    for (auto i = myPathElements.begin(); i != (myPathElements.end() - 1); i++) {
+        i->updateNextLane((i + 1)->getLane());
     }
 }
 
 
-const std::vector<GNEEdge*> 
+const std::vector<GNEEdge*>
 GNEPathElements::calculateFromViaToEdges(GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*>& viaEdges) {
     // declare a edge vector
     std::vector<GNEEdge*> edges;
     // add from-via-edge lanes
     edges.push_back(fromLane->getParentEdge());
-    for (const auto &edge : viaEdges) {
+    for (const auto& edge : viaEdges) {
         edges.push_back(edge);
     }
     edges.push_back(toLane->getParentEdge());

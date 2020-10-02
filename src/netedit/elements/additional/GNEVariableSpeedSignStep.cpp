@@ -31,33 +31,24 @@
 // member method definitions
 // ===========================================================================
 
-GNEVariableSpeedSignStep::GNEVariableSpeedSignStep(GNEVariableSpeedSignDialog* variableSpeedSignDialog) :
-    GNEAdditional(variableSpeedSignDialog->getEditedAdditional(), variableSpeedSignDialog->getEditedAdditional()->getNet(), GLO_VSS, SUMO_TAG_STEP, "", false,
-        {}, {}, {}, {variableSpeedSignDialog->getEditedAdditional()}, {}, {}, {}, {},   // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                                                // Children
-    myTime(0),
-    mySpeed(0) {
-    // fill VSS Step with default values
-    setDefaultValues();
-    // set time Attribute manually
-    if (getParentAdditionals().at(0)->getChildAdditionals().size() > 0) {
-        myTime = getParentAdditionals().at(0)->getChildAdditionals().back()->getAttributeDouble(SUMO_ATTR_TIME) + 1;
-    } else {
-        myTime = 0;
-    }
-}
-
-
 GNEVariableSpeedSignStep::GNEVariableSpeedSignStep(GNEAdditional* variableSpeedSignParent, double time, double speed) :
-    GNEAdditional(variableSpeedSignParent, variableSpeedSignParent->getNet(), GLO_VSS, SUMO_TAG_STEP, "", false,
-        {}, {}, {}, {variableSpeedSignParent}, {}, {}, {}, {},  // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                        // Children
+    GNEAdditional(variableSpeedSignParent->getNet(), GLO_VSS, SUMO_TAG_STEP, "", false,
+        {}, {}, {}, {variableSpeedSignParent}, {}, {}, {}, {}),
     myTime(time),
     mySpeed(speed) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
 GNEVariableSpeedSignStep::~GNEVariableSpeedSignStep() {}
+
+
+GNEMoveOperation* 
+GNEVariableSpeedSignStep::getMoveOperation(const double /*shapeOffset*/) {
+    // VSS Steps cannot be moved
+    return nullptr;
+}
 
 
 double
@@ -67,32 +58,15 @@ GNEVariableSpeedSignStep::getTime() const {
 
 
 void
-GNEVariableSpeedSignStep::moveGeometry(const Position&) {
-    // This additional cannot be moved
-}
-
-
-void
-GNEVariableSpeedSignStep::commitGeometryMoving(GNEUndoList*) {
-    // This additional cannot be moved
-}
-
-
-void
 GNEVariableSpeedSignStep::updateGeometry() {
     // This additional doesn't own a geometry
 }
 
 
-Position
-GNEVariableSpeedSignStep::getPositionInView() const {
-    return getParentAdditionals().at(0)->getPositionInView();
-}
-
-
-Boundary
-GNEVariableSpeedSignStep::getCenteringBoundary() const {
-    return getParentAdditionals().at(0)->getCenteringBoundary();
+void
+GNEVariableSpeedSignStep::updateCenteringBoundary(const bool /*updateGrid*/) {
+    // use boundary of parent element
+    myBoundary = getParentAdditionals().front()->getCenteringBoundary();
 }
 
 
@@ -150,7 +124,6 @@ GNEVariableSpeedSignStep::setAttribute(SumoXMLAttr key, const std::string& value
         return; //avoid needless changes, later logic relies on the fact that attributes have changed
     }
     switch (key) {
-        case SUMO_ATTR_ID:
         case SUMO_ATTR_TIME:
         case SUMO_ATTR_SPEED:
         case GNE_ATTR_PARAMETERS:
@@ -165,8 +138,6 @@ GNEVariableSpeedSignStep::setAttribute(SumoXMLAttr key, const std::string& value
 bool
 GNEVariableSpeedSignStep::isValid(SumoXMLAttr key, const std::string& value) {
     switch (key) {
-        case SUMO_ATTR_ID:
-            return isValidAdditionalID(value);
         case SUMO_ATTR_TIME:
             if (canParse<double>(value)) {
                 // Check that
@@ -177,8 +148,8 @@ GNEVariableSpeedSignStep::isValid(SumoXMLAttr key, const std::string& value) {
                 }
                 // check that there isn't duplicate times
                 int counter = 0;
-                for (auto i : getParentAdditionals().at(0)->getChildAdditionals()) {
-                    if (i->getAttributeDouble(SUMO_ATTR_TIME) == newTime) {
+                for (const auto& VSSChild : getParentAdditionals().at(0)->getChildAdditionals()) {
+                    if (!VSSChild->getTagProperty().isSymbol() && VSSChild->getAttributeDouble(SUMO_ATTR_TIME) == newTime) {
                         counter++;
                     }
                 }
@@ -220,9 +191,6 @@ GNEVariableSpeedSignStep::getHierarchyName() const {
 void
 GNEVariableSpeedSignStep::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
-        case SUMO_ATTR_ID:
-            myNet->getAttributeCarriers()->updateID(this, value);
-            break;
         case SUMO_ATTR_TIME:
             myTime = parse<double>(value);
             break;
@@ -235,6 +203,18 @@ GNEVariableSpeedSignStep::setAttribute(SumoXMLAttr key, const std::string& value
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
+}
+
+
+void
+GNEVariableSpeedSignStep::setMoveShape(const GNEMoveResult& /*moveResult*/) {
+    // nothing to do
+}
+
+
+void 
+GNEVariableSpeedSignStep::commitMoveShape(const GNEMoveResult& /*moveResult*/, GNEUndoList* /*undoList*/) {
+    // nothing to do
 }
 
 

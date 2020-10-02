@@ -35,7 +35,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_Additional, GNEChange, nullptr, 0)
 // ===========================================================================
 
 GNEChange_Additional::GNEChange_Additional(GNEAdditional* additional, bool forward) :
-    GNEChange(additional, additional, forward, additional->isAttributeCarrierSelected()),
+    GNEChange(additional, forward, additional->isAttributeCarrierSelected()),
     myAdditional(additional),
     myPath(additional->getPath()) {
     myAdditional->incRef("GNEChange_Additional");
@@ -51,15 +51,13 @@ GNEChange_Additional::~GNEChange_Additional() {
         if (myAdditional->getNet()->getAttributeCarriers()->additionalExist(myAdditional)) {
             // delete additional from net
             myAdditional->getNet()->getAttributeCarriers()->deleteAdditional(myAdditional);
-            // remove element from path
+            // remove element from path (used by E2 multilane detectors)
             for (const auto& pathElement : myPath) {
                 pathElement.getLane()->removePathAdditionalElement(myAdditional);
                 if (pathElement.getJunction()) {
                     pathElement.getJunction()->removePathAdditionalElement(myAdditional);
                 }
             }
-            // remove additional from parents and children
-            removeElementFromParentsAndChildren(myAdditional);
         }
         delete myAdditional;
     }
@@ -84,8 +82,8 @@ GNEChange_Additional::undo() {
                 pathElement.getJunction()->removePathAdditionalElement(myAdditional);
             }
         }
-        // remove additional from parents and children
-        removeElementFromParentsAndChildren(myAdditional);
+        // restore container
+        restoreHierarchicalContainers();
     } else {
         // show extra information for tests
         WRITE_DEBUG("Adding " + myAdditional->getTagStr() + " '" + myAdditional->getID() + "' in GNEChange_Additional");
@@ -95,8 +93,8 @@ GNEChange_Additional::undo() {
         }
         // insert additional into net
         myAdditional->getNet()->getAttributeCarriers()->insertAdditional(myAdditional);
-        // add additional in parent elements
-        addElementInParentsAndChildren(myAdditional);
+        // restore container
+        restoreHierarchicalContainers();
     }
     // Requiere always save additionals
     myAdditional->getNet()->requireSaveAdditionals(true);

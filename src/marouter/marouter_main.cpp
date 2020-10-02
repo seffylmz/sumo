@@ -252,6 +252,8 @@ computeRoutes(RONet& net, OptionsCont& oc, ODMatrix& matrix) {
         ROMAAssignments a(begin, end, oc.getBool("additive-traffic"), oc.getFloat("weight-adaption"), oc.getInt("max-alternatives"), net, matrix, *router);
         a.resetFlows();
 #ifdef HAVE_FOX
+        // this is just to init the CHRouter with the default vehicle
+        router->reset(&defaultVehicle);
         const int maxNumThreads = oc.getInt("routing-threads");
         while ((int)net.getThreadPool().size() < maxNumThreads) {
             new RONet::WorkerThread(net.getThreadPool(), provider);
@@ -391,9 +393,10 @@ main(int argc, char** argv) {
             SystemFrame::close();
             return 0;
         }
-        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+        SystemFrame::checkOptions();
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"), oc.getString("xml-validation.routes"));
         MsgHandler::initOutputOptions();
-        if (!(ROMAFrame::checkOptions() && SystemFrame::checkOptions())) {
+        if (!ROMAFrame::checkOptions()) {
             throw ProcessError();
         }
         RandHelper::initRandGlobal();

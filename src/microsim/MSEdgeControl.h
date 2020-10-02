@@ -34,14 +34,20 @@
 #include <queue>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/Named.h>
+#include <utils/common/StopWatch.h>
 #include <utils/router/SUMOAbstractRouter.h>
 #include <utils/router/RouterProvider.h>
 #include <utils/vehicle/SUMOVehicle.h>
 
 #include <utils/foxtools/FXSynchQue.h>
 #include <utils/foxtools/FXSynchSet.h>
+//#define THREAD_POOL
+#ifdef THREAD_POOL
+#include <utils/threadpool/WorkStealingThreadPool.h>
+#else
 #ifdef HAVE_FOX
 #include <utils/foxtools/FXWorkerThread.h>
+#endif
 #endif
 
 
@@ -187,10 +193,12 @@ public:
     /// @brief apply additional restrictions
     void setAdditionalRestrictions();
 
+#ifndef THREAD_POOL
 #ifdef HAVE_FOX
     FXWorkerThread::Pool& getThreadPool() {
         return myThreadPool;
     }
+#endif
 #endif
 
 public:
@@ -270,11 +278,15 @@ private:
 
     double myMinLengthGeometryFactor;
 
+#ifdef THREAD_POOL
+    WorkStealingThreadPool<> myThreadPool;
+#else
 #ifdef HAVE_FOX
     FXWorkerThread::Pool myThreadPool;
 #endif
+#endif
 
-    std::priority_queue<std::pair<int, int> > myRNGLoad;
+    std::vector<StopWatch<std::chrono::nanoseconds> > myStopWatch;
 
 private:
     /// @brief Copy constructor.

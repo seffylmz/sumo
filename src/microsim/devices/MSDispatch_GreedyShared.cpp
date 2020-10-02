@@ -36,14 +36,15 @@
 // ===========================================================================
 
 int
-MSDispatch_GreedyShared::dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, std::vector<Reservation*>& reservations) {
+MSDispatch_GreedyShared::dispatch(MSDevice_Taxi* taxi, std::vector<Reservation*>::iterator& resIt, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, std::vector<Reservation*>& reservations) {
+    const Reservation* const res = *resIt;
 #ifdef DEBUG_DISPATCH
     if (DEBUG_COND2(person)) {
         std::cout << SIMTIME << " dispatch taxi=" << taxi->getHolder().getID() << " person=" << toString(res->persons) << "\n";
     }
 #endif
+    const int capacityLeft = taxi->getHolder().getVehicleType().getPersonCapacity() - (int)res->persons.size();
     const SUMOTime now = MSNet::getInstance()->getCurrentTimeStep();
-    auto it = std::find(reservations.begin(), reservations.end(), res);
     // check whether the ride can be shared
     int shareCase = 0;
     Reservation* res2 = nullptr;
@@ -53,8 +54,11 @@ MSDispatch_GreedyShared::dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbs
     double relLoss2 = 0;
     double directTime = -1; // only computed once for res
     double directTime2 = -1;
-    for (auto it2 = it + 1; it2 != reservations.end(); it2++) {
+    for (auto it2 = resIt + 1; it2 != reservations.end(); it2++) {
         res2 = *it2;
+        if (capacityLeft < (int)res2->persons.size()) {
+            continue;
+        }
         // res picks up res2 on the way
         directTime2 = -1; // reset for new candidate
         const SUMOTime startPickup = MAX2(now, res->pickupTime);
@@ -84,8 +88,7 @@ MSDispatch_GreedyShared::dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbs
             const double absLoss_c2 = detourTime3 - directTime2;
             const double relLoss_c2 = absLoss_c2 / directTime2;
 
-            if (absLoss_c2 <= absLoss_c1 &&
-                    absLoss_c2 < myAbsoluteLossThreshold && relLoss_c2 < myRelativeLossThreshold) {
+            if (absLoss_c2 <= absLoss_c1 && absLoss_c2 < myAbsoluteLossThreshold && relLoss_c2 < myRelativeLossThreshold) {
                 shareCase = 2;
                 taxi->dispatchShared({res, res2, res, res2});
                 absLoss = absLossPickup;
@@ -101,7 +104,7 @@ MSDispatch_GreedyShared::dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbs
                 relLoss2 = 0;
             }
             if (shareCase != 0) {
-                reservations.erase(it2); // it (before i2) stays valid
+                reservations.erase(it2); // (it before it2) stays valid
                 break;
             } else {
 #ifdef DEBUG_DISPATCH
@@ -142,6 +145,7 @@ MSDispatch_GreedyShared::dispatch(MSDevice_Taxi* taxi, Reservation* res, SUMOAbs
         taxi->dispatch(*res);
     }
     servedReservation(res); // deleting res
+    resIt = reservations.erase(resIt);
     return shareCase == 0 ? 1 : 2;
 }
 

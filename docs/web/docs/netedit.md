@@ -70,10 +70,11 @@ via menus. The following input formats are supported:
 | Undo           | Ctrl + Z | Undo the last change |
 | Redo           | Ctrl + Y | Redo the last change |
 
-| Supermodes shortcuts | Key | Description                                     |
-| -------------------- | --- | ----------------------------------------------- |
-| Network              | F3  | Change to Network supermode (default )          |
-| Demand               | F4  | Change to Demand supermode(implies recomputing) |
+| Supermodes shortcuts | Key  | Description                                      |
+| -------------------- | ---- | ------------------------------------------------ |
+| Network              | F2   | Change to supermode Network (default )           |
+| Demand               | F3   | Change to supermode Demand (implies recomputing) |
+| Data                 | F4   | Change to supermode Data (implies recomputing)   |
 
 | Common modes shortcuts | Key | Description              |
 | ---------------------- | --- | ------------------------ |
@@ -102,6 +103,11 @@ via menus. The following input formats are supported:
 | Create persons        | P   | Change to mode "Create Persons"      |
 | Create person plans   | C   | Change to mode "Create Person Plans" |
 
+| Data mode shortcuts | Key  | Description                                 |
+| ------------------- | ---- | ------------------------------------------- |
+| Edge data           | E    | Change to mode "Create Edge Datas"          |
+| Edge relation data  | E    | Change to mode "Create Edge Relation datas" |
+
 | Processing shortcuts    | Key | Description                            |
 | ----------------------- | --- | -------------------------------------- |
 | Compute Junction        | F5  | Compute junctions of the network       |
@@ -115,10 +121,10 @@ via menus. The following input formats are supported:
 | Locate Edges     | Shift + e | Open dialog to locate edges          |
 | Locate TLS       | Shift + t | Open dialog to locate Traffic Lights |
 
-| Help shortcuts       | Key | Description                                      |
-| -------------------- | --- | ------------------------------------------------ |
-| Online documentation | F1  | Open the online documentation in the web browser |
-| About                | F2  | Open the about dialog                            |
+| Help shortcuts       | Key  | Description                                      |
+| -------------------- | ---- | ------------------------------------------------ |
+| Online documentation | F1   | Open the online documentation in the web browser |
+| About                | F12  | Open the about dialog                            |
 
 | Text edition shortcuts | Key      | Description                                      |
 | ---------------------- | -------- | ------------------------------------------------ |
@@ -269,7 +275,7 @@ with multiple elements of the same type this mode behaves differently:
 #### Generic Parameters
 Most simulation objects support [Generic Parameters](Simulation/GenericParameters.md) to express custom user data and supplemental configurations. They can be edited with the 'Edit parameters' dialog which is accessible with the 'Edit parameters' button. 
 
-In inspect mode, a serialized form of the parameters is also given. In this form, all parameters are concatenated using the '=' sign between key and value and by using the '|' sign between parameters. Serialization of key value pars that use these separating characters in their key or value is currently not supported by netedit (though peritted by SUMO). 
+In inspect mode, a serialized form of the parameters is also given. In this form, all parameters are concatenated using the '=' sign between key and value and by using the '|' sign between parameters. Serialization of key value pars that use these separating characters in their key or value is currently not supported by netedit (though permitted by SUMO). 
 The serialized form is useful in select mode when selecting objects with a particular parameter.
 
 #### Edge template
@@ -397,7 +403,7 @@ comparison operator ('<', '\>', '=') and a number.
 - For string attributes the match expression must consist of a
 comparison operator ('', '=', '\!', '^') and a string.
   - *(no operator) matches if string is a substring of that
-    object'ts attribute.*
+    object's attribute.*
   - '=' matches if string is an exact match.
   - '\!' matches if string is not a substring.
   - '^' matches if string is not an exact match.
@@ -478,6 +484,11 @@ parallel
   - When dragging the edge, the edge will move locally and the
     junction will move in parallel
 
+#### Moving Polygons and TAZs
+
+- When clicking over an Polygon/TAZ edge or vertex, contour will be moved
+- If Polygon/TAZ is inspected an option "block shape" is enabled, then entire shape will be moved
+  
 ## Network specific modes
 
 ### Create Edges
@@ -598,11 +609,16 @@ color code. To select another connection, cancel the current one with
 <ESC\>.
 
 ### Traffic Lights
-
 Set junctions to be controlled or uncontrolled by a traffic light. Edit
 all aspects of static or actuated signal plans. Visualizes a signal
 phase by coloring the controlled lane-to-lane connections according to
-the signal state. Editing signal states can be accomplished in either of
+the signal state. 
+
+When entering this mode, each traffic light controlled junction is indicated with a traffic light icon.
+- Click on an uncontrolled junction to add a traffic light
+- Click on a controlled junction to make it uncontrolled, add a program (copy) or change a program.
+
+Editing signal states can be accomplished in either of
 the following ways:
 
 - right-clicking on any controlled lane and picking a new state
@@ -617,6 +633,15 @@ the following ways:
   phases of the current plan will be affected
 
 You can also change the state by editing the phase table directly.
+
+#### Joined Traffic Lights
+To edit the program of a joined traffic light, any of its junctions can be clicked in traffic light mode.
+This will cause connections from all controlled junctions to be highlighted.
+
+To create a joined traffic light you need to use inspect mode:
+
+- make all junctions controlled by a traffic light
+- set their 'tl' attribute (traffic light id) to the same value
 
 ![](images/GNETLS.png)General view of the TLS frame
 
@@ -684,7 +709,7 @@ associated with certain weights for the inputs (Sources) and outputs
 (Sinks) (Similar to a [Flow
 Network](https://en.wikipedia.org/wiki/Flow_network)).
 
-The creation of TAZs requiere two steps:
+The creation of TAZs require two steps:
 
 1\) **Creation of the polygon (similar to a polygon shape):** Press
 *Start drawing* button (or alternatively press ENTER key) and click over
@@ -908,11 +933,21 @@ Person plans can be sorted clicking over person plan in hierarchy.
 
 ### Person plan mode
 
-Person plans can be extended using the PersonPlan frame. Once the Person plan frame is opened, a person or a personFlow has to be choosen. Then the last edge of the plan will be marked, and the new created person plans will start from there.
+Person plans can be extended using the PersonPlan frame. Once the Person plan frame is opened, a person or a personFlow has to be chosen. Then the last edge of the plan will be marked, and the new created person plans will start from there.
 
 ![](images/PersonPlanCreator1.png)Person_0 has only a trip, and the last edge of person's trip is marked (green)
 
 ![](images/PersonPlanCreator2.png)Multiple person plans can be added continuously
+
+## Data specific modes
+
+### Edge data mode
+
+Edge data
+
+### Edge rel data mode
+
+Edge rel data
 
 
 # netedit elements
@@ -1190,7 +1225,7 @@ normal traffic demand of the simulation does not reach the specified
 number of vehsPerHour. Furthermore, the defined edge speed will be
 adjusted to the specified speed similar of the operation of a variable
 speed sign. Calibrators will also remove vehicles if the traffic on
-their lane is jammend beyond the specified flow and speed. This ensures
+their lane is jammed beyond the specified flow and speed. This ensures
 that invalid jams do not grow upstream past a calibrator. A double click
 over the calibrator icon opens the values editor.
 
@@ -1260,7 +1295,7 @@ values editor.
 
 ## Edge and Lane
 
-- *Split edge here*: Split an edge into two differentes edges
+- *Split edge here*: Split an edge into two different edges
   connected with a junction.
 
 ![](images/neteditSplit1.png)Edge is splitted in the mouse cursor position
@@ -1269,7 +1304,7 @@ values editor.
 - *Split edge in both directions here*: Is similar to *Split edge
   here*, but generate splitted edges in both directions.
 - *Reverse edge*: Reverse the direction of an edge. If the ID of the
-  start and end junctions of edge are respectively A and B, afer this
+  start and end junctions of edge are respectively A and B, after this
   operation start and end junction will be B and A.
 - *Add reverse direction*: If don't exist, add a revere edge between
   two junctions
@@ -1476,6 +1511,11 @@ original junction positions.
 
 ## Converting an intersection into a roundabout
 
+1. set junction attribute 'radius' to the desired roundabout radius
+2. right-click on junction and select 'Convert to roundabout'
+
+## Converting an intersection into a roundabout (old manual method)
+
 1.  For each of the 'legs' of the intersection do a right click and
     select 'split edges in both directions' at some distance from the
     intersection (this will be the radius of the roundabout)
@@ -1488,12 +1528,12 @@ original junction positions.
     This should work by default but may fail if the shape of the roundabout is not 'round' enough.
     Either correct the geometry or assign a higher priority value to the roundabout roads
     (compared to the adjoining roads)
-  
+
 Assuming you have a regular intersection
 
 - **Visual example**
 
-![](images/RoundAbout1.png)We have a itersection(Junction) with four edges.
+![](images/RoundAbout1.png)We have a intersection (Junction) with four edges.
 ![](images/RoundAbout2.png)Split edges in both direction in every edge to
 create new junctions.
 
@@ -1555,6 +1595,12 @@ settings may help
 When setting coloring to *by selection* it may also help to modify
 transparency for selected or unselected edges.
 
+## Defining a linear referencing scheme [(kilometrage / mileage/ chainage)](Simulation/Railways.md#kilometrage_mileage_chainage)
+
+1. [Define a route](#route_mode) through your network along which you want to define kilometrage (in forward direction)
+2. (optional) Use inspect mode to et the initial distance value of the first edge of the route (default 0)
+3) Right click the route element (in demand mode) and select 'Apply distance along route'
+
 ## Creating [bidirectional railway tracks](Simulation/Railways.md)
 
 ### Make an existing track bidirectional
@@ -1595,7 +1641,7 @@ To make a unidirectional track usable in both directions,
     [Simulation/OppositeDirectionDriving](Simulation/OppositeDirectionDriving.md).
 
     !!! note
-        Currently, the only support is in switching on **--opposites.guess** via the [F10-menu](#processing_menu_options).
+        Currently, you may either switching on **--opposites.guess** via the [F10-menu](#processing_menu_options) or set lane attribute 'oppositeID'.
 
   - Editing [walkingarea
     shapes](Networks/PlainXML.md#walking_areas)

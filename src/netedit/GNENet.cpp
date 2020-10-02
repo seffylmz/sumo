@@ -42,20 +42,12 @@
 #include <netedit/changes/GNEChange_Shape.h>
 #include <netedit/dialogs/GNEFixAdditionalElements.h>
 #include <netedit/dialogs/GNEFixDemandElements.h>
-#include <netedit/elements/additional/GNEAdditional.h>
 #include <netedit/elements/additional/GNEAdditionalHandler.h>
-#include <netedit/elements/additional/GNEPoly.h>
-#include <netedit/elements/additional/GNETAZElement.h>
 #include <netedit/elements/data/GNEDataInterval.h>
-#include <netedit/elements/data/GNEDataSet.h>
-#include <netedit/elements/data/GNEGenericData.h>
 #include <netedit/elements/demand/GNERouteHandler.h>
-#include <netedit/elements/demand/GNEVehicleType.h>
 #include <netedit/elements/network/GNEConnection.h>
 #include <netedit/elements/network/GNECrossing.h>
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/elements/network/GNEJunction.h>
-#include <netedit/elements/network/GNELane.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
 #include <netwrite/NWFrame.h>
 #include <netwrite/NWWriter_SUMO.h>
@@ -293,22 +285,22 @@ GNENet::deleteJunction(GNEJunction* junction, GNEUndoList* undoList) {
     // find all crossings of neightbour junctions that shares an edge of this junction
     std::vector<GNECrossing*> crossingsToRemove;
     std::vector<GNEJunction*> junctionNeighbours = junction->getJunctionNeighbours();
-    for (const auto &junction : junctionNeighbours) {
+    for (const auto& junction : junctionNeighbours) {
         // iterate over crossing of neighbour juntion
-        for (const auto &crossing : junction->getGNECrossings()) {
+        for (const auto& crossing : junction->getGNECrossings()) {
             // if at least one of the edges of junction to remove belongs to a crossing of the neighbour junction, delete it
-            if (crossing->checkEdgeBelong(junction->getGNEEdges())) {
+            if (crossing->checkEdgeBelong(junction->getChildEdges())) {
                 crossingsToRemove.push_back(crossing);
             }
         }
     }
     // delete crossings top remove
-    for (const auto &crossing : crossingsToRemove) {
+    for (const auto& crossing : crossingsToRemove) {
         deleteCrossing(crossing, undoList);
     }
     // deleting edges changes in the underlying EdgeVector so we have to make a copy
     const EdgeVector incidentEdges = junction->getNBNode()->getEdges();
-    for (const auto &edge : incidentEdges) {
+    for (const auto& edge : incidentEdges) {
         deleteEdge(myAttributeCarriers->getEdges().at(edge->getID()), undoList, true);
     }
     // remove any traffic lights from the traffic light container (avoids lots of warnings)
@@ -360,23 +352,23 @@ GNENet::deleteEdge(GNEEdge* edge, GNEUndoList* undoList, bool recomputeConnectio
         deleteGenericData(edge->getChildGenericDatas().front(), undoList);
     }
     // remove edge from crossings related with this edge
-    edge->getFirstParentJunction()->removeEdgeFromCrossings(edge, undoList);
-    edge->getSecondParentJunction()->removeEdgeFromCrossings(edge, undoList);
+    edge->getParentJunctions().front()->removeEdgeFromCrossings(edge, undoList);
+    edge->getParentJunctions().back()->removeEdgeFromCrossings(edge, undoList);
     // update affected connections
     if (recomputeConnections) {
-        edge->getFirstParentJunction()->setLogicValid(false, undoList);
-        edge->getSecondParentJunction()->setLogicValid(false, undoList);
+        edge->getParentJunctions().front()->setLogicValid(false, undoList);
+        edge->getParentJunctions().back()->setLogicValid(false, undoList);
     } else {
-        edge->getFirstParentJunction()->removeConnectionsTo(edge, undoList, true);
-        edge->getFirstParentJunction()->removeConnectionsFrom(edge, undoList, true);
+        edge->getParentJunctions().front()->removeConnectionsTo(edge, undoList, true);
+        edge->getParentJunctions().front()->removeConnectionsFrom(edge, undoList, true);
     }
     // if junction source is a TLS and after deletion will have only an edge, remove TLS
-    if (edge->getFirstParentJunction()->getNBNode()->isTLControlled() && (edge->getFirstParentJunction()->getGNEOutgoingEdges().size() <= 1)) {
-        edge->getFirstParentJunction()->setAttribute(SUMO_ATTR_TYPE, toString(SumoXMLNodeType::PRIORITY), undoList);
+    if (edge->getParentJunctions().front()->getNBNode()->isTLControlled() && (edge->getParentJunctions().front()->getGNEOutgoingEdges().size() <= 1)) {
+        edge->getParentJunctions().front()->setAttribute(SUMO_ATTR_TYPE, toString(SumoXMLNodeType::PRIORITY), undoList);
     }
     // if junction destiny is a TLS and after deletion will have only an edge, remove TLS
-    if (edge->getSecondParentJunction()->getNBNode()->isTLControlled() && (edge->getSecondParentJunction()->getGNEIncomingEdges().size() <= 1)) {
-        edge->getSecondParentJunction()->setAttribute(SUMO_ATTR_TYPE, toString(SumoXMLNodeType::PRIORITY), undoList);
+    if (edge->getParentJunctions().back()->getNBNode()->isTLControlled() && (edge->getParentJunctions().back()->getGNEIncomingEdges().size() <= 1)) {
+        edge->getParentJunctions().back()->setAttribute(SUMO_ATTR_TYPE, toString(SumoXMLNodeType::PRIORITY), undoList);
     }
     // Delete edge
     undoList->add(new GNEChange_Edge(edge, false), true);
@@ -435,7 +427,7 @@ GNENet::replaceIncomingEdge(GNEEdge* which, GNEEdge* by, GNEUndoList* undoList) 
         replaceInListAttribute(rerouter, SUMO_ATTR_EDGES, which->getID(), by->getID(), undoList);
     }
     // replace in crossings
-    for (const auto& crossing : which->getSecondParentJunction()->getGNECrossings()) {
+    for (const auto& crossing : which->getParentJunctions().back()->getGNECrossings()) {
         // if at least one of the edges of junction to remove belongs to a crossing of the source junction, delete it
         replaceInListAttribute(crossing, SUMO_ATTR_EDGES, which->getID(), by->getID(), undoList);
     }
@@ -469,7 +461,7 @@ GNENet::deleteLane(GNELane* lane, GNEUndoList* undoList, bool recomputeConnectio
         }
         // delete lane shape children
         while (lane->getChildShapes().size() > 0) {
-            undoList->add(new GNEChange_Shape(lane->getChildShapes().front(), false), true);
+            deleteShape(lane->getChildShapes().front(), undoList);
         }
         // delete lane demand element children
         while (lane->getChildDemandElements().size() > 0) {
@@ -481,11 +473,11 @@ GNENet::deleteLane(GNELane* lane, GNEUndoList* undoList, bool recomputeConnectio
         }
         // update affected connections
         if (recomputeConnections) {
-            edge->getFirstParentJunction()->setLogicValid(false, undoList);
-            edge->getSecondParentJunction()->setLogicValid(false, undoList);
+            edge->getParentJunctions().front()->setLogicValid(false, undoList);
+            edge->getParentJunctions().back()->setLogicValid(false, undoList);
         } else {
-            edge->getFirstParentJunction()->removeConnectionsTo(edge, undoList, true, lane->getIndex());
-            edge->getFirstParentJunction()->removeConnectionsFrom(edge, undoList, true, lane->getIndex());
+            edge->getParentJunctions().front()->removeConnectionsTo(edge, undoList, true, lane->getIndex());
+            edge->getParentJunctions().front()->removeConnectionsFrom(edge, undoList, true, lane->getIndex());
         }
         // delete lane
         const NBEdge::Lane& laneAttrs = edge->getNBEdge()->getLaneStruct(lane->getIndex());
@@ -502,7 +494,7 @@ GNENet::deleteConnection(GNEConnection* connection, GNEUndoList* undoList) {
     undoList->p_begin("delete " + toString(SUMO_TAG_CONNECTION));
     // obtain NBConnection to remove
     NBConnection deleted = connection->getNBConnection();
-    GNEJunction* junctionDestiny = connection->getEdgeFrom()->getSecondParentJunction();
+    GNEJunction* junctionDestiny = connection->getEdgeFrom()->getParentJunctions().back();
     junctionDestiny->markAsModified(undoList);
     undoList->add(new GNEChange_Connection(connection->getEdgeFrom(), connection->getNBEdgeConnection(), connection->isAttributeCarrierSelected(), false), true);
     junctionDestiny->invalidateTLS(undoList, deleted);
@@ -588,7 +580,7 @@ GNENet::deleteDemandElement(GNEDemandElement* demandElement, GNEUndoList* undoLi
         throw ProcessError("Trying to delete a default Vehicle Type");
     } else {
         // check if currently is being inspected
-        if (myViewNet->getInspectedAttributeCarrier() == demandElement) {
+        if (myViewNet->isAttributeCarrierInspected(demandElement)) {
             myViewNet->getViewParent()->getInspectorFrame()->clearInspectedAC();
         }
         undoList->p_begin("delete " + demandElement->getTagStr());
@@ -613,7 +605,7 @@ GNENet::deleteDataSet(GNEDataSet* dataSet, GNEUndoList* undoList) {
     // make a copy of all generic data children
     auto copyOfDataIntervalChildren = dataSet->getDataIntervalChildren();
     // clear all data intervals (this will be delete also the dataSet)
-    for (const auto &dataInterval : copyOfDataIntervalChildren) {
+    for (const auto& dataInterval : copyOfDataIntervalChildren) {
         deleteDataInterval(dataInterval.second, undoList);
     }
     undoList->p_end();
@@ -626,7 +618,7 @@ GNENet::deleteDataInterval(GNEDataInterval* dataInterval, GNEUndoList* undoList)
     // make a copy of all generic data children
     auto copyOfGenericDataChildren = dataInterval->getGenericDataChildren();
     // clear all generic datas (this will be delete also the data intervals)
-    for (const auto &genericData : copyOfGenericDataChildren) {
+    for (const auto& genericData : copyOfGenericDataChildren) {
         deleteGenericData(genericData, undoList);
     }
     undoList->p_end();
@@ -645,8 +637,8 @@ GNENet::deleteGenericData(GNEGenericData* genericData, GNEUndoList* undoList) {
         deleteGenericData(genericData->getChildGenericDatas().front(), undoList);
     }
     // get pointer to dataInterval and dataSet
-    GNEDataInterval *dataInterval = genericData->getDataIntervalParent();
-    GNEDataSet *dataSet = dataInterval->getDataSetParent();
+    GNEDataInterval* dataInterval = genericData->getDataIntervalParent();
+    GNEDataSet* dataSet = dataInterval->getDataSetParent();
     // remove generic data
     undoList->add(new GNEChange_GenericData(genericData, false), true);
     // check if data interval is empty
@@ -669,8 +661,8 @@ GNENet::duplicateLane(GNELane* lane, GNEUndoList* undoList, bool recomputeConnec
     GNEEdge* edge = lane->getParentEdge();
     const NBEdge::Lane& laneAttrs = edge->getNBEdge()->getLaneStruct(lane->getIndex());
     if (recomputeConnections) {
-        edge->getFirstParentJunction()->setLogicValid(false, undoList);
-        edge->getFirstParentJunction()->setLogicValid(false, undoList);
+        edge->getParentJunctions().front()->setLogicValid(false, undoList);
+        edge->getParentJunctions().front()->setLogicValid(false, undoList);
     }
     GNELane* newLane = new GNELane(edge, lane->getIndex());
     undoList->add(new GNEChange_Lane(edge, newLane, laneAttrs, true, recomputeConnections), true);
@@ -795,16 +787,16 @@ GNENet::splitEdge(GNEEdge* edge, const Position& pos, GNEUndoList* undoList, GNE
     }
     baseName += '.';
     // create a new edge from the new junction to the previous destination
-    GNEEdge* secondPart = createEdge(newJunction, edge->getSecondParentJunction(), edge,
+    GNEEdge* secondPart = createEdge(newJunction, edge->getParentJunctions().back(), edge,
                                      undoList, baseName + toString(posBase + (int)edgeSplitPosition), true, false, false);
     // fix connections from the split edge (must happen before changing SUMO_ATTR_TO)
-    edge->getSecondParentJunction()->replaceIncomingConnections(edge, secondPart, undoList);
+    edge->getParentJunctions().back()->replaceIncomingConnections(edge, secondPart, undoList);
     // remove affected crossings from junction (must happen before changing SUMO_ATTR_TO)
     std::vector<NBNode::Crossing> affectedCrossings;
-    for (GNECrossing* crossing : edge->getSecondParentJunction()->getGNECrossings()) {
+    for (GNECrossing* crossing : edge->getParentJunctions().back()->getGNECrossings()) {
         if (crossing->checkEdgeBelong(edge)) {
             NBNode::Crossing nbC = *crossing->getNBCrossing();
-            undoList->add(new GNEChange_Crossing(edge->getSecondParentJunction(), nbC, false), true);
+            undoList->add(new GNEChange_Crossing(edge->getParentJunctions().back(), nbC, false), true);
             EdgeVector newEdges;
             for (NBEdge* nbEdge : nbC.edges) {
                 if (nbEdge == edge->getNBEdge()) {
@@ -835,7 +827,7 @@ GNENet::splitEdge(GNEEdge* edge, const Position& pos, GNEUndoList* undoList, GNE
     }
     // re-add modified crossings
     for (const auto& nbC : affectedCrossings) {
-        undoList->add(new GNEChange_Crossing(secondPart->getSecondParentJunction(), nbC, true), true);
+        undoList->add(new GNEChange_Crossing(secondPart->getParentJunctions().back(), nbC, true), true);
     }
     // Split geometry of all child additional
     for (const auto& additional : edge->getChildAdditionals()) {
@@ -880,7 +872,7 @@ void
 GNENet::reverseEdge(GNEEdge* edge, GNEUndoList* undoList) {
     undoList->p_begin("reverse " + toString(SUMO_TAG_EDGE));
     deleteEdge(edge, undoList, false); // still exists. we delete it so we can reuse the name in case of resplit
-    GNEEdge* reversed = createEdge(edge->getSecondParentJunction(), edge->getFirstParentJunction(), edge, undoList, edge->getID(), false, true);
+    GNEEdge* reversed = createEdge(edge->getParentJunctions().back(), edge->getParentJunctions().front(), edge, undoList, edge->getID(), false, true);
     assert(reversed != 0);
     reversed->setAttribute(SUMO_ATTR_SHAPE, toString(edge->getNBEdge()->getInnerGeometry().reverse()), undoList);
     reversed->setAttribute(GNE_ATTR_SHAPE_START, edge->getAttribute(GNE_ATTR_SHAPE_END), undoList);
@@ -895,7 +887,7 @@ GNENet::addReversedEdge(GNEEdge* edge, GNEUndoList* undoList) {
     GNEEdge* reversed = nullptr;
     if (edge->getNBEdge()->getLaneSpreadFunction() == LaneSpreadFunction::RIGHT || isRailway(edge->getNBEdge()->getPermissions())) {
         // for rail edges, we assume bi-directional tracks are wanted
-        reversed = createEdge(edge->getSecondParentJunction(), edge->getFirstParentJunction(), edge, undoList, "-" + edge->getID(), false, true);
+        reversed = createEdge(edge->getParentJunctions().back(), edge->getParentJunctions().front(), edge, undoList, "-" + edge->getID(), false, true);
         assert(reversed != 0);
         reversed->setAttribute(SUMO_ATTR_SHAPE, toString(edge->getNBEdge()->getInnerGeometry().reverse()), undoList);
         reversed->setAttribute(GNE_ATTR_SHAPE_START, edge->getAttribute(GNE_ATTR_SHAPE_END), undoList);
@@ -934,7 +926,7 @@ GNENet::mergeJunctions(GNEJunction* moved, GNEJunction* target, GNEUndoList* und
     for (const auto& incomingNBEdge : incomingNBEdges) {
         // delete edges between the merged junctions
         GNEEdge* edge = myAttributeCarriers->getEdges().at(incomingNBEdge->getID());
-        if (edge->getFirstParentJunction() == target) {
+        if (edge->getParentJunctions().front() == target) {
             deleteEdge(edge, undoList, false);
         } else {
             undoList->p_add(new GNEChange_Attribute(edge, SUMO_ATTR_TO, target->getID()));
@@ -945,7 +937,7 @@ GNENet::mergeJunctions(GNEJunction* moved, GNEJunction* target, GNEUndoList* und
     for (const auto& outgoingNBEdge : outgoingNBEdges) {
         // delete edges between the merged junctions
         GNEEdge* edge = myAttributeCarriers->getEdges().at(outgoingNBEdge->getID());
-        if (edge->getSecondParentJunction() == target) {
+        if (edge->getParentJunctions().back() == target) {
             deleteEdge(edge, undoList, false);
         } else {
             undoList->p_add(new GNEChange_Attribute(edge, SUMO_ATTR_FROM, target->getID()));
@@ -966,7 +958,7 @@ GNENet::selectRoundabout(GNEJunction* junction, GNEUndoList* undoList) {
                 for (NBEdge* roundaboutEdge : roundabout) {
                     GNEEdge* e = retrieveEdge(roundaboutEdge->getID());
                     e->setAttribute(GNE_ATTR_SELECTED, "true", undoList);
-                    e->getSecondParentJunction()->setAttribute(GNE_ATTR_SELECTED, "true", undoList);
+                    e->getParentJunctions().back()->setAttribute(GNE_ATTR_SELECTED, "true", undoList);
                 }
                 undoList->p_end();
                 return;
@@ -1002,9 +994,9 @@ GNENet::createRoundabout(GNEJunction* junction, GNEUndoList* undoList) {
         //std::cout << " edge=" << edge->getID() << " prevOpposite=" << Named::getIDSecure(prevOpposite) << " newJunction=" << Named::getIDSecure(newJunction) << "\n";
         prevOpposite = edge->getOppositeEdge();
         const double geomLength = edge->getNBEdge()->getGeometry().length2D();
-        const double splitOffset = (edge->getSecondParentJunction() == junction 
-                ? MAX2(POSITION_EPS, geomLength - radius)
-                : MIN2(geomLength - POSITION_EPS, radius));
+        const double splitOffset = (edge->getParentJunctions().back() == junction
+                                    ? MAX2(POSITION_EPS, geomLength - radius)
+                                    : MIN2(geomLength - POSITION_EPS, radius));
         Position pos = edge->getNBEdge()->getGeometry().positionAtOffset2D(splitOffset);
         newJunction = splitEdge(edge, pos, undoList, newJunction);
         if (newJunctions.empty() || newJunction != newJunctions.back()) {
@@ -1031,7 +1023,7 @@ GNENet::createRoundabout(GNEJunction* junction, GNEUndoList* undoList) {
             const double angle = angle1 + lefthandSign * j * angleDiff / numSegments;
             innerGeom.push_back(center + Position(cos(angle) * radius, sin(angle) * radius));
         }
-        //std::cout << " newEdge=" << newEdge->getID() << " angle1=" << angle1 << " angle2=" << angle2 << " angleDiff=" << angleDiff 
+        //std::cout << " newEdge=" << newEdge->getID() << " angle1=" << angle1 << " angle2=" << angle2 << " angleDiff=" << angleDiff
         //    << " numSegments=" << numSegments << " innerGeom=" << innerGeom << "\n";
         newEdge->setAttribute(SUMO_ATTR_SHAPE, toString(innerGeom), undoList);
     }
@@ -1104,8 +1096,8 @@ GNENet::setViewNet(GNEViewNet* viewNet) {
     // add default vTypes
     myAttributeCarriers->addDefaultVTypes();
     // update geometry of all lanes (needed  for dotted geometry)
-    for (const auto &edge : myAttributeCarriers->getEdges()) {
-        for (const auto &lane : edge.second->getLanes()) {
+    for (const auto& edge : myAttributeCarriers->getEdges()) {
+        for (const auto& lane : edge.second->getLanes()) {
             lane->updateGeometry();
         }
     }
@@ -1145,7 +1137,7 @@ GNENet::retrieveEdge(GNEJunction* from, GNEJunction* to, bool failHard) const {
     if ((from != nullptr) && (to != nullptr)) {
         // iterate over Junctions of net
         for (const auto& edge : myAttributeCarriers->getEdges()) {
-            if ((edge.second->getFirstParentJunction() == from) && (edge.second->getSecondParentJunction() == to)) {
+            if ((edge.second->getParentJunctions().front() == from) && (edge.second->getParentJunctions().back() == to)) {
                 return edge.second;
             }
         }
@@ -1237,11 +1229,71 @@ std::vector<GNEEdge*>
 GNENet::retrieveEdges(bool onlySelected) {
     std::vector<GNEEdge*> result;
     // returns edges depending of selection
-    for (auto i : myAttributeCarriers->getEdges()) {
-        if (!onlySelected || i.second->isAttributeCarrierSelected()) {
-            result.push_back(i.second);
+    for (const auto &edge : myAttributeCarriers->getEdges()) {
+        if (!onlySelected || edge.second->isAttributeCarrierSelected()) {
+            result.push_back(edge.second);
         }
     }
+    return result;
+}
+
+
+std::vector<GNEEdge*> 
+GNENet::retrieve000180AngleEdges(bool onlySelected) const {
+    std::vector<GNEEdge*> result;
+    // returns edges depending of selection
+    for (const auto &edge : myAttributeCarriers->getEdges()) {
+        // check selection
+        if (!onlySelected || edge.second->isAttributeCarrierSelected()) {
+            // get junction positions
+            const Position firstJunctionPosition = edge.second->getParentJunctions().front()->getPositionInView();
+            const Position secondJunctionPosition = edge.second->getParentJunctions().back()->getPositionInView();
+            // calculate angle between both junction positions
+            double edgeAngle = RAD2DEG(firstJunctionPosition.angleTo2D(secondJunctionPosition));
+            // adjusto to 360º
+            while (edgeAngle < 0) {
+                edgeAngle += 360;
+            }
+            // fmod round towards zero which is not want we want for negative numbers
+            edgeAngle = fmod(edgeAngle, 360);
+            // check angle
+            if ((edgeAngle >= 0) && (edgeAngle < 180)) {
+                // add it in result
+                result.push_back(edge.second);
+            }
+        }
+    }
+    // return result
+    return result;
+}
+
+
+std::vector<GNEEdge*> 
+GNENet::retrieve180360AngleEdges(bool onlySelected) const {
+    std::vector<GNEEdge*> result;
+    // returns edges depending of selection
+    for (const auto &edge : myAttributeCarriers->getEdges()) {
+        // check selection
+        if (!onlySelected || edge.second->isAttributeCarrierSelected()) {
+            // get junction positions
+            const Position firstJunctionPosition = edge.second->getParentJunctions().front()->getPositionInView();
+            const Position secondJunctionPosition = edge.second->getParentJunctions().back()->getPositionInView();
+            // calculate angle between both junction positions
+            double edgeAngle = RAD2DEG(firstJunctionPosition.angleTo2D(secondJunctionPosition));
+            // adjusto to 360º
+            while (edgeAngle < 0) {
+                edgeAngle += 360;
+            }
+            // fmod round towards zero which is not want we want for negative numbers
+            edgeAngle = fmod(edgeAngle, 360);
+            // check angle
+            if ((edgeAngle >= 180) && (edgeAngle < 360)) {
+                // add it in result
+                result.push_back(edge.second);
+            }
+        }
+    }
+    // return result
     return result;
 }
 
@@ -1387,44 +1439,44 @@ GNENet::retrieveAttributeCarriers(SumoXMLTag type) {
     std::vector<GNEAttributeCarrier*> result;
     if (type == SUMO_TAG_NOTHING) {
         // return all elements
-        for (const auto &junction : myAttributeCarriers->getJunctions()) {
+        for (const auto& junction : myAttributeCarriers->getJunctions()) {
             result.push_back(junction.second);
-            for (const auto &crossing : junction.second->getGNECrossings()) {
+            for (const auto& crossing : junction.second->getGNECrossings()) {
                 result.push_back(crossing);
             }
         }
-        for (const auto &edge : myAttributeCarriers->getEdges()) {
+        for (const auto& edge : myAttributeCarriers->getEdges()) {
             result.push_back(edge.second);
-            for (const auto &lane : edge.second->getLanes()) {
+            for (const auto& lane : edge.second->getLanes()) {
                 result.push_back(lane);
             }
-            for (const auto &connection : edge.second->getGNEConnections()) {
+            for (const auto& connection : edge.second->getGNEConnections()) {
                 result.push_back(connection);
             }
         }
-        for (const auto &additionalSet : myAttributeCarriers->getAdditionals()) {
-            for (const auto &additional : additionalSet.second) {
+        for (const auto& additionalSet : myAttributeCarriers->getAdditionals()) {
+            for (const auto& additional : additionalSet.second) {
                 result.push_back(additional.second);
             }
         }
-        for (const auto &shapeSet : myAttributeCarriers->getShapes()) {
-            for (const auto &shape : shapeSet.second) {
+        for (const auto& shapeSet : myAttributeCarriers->getShapes()) {
+            for (const auto& shape : shapeSet.second) {
                 result.push_back(shape.second);
             }
         }
-        for (const auto &TAZSet : myAttributeCarriers->getTAZElements()) {
-            for (const auto &TAZElement : TAZSet.second) {
+        for (const auto& TAZSet : myAttributeCarriers->getTAZElements()) {
+            for (const auto& TAZElement : TAZSet.second) {
                 result.push_back(TAZElement.second);
             }
         }
-        for (const auto &demandElementSet: myAttributeCarriers->getDemandElements()) {
-            for (const auto &demandElement : demandElementSet.second) {
+        for (const auto& demandElementSet : myAttributeCarriers->getDemandElements()) {
+            for (const auto& demandElement : demandElementSet.second) {
                 result.push_back(demandElement.second);
             }
         }
-        for (const auto &dataSet : myAttributeCarriers->getDataSets()) {
+        for (const auto& dataSet : myAttributeCarriers->getDataSets()) {
             result.push_back(dataSet.second);
-            for (const auto &dataInterval: dataSet.second->getDataIntervalChildren()) {
+            for (const auto& dataInterval : dataSet.second->getDataIntervalChildren()) {
                 result.push_back(dataInterval.second);
                 for (const auto& genericData : dataInterval.second->getGenericDataChildren()) {
                     result.push_back(genericData);
@@ -1432,23 +1484,34 @@ GNENet::retrieveAttributeCarriers(SumoXMLTag type) {
             }
         }
     } else if (GNEAttributeCarrier::getTagProperties(type).isAdditionalElement()) {
-        // only returns additionals of a certain type.
-        for (const auto &additional : myAttributeCarriers->getAdditionals().at(type)) {
-            result.push_back(additional.second);
+        // iterate over all additionals
+        for (const auto& additionalTag : myAttributeCarriers->getAdditionals()) {
+            for (const auto& additional : additionalTag.second) {
+                if (additional.second->getTagProperty().getTag() == type) {
+                    result.push_back(additional.second);
+                } else {
+                    // check additional children
+                    for (const auto& additionalChild : additional.second->getChildAdditionals()) {
+                        if (additionalChild->getTagProperty().getTag() == type) {
+                            result.push_back(additionalChild);
+                        }
+                    }
+                }
+            }
         }
     } else if (GNEAttributeCarrier::getTagProperties(type).isShape()) {
         // only returns shapes of a certain type.
-        for (const auto &shape : myAttributeCarriers->getShapes().at(type)) {
+        for (const auto& shape : myAttributeCarriers->getShapes().at(type)) {
             result.push_back(shape.second);
         }
     } else if (GNEAttributeCarrier::getTagProperties(type).isTAZElement()) {
         // only returns TAZ of a certain type.
-        for (const auto &TAZElement : myAttributeCarriers->getTAZElements().at(type)) {
+        for (const auto& TAZElement : myAttributeCarriers->getTAZElements().at(type)) {
             result.push_back(TAZElement.second);
         }
     } else if (GNEAttributeCarrier::getTagProperties(type).isDemandElement()) {
         // only returns demand elements of a certain type.
-        for (const auto &demandElemet : myAttributeCarriers->getDemandElements().at(type)) {
+        for (const auto& demandElemet : myAttributeCarriers->getDemandElements().at(type)) {
             result.push_back(demandElemet.second);
         }
     } else if (GNEAttributeCarrier::getTagProperties(type).isGenericData()) {
@@ -1465,32 +1528,32 @@ GNENet::retrieveAttributeCarriers(SumoXMLTag type) {
         // return only a part of elements, depending of type
         switch (type) {
             case SUMO_TAG_JUNCTION:
-                for (const auto &junction : myAttributeCarriers->getJunctions()) {
+                for (const auto& junction : myAttributeCarriers->getJunctions()) {
                     result.push_back(junction.second);
                 }
                 break;
             case SUMO_TAG_EDGE:
-                for (const auto &edge : myAttributeCarriers->getEdges()) {
+                for (const auto& edge : myAttributeCarriers->getEdges()) {
                     result.push_back(edge.second);
                 }
                 break;
             case SUMO_TAG_LANE:
-                for (const auto &edge : myAttributeCarriers->getEdges()) {
-                    for (const auto &lane : edge.second->getLanes()) {
+                for (const auto& edge : myAttributeCarriers->getEdges()) {
+                    for (const auto& lane : edge.second->getLanes()) {
                         result.push_back(lane);
                     }
                 }
                 break;
             case SUMO_TAG_CONNECTION:
-                for (const auto &edge : myAttributeCarriers->getEdges()) {
-                    for (const auto &connection : edge.second->getGNEConnections()) {
+                for (const auto& edge : myAttributeCarriers->getEdges()) {
+                    for (const auto& connection : edge.second->getGNEConnections()) {
                         result.push_back(connection);
                     }
                 }
                 break;
             case SUMO_TAG_CROSSING:
-                for (const auto &junction : myAttributeCarriers->getJunctions()) {
-                    for (const auto &crossing : junction.second->getGNECrossings()) {
+                for (const auto& junction : myAttributeCarriers->getJunctions()) {
+                    for (const auto& crossing : junction.second->getGNECrossings()) {
                         result.push_back(crossing);
                     }
                 }
@@ -1753,7 +1816,7 @@ GNENet::joinSelectedJunctions(GNEUndoList* undoList) {
     for (auto it : allOutgoing) {
         // delete edges within the cluster
         GNEEdge* edge = myAttributeCarriers->getEdges().at(it->getID());
-        if (edge->getSecondParentJunction() == joined) {
+        if (edge->getParentJunctions().back() == joined) {
             edgesWithin.insert(it);
             deleteEdge(edge, undoList, false);
         } else {
@@ -2101,11 +2164,11 @@ GNENet::splitJunction(GNEJunction* junction, bool reconnect, GNEUndoList* undoLi
             for (auto& c : item.second) {
                 GNEEdge* out = retrieveEdge(c.toEdge->getID());
                 GNEEdge* newEdge = nullptr;
-                if (in->getSecondParentJunction() == out->getFirstParentJunction()) {
+                if (in->getParentJunctions().back() == out->getParentJunctions().front()) {
                     continue;
                 }
                 if (newEdges.count(c.toEdge) == 0) {
-                    newEdge = createEdge(in->getSecondParentJunction(), out->getFirstParentJunction(), in, undoList);
+                    newEdge = createEdge(in->getParentJunctions().back(), out->getParentJunctions().front(), in, undoList);
                     newEdges[c.toEdge] = newEdge;
                     newEdge->setAttribute(SUMO_ATTR_NUMLANES, "1", undoList);
                 } else {
@@ -2170,16 +2233,23 @@ GNENet::getSelectedAttributeCarriers(bool ignoreCurrentSupermode) {
     std::vector<GNEAttributeCarrier*> result;
     result.reserve(gSelected.getSelected().size());
     // iterate over all elements of global selection
-    for (auto i : gSelected.getSelected()) {
+    for (const auto& glID : gSelected.getSelected()) {
         // obtain AC
-        GNEAttributeCarrier* AC = retrieveAttributeCarrier(i, false);
+        GNEAttributeCarrier* AC = retrieveAttributeCarrier(glID, false);
         // check if attribute carrier exist and is selected
         if (AC && AC->isAttributeCarrierSelected()) {
-            // now check if selected supermode is correct
-            if (ignoreCurrentSupermode ||
-                    ((myViewNet->getEditModes().isCurrentSupermodeNetwork()) && !AC->getTagProperty().isDemandElement()) ||
-                    ((myViewNet->getEditModes().isCurrentSupermodeDemand()) && AC->getTagProperty().isDemandElement())) {
-                // add it into result vector
+            bool insert = false;
+            if (ignoreCurrentSupermode) {
+                insert = true;
+            } else if (myViewNet->getEditModes().isCurrentSupermodeNetwork() && (AC->getTagProperty().isNetworkElement() ||
+                       AC->getTagProperty().isAdditionalElement() || AC->getTagProperty().isShape() || AC->getTagProperty().isTAZElement())) {
+                insert = true;
+            } else if (myViewNet->getEditModes().isCurrentSupermodeDemand() && AC->getTagProperty().isDemandElement()) {
+                insert = true;
+            } else if (myViewNet->getEditModes().isCurrentSupermodeData() && AC->getTagProperty().isDataElement()) {
+                insert = true;
+            }
+            if (insert) {
                 result.push_back(AC);
             }
         }
@@ -2228,10 +2298,16 @@ std::vector<GNEAdditional*>
 GNENet::retrieveAdditionals(bool onlySelected) const {
     std::vector<GNEAdditional*> result;
     // returns additionals depending of selection
-    for (auto i : myAttributeCarriers->getAdditionals()) {
-        for (auto j : i.second) {
-            if (!onlySelected || j.second->isAttributeCarrierSelected()) {
-                result.push_back(j.second);
+    for (const auto& additionalTag : myAttributeCarriers->getAdditionals()) {
+        for (const auto& additional : additionalTag.second) {
+            if (!onlySelected || additional.second->isAttributeCarrierSelected()) {
+                result.push_back(additional.second);
+            }
+            // iterate over children
+            for (const auto& additionalChild : additional.second->getChildAdditionals()) {
+                if (!onlySelected || additionalChild->isAttributeCarrierSelected()) {
+                    result.push_back(additionalChild);
+                }
             }
         }
     }
@@ -2278,8 +2354,8 @@ GNENet::saveAdditionals(const std::string& filename) {
     std::vector<GNEAdditional*> invalidSingleLaneAdditionals;
     std::vector<GNEAdditional*> invalidMultiLaneAdditionals;
     // iterate over additionals and obtain invalids
-    for (const auto &additionalPair : myAttributeCarriers->getAdditionals()) {
-        for (const auto &addditional : additionalPair.second) {
+    for (const auto& additionalPair : myAttributeCarriers->getAdditionals()) {
+        for (const auto& addditional : additionalPair.second) {
             // check if has to be fixed
             if (addditional.second->getTagProperty().hasAttribute(SUMO_ATTR_LANE) && !addditional.second->isAdditionalValid()) {
                 invalidSingleLaneAdditionals.push_back(addditional.second);
@@ -2448,15 +2524,15 @@ GNENet::isDemandElementsSaved() const {
 std::string
 GNENet::generateDemandElementID(SumoXMLTag tag) const {
     // get references to vehicle maps
-    const std::map<std::string, GNEDemandElement*> &vehicles = myAttributeCarriers->getDemandElements().at(SUMO_TAG_VEHICLE);
-    const std::map<std::string, GNEDemandElement*> &trips = myAttributeCarriers->getDemandElements().at(SUMO_TAG_TRIP);
-    const std::map<std::string, GNEDemandElement*> &vehiclesEmbebbed = myAttributeCarriers->getDemandElements().at(GNE_TAG_VEHICLE_WITHROUTE);
-    const std::map<std::string, GNEDemandElement*> &routeFlows = myAttributeCarriers->getDemandElements().at(GNE_TAG_FLOW_ROUTE);
-    const std::map<std::string, GNEDemandElement*> &flows = myAttributeCarriers->getDemandElements().at(SUMO_TAG_FLOW);
-    const std::map<std::string, GNEDemandElement*> &flowsEmbebbed = myAttributeCarriers->getDemandElements().at(GNE_TAG_FLOW_WITHROUTE);
+    const std::map<std::string, GNEDemandElement*>& vehicles = myAttributeCarriers->getDemandElements().at(SUMO_TAG_VEHICLE);
+    const std::map<std::string, GNEDemandElement*>& trips = myAttributeCarriers->getDemandElements().at(SUMO_TAG_TRIP);
+    const std::map<std::string, GNEDemandElement*>& vehiclesEmbebbed = myAttributeCarriers->getDemandElements().at(GNE_TAG_VEHICLE_WITHROUTE);
+    const std::map<std::string, GNEDemandElement*>& routeFlows = myAttributeCarriers->getDemandElements().at(GNE_TAG_FLOW_ROUTE);
+    const std::map<std::string, GNEDemandElement*>& flows = myAttributeCarriers->getDemandElements().at(SUMO_TAG_FLOW);
+    const std::map<std::string, GNEDemandElement*>& flowsEmbebbed = myAttributeCarriers->getDemandElements().at(GNE_TAG_FLOW_WITHROUTE);
     // get references to persons maps
-    const std::map<std::string, GNEDemandElement*> &persons = myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSON);
-    const std::map<std::string, GNEDemandElement*> &personFlows = myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSONFLOW);
+    const std::map<std::string, GNEDemandElement*>& persons = myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSON);
+    const std::map<std::string, GNEDemandElement*>& personFlows = myAttributeCarriers->getDemandElements().at(SUMO_TAG_PERSONFLOW);
     // declare flags
     const bool isVehicle = ((tag == SUMO_TAG_VEHICLE) || (tag == SUMO_TAG_TRIP) || (tag == GNE_TAG_VEHICLE_WITHROUTE));
     const bool isFlow = ((tag == GNE_TAG_FLOW_ROUTE) || (tag == SUMO_TAG_FLOW) || (tag == GNE_TAG_FLOW_WITHROUTE));
@@ -2465,23 +2541,23 @@ GNENet::generateDemandElementID(SumoXMLTag tag) const {
     int counter = 0;
     if (isVehicle || isFlow) {
         // declare tag
-        const std::string tagStr = isVehicle? toString(SUMO_TAG_VEHICLE) : toString(SUMO_TAG_FLOW);
+        const std::string tagStr = isVehicle ? toString(SUMO_TAG_VEHICLE) : toString(SUMO_TAG_FLOW);
         // special case for vehicles (Vehicles, Flows, Trips and routeFlows share nameSpaces)
         while ((vehicles.count(tagStr + "_" + toString(counter)) != 0) ||
-               (trips.count(tagStr + "_" + toString(counter)) != 0) ||
-               (vehiclesEmbebbed.count(tagStr + "_" + toString(counter)) != 0) ||
-               (routeFlows.count(tagStr + "_" + toString(counter)) != 0) ||
-               (flows.count(tagStr + "_" + toString(counter)) != 0) ||
-               (flowsEmbebbed.count(tagStr + "_" + toString(counter)) != 0) ||
-               (vehicles.count(tagStr + "_" + toString(counter)) != 0)) {
+                (trips.count(tagStr + "_" + toString(counter)) != 0) ||
+                (vehiclesEmbebbed.count(tagStr + "_" + toString(counter)) != 0) ||
+                (routeFlows.count(tagStr + "_" + toString(counter)) != 0) ||
+                (flows.count(tagStr + "_" + toString(counter)) != 0) ||
+                (flowsEmbebbed.count(tagStr + "_" + toString(counter)) != 0) ||
+                (vehicles.count(tagStr + "_" + toString(counter)) != 0)) {
             counter++;
         }
         // return new vehicle ID
         return (tagStr + "_" + toString(counter));
     } else if (isPerson) {
         // special case for persons (person and personFlows share nameSpaces)
-        while ((persons.count(toString(tag) + "_" + toString(counter)) != 0) || 
-               (personFlows.count(toString(tag) + "_" + toString(counter)) != 0)) {
+        while ((persons.count(toString(tag) + "_" + toString(counter)) != 0) ||
+                (personFlows.count(toString(tag) + "_" + toString(counter)) != 0)) {
             counter++;
         }
         // return new person ID
@@ -2748,17 +2824,17 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
     OutputDevice& device = OutputDevice::getDevice(filename);
     device.writeXMLHeader("additional", "additional_file.xsd");
     // now write all route probes (see Ticket #4058)
-    for (const auto &additionalPair : myAttributeCarriers->getAdditionals()) {
+    for (const auto& additionalPair : myAttributeCarriers->getAdditionals()) {
         if (additionalPair.first == SUMO_TAG_ROUTEPROBE) {
-            for (const auto &additional : additionalPair.second) {
+            for (const auto& additional : additionalPair.second) {
                 additional.second->writeAdditional(device);
             }
         }
     }
     // now write all stoppingPlaces
-    for (const auto &additionalPair : myAttributeCarriers->getAdditionals()) {
+    for (const auto& additionalPair : myAttributeCarriers->getAdditionals()) {
         if (GNEAttributeCarrier::getTagProperties(additionalPair.first).isStoppingPlace()) {
-            for (const auto &additional : additionalPair.second) {
+            for (const auto& additional : additionalPair.second) {
                 // only save stoppingPlaces that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
                 if (additional.second->getParentAdditionals().empty()) {
                     additional.second->writeAdditional(device);
@@ -2767,9 +2843,9 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
         }
     }
     // now write all detectors
-    for (const auto &additionalPair : myAttributeCarriers->getAdditionals()) {
+    for (const auto& additionalPair : myAttributeCarriers->getAdditionals()) {
         if (GNEAttributeCarrier::getTagProperties(additionalPair.first).isDetector()) {
-            for (const auto &additional : additionalPair.second) {
+            for (const auto& additional : additionalPair.second) {
                 // only save Detectors that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
                 if (additional.second->getParentAdditionals().empty()) {
                     additional.second->writeAdditional(device);
@@ -2778,10 +2854,10 @@ GNENet::saveAdditionalsConfirmed(const std::string& filename) {
         }
     }
     // now write rest of additionals
-    for (const auto &additionalPair : myAttributeCarriers->getAdditionals()) {
+    for (const auto& additionalPair : myAttributeCarriers->getAdditionals()) {
         const auto& tagValue = GNEAttributeCarrier::getTagProperties(additionalPair.first);
         if (!tagValue.isStoppingPlace() && !tagValue.isDetector() && (additionalPair.first != SUMO_TAG_ROUTEPROBE) && (additionalPair.first != SUMO_TAG_VTYPE) && (additionalPair.first != SUMO_TAG_ROUTE)) {
-            for (const auto &additional : additionalPair.second) {
+            for (const auto& additional : additionalPair.second) {
                 // only save additionals that doesn't have Additional parents, because they are automatically writed by writeAdditional(...) parent's function
                 if (additional.second->getParentAdditionals().empty()) {
                     additional.second->writeAdditional(device);
@@ -2825,9 +2901,21 @@ GNENet::saveDemandElementsConfirmed(const std::string& filename) {
     for (auto i : myAttributeCarriers->getDemandElements().at(SUMO_TAG_ROUTE)) {
         i.second->writeDemandElement(device);
     }
+    // sort vehicles/persons by depart
+    std::map<double, std::vector<GNEDemandElement*> > vehiclesSortedByDepart;
+    for (const auto& demandElementTag : myAttributeCarriers->getDemandElements()) {
+        for (const auto& demandElement : demandElementTag.second) {
+            if (demandElement.second->getTagProperty().isPerson() || demandElement.second->getTagProperty().isVehicle()) {
+                // save it in myVehiclesSortedByDepart
+                vehiclesSortedByDepart[GNEAttributeCarrier::parse<double>(demandElement.second->getBegin())].push_back(demandElement.second);
+            }
+        }
+    }
     // finally write all vehicles and persons sorted by depart time (and their associated stops, personPlans, etc.)
-    for (auto i : myAttributeCarriers->getVehicleDepartures()) {
-        i.second->writeDemandElement(device);
+    for (const auto& vehicleTag : vehiclesSortedByDepart) {
+        for (const auto& vehicle : vehicleTag.second) {
+            vehicle->writeDemandElement(device);
+        }
     }
     device.close();
 }
@@ -2870,36 +2958,6 @@ GNENet::retrieveShapes(bool onlySelected) const {
         }
     }
     return result;
-}
-
-
-GNEPoly*
-GNENet::addPolygonForEditShapes(GNENetworkElement* networkElement, const PositionVector& shape, bool fill, RGBColor col) {
-    if (shape.size() > 0) {
-        // create poly for edit shapes
-        GNEPoly* shapePoly = new GNEPoly(this, "edit_shape", "edit_shape", shape, false, fill, 0.3, col, GLO_POLYGON, 0, "", false, false, false);
-        shapePoly->setShapeEditedElement(networkElement);
-        myGrid.addAdditionalGLObject(shapePoly);
-        myViewNet->updateViewNet();
-        return shapePoly;
-    } else {
-        throw ProcessError("shape cannot be empty");
-    }
-}
-
-
-void
-GNENet::removePolygonForEditShapes(GNEPoly* polygon) {
-    if (polygon) {
-        // remove it from Inspector Frame and AttributeCarrierHierarchy
-        myViewNet->getViewParent()->getInspectorFrame()->getAttributesEditor()->removeEditedAC(polygon);
-        myViewNet->getViewParent()->getInspectorFrame()->getAttributeCarrierHierarchy()->removeCurrentEditedAttribute(polygon);
-        // Remove from grid
-        myGrid.removeAdditionalGLObject(polygon);
-        myViewNet->updateViewNet();
-    } else {
-        throw ProcessError("Polygon for edit shapes has to be inicializated");
-    }
 }
 
 
@@ -3041,29 +3099,31 @@ GNENet::initJunctionsAndEdges() {
         NBNode* nbn = nodeContainer.retrieve(name_it);
         myAttributeCarriers->registerJunction(new GNEJunction(this, nbn, true));
     }
-
     // init edges
     NBEdgeCont& ec = myNetBuilder->getEdgeCont();
     for (auto name_it : ec.getAllNames()) {
-        NBEdge* nbe = ec.retrieve(name_it);
-        myAttributeCarriers->registerEdge(new GNEEdge(this, nbe, false, true));
+        // create edge using NBEdge
+        GNEEdge* edge = new GNEEdge(this, ec.retrieve(name_it), false, true);
+        // register edge
+        myAttributeCarriers->registerEdge(edge);
+        // add manually child references due initJunctionsAndEdges doesn't use undo-redo
+        edge->getParentJunctions().front()->addChildElement(edge);
+        edge->getParentJunctions().back()->addChildElement(edge);
+        // check grid
         if (myGrid.getWidth() > 10e16 || myGrid.getHeight() > 10e16) {
             throw ProcessError("Network size exceeds 1 Lightyear. Please reconsider your inputs.\n");
         }
     }
-
     // make sure myGrid is initialized even for an empty net
     if (myAttributeCarriers->getEdges().size() == 0) {
         myGrid.add(Boundary(0, 0, 100, 100));
     }
-
     // recalculate all lane2lane connections
     for (const auto& edge : myAttributeCarriers->getEdges()) {
         for (const auto& lane : edge.second->getLanes()) {
             lane->updateGeometry();
         }
     }
-
     // sort nodes edges so that arrows can be drawn correctly
     NBNodesEdgesSorter::sortNodesEdges(nodeContainer);
 }
@@ -3160,11 +3220,17 @@ GNENet::computeAndUpdate(OptionsCont& oc, bool volatileOptions) {
         // insert all junctions of grid again
         WRITE_GLDEBUG("Add junctions during recomputing after calling myNetBuilder->compute(...)");
         for (const auto& junction : myAttributeCarriers->getJunctions()) {
+            // update centering boundary
+            junction.second->updateCenteringBoundary(false);
+            // add junction in grid again
             myGrid.addAdditionalGLObject(junction.second);
         }
         // insert all edges from grid again
         WRITE_GLDEBUG("Add edges during recomputing after calling myNetBuilder->compute(...)");
         for (const auto& edge : myAttributeCarriers->getEdges()) {
+            // update centeting boundary
+            edge.second->updateCenteringBoundary(false);
+            // add edge in grid again
             myGrid.addAdditionalGLObject(edge.second);
         }
         // remake connections

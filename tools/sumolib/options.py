@@ -22,7 +22,7 @@ import sys
 import subprocess
 from collections import namedtuple
 import re
-from xml.sax import parse, handler
+from xml.sax import parse, handler, saxutils
 import argparse
 
 _OPTIONS = [None]
@@ -65,6 +65,8 @@ def getOptions():
     # return global option value (after parse_args was called)
     return _OPTIONS[0]
 
+def xmlescape(value):
+    return saxutils.escape(str(value), {'"' : '&quot;'})
 
 class ArgumentParser(argparse.ArgumentParser):
     """Drop-in replacement for argparse.ArgumentParser that adds support for
@@ -89,7 +91,8 @@ class ArgumentParser(argparse.ArgumentParser):
             return
         with open(out_file, "w") as out:
             out.write('<configuration>\n')
-            for k, v in vars(namespace).items():
+            for k in sorted(vars(namespace).keys()):
+                v = vars(namespace)[k]
                 if k not in ("save_configuration", "save_template", "configuration_file"):
                     key = k
                     default = ''
@@ -109,7 +112,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     if print_template or v != a.default:
                         if isinstance(v, list):
                             v = " ".join(map(str, v))
-                        out.write('    <%s value="%s"%s%s/>\n' % (key, v, default, help))
+                        out.write('    <%s value="%s"%s%s/>\n' % (key, xmlescape(v), default, help))
             out.write('</configuration>\n')
         if exit:
             sys.exit()

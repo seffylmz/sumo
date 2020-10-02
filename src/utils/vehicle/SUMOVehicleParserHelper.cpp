@@ -52,7 +52,7 @@ std::set<SumoXMLAttr> SUMOVehicleParserHelper::allowedJMAttrs;
 // ===========================================================================
 
 SUMOVehicleParameter*
-SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, const bool hardFail, const SUMOTime beginDefault, const SUMOTime endDefault, bool isPerson) {
+SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttributes& attrs, const bool hardFail, const SUMOTime beginDefault, const SUMOTime endDefault, bool isPerson) {
     bool ok = true;
     bool abortCreation = true;
     // first parse ID
@@ -62,7 +62,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
         if (!SUMOXMLDefinitions::isValidVehicleID(id)) {
             return handleError(hardFail, abortCreation, "Invalid flow id '" + id + "'.");
         }
-
+        // declare flags
         const bool hasPeriod = attrs.hasAttribute(SUMO_ATTR_PERIOD);
         const bool hasVPH = attrs.hasAttribute(SUMO_ATTR_VEHSPERHOUR);
         const bool hasPPH = attrs.hasAttribute(SUMO_ATTR_PERSONSPERHOUR);
@@ -110,6 +110,9 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
             }
         }
         SUMOVehicleParameter* ret = new SUMOVehicleParameter();
+        // set tag
+        ret->tag = tag;
+        // set id
         ret->id = id;
         if (isPerson) {
             ret->vtypeid = DEFAULT_PEDTYPE_ID;
@@ -119,12 +122,6 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
         } catch (ProcessError&) {
             delete ret;
             throw;
-        }
-        // set tag
-        if (ret->routeid.empty()) {
-            ret->tag = SUMO_TAG_FLOW;
-        } else {
-            ret->tag = GNE_TAG_FLOW_ROUTE;
         }
         // parse repetition information
         if (hasPeriod) {
@@ -137,8 +134,8 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
             if (ok && vph <= 0) {
                 delete ret;
                 return handleError(hardFail, abortCreation,
-                        "Invalid repetition rate in the definition of " 
-                        + std::string(hasVPH ? "flow" : "personFlow") + " '" + id + "'.");
+                                   "Invalid repetition rate in the definition of "
+                                   + std::string(hasVPH ? "flow" : "personFlow") + " '" + id + "'.");
             }
             if (ok && vph != 0) {
                 ret->repetitionOffset = TIME2STEPS(3600. / vph);
@@ -168,8 +165,8 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
             ret->repetitionEnd = attrs.getSUMOTimeReporting(SUMO_ATTR_END, id.c_str(), ok);
             ret->parametersSet |= VEHPARS_END_SET;
         } else if ((endDefault >= TIME2STEPS(9223372036854773) || endDefault < 0)
-                // see SUMOTIME_MAXSTRING (which differs slightly from SUMOTime_MAX)
-                && (!hasNumber || (!hasProb && !hasPeriod && !hasXPH))) {
+                   // see SUMOTIME_MAXSTRING (which differs slightly from SUMOTime_MAX)
+                   && (!hasNumber || (!hasProb && !hasPeriod && !hasXPH))) {
             WRITE_WARNING("Undefined end for flow '" + id + "', defaulting to 24hour duration.");
             ret->repetitionEnd = ret->depart + TIME2STEPS(24 * 3600);
         }
@@ -381,6 +378,19 @@ SUMOVehicleParserHelper::parseCommonAttributes(const SUMOSAXAttributes& attrs, c
             ret->parametersSet |= VEHPARS_DEPARTSPEED_SET;
             ret->departSpeed = speed;
             ret->departSpeedProcedure = dsd;
+        } else {
+            handleError(hardFail, abortCreation, error);
+        }
+    }
+    // parse depart edge information
+    if (attrs.hasAttribute(SUMO_ATTR_DEPARTEDGE)) {
+        std::string helper = attrs.get<std::string>(SUMO_ATTR_DEPARTEDGE, ret->id.c_str(), ok);
+        int edgeIndex;
+        DepartEdgeDefinition ded;
+        if (SUMOVehicleParameter::parseDepartEdge(helper, element, ret->id, edgeIndex, ded, error)) {
+            ret->parametersSet |= VEHPARS_DEPARTEDGE_SET;
+            ret->departEdge = edgeIndex;
+            ret->departEdgeProcedure = ded;
         } else {
             handleError(hardFail, abortCreation, error);
         }
@@ -1326,6 +1336,7 @@ SUMOVehicleParserHelper::parseJMParams(SUMOVTypeParameter& into, const SUMOSAXAt
         allowedJMAttrs.insert(SUMO_ATTR_JM_IGNORE_FOE_SPEED);
         allowedJMAttrs.insert(SUMO_ATTR_JM_IGNORE_FOE_PROB);
         allowedJMAttrs.insert(SUMO_ATTR_JM_SIGMA_MINOR);
+        allowedJMAttrs.insert(SUMO_ATTR_JM_STOPLINE_GAP);
         allowedJMAttrs.insert(SUMO_ATTR_JM_TIMEGAP_MINOR);
     }
     bool ok = true;

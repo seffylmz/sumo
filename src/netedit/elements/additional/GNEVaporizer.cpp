@@ -34,10 +34,11 @@
 
 GNEVaporizer::GNEVaporizer(GNENet* net, GNEEdge* edge, SUMOTime begin, SUMOTime end, const std::string& name) :
     GNEAdditional(edge->getID(), net, GLO_VAPORIZER, SUMO_TAG_VAPORIZER, name, false,
-        {}, {edge}, {}, {}, {}, {}, {}, {}, // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),    // Children
+        {}, {edge}, {}, {}, {}, {}, {}, {}),
     myBegin(begin),
     myEnd(end) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
@@ -45,63 +46,34 @@ GNEVaporizer::~GNEVaporizer() {
 }
 
 
+GNEMoveOperation* 
+GNEVaporizer::getMoveOperation(const double /*shapeOffset*/) {
+    // vaporizers cannot be moved
+    return nullptr;
+}
+
+
 void
 GNEVaporizer::updateGeometry() {
-    // get lanes of edge
-    GNELane* firstLane = getParentEdges().front()->getLanes().at(0);
+    // calculate perpendicular line
+    calculatePerpendicularLine(3);
+}
 
-    // Get shape of parent lane
-    const double offset = firstLane->getLaneShape().length() < 2.5 ? firstLane->getLaneShape().length() : 2.5;
 
+void 
+GNEVaporizer::updateCenteringBoundary(const bool /*updateGrid*/) {
     // update geometry
-    myAdditionalGeometry.updateGeometry(firstLane, offset);
-
-    // Set block icon position
-    myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
-
-    // Set offset of the block icon
-    myBlockIcon.offset = Position(1.1, (-3.06));
-
-    // Set block icon rotation, and using their rotation for logo
-    myBlockIcon.setRotation(firstLane);
-}
-
-
-Position
-GNEVaporizer::getPositionInView() const {
-    if (getParentEdges().front()->getLanes().front()->getLaneShape().length() < 2.5) {
-        return getParentEdges().front()->getLanes().front()->getLaneShape().front();
-    } else {
-        Position A = getParentEdges().front()->getLanes().front()->getLaneShape().positionAtOffset(2.5);
-        Position B = getParentEdges().front()->getLanes().back()->getLaneShape().positionAtOffset(2.5);
-
-        // return Middle point
-        return Position((A.x() + B.x()) / 2, (A.y() + B.y()) / 2);
-    }
-}
-
-
-Boundary
-GNEVaporizer::getCenteringBoundary() const {
-    return myAdditionalGeometry.getShape().getBoxBoundary().grow(10);
+    updateGeometry();
+    // add shape boundary
+    myBoundary = myAdditionalGeometry.getShape().getBoxBoundary();
+    // grow
+    myBoundary.grow(10);
 }
 
 
 void
 GNEVaporizer::splitEdgeGeometry(const double /*splitPosition*/, const GNENetworkElement* /*originalElement*/, const GNENetworkElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
-}
-
-
-void
-GNEVaporizer::moveGeometry(const Position&) {
-    // This additional cannot be moved
-}
-
-
-void
-GNEVaporizer::commitGeometryMoving(GNEUndoList*) {
-    // This additional cannot be moved
 }
 
 
@@ -117,80 +89,66 @@ GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
     const double vaporizerExaggeration = s.addSize.getExaggeration(s, this);
     // first check if additional has to be drawn
     if (s.drawAdditionals(vaporizerExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
-        // get values
-        const int numberOfLanes = int(getParentEdges().front()->getLanes().size());
-        const double width = (double) 2.0 * s.scale;
-        // begin draw
-        glPushName(getGlID());
-        glLineWidth(1.0);
-        // set color
+        // declare colors
+        RGBColor vaporizerColor, centralLineColor;
+        // set colors
         if (drawUsingSelectColor()) {
-            GLHelper::setColor(s.colorSettings.selectedAdditionalColor);
+            vaporizerColor = s.colorSettings.selectedAdditionalColor;
+            centralLineColor = vaporizerColor.changedBrightness(-32);
         } else {
-            GLHelper::setColor(s.additionalSettings.vaporizerColor);
+            vaporizerColor = s.additionalSettings.vaporizerColor;
+            centralLineColor = RGBColor::WHITE;
         }
-        // draw shape
+        // Start drawing adding an gl identificator
+        glPushName(getGlID());
+        // Add layer matrix matrix
         glPushMatrix();
-        glTranslated(0, 0, getType());
-        glTranslated(myAdditionalGeometry.getPosition().x(), myAdditionalGeometry.getPosition().y(), 0);
-        glRotated(myAdditionalGeometry.getRotation(), 0, 0, 1);
-        glScaled(vaporizerExaggeration, vaporizerExaggeration, 1);
-        glTranslated(-1.6, -1.6, 0);
-        glBegin(GL_QUADS);
-        glVertex2d(0,  0.25);
-        glVertex2d(0, -0.25);
-        glVertex2d((numberOfLanes * 3.3), -0.25);
-        glVertex2d((numberOfLanes * 3.3),  0.25);
-        glEnd();
-        glTranslated(0, 0, .01);
-        glBegin(GL_LINES);
-        glVertex2d(0, 0.25 - .1);
-        glVertex2d(0, -0.25 + .1);
-        glEnd();
-        // draw position indicator (White) if isn't being drawn for selecting
-        if ((width * vaporizerExaggeration > 1) && !s.drawForRectangleSelection) {
-            if (drawUsingSelectColor()) {
-                GLHelper::setColor(s.colorSettings.selectionColor);
-            } else {
-                GLHelper::setColor(RGBColor::WHITE);
-            }
-            glRotated(90, 0, 0, -1);
-            glBegin(GL_LINES);
-            glVertex2d(0, 0);
-            glVertex2d(0, (numberOfLanes * 3.3));
-            glEnd();
-        }
-        // Pop shape matrix
-        glPopMatrix();
-        // Add a draw matrix for drawing logo
-        glPushMatrix();
-        glTranslated(myAdditionalGeometry.getPosition().x(), myAdditionalGeometry.getPosition().y(), getType());
-        glRotated(myAdditionalGeometry.getRotation(), 0, 0, 1);
-        glTranslated((-2.56), (-1.6), 0);
-        // Draw icon depending of Vaporizer is selected and if isn't being drawn for selecting
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_VAPORIZER);
+        // set base color
+        GLHelper::setColor(vaporizerColor);
+        // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
+        GNEGeometry::drawGeometry(myNet->getViewNet(), myAdditionalGeometry, 0.3 * vaporizerExaggeration);
+        // move to front
+        glTranslated(0, 0, .1);
+        // set central color
+        GLHelper::setColor(centralLineColor);
+        // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
+        GNEGeometry::drawGeometry(myNet->getViewNet(), myAdditionalGeometry, 0.05 * vaporizerExaggeration);
+        // move to icon position and front
+        glTranslated(myAdditionalGeometry.getShape().front().x(), myAdditionalGeometry.getShape().front().y(), .1);
+        // rotate over lane
+        GNEGeometry::rotateOverLane(myAdditionalGeometry.getShapeRotations().front());
+        // Draw icon depending of Route Probe is selected and if isn't being drawn for selecting
         if (!s.drawForRectangleSelection && s.drawDetail(s.detailSettings.laneTextures, vaporizerExaggeration)) {
+            // set color
             glColor3d(1, 1, 1);
-            glRotated(-90, 0, 0, 1);
+            // rotate texture
+            glRotated(180, 0, 0, 1);
+            // draw texture
             if (drawUsingSelectColor()) {
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_VAPORIZERSELECTED), s.additionalSettings.vaporizerSize);
+                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_VAPORIZERSELECTED), s.additionalSettings.vaporizerSize * vaporizerExaggeration);
             } else {
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_VAPORIZER), s.additionalSettings.vaporizerSize);
+                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_VAPORIZER), s.additionalSettings.vaporizerSize * vaporizerExaggeration);
             }
         } else {
-            GLHelper::setColor(s.additionalSettings.vaporizerColor);
-            GLHelper::drawBoxLine(Position(0, s.additionalSettings.vaporizerSize), 0, 2 * s.additionalSettings.vaporizerSize, s.additionalSettings.vaporizerSize);
+            // set route probe color
+            GLHelper::setColor(vaporizerColor);
+            // just drawn a box
+            GLHelper::drawBoxLine(Position(0, 0), 0, 2 * s.additionalSettings.vaporizerSize, s.additionalSettings.vaporizerSize * vaporizerExaggeration);
         }
-        // Pop logo matrix
+        // pop layer matrix
         glPopMatrix();
-        // Show Lock icon
-        myBlockIcon.drawIcon(s, vaporizerExaggeration, 0.4);
-        // draw name
-        drawName(getPositionInView(), s.scale, s.addName);
-        // pop name
+        // Pop name
         glPopName();
-        // check if dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
-            GNEGeometry::drawDottedSquaredShape(s, myAdditionalGeometry.getPosition(), 1, 1, myAdditionalGeometry.getRotation(), vaporizerExaggeration);
+        // draw additional name
+        drawAdditionalName(s);
+        // check if dotted contours has to be drawn
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
+            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::INSPECT, s, myAdditionalGeometry.getShape(), 0.3, vaporizerExaggeration);
+        }
+        if (s.drawDottedContour() || myNet->getViewNet()->getFrontAttributeCarrier() == this) {
+            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::FRONT, s, myAdditionalGeometry.getShape(), 0.3, vaporizerExaggeration);
         }
     }
 }
@@ -313,7 +271,7 @@ GNEVaporizer::setAttribute(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_ID:
         case SUMO_ATTR_EDGE:
             myNet->getAttributeCarriers()->updateID(this, value);
-            replaceParentEdges(this, value);
+            replaceAdditionalParentEdges(value);
             break;
         case SUMO_ATTR_BEGIN:
             myBegin = parse<SUMOTime>(value);
@@ -339,5 +297,16 @@ GNEVaporizer::setAttribute(SumoXMLAttr key, const std::string& value) {
     }
 }
 
+
+void 
+GNEVaporizer::setMoveShape(const GNEMoveResult& /*moveResult*/) {
+    // nothing to do
+}
+
+
+void 
+GNEVaporizer::commitMoveShape(const GNEMoveResult& /*moveResult*/, GNEUndoList* /*undoList*/) {
+    // nothing to do
+}
 
 /****************************************************************************/

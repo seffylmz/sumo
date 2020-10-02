@@ -327,18 +327,14 @@ GUISUMOAbstractView::getObjectsUnderCursor() {
 
 
 std::vector<GUIGlObject*>
-GUISUMOAbstractView::getGUIGlObjectsUnderGrippedCursor() {
-    if (myVisualizationSettings->showGrid) {
-        return getGUIGlObjectsAtPosition(snapToActiveGrid(getPositionInformation()), SENSITIVITY);
-    } else {
-        return getGUIGlObjectsAtPosition(getPositionInformation(), SENSITIVITY);
-    }
+GUISUMOAbstractView::getGUIGlObjectsUnderCursor() {
+    return getGUIGlObjectsAtPosition(getPositionInformation(), SENSITIVITY);
 }
 
 
 std::vector<GUIGlObject*>
-GUISUMOAbstractView::getGUIGlObjectsUnderCursor() {
-    return getGUIGlObjectsAtPosition(getPositionInformation(), SENSITIVITY);
+GUISUMOAbstractView::getGUIGlObjectsUnderSnappedCursor() {
+    return getGUIGlObjectsAtPosition(snapToActiveGrid(getPositionInformation()), SENSITIVITY);
 }
 
 
@@ -1199,12 +1195,12 @@ GUISUMOAbstractView::makeSnapshot(const std::string& destFile, const int w, cons
             glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
             // draw decals (if not in grabbing mode)
-            if (!myUseToolTips) {
-                drawDecals();
-                if (myVisualizationSettings->showGrid) {
-                    paintGLGrid();
-                }
+            
+            drawDecals();
+            if (myVisualizationSettings->showGrid) {
+                paintGLGrid();
             }
+            
             glLineWidth(1);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             Boundary viewPort = myChanger->getViewport();

@@ -30,6 +30,7 @@
 // ===========================================================================
 class SUMOTrafficObject;
 class MSDispatch;
+class MSIdling;
 struct Reservation;
 
 
@@ -149,7 +150,7 @@ public:
     /// @brief whether the taxi is empty
     bool isEmpty();
 
-    TaxiState getState() const {
+    int getState() const {
         return myState;
     }
 
@@ -160,13 +161,13 @@ public:
     void dispatch(const Reservation& res);
 
     /// @brief service the given reservations
-    void dispatchShared(const std::vector<const Reservation*> reservations);
+    void dispatchShared(const std::vector<const Reservation*>& reservations);
 
     /// @brief whether the given person is allowed to board this taxi
     bool allowsBoarding(MSTransportable* t) const;
 
     /// @brief called by MSDevice_Transportable upon loading a person
-    void customerEntered();
+    void customerEntered(const MSTransportable* t);
 
     /// @brief called by MSDevice_Transportable upon unloading a person
     void customerArrived(const MSTransportable* person);
@@ -204,12 +205,15 @@ private:
     /// @brief determine stopping lane for taxi
     MSLane* getStopLane(const MSEdge* edge);
 
+    /// @brief whether the taxi has another pickup scheduled
+    bool hasFuturePickup();
+
     /// @brief initialize the dispatch algorithm
     static void initDispatch();
 
 private:
 
-    TaxiState myState = EMPTY;
+    int myState = EMPTY;
     /// @brief number of customers that were served
     int myCustomersServed = 0;
     /// @brief distance driven with customers
@@ -222,6 +226,9 @@ private:
     bool myIsStopped = false;
     /// @brief the customer of the current reservation
     std::set<const MSTransportable*> myCustomers;
+
+    /// @brief algorithm for controlling idle behavior
+    MSIdling* myIdleAlgorithm;
 
     /// @brief the time between successive calls to the dispatcher
     static SUMOTime myDispatchPeriod;

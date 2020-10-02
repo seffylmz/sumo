@@ -20,8 +20,7 @@
 #pragma once
 #include <config.h>
 
-#include <netedit/elements/GNEHierarchicalParentElements.h>
-#include <netedit/elements/GNEHierarchicalChildElements.h>
+#include <netedit/elements/GNEHierarchicalElement.h>
 #include <netedit/elements/GNEPathElements.h>
 #include <netedit/GNEGeometry.h>
 #include <utils/common/Parameterised.h>
@@ -49,7 +48,7 @@ class GNEJunction;
  * @class GNEDemandElement
  * @brief An Element which don't belongs to GNENet but has influency in the simulation
  */
-class GNEDemandElement : public GUIGlObject, public GNEAttributeCarrier, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements, public GNEPathElements {
+class GNEDemandElement : public GUIGlObject, public GNEHierarchicalElement, public GNEPathElements {
 
 public:
     /// @brief struct for pack all variables related with Demand Element moving
@@ -80,32 +79,16 @@ public:
      * @param[in] TAZElementParents vector of TAZElement parents
      * @param[in] demandElementParents vector of demand element parents
      * @param[in] genericDataParents vector of generic data parents
-     * @param[in] junctionChildren vector of junction children
-     * @param[in] edgeChildren vector of edge children
-     * @param[in] laneChildren vector of lane children
-     * @param[in] additionalChildren vector of additional children
-     * @param[in] shapeChildren vector of shape children
-     * @param[in] TAZElementChildren vector of TAZElement children
-     * @param[in] demandElementChildren vector of demandElement children
-     * @param[in] genericDataChildren vector of genericData children
      */
     GNEDemandElement(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren);
+                     const std::vector<GNEJunction*>& junctionParents,
+                     const std::vector<GNEEdge*>& edgeParents,
+                     const std::vector<GNELane*>& laneParents,
+                     const std::vector<GNEAdditional*>& additionalParents,
+                     const std::vector<GNEShape*>& shapeParents,
+                     const std::vector<GNETAZElement*>& TAZElementParents,
+                     const std::vector<GNEDemandElement*>& demandElementParents,
+                     const std::vector<GNEGenericData*>& genericDataParents);
 
     /**@brief Constructor
      * @param[in] demandElementParent pointer to parent demand element pointer (used to generate an ID)
@@ -120,32 +103,16 @@ public:
      * @param[in] TAZElementParents vector of TAZElement parents
      * @param[in] demandElementParents vector of demand element parents
      * @param[in] genericDataParents vector of generic data parents
-     * @param[in] junctionChildren vector of junction children
-     * @param[in] edgeChildren vector of edge children
-     * @param[in] laneChildren vector of lane children
-     * @param[in] additionalChildren vector of additional children
-     * @param[in] shapeChildren vector of shape children
-     * @param[in] TAZElementChildren vector of TAZElement children
-     * @param[in] demandElementChildren vector of demandElement children
-     * @param[in] genericDataChildren vector of genericData children
      */
     GNEDemandElement(GNEDemandElement* demandElementParent, GNENet* net, GUIGlObjectType type, SumoXMLTag tag,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren);
+                     const std::vector<GNEJunction*>& junctionParents,
+                     const std::vector<GNEEdge*>& edgeParents,
+                     const std::vector<GNELane*>& laneParents,
+                     const std::vector<GNEAdditional*>& additionalParents,
+                     const std::vector<GNEShape*>& shapeParents,
+                     const std::vector<GNETAZElement*>& TAZElementParents,
+                     const std::vector<GNEDemandElement*>& demandElementParents,
+                     const std::vector<GNEGenericData*>& genericDataParents);
 
     /// @brief Destructor
     virtual ~GNEDemandElement();
@@ -161,6 +128,15 @@ public:
 
     /// @brief get demand element segment geometry (stacked)
     const GNEGeometry::SegmentGeometry& getDemandElementSegmentGeometry() const;
+
+    /// @brief get previous child demand element to the given demand element
+    GNEDemandElement* getPreviousChildDemandElement(const GNEDemandElement* demandElement) const;
+
+    /// @brief get next child demand element to the given demand element
+    GNEDemandElement* getNextChildDemandElement(const GNEDemandElement* demandElement) const;
+
+    /// @brief get middle (via) parent edges
+    std::vector<GNEEdge*> getViaEdges() const;
 
     /// @brief update element stacked geometry (stacked)
     void updateDemandElementGeometry(const GNELane* lane, const double posOverLane);
@@ -371,7 +347,7 @@ protected:
     bool isValidDemandElementID(const std::string& newID) const;
 
     /// @brief get first person plan edge
-    const GNEEdge *getFirstPersonPlanEdge() const;
+    const GNEEdge* getFirstPersonPlanEdge() const;
 
     /// @name Only for person plans
     /// @{
@@ -380,17 +356,38 @@ protected:
     GNEGeometry::ExtremeGeometry calculatePersonPlanLaneStartEndPos() const;
 
     /// @brief draw person plan partial lane
-    void drawPersonPlanPartialLane(const GUIVisualizationSettings& s, const GNELane* lane, 
-        const double offsetFront, const double personPlanWidth, const RGBColor &personPlanColor) const;
+    void drawPersonPlanPartialLane(const GUIVisualizationSettings& s, const GNELane* lane,
+                                   const double offsetFront, const double personPlanWidth, const RGBColor& personPlanColor) const;
 
     /// @brief draw person plan partial junction
-    void drawPersonPlanPartialJunction(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, 
-        const double offsetFront, const double personPlanWidth, const RGBColor &personPlanColor) const;
+    void drawPersonPlanPartialJunction(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane,
+                                       const double offsetFront, const double personPlanWidth, const RGBColor& personPlanColor) const;
 
     /// @brief person plans arrival position radius
     static const double myPersonPlanArrivalPositionDiameter;
 
     /// @}
+
+    /// @brief replace demand parent edges
+    void replaceDemandParentEdges(const std::string& value);
+
+    /// @brief replace demand parent lanes
+    void replaceDemandParentLanes(const std::string& value);
+
+    /// @brief replace the first parent edge
+    void replaceFirstParentEdge(const std::string& value);
+
+    /// @brief replace middle (via) parent edges
+    void replaceMiddleParentEdges(const std::string& value, const bool updateChildReferences);
+
+    /// @brief replace the last parent edge
+    void replaceLastParentEdge(const std::string& value);
+
+    /// @brief replace additional parent
+    void replaceAdditionalParent(SumoXMLTag tag, const std::string& value, const int parentIndex);
+
+    /// @brief replace demand element parent
+    void replaceDemandElementParent(SumoXMLTag tag, const std::string& value, const int parentIndex);
 
 private:
     /**@brief check restriction with the number of children

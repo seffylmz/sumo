@@ -32,9 +32,8 @@
 
 GNETAZSourceSink::GNETAZSourceSink(SumoXMLTag sourceSinkTag, GNETAZElement* TAZParent, GNEEdge* edge, double departWeight) :
     GNETAZElement(TAZParent, TAZParent->getNet(), GLO_TAZ, sourceSinkTag, false,
-        {}, {edge}, {}, {}, {}, {TAZParent}, {}, {},    // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                // Children
-    myDepartWeight(departWeight) {
+{}, {edge}, {}, {}, {}, {TAZParent}, {}, {}),
+myDepartWeight(departWeight) {
     //check that this is a TAZ Source OR a TAZ Sink
     if ((sourceSinkTag != SUMO_TAG_TAZSOURCE) && (sourceSinkTag != SUMO_TAG_TAZSINK)) {
         throw InvalidArgument("Invalid TAZ Child Tag");
@@ -45,13 +44,13 @@ GNETAZSourceSink::GNETAZSourceSink(SumoXMLTag sourceSinkTag, GNETAZElement* TAZP
 GNETAZSourceSink::~GNETAZSourceSink() {}
 
 
-const PositionVector& 
+const PositionVector&
 GNETAZSourceSink::getTAZElementShape() const {
     return getParentTAZElements().front()->getTAZElementShape();
 }
 
 
-void 
+void
 GNETAZSourceSink::writeTAZElement(OutputDevice& device) const {
     // open source/sink tag
     device.openTag(myTagProperty.getTag());
@@ -66,18 +65,6 @@ GNETAZSourceSink::writeTAZElement(OutputDevice& device) const {
 double
 GNETAZSourceSink::getDepartWeight() const {
     return myDepartWeight;
-}
-
-
-void
-GNETAZSourceSink::moveGeometry(const Position&) {
-    // This TAZElement cannot be moved
-}
-
-
-void
-GNETAZSourceSink::commitGeometryMoving(GNEUndoList*) {
-    // This TAZElement cannot be moved
 }
 
 

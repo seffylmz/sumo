@@ -38,6 +38,7 @@ public:
      * @param[in] pos position of the detector on the lane
      * @param[in] length The length of the detector in meters.
      * @param[in] freq the aggregation period the values the detector collects shall be summed up.
+     * @param[in] trafficLight The traffic light that triggers aggregation when switching.
      * @param[in] filename The path to the output file.
      * @param[in] vehicleTypes space separated list of vehicle type ids to consider
      * @param[in] name E2 detector name
@@ -47,8 +48,8 @@ public:
      * @param[in] friendlyPos enable or disable friendly positions
      * @param[in] block movement enable or disable additional movement
      */
-    GNEDetectorE2(const std::string& id, GNELane* lane, GNENet* net, double pos, double length, SUMOTime freq, const std::string& filename, const std::string& vehicleTypes,
-                  const std::string& name, SUMOTime timeThreshold, double speedThreshold, double jamThreshold, bool friendlyPos, bool blockMovement);
+    GNEDetectorE2(const std::string& id, GNELane* lane, GNENet* net, double pos, double length, const std::string& freq, const std::string& trafficLight, const std::string& filename,
+                  const std::string& vehicleTypes, const std::string& name, SUMOTime timeThreshold, double speedThreshold, double jamThreshold, bool friendlyPos, bool blockMovement);
 
     /**@brief Constructor for Multi-Lane detectors
      * @param[in] id The storage of gl-ids to get the one for this lane representation from
@@ -57,6 +58,7 @@ public:
      * @param[in] pos position of the detector on the first lane
      * @param[in] endPos position of the detector on the last lane
      * @param[in] freq the aggregation period the values the detector collects shall be summed up.
+     * @param[in] trafficLight The traffic light that triggers aggregation when switching.
      * @param[in] filename The path to the output file.
      * @param[in] vehicleTypes space separated list of vehicle type ids to consider
      * @param[in] name E2 detector name
@@ -66,8 +68,8 @@ public:
      * @param[in] friendlyPos enable or disable friendly positions
      * @param[in] block movement enable or disable additional movement
      */
-    GNEDetectorE2(const std::string& id, std::vector<GNELane*> lanes, GNENet* net, double pos, double endPos, SUMOTime freq, const std::string& filename, const std::string& vehicleTypes,
-                  const std::string& name, SUMOTime timeThreshold, double speedThreshold, double jamThreshold, bool friendlyPos, bool blockMovement);
+    GNEDetectorE2(const std::string& id, std::vector<GNELane*> lanes, GNENet* net, double pos, double endPos, const std::string& freq, const std::string& trafficLight, const std::string& filename,
+                  const std::string& vehicleTypes, const std::string& name, SUMOTime timeThreshold, double speedThreshold, double jamThreshold, bool friendlyPos, bool blockMovement);
 
     /// @brief Destructor
     ~GNEDetectorE2();
@@ -87,24 +89,8 @@ public:
     /// @brief get length of E2 Detector
     double getLength() const;
 
-    /// @brief check if E2 is valid (all of their lanes are connected, it must called after every operation which involves lane's connections)
-    void checkE2MultilaneIntegrity();
-
-    /// @name Functions related with geometry of element
-    /// @{
-    /**@brief change the position of the element geometry without saving in undoList
-     * @param[in] offset Position used for calculate new position of geometry without updating RTree
-     */
-    void moveGeometry(const Position& offset);
-
-    /**@brief commit geometry changes in the attributes of an element after use of moveGeometry(...)
-     * @param[in] undoList The undoList on which to register changes
-     */
-    void commitGeometryMoving(GNEUndoList* undoList);
-
     /// @brief update pre-computed geometry information
     void updateGeometry();
-    /// @}
 
     /// @name inherited from GUIGlObject
     /// @{
@@ -159,12 +145,15 @@ protected:
     /// @brief The minimum distance to the next standing vehicle in order to make this vehicle count as a participant to the jam
     double myJamThreshold;
 
-    /// @brief flag to check if E2 multilane is valid or invalid
-    bool myE2valid;
+    /// @brief Traffic light vinculated with this E2 Detector
+    std::string myTrafficLight;
 
 private:
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
+
+    /// @brief check if lanes are consecutives
+    bool areLaneConsecutives() const;
 
     /// @brief Invalidated copy constructor.
     GNEDetectorE2(const GNEDetectorE2&) = delete;

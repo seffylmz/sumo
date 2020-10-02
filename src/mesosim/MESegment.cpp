@@ -27,7 +27,6 @@
 #include <microsim/MSJunction.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
-#include <microsim/MSLinkCont.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSMoveReminder.h>
 #include <microsim/output/MSXMLRawOut.h>
@@ -105,7 +104,7 @@ MESegment::MESegment(const std::string& id,
     myCapacity(length * parent.getLanes().size()),
     myQueueCapacity(multiQueue ? length : length * parent.getLanes().size()),
     myJunctionControl(junctionControl),
-    myTLSPenalty(MSGlobals::gMesoTLSPenalty > 0 &&
+    myTLSPenalty((MSGlobals::gMesoTLSPenalty > 0 || MSGlobals::gMesoTLSFlowPenalty > 0) &&
                  // only apply to the last segment of a tls-controlled edge
                  myNextSegment == nullptr && (
                      parent.getToJunction()->getType() == SumoXMLNodeType::TRAFFIC_LIGHT ||
@@ -481,7 +480,7 @@ void
 MESegment::send(MEVehicle* veh, MESegment* const next, const int nextQIdx, SUMOTime time, const MSMoveReminder::Notification reason) {
     Queue& q = myQueues[veh->getQueIndex()];
     assert(isInvalid(next) || time >= q.getBlockTime());
-    MSLink* link = getLink(veh);
+    MSLink* const link = getLink(veh);
     if (link != nullptr) {
         link->removeApproaching(veh);
     }
@@ -490,15 +489,15 @@ MESegment::send(MEVehicle* veh, MESegment* const next, const int nextQIdx, SUMOT
     if (!isInvalid(next)) {
         const bool nextFree = next->myQueues[nextQIdx].getOccupancy() <= next->myJamThreshold;
         const SUMOTime tau = (q.getOccupancy() <= myJamThreshold
-            ? (nextFree ? myTau_ff : myTau_fj)
-            : (nextFree ? myTau_jf : TIME2STEPS(myA * q.size() + myB)));
+                              ? (nextFree ? myTau_ff : myTau_fj)
+                              : (nextFree ? myTau_jf : TIME2STEPS(myA * q.size() + myB)));
         myLastHeadway = tauWithVehLength(tau, veh->getVehicleType().getLengthWithGap());
         if (myTLSPenalty) {
-            const MSLink* const link = getLink(veh, true);
-            if (link != nullptr) {
-                assert(link->isTLSControlled());
-                assert(link->getGreenFraction() > 0);
-                myLastHeadway = (SUMOTime)(myLastHeadway / link->getGreenFraction());
+            const MSLink* const tllink = getLink(veh, true);
+            if (tllink != nullptr) {
+                assert(tllink->isTLSControlled());
+                assert(tllink->getGreenFraction() > 0);
+                myLastHeadway = (SUMOTime)(myLastHeadway / tllink->getGreenFraction());
             }
         }
         q.setBlockTime(q.getBlockTime() + myLastHeadway);
@@ -711,7 +710,7 @@ MESegment::loadState(const std::vector<std::string>& vehIds, MSVehicleControl& v
         MSGlobals::gMesoNet->addLeaderCar(veh, getLink(veh));
     }
     q.setBlockTime(block);
-    q.setOccupancy(MIN2(q.getOccupancy() , myQueueCapacity));
+    q.setOccupancy(MIN2(q.getOccupancy(), myQueueCapacity));
 }
 
 
@@ -766,11 +765,8 @@ MESegment::getLinkPenalty(const MEVehicle* veh) const {
 double
 MESegment::getMaxPenaltySeconds() const {
     double maxPenalty = 0;
-    for (std::vector<MSLane*>::const_iterator i = myEdge.getLanes().begin(); i != myEdge.getLanes().end(); ++i) {
-        MSLane* l = *i;
-        const MSLinkCont& lc = l->getLinkCont();
-        for (MSLinkCont::const_iterator j = lc.begin(); j != lc.end(); ++j) {
-            MSLink* link = *j;
+    for (const MSLane* const l : myEdge.getLanes()) {
+        for (const MSLink* const link : l->getLinkCont()) {
             maxPenalty = MAX2(maxPenalty, STEPS2TIME(
                                   link->getMesoTLSPenalty() + (link->havePriority() ? 0 : MSGlobals::gMesoMinorPenalty)));
         }

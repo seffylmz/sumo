@@ -31,31 +31,34 @@
 // method definitions
 // ===========================================================================
 
-GNEShape::GNEShape(GNENet* net, SumoXMLTag tag, bool movementBlocked,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren) :
-    GNEAttributeCarrier(tag, net),
-    GNEHierarchicalParentElements(this, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
-    GNEHierarchicalChildElements(this, junctionChildren, edgeChildren, laneChildren, additionalChildren, shapeChildren, TAZElementChildren, demandElementChildren, genericDataChildren),
+GNEShape::GNEShape(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, bool movementBlocked,
+                   const std::vector<GNEJunction*>& junctionParents,
+                   const std::vector<GNEEdge*>& edgeParents,
+                   const std::vector<GNELane*>& laneParents,
+                   const std::vector<GNEAdditional*>& additionalParents,
+                   const std::vector<GNEShape*>& shapeParents,
+                   const std::vector<GNETAZElement*>& TAZElementParents,
+                   const std::vector<GNEDemandElement*>& demandElementParents,
+                   const std::vector<GNEGenericData*>& genericDataParents) :
+    GUIGlObject(type, id),
+    GNEHierarchicalElement(net, tag, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
     myBlockMovement(movementBlocked) {
 }
 
 
 GNEShape::~GNEShape() {}
+
+
+const std::string& 
+GNEShape::getID() const {
+    return getMicrosimID();
+}
+
+
+GUIGlObject* 
+GNEShape::getGUIGlObject() {
+    return this;
+}
 
 
 bool
@@ -99,6 +102,18 @@ GNEShape::draw(const Position& pos, double layer, double size) const {
 }
 
 
+Position 
+GNEShape::getPositionInView() const {
+    return myBoundary.getCenter();
+}
+
+
+Boundary 
+GNEShape::getCenteringBoundary() const {
+    return myBoundary;
+}
+
+
 void
 GNEShape::enableAttribute(SumoXMLAttr /*key*/, GNEUndoList* /*undoList*/) {
     //
@@ -120,6 +135,12 @@ GNEShape::getPopUpID() const {
 std::string
 GNEShape::getHierarchyName() const {
     return getTagStr();
+}
+
+
+void
+GNEShape::replaceShapeParentLanes(const std::string& value) {
+    replaceParentElements(this, parse<std::vector<GNELane*> >(getNet(), value));
 }
 
 

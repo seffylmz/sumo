@@ -309,6 +309,24 @@ MEVehicle::getStopIndices() const {
     return result;
 }
 
+
+bool
+MEVehicle::abortNextStop(int nextStopIndex) {
+    if (!myStops.empty() && nextStopIndex < (int)myStops.size()) {
+        if (nextStopIndex == 0 && isStopped()) {
+            // resumeFromStopping();
+        } else {
+            auto stopIt = myStopEdges.begin();
+            std::advance(stopIt, nextStopIndex);
+            myStopEdges.erase(stopIt);
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 void
 MEVehicle::processStop() {
     assert(isStopped());
@@ -402,6 +420,9 @@ MEVehicle::updateDetectorForWriting(MSMoveReminder* rem, SUMOTime currentTime, S
 void
 MEVehicle::updateDetectors(SUMOTime currentTime, const bool isLeave, const MSMoveReminder::Notification reason) {
     // segments of the same edge have the same reminder so no cleaning up must take place
+    if (reason == MSMoveReminder::NOTIFICATION_JUNCTION || reason == MSMoveReminder::NOTIFICATION_TELEPORT) {
+        myOdometer += getEdge()->getLength();
+    }
     const bool cleanUp = isLeave && (reason != MSMoveReminder::NOTIFICATION_SEGMENT);
     for (MoveReminderCont::iterator rem = myMoveReminders.begin(); rem != myMoveReminders.end();) {
         if (currentTime != getLastEntryTime()) {
@@ -421,9 +442,6 @@ MEVehicle::updateDetectors(SUMOTime currentTime, const bool isLeave, const MSMov
             }
 #endif
             ++rem;
-            if (reason == MSMoveReminder::NOTIFICATION_JUNCTION || reason == MSMoveReminder::NOTIFICATION_TELEPORT) {
-                myOdometer += getEdge()->getLength();
-            }
         } else {
 #ifdef _DEBUG
             if (myTraceMoveReminders) {

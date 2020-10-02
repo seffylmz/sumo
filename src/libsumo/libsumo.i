@@ -1,5 +1,10 @@
 %module libsumo
+#ifdef SWIGPYTHON
+// avoid warnings about keyword arguments with overloaded functions
 #pragma SWIG nowarn=511
+// avoid warnings about unknown base class std::runtime_error
+#pragma SWIG nowarn=401
+#endif
 
 #ifdef SWIGPYTHON
 %naturalvar;
@@ -298,20 +303,6 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
     }
 };
 
-%typemap(out) std::vector<libsumo::TraCINextStopData> {
-    $result = PyTuple_New($1.size());
-    int index = 0;
-    for (auto iter = $1.begin(); iter != $1.end(); ++iter) {
-        PyTuple_SetItem($result, index++, Py_BuildValue("(sdsidd)",
-                                                        iter->lane.c_str(),
-                                                        iter->endPos,
-                                                        iter->stoppingPlaceID.c_str(),
-                                                        iter->stopFlags,
-                                                        iter->duration,
-                                                        iter->until));
-    }
-};
-
 %typemap(out) std::vector<std::vector<libsumo::TraCILink> > {
     $result = PyList_New($1.size());
     int index = 0;
@@ -352,6 +343,20 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
   %pythoncode %{
     __attr_repr__ = _simulation.Stage.__attr_repr__
     __repr__ = _simulation.Stage.__repr__
+  %}
+};
+
+%extend libsumo::TraCINextStopData {
+  %pythoncode %{
+    __attr_repr__ = _vehicle.StopData.__attr_repr__
+    __repr__ = _vehicle.StopData.__repr__
+  %}
+};
+
+%extend libsumo::TraCIReservation {
+  %pythoncode %{
+    __attr_repr__ = _person.Reservation.__attr_repr__
+    __repr__ = _person.Reservation.__repr__
   %}
 };
 
@@ -445,6 +450,8 @@ static PyObject* parseSubscriptionMap(const std::map<int, std::shared_ptr<libsum
 %include "TraCIDefs.h"
 %template(TraCILogicVector) std::vector<libsumo::TraCILogic>;
 %template(TraCIStageVector) std::vector<libsumo::TraCIStage>;
+%template(TraCINextStopDataVector2) std::vector<libsumo::TraCINextStopData>;
+%template(TraCIReservationVector) std::vector<libsumo::TraCIReservation>;
 %include "Edge.h"
 %include "InductionLoop.h"
 %include "Junction.h"
@@ -475,6 +482,8 @@ def wrapAsClassMethod(func, module):
 
 exceptions.TraCIException = TraCIException
 simulation.Stage = TraCIStage
+vehicle.StopData = TraCINextStopData
+person.Reservation = TraCIReservation
 trafficlight.Phase = TraCIPhase
 trafficlight.Logic = TraCILogic
 vehicle.addFull = vehicle.add

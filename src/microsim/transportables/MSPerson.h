@@ -96,6 +96,14 @@ public:
 
         std::string getStageSummary(const bool isPerson) const;
 
+        /** @brief Saves the current state into the given stream
+         */
+        void saveState(std::ostringstream& out);
+
+        /** @brief Reconstructs the current state
+         */
+        void loadState(MSTransportable* transportable, std::istringstream& state);
+
         /** @brief Called on writing tripinfo output
          * @param[in] os The stream to write the information into
          * @exception IOError not yet implemented
@@ -107,7 +115,7 @@ public:
          * @param[in] withRouteLength whether route length shall be written
          * @exception IOError not yet implemented
          */
-        virtual void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength) const;
+        virtual void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength, const MSStage* const previous) const;
 
         /// @brief move forward and return whether the person arrived
         bool moveToNextEdge(MSTransportable* person, SUMOTime currentTime, MSEdge* nextInternal = nullptr);
@@ -207,7 +215,7 @@ public:
         void tripInfoOutput(OutputDevice& os, const MSTransportable* const transportable) const;
 
         /// @brief Called on writing vehroute output. Currently does nothing.
-        void routeOutput(const bool, OutputDevice&, const bool) const {};
+        void routeOutput(const bool, OutputDevice&, const bool, const MSStage* const) const {};
 
     private:
         class ProceedCmd : public Command {

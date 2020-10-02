@@ -41,18 +41,17 @@ GNETagProperties::GNETagProperties() :
     myTagType(0),
     myTagProperty(0),
     myIcon(GUIIcon::EMPTY),
-    myParentTag(SUMO_TAG_NOTHING),
     myTagSynonym(SUMO_TAG_NOTHING) {
 }
 
 
-GNETagProperties::GNETagProperties(SumoXMLTag tag, int tagType, int tagProperty, GUIIcon icon, SumoXMLTag parentTag, SumoXMLTag tagSynonym) :
+GNETagProperties::GNETagProperties(SumoXMLTag tag, int tagType, int tagProperty, GUIIcon icon, const std::vector<SumoXMLTag>& masterTags, SumoXMLTag tagSynonym) :
     myTag(tag),
     myTagStr(toString(tag)),
     myTagType(tagType),
     myTagProperty(tagProperty),
     myIcon(icon),
-    myParentTag(parentTag),
+    myMasterTags(masterTags),
     myTagSynonym(tagSynonym) {
 }
 
@@ -93,6 +92,14 @@ GNETagProperties::checkTagIntegrity() const {
     // check that synonym was defined
     if (!hasTagSynonym() && (myTagSynonym != SUMO_TAG_NOTHING)) {
         throw FormatException("Tag doesn't support synonyms");
+    }
+    // check that master tag is valid
+    if (isSlave() && myMasterTags.empty()) {
+        throw FormatException("Master tags cannot be empty");
+    }
+    // check that master was defined
+    if (!isSlave() && !myMasterTags.empty()) {
+        throw FormatException("Tag doesn't support master elements");
     }
     // check integrity of all attributes
     for (auto attributeProperty : myAttributeProperties) {
@@ -197,13 +204,9 @@ GNETagProperties::getGUIIcon() const {
 }
 
 
-SumoXMLTag
-GNETagProperties::getParentTag() const {
-    if (hasParent()) {
-        return myParentTag;
-    } else {
-        throw ProcessError("Tag doesn't have parent");
-    }
+const std::vector<SumoXMLTag>&
+GNETagProperties::getMasterTags() const {
+    return myMasterTags;
 }
 
 
@@ -342,6 +345,18 @@ GNETagProperties::isGenericData() const {
 
 
 bool
+GNETagProperties::isSlave() const {
+    return (myTagProperty & SLAVE) != 0;
+}
+
+
+bool
+GNETagProperties::isSymbol() const {
+    return (myTagType & SYMBOL) != 0;
+}
+
+
+bool
 GNETagProperties::isDrawable() const {
     return (myTagProperty & DRAWABLE) != 0;
 }
@@ -384,12 +399,6 @@ GNETagProperties::hasGEOShape() const {
 
 
 bool
-GNETagProperties::hasParent() const {
-    return (myTagProperty & PARENT) != 0;
-}
-
-
-bool
 GNETagProperties::hasTagSynonym() const {
     return (myTagProperty & SYNONYM) != 0;
 }
@@ -427,20 +436,8 @@ GNETagProperties::isPlacedInRTree() const {
 
 
 bool
-GNETagProperties::canBeSortedManually() const {
-    return (myTagProperty & SORTINGCHILDREN) != 0;
-}
-
-
-bool
 GNETagProperties::canBeReparent() const {
     return (myTagProperty & REPARENT) != 0;
-}
-
-
-bool
-GNETagProperties::canAutomaticSortChildren() const {
-    return (myTagProperty & AUTOMATICSORTING) != 0;
 }
 
 
@@ -468,13 +465,13 @@ GNETagProperties::canCenterCameraAfterCreation() const {
 }
 
 
-bool 
+bool
 GNETagProperties::personPlanStartEdge() const {
     return (myTagProperty & PERSONPLAN_START_EDGE) != 0;
 }
 
 
-bool 
+bool
 GNETagProperties::personPlanEndEdge() const {
     return (myTagProperty & PERSONPLAN_END_EDGE) != 0;
 }
@@ -486,13 +483,25 @@ GNETagProperties::personPlanStartBusStop() const {
 }
 
 
-bool 
+bool
 GNETagProperties::personPlanEndBusStop() const {
     return (myTagProperty & PERSONPLAN_END_BUSSTOP) != 0;
 }
 
 
-bool 
+bool
+GNETagProperties::personPlanStartStop() const {
+    return (myTagProperty & PERSONPLAN_START_STOP) != 0;
+}
+
+
+bool
+GNETagProperties::personPlanEndStop() const {
+    return (myTagProperty & PERSONPLAN_END_STOP) != 0;
+}
+
+
+bool
 GNETagProperties::embebbedRoute() const {
     return (myTagProperty & EMBEDDED_ROUTE) != 0;
 }

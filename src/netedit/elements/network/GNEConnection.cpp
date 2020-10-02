@@ -50,13 +50,14 @@ int NUM_POINTS = 5;
 GNEConnection::GNEConnection(GNELane* from, GNELane* to) :
     GNENetworkElement(from->getNet(), "from" + from->getID() + "to" + to->getID(),
                       GLO_CONNECTION, SUMO_TAG_CONNECTION,
-    {}, {}, {}, {}, {}, {}, {}, {},     // Parents
-    {}, {}, {}, {}, {}, {}, {}, {}),    // Children
+    {}, {}, {}, {}, {}, {}, {}, {}),
     myFromLane(from),
     myToLane(to),
     myLinkState(LINKSTATE_TL_OFF_NOSIGNAL),
     mySpecialColor(nullptr),
     myShapeDeprecated(true) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
@@ -142,15 +143,65 @@ GNEConnection::getPositionInView() const {
 }
 
 
-Boundary
-GNEConnection::getBoundary() const {
-    if (myConnectionGeometry.getShape().size() == 0) {
-        // we need to use the center of junction parent as boundary if shape is empty
-        Position junctionParentPosition = myFromLane->getParentEdge()->getSecondParentJunction()->getPositionInView();
-        return Boundary(junctionParentPosition.x() - 0.1, junctionParentPosition.y() - 0.1,
-                        junctionParentPosition.x() + 0.1, junctionParentPosition.x() + 0.1);
+GNEMoveOperation* 
+GNEConnection::getMoveOperation(const double shapeOffset) {
+    // edit depending if shape is being edited
+    if (isShapeEdited()) {
+        // get connection
+        const auto &connection = getNBEdgeConnection();
+        // get original shape
+        const PositionVector originalShape = connection.customShape.size() > 0? connection.customShape : connection.shape;
+        // declare shape to move
+        PositionVector shapeToMove = originalShape;
+        // first check if in the given shapeOffset there is a geometry point
+        const Position positionAtOffset = shapeToMove.positionAtOffset2D(shapeOffset);
+        // check if position is valid
+        if (positionAtOffset == Position::INVALID) {
+            return nullptr;
+        } else {
+            // obtain index
+            const int index = originalShape.indexOfClosest(positionAtOffset);
+            // declare new index
+            int newIndex = index;
+            // get snap radius
+            const double snap_radius = myNet->getViewNet()->getVisualisationSettings().neteditSizeSettings.connectionGeometryPointRadius;
+            // check if we have to create a new index
+            if (positionAtOffset.distanceSquaredTo2D(shapeToMove[index]) > (snap_radius * snap_radius)) {
+                newIndex = shapeToMove.insertAtClosest(positionAtOffset, true);
+            }
+            // return move operation for edit shape
+            return new GNEMoveOperation(this, originalShape, {index}, shapeToMove, {newIndex});
+        }
     } else {
-        return myConnectionGeometry.getShape().getBoxBoundary();
+        return nullptr;
+    }
+}
+
+
+void 
+GNEConnection::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList) {
+    // edit depending if shape is being edited
+    if (isShapeEdited()) {
+        // get connection
+        const auto &connection = getNBEdgeConnection();
+        // get original shape
+        PositionVector shape = connection.customShape.size() > 0? connection.customShape : connection.shape;
+        // check shape size
+        if (shape.size() > 2) {
+            // obtain index
+            int index = shape.indexOfClosest(clickedPosition);
+            // get snap radius
+            const double snap_radius = myNet->getViewNet()->getVisualisationSettings().neteditSizeSettings.connectionGeometryPointRadius;
+            // check if we have to create a new index
+            if ((index != -1) && shape[index].distanceSquaredTo2D(clickedPosition) < (snap_radius * snap_radius)) {
+                // remove geometry point
+                shape.erase(shape.begin() + index);
+                // commit new shape
+                undoList->p_begin("remove geometry point of " + getTagStr());
+                undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_CUSTOMSHAPE, toString(shape)));
+                undoList->p_end();
+            }
+        }
     }
 }
 
@@ -262,11 +313,19 @@ GNEConnection::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
 }
 
 
-Boundary
-GNEConnection::getCenteringBoundary() const {
-    Boundary b = getBoundary();
-    b.grow(20);
-    return b;
+void
+GNEConnection::updateCenteringBoundary(const bool /*updateGrid*/) {
+    // calculate boundary
+    if (myConnectionGeometry.getShape().size() == 0) {
+        // we need to use the center of junction parent as boundary if shape is empty
+        const Position junctionParentPosition = myFromLane->getParentEdge()->getParentJunctions().back()->getPositionInView();
+        myBoundary = Boundary(junctionParentPosition.x() - 0.1, junctionParentPosition.y() - 0.1,
+            junctionParentPosition.x() + 0.1, junctionParentPosition.x() + 0.1);
+    } else {
+        myBoundary = myConnectionGeometry.getShape().getBoxBoundary();
+    }
+    // grow
+    myBoundary.grow(10);
 }
 
 
@@ -283,30 +342,40 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
     } else {
         drawConnection = false;
     }
+    // check if we're editing this connection
+    if (myNet->getViewNet()->getEditNetworkElementShapes().getEditedNetworkElement() == this) {
+        drawConnection = true;
+    }
     // Check if connection must be drawed
     if (drawConnection) {
         // draw connection checking whether it is not too small if isn't being drawn for selecting
-        const double selectionScale = isAttributeCarrierSelected() ? s.selectionScale : 1;
-        // check if boundary has to be drawn
-        if (s.drawBoundaries) {
-            GLHelper::drawBoundary(getBoundary());
-        }
-        // Push draw matrix 1
-        glPushMatrix();
-        // Push name
-        glPushName(getGlID());
-        // Traslate matrix
-        glTranslated(0, 0, GLO_JUNCTION + 0.1); // must draw on top of junction
-        // Set color
-        if (drawUsingSelectColor()) {
+        const double selectionScale = isAttributeCarrierSelected() ? s.selectorFrameScale : 1;
+        // get color
+        RGBColor connectionColor;
+        // first check if we're editing shape
+        if (myShapeEdited) {
+            connectionColor = s.colorSettings.editShape;
+        } else if (drawUsingSelectColor()) {
             // override with special colors (unless the color scheme is based on selection)
-            GLHelper::setColor(s.colorSettings.selectedConnectionColor);
+            connectionColor = s.colorSettings.selectedConnectionColor;
         } else if (mySpecialColor != nullptr) {
-            GLHelper::setColor(*mySpecialColor);
+            connectionColor = *mySpecialColor;
         } else {
             // Set color depending of the link state
-            GLHelper::setColor(GNEInternalLane::colorForLinksState(getLinkState()));
+            connectionColor = GNEInternalLane::colorForLinksState(getLinkState());
         }
+        // check if boundary has to be drawn
+        if (s.drawBoundaries) {
+            GLHelper::drawBoundary(getCenteringBoundary());
+        }
+        // Push name
+        glPushName(getGlID());
+        // Push layer matrix
+        glPushMatrix();
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_CONNECTION);
+        // Set color
+        GLHelper::setColor(connectionColor);
         if ((s.scale * selectionScale < 5.) && !s.drawForRectangleSelection) {
             // If it's small, draw a simple line
             GLHelper::drawLine(myConnectionGeometry.getShape());
@@ -324,7 +393,16 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
             if (myInternalJunctionMarker.size() > 0) {
                 GLHelper::drawLine(myInternalJunctionMarker);
             }
-            // Pop draw matrix 1
+            // draw shape points only in Network supemode
+            if (myShapeEdited && s.drawMovingGeometryPoint(1, s.neteditSizeSettings.connectionGeometryPointRadius) && myNet->getViewNet()->getEditModes().isCurrentSupermodeNetwork()) {
+                // color
+                const RGBColor darkerColor = connectionColor.changedBrightness(-32);
+                // draw geometry points
+                GNEGeometry::drawGeometryPoints(s, myNet->getViewNet(), myConnectionGeometry.getShape(), darkerColor, darkerColor, s.neteditSizeSettings.connectionGeometryPointRadius, 1);
+                // draw moving hint
+                GNEGeometry::drawMovingHint(s, myNet->getViewNet(), myConnectionGeometry.getShape(), darkerColor, s.neteditSizeSettings.connectionGeometryPointRadius, 1);
+            }
+            // Pop layer matrix
             glPopMatrix();
             // check if edge value has to be shown
             if (s.edgeValue.show) {
@@ -333,20 +411,20 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
                 if (value != "") {
                     int shapeIndex = (int)myConnectionGeometry.getShape().size() / 2;
                     Position p = (myConnectionGeometry.getShape().size() == 2
-                        ? (myConnectionGeometry.getShape().front() * 0.67 + myConnectionGeometry.getShape().back() * 0.33)
-                        : myConnectionGeometry.getShape()[shapeIndex]);
+                                  ? (myConnectionGeometry.getShape().front() * 0.67 + myConnectionGeometry.getShape().back() * 0.33)
+                                  : myConnectionGeometry.getShape()[shapeIndex]);
                     GLHelper::drawTextSettings(s.edgeValue, value, p, s.scale, 0);
                 }
             }
             // Pop name
             glPopName();
             // check if dotted contour has to be drawn (not useful at high zoom)
-            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
                 // calculate dotted geometry
                 GNEGeometry::DottedGeometry dottedConnectionGeometry(s, myConnectionGeometry.getShape(), false);
                 dottedConnectionGeometry.setWidth(0.1);
                 // use drawDottedContourLane to draw it
-                GNEGeometry::drawDottedContourLane(s, dottedConnectionGeometry, s.connectionSettings.connectionWidth * selectionScale, true, true);
+                GNEGeometry::drawDottedContourLane(GNEGeometry::DottedContourType::INSPECT, s, dottedConnectionGeometry, s.connectionSettings.connectionWidth * selectionScale, true, true);
             }
         }
     }
@@ -480,8 +558,9 @@ GNEConnection::changeTLIndex(SumoXMLAttr key, int tlIndex, int tlIndex2, GNEUndo
             NBLoadedSUMOTLDef* newDef = new NBLoadedSUMOTLDef(*tlDef, *tllogic);
             newDef->addConnection(getEdgeFrom()->getNBEdge(), getEdgeTo()->getNBEdge(),
                                   getLaneFrom()->getIndex(), getLaneTo()->getIndex(), tlIndex, tlIndex2, false);
-            // iterate over NBNodes
-            for (NBNode* node : tlDef->getNodes()) {
+            // make a copy
+            std::vector<NBNode*> nodes = tlDef->getNodes();
+            for (NBNode* node : nodes) {
                 GNEJunction* junction = getNet()->retrieveJunction(node->getID());
                 undoList->add(new GNEChange_TLS(junction, tlDef, false), true);
                 undoList->add(new GNEChange_TLS(junction, newDef, true), true);
@@ -631,6 +710,8 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value) {
             throw InvalidArgument("Attribute of '" + toString(key) + "' cannot be modified");
         case SUMO_ATTR_CUSTOMSHAPE: {
             nbCon.customShape = parse<PositionVector>(value);
+            // update centering boundary
+            updateCenteringBoundary(false);
             break;
         }
         case GNE_ATTR_SELECTED:
@@ -651,6 +732,26 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value) {
         markConnectionGeometryDeprecated();
         updateGeometry();
     }
+}
+
+
+void 
+GNEConnection::setMoveShape(const GNEMoveResult& moveResult) {
+    // set custom shape
+    getNBEdgeConnection().customShape = moveResult.shapeToUpdate;
+    // mark junction as deprecated
+    myShapeDeprecated = true;
+    // update geometry
+    updateGeometry();
+}
+
+
+void
+GNEConnection::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
+    // commit new shape
+    undoList->p_begin("moving " + toString(SUMO_ATTR_CUSTOMSHAPE) + " of " + getTagStr());
+    undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_CUSTOMSHAPE, toString(moveResult.shapeToUpdate)));
+    undoList->p_end();
 }
 
 /****************************************************************************/

@@ -39,6 +39,10 @@ def load(args):
     simulation.load(args)
 
 
+def isLoaded():
+    return simulation.isLoaded()
+
+
 def getVersion():
     return simulation.getVersion()
 
@@ -49,9 +53,9 @@ def close():
         _traceFile[0].close()
 
 
-def start(args, traceFile=None):
+def start(args, traceFile=None, traceGetters=True):
     if traceFile is not None:
-        _startTracing(traceFile, args)
+        _startTracing(traceFile, args, traceGetters)
     simulation.load(args[1:])
     return simulation.getVersion()
 
@@ -60,7 +64,7 @@ def setLegacyGetLeader(enabled):
     vehicle._legacyGetLeader = enabled
 
 
-def _startTracing(traceFile, cmd):
+def _startTracing(traceFile, cmd, traceGetters):
     _traceFile[0] = open(traceFile, 'w')
     _traceFile[0].write("traci.start(%s)\n" % repr(cmd))
     self = sys.modules[__name__]
@@ -98,9 +102,11 @@ def _startTracing(traceFile, cmd):
                             "getAllSubscriptionResults",
                             "getAllContextSubscriptionResults",
                             "close",
-                            "load"
+                            "load",
+                            "getVersion",
                 ]
-                        and not attrName.endswith('makeWrapper')):
+                        and not attrName.endswith('makeWrapper')
+                        and (traceGetters or not attrName.startswith("get"))):
                     setattr(domain, attrName, _addTracing(attr, domain.__name__))
 
 

@@ -7,7 +7,7 @@ permalink: /TraCI/
 
 TraCI is the short term for "**Tra**ffic **C**ontrol **I**nterface".
 Giving access to a running road traffic simulation, it allows to
-retrieve values of simulated objects and to manipulate their behaviour
+retrieve values of simulated objects and to manipulate their behavior
 "on-line".
 
 ## Using TraCI
@@ -120,6 +120,10 @@ structure](TraCI/SUMO_ID_Commands_Structure.md).
     information about the simulation
   - [GUI Value Retrieval](TraCI/GUI_Value_Retrieval.md)
     retrieve information about the simulation visualization
+  - [Rerouter](TraCI/Rerouter.md)
+    retrieve information about the rerouter
+  - [RouteProbe](TraCI/RouteProbe.md)
+    retrieve information about the RouteProbe
 - State Changing
   - [Change Lane State](TraCI/Change_Lane_State.md) change a
     lane's state
@@ -195,10 +199,10 @@ bindings are included when downloading a sumo-build.
 
 ### Interfaces by Programming Language
 
-- <span style="background: #ccffcc;"> Python: [the package
+- Python: [the package
   tools/traci](TraCI/Interfacing_TraCI_from_Python.md) allows
   to interact with [sumo](sumo.md) using Python (This library
-  is tested daily and supports all TraCI commands)</span>
+  is tested daily and supports all TraCI commands).
 - C++: [The C++ TraCIAPI](TraCI/C++TraCIAPI.md) is client
   library that is part of the [sumo](sumo.md)-source tree (API
   coverage is almost complete).
@@ -214,22 +218,22 @@ bindings are included when downloading a sumo-build.
   [TraCI4Matlab](http://www.mathworks.com/matlabcentral/fileexchange/44805-traci4matlab).
   The client is included as part of each SUMO release in
   {{SUMO}}*/tools/contributed/traci4matlab*
-  <span style="background: #ffcccc;">Not all TraCI commands have been
-  implemented</span>
+  Not all TraCI commands have been
+  implemented.
 - Java: [TraaS](TraCI/TraaS.md#java_client) provides a client
   library that is part of the [sumo](sumo.md)-source tree (API
-  coverage is almost complete)
-- Others: Any language that can access webservies using
+  coverage is almost complete).
+- Others: Any language that can access webservices using
   [SOAP](https://en.wikipedia.org/wiki/SOAP) can access SUMO using the
   [TraaS Webservice](TraCI/TraaS.md#webservice). A [Java
   webservice client](TraCI/TraaS.md#webservice_client) is also
-  included with TraaS. <span style="background: #ffcccc;">API lags
-  behind the python client</span>
+  included with TraaS. API lags
+  behind the python client.
 
 ### V2X simulation
 
 TraCI allows to use [sumo](sumo.md) in combination with
-communication network simulators vor simulating [vehicular
+communication network simulators for simulating [vehicular
 communication](Topics/V2X.md). See
 [Topics/V2X](Topics/V2X.md) for a list of available solutions.
 
@@ -328,7 +332,7 @@ and the different hand crafted clients.
 
 ### Output files are not closed.
 
-This problem occures if the client tries to access the output while
+This problem occurs if the client tries to access the output while
 the simulation is still closing down. This can be solved by letting
 the client wait for the simulation to shut down. The bug report was #524
 

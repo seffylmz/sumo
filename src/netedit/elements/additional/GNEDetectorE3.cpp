@@ -33,54 +33,59 @@
 // ===========================================================================
 
 GNEDetectorE3::GNEDetectorE3(const std::string& id, GNENet* net, Position pos, SUMOTime freq, const std::string& filename,
-        const std::string& vehicleTypes, const std::string& name, SUMOTime timeThreshold, double speedThreshold, bool blockMovement) :
+                             const std::string& vehicleTypes, const std::string& name, SUMOTime timeThreshold, double speedThreshold, bool blockMovement) :
     GNEAdditional(id, net, GLO_E3DETECTOR, SUMO_TAG_E3DETECTOR, name, blockMovement,
-        {}, {}, {}, {}, {}, {}, {}, {},     // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),    // Children
+        {}, {}, {}, {}, {}, {}, {}, {}),
     myPosition(pos),
     myFreq(freq),
     myFilename(filename),
     myVehicleTypes(vehicleTypes),
     myTimeThreshold(timeThreshold),
     mySpeedThreshold(speedThreshold) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
 GNEDetectorE3::~GNEDetectorE3() {}
 
 
+GNEMoveOperation* 
+GNEDetectorE3::getMoveOperation(const double /*shapeOffset*/) {
+    if (myBlockMovement) {
+        // element blocked, then nothing to move
+        return nullptr;
+    } else {
+        // return move operation for additional placed in view
+        return new GNEMoveOperation(this, myPosition);
+    }
+}
+
+
 void
 GNEDetectorE3::updateGeometry() {
-    // Set block icon position
-    myBlockIcon.position = myPosition;
-
-    // Set block icon offset
-    myBlockIcon.offset = Position(-0.5, -0.5);
-
-    // Set block icon rotation, and using their rotation for draw logo
-    myBlockIcon.setRotation();
-
-    // Update connection's geometry
-    myChildConnections.update();
+    // update additional geometry
+    myAdditionalGeometry.updateGeometry(myPosition, 0);
+    // Update Hierarchical connections geometry
+    myHierarchicalConnections.update();
 }
 
 
-Position
-GNEDetectorE3::getPositionInView() const {
-    return myPosition;
-}
-
-
-Boundary
-GNEDetectorE3::getCenteringBoundary() const {
-    // Return Boundary depending if myMovingGeometryBoundary is initialised (important for move geometry)
-    if (myMove.movingGeometryBoundary.isInitialised()) {
-        return myMove.movingGeometryBoundary;
-    } else {
-        Boundary b;
-        b.add(myPosition);
-        b.grow(5);
-        return b;
+void 
+GNEDetectorE3::updateCenteringBoundary(const bool updateGrid) {
+    // remove additional from grid
+    if (updateGrid) {
+        myNet->removeGLObjectFromGrid(this);
+    }
+    // now update geometry
+    updateGeometry();
+    // add shape boundary
+    myBoundary = myAdditionalGeometry.getShape().getBoxBoundary();
+    // grow
+    myBoundary.grow(10);
+    // add additional into RTREE again
+    if (updateGrid) {
+        myNet->addGLObjectIntoGrid(this);
     }
 }
 
@@ -88,27 +93,6 @@ GNEDetectorE3::getCenteringBoundary() const {
 void
 GNEDetectorE3::splitEdgeGeometry(const double /*splitPosition*/, const GNENetworkElement* /*originalElement*/, const GNENetworkElement* /*newElement*/, GNEUndoList* /*undoList*/) {
     // geometry of this element cannot be splitted
-}
-
-
-void
-GNEDetectorE3::moveGeometry(const Position& offset) {
-    // restore old position, apply offset and update Geometry
-    myPosition = myMove.originalViewPosition;
-    myPosition.add(offset);
-    // filtern position using snap to active grid
-    // filtern position using snap to active grid
-    myPosition = myNet->getViewNet()->snapToActiveGrid(myPosition);
-    updateGeometry();
-}
-
-
-void
-GNEDetectorE3::commitGeometryMoving(GNEUndoList* undoList) {
-    // commit new position allowing undo/redo
-    undoList->p_begin("position of " + getTagStr());
-    undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(myPosition), toString(myMove.originalViewPosition)));
-    undoList->p_end();
 }
 
 
@@ -130,42 +114,63 @@ GNEDetectorE3::drawGL(const GUIVisualizationSettings& s) const {
         }
         // Start drawing adding an gl identificator
         glPushName(getGlID());
-        // Add a draw matrix for drawing logo
+        // Add layer matrix
         glPushMatrix();
-        glTranslated(myPosition.x(), myPosition.y(), getType());
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_E3DETECTOR);
+        // Add texture matrix
+        glPushMatrix();
+        // translate to position
+        glTranslated(myPosition.x(), myPosition.y(), 0);
         // scale
         glScaled(E3Exaggeration, E3Exaggeration, 1);
-        // Draw icon depending of detector is selected and if isn't being drawn for selecting
-        if (!s.drawForRectangleSelection && s.drawDetail(s.detailSettings.laneTextures, E3Exaggeration)) {
-            glColor3d(1, 1, 1);
-            glRotated(180, 0, 0, 1);
+        // set color
+        glColor3d(1, 1, 1);
+        // rotate
+        glRotated(180, 0, 0, 1);
+        // draw depending
+        if (s.drawForRectangleSelection || !s.drawDetail(s.detailSettings.laneTextures, E3Exaggeration)) {
+            // set color
+            GLHelper::setColor(RGBColor::GREY);
+            // just draw a box
+            GLHelper::drawBoxLine(Position(0, s.detectorSettings.E3Size), 0, 2 * s.detectorSettings.E3Size, s.detectorSettings.E3Size);
+        } else {
+            // draw texture
             if (drawUsingSelectColor()) {
                 GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_E3SELECTED), s.detectorSettings.E3Size);
             } else {
                 GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_E3), s.detectorSettings.E3Size);
             }
-        } else {
-            GLHelper::setColor(RGBColor::GREY);
-            GLHelper::drawBoxLine(Position(0, s.detectorSettings.E3Size), 0, 2 * s.detectorSettings.E3Size, s.detectorSettings.E3Size);
         }
-        // Pop logo matrix
+        // Pop texture matrix
         glPopMatrix();
-        // Show Lock icon depending
-        myBlockIcon.drawIcon(s, E3Exaggeration, 0.4);
-        // Draw child connections
-        drawChildConnections(s, getType(), E3Exaggeration);
-        // Draw name if isn't being drawn for selecting
-        if (!s.drawForRectangleSelection) {
-            drawName(getPositionInView(), s.scale, s.addName);
-        }
-        // check if dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
-            GNEGeometry::drawDottedSquaredShape(s, myPosition, s.detectorSettings.E3Size, s.detectorSettings.E3Size, 0, E3Exaggeration);
-            // draw shape dotte contour aroud alld connections between child and parents
-            drawChildDottedConnections(s, E3Exaggeration);
-        }
+        // draw lock icon
+        GNEViewNetHelper::LockIcon::drawLockIcon(this, myAdditionalGeometry, E3Exaggeration, -0.5, -0.5, false, 0.4);
+        // Pop layer matrix
+        glPopMatrix();
         // Pop name
         glPopName();
+        // Draw name if isn't being drawn for selecting
+        drawName(getPositionInView(), s.scale, s.addName);
+        // Pop name
+        glPopName();
+        // push connection matrix
+        glPushMatrix();
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_E3DETECTOR, -0.1);
+        // Draw child connections
+        drawHierarchicalConnections(s, this, E3Exaggeration);
+        // Pop connection matrix
+        glPopMatrix();
+        // draw additional name
+        drawAdditionalName(s);
+        // check if dotted contours has to be drawn
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
+            GNEGeometry::drawDottedSquaredShape(GNEGeometry::DottedContourType::INSPECT, s, myPosition, s.detectorSettings.E3Size, s.detectorSettings.E3Size, 0, 0, 0, E3Exaggeration);
+        }
+        if (s.drawDottedContour() || myNet->getViewNet()->getFrontAttributeCarrier() == this) {
+            GNEGeometry::drawDottedSquaredShape(GNEGeometry::DottedContourType::FRONT, s, myPosition, s.detectorSettings.E3Size, s.detectorSettings.E3Size, 0, 0, 0, E3Exaggeration);
+        }
     }
 }
 
@@ -213,15 +218,7 @@ GNEDetectorE3::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoLi
         return; //avoid needless changes, later logic relies on the fact that attributes have changed
     }
     switch (key) {
-        case SUMO_ATTR_ID: {
-            // change ID of Entry
-            undoList->p_add(new GNEChange_Attribute(this, key, value));
-            // Change IDs of all Entry/Exits children
-            for (const auto &entryExit : getChildAdditionals()) {
-                entryExit->setAttribute(SUMO_ATTR_ID, generateAdditionalChildID(entryExit->getTagProperty().getTag()), undoList);
-            }
-            break;
-        }
+        case SUMO_ATTR_ID:
         case SUMO_ATTR_FREQUENCY:
         case SUMO_ATTR_POSITION:
         case SUMO_ATTR_NAME:
@@ -316,12 +313,6 @@ GNEDetectorE3::getHierarchyName() const {
     return getTagStr();
 }
 
-
-void
-GNEDetectorE3::updateParentAdditional() {
-    myChildConnections.update();
-}
-
 // ===========================================================================
 // private
 // ===========================================================================
@@ -331,11 +322,15 @@ GNEDetectorE3::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
         case SUMO_ATTR_ID:
             myNet->getAttributeCarriers()->updateID(this, value);
+            // Change IDs of all Entry/Exits children
+            for (const auto& entryExit : getChildAdditionals()) {
+                entryExit->setMicrosimID(getID());
+            }
             break;
         case SUMO_ATTR_POSITION:
-            myNet->removeGLObjectFromGrid(this);
             myPosition = parse<Position>(value);
-            myNet->addGLObjectIntoGrid(this);
+            // update boundary
+            updateCenteringBoundary(true);
             break;
         case SUMO_ATTR_FREQUENCY:
             myFreq = parse<SUMOTime>(value);
@@ -371,6 +366,23 @@ GNEDetectorE3::setAttribute(SumoXMLAttr key, const std::string& value) {
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
+}
+
+
+void 
+GNEDetectorE3::setMoveShape(const GNEMoveResult& moveResult) {
+    // update position
+    myPosition = moveResult.shapeToUpdate.front();
+    // update geometry
+    updateGeometry();
+}
+
+
+void
+GNEDetectorE3::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
+    undoList->p_begin("position of " + getTagStr());
+    undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(moveResult.shapeToUpdate.front())));
+    undoList->p_end();
 }
 
 

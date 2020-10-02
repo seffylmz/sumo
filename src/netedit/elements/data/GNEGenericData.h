@@ -25,8 +25,7 @@
 // ===========================================================================
 #include <config.h>
 
-#include <netedit/elements/GNEHierarchicalParentElements.h>
-#include <netedit/elements/GNEHierarchicalChildElements.h>
+#include <netedit/elements/GNEHierarchicalElement.h>
 #include <netedit/elements/GNEPathElements.h>
 #include <netedit/GNEGeometry.h>
 #include <utils/common/Parameterised.h>
@@ -51,7 +50,7 @@ class GNEDataInterval;
  * @class GNEGenericData
  * @brief An Element which don't belongs to GNENet but has influency in the simulation
  */
-class GNEGenericData : public GUIGlObject, public GNEAttributeCarrier, public Parameterised, public GNEHierarchicalParentElements, public GNEHierarchicalChildElements, public GNEPathElements {
+class GNEGenericData : public GUIGlObject, public Parameterised, public GNEHierarchicalElement, public GNEPathElements {
 
 public:
     /**@brief Constructor
@@ -67,33 +66,17 @@ public:
      * @param[in] TAZElementParents vector of TAZElement parents
      * @param[in] demandElementParents vector of demand element parents
      * @param[in] genericDataParents vector of generic data parents
-     * @param[in] junctionChildren vector of junction children
-     * @param[in] edgeChildren vector of edge children
-     * @param[in] laneChildren vector of lane children
-     * @param[in] additionalChildren vector of additional children
-     * @param[in] shapeChildren vector of shape children
-     * @param[in] TAZElementChildren vector of TAZElement children
-     * @param[in] demandElementChildren vector of demandElement children
-     * @param[in] genericDataChildren vector of genericData children
      */
     GNEGenericData(const SumoXMLTag tag, const GUIGlObjectType type, GNEDataInterval* dataIntervalParent,
-        const std::map<std::string, std::string>& parameters,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren);
+                   const std::map<std::string, std::string>& parameters,
+                   const std::vector<GNEJunction*>& junctionParents,
+                   const std::vector<GNEEdge*>& edgeParents,
+                   const std::vector<GNELane*>& laneParents,
+                   const std::vector<GNEAdditional*>& additionalParents,
+                   const std::vector<GNEShape*>& shapeParents,
+                   const std::vector<GNETAZElement*>& TAZElementParents,
+                   const std::vector<GNEDemandElement*>& demandElementParents,
+                   const std::vector<GNEGenericData*>& genericDataParents);
 
     /// @brief Destructor
     virtual ~GNEGenericData();
@@ -243,10 +226,22 @@ protected:
     GNEDataInterval* myDataIntervalParent;
 
     /// @brief draw filtered attribute
-    void drawFilteredAttribute(const GUIVisualizationSettings& s, const PositionVector &laneShape, const std::string &attribute) const;
+    void drawFilteredAttribute(const GUIVisualizationSettings& s, const PositionVector& laneShape, const std::string& attribute) const;
 
     /// @brief check if attribute is visible in inspect, delete or select mode
     bool isVisibleInspectDeleteSelect() const;
+
+    /// @brief replace the first parent edge
+    void replaceFirstParentEdge(const std::string& value);
+
+    /// @brief replace the last parent edge
+    void replaceLastParentEdge(const std::string& value);
+
+    /// @brief replace the first parent TAZElement
+    void replaceFirstParentTAZElement(SumoXMLTag tag, const std::string& value);
+
+    /// @brief replace the last parent TAZElement
+    void replaceLastParentTAZElement(SumoXMLTag tag, const std::string& value);
 
 private:
     /// @brief method for setting the attribute and nothing else (used in GNEChange_Attribute)

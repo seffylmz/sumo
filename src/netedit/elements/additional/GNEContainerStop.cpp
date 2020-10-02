@@ -37,6 +37,8 @@ GNEContainerStop::GNEContainerStop(const std::string& id, GNELane* lane, GNENet*
                                    const std::string& name, const std::vector<std::string>& lines, bool friendlyPosition, bool blockMovement) :
     GNEStoppingPlace(id, net, GLO_CONTAINER_STOP, SUMO_TAG_CONTAINER_STOP, lane, startPos, endPos, parametersSet, name, friendlyPosition, blockMovement),
     myLines(lines) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
@@ -59,19 +61,6 @@ GNEContainerStop::updateGeometry() {
 
     // Get position of the sign
     mySignPos = tmpShape.getLineCenter();
-
-    // Set block icon position
-    myBlockIcon.position = myAdditionalGeometry.getShape().getLineCenter();
-
-    // Set block icon rotation, and using their rotation for sign
-    myBlockIcon.setRotation(getParentLanes().front());
-
-}
-
-
-Boundary
-GNEContainerStop::getCenteringBoundary() const {
-    return myAdditionalGeometry.getShape().getBoxBoundary().grow(10);
 }
 
 
@@ -81,110 +70,57 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
     const double containerStopExaggeration = s.addSize.getExaggeration(s, this);
     // first check if additional has to be drawn
     if (s.drawAdditionals(containerStopExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
+        // declare colors
+        RGBColor baseColor, signColor;
+        // set colors
+        if (mySpecialColor) {
+            baseColor = *mySpecialColor;
+            signColor = baseColor.changedBrightness(-32);
+        } else if (drawUsingSelectColor()) {
+            baseColor = s.colorSettings.selectedAdditionalColor;
+            signColor = baseColor.changedBrightness(-32);
+        } else {
+            baseColor = s.stoppingPlaceSettings.containerStopColor;
+            signColor = s.stoppingPlaceSettings.containerStopColorSign;
+        }
         // Start drawing adding an gl identificator
         glPushName(getGlID());
         // Add a draw matrix
         glPushMatrix();
-        // Start with the drawing of the area traslating matrix to origin
-        glTranslated(0, 0, getType());
-        // Set color of the base
-        if (drawUsingSelectColor()) {
-            GLHelper::setColor(s.colorSettings.selectedAdditionalColor);
-        } else {
-            GLHelper::setColor(s.stoppingPlaceSettings.containerStopColor);
-        }
+        // translate to front
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_CONTAINER_STOP);
+        // set base color
+        GLHelper::setColor(baseColor);
         // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
         GNEGeometry::drawGeometry(myNet->getViewNet(), myAdditionalGeometry, s.stoppingPlaceSettings.containerStopWidth * containerStopExaggeration);
-        // Check if the distance is enought to draw details and if is being drawn for selecting
-        if (s.drawForRectangleSelection) {
-            // only draw circle depending of distance between sign and mouse cursor
-            if (myNet->getViewNet()->getPositionInformation().distanceSquaredTo2D(mySignPos) <= (myCircleWidthSquared + 2)) {
-                // Add a draw matrix for details
-                glPushMatrix();
-                // Start drawing sign traslating matrix to signal position
-                glTranslated(mySignPos.x(), mySignPos.y(), 0);
-                // scale matrix depending of the exaggeration
-                glScaled(containerStopExaggeration, containerStopExaggeration, 1);
-                // set color
-                GLHelper::setColor(s.stoppingPlaceSettings.containerStopColor);
-                // Draw circle
-                GLHelper::drawFilledCircle(myCircleWidth, s.getCircleResolution());
-                // pop draw matrix
-                glPopMatrix();
-            }
-        } else if (s.drawDetail(s.detailSettings.stoppingPlaceDetails, containerStopExaggeration)) {
-            // Add a draw matrix for details
-            glPushMatrix();
-            // only draw lines if we aren't in draw for position selection
-            if (!s.drawForPositionSelection) {
-                // Iterate over every line
-                for (int i = 0; i < (int)myLines.size(); ++i) {
-                    // push a new matrix for every line
-                    glPushMatrix();
-                    // Rotate and traslaste
-                    glTranslated(mySignPos.x(), mySignPos.y(), 0);
-                    glRotated(-1 * myBlockIcon.rotation, 0, 0, 1);
-                    // draw line with a color depending of the selection status
-                    if (drawUsingSelectColor()) {
-                        GLHelper::drawText(myLines[i].c_str(), Position(1.2, (double)i), .1, 1.f, s.colorSettings.selectionColor, 0, FONS_ALIGN_LEFT);
-                    } else {
-                        GLHelper::drawText(myLines[i].c_str(), Position(1.2, (double)i), .1, 1.f, s.stoppingPlaceSettings.containerStopColor, 0, FONS_ALIGN_LEFT);
-                    }
-                    // pop matrix for every line
-                    glPopMatrix();
-                }
-            }
-            // Start drawing sign traslating matrix to signal position
-            glTranslated(mySignPos.x(), mySignPos.y(), 0);
-            // scale matrix depending of the exaggeration
-            glScaled(containerStopExaggeration, containerStopExaggeration, 1);
-            // Set color of the externe circle
-            if (drawUsingSelectColor()) {
-                GLHelper::setColor(s.colorSettings.selectedAdditionalColor);
-            } else {
-                GLHelper::setColor(s.stoppingPlaceSettings.containerStopColor);
-            }
-            // Draw circle
-            GLHelper::drawFilledCircle(myCircleWidth, s.getCircleResolution());
-            // Traslate to front
-            glTranslated(0, 0, .1);
-            // Set color of the inner circle
-            if (drawUsingSelectColor()) {
-                GLHelper::setColor(s.colorSettings.selectionColor);
-            } else {
-                GLHelper::setColor(s.stoppingPlaceSettings.containerStopColorSign);
-            }
-            // draw another circle in the same position, but a little bit more small
-            GLHelper::drawFilledCircle(myCircleInWidth, s.getCircleResolution());
-            // draw text depending of detail settings
-            if (s.drawDetail(s.detailSettings.stoppingPlaceText, containerStopExaggeration) && !s.drawForPositionSelection) {
-                if (drawUsingSelectColor()) {
-                    GLHelper::drawText("C", Position(), .1, myCircleInText, s.colorSettings.selectedAdditionalColor, myBlockIcon.rotation);
-                } else {
-                    GLHelper::drawText("C", Position(), .1, myCircleInText, s.stoppingPlaceSettings.containerStopColor, myBlockIcon.rotation);
-                }
-            }
-            // pop draw matrix
-            glPopMatrix();
-            // Show Lock icon depending of the Edit mode
-            myBlockIcon.drawIcon(s, containerStopExaggeration);
+        // draw detail
+        if (s.drawDetail(s.detailSettings.stoppingPlaceDetails, containerStopExaggeration)) {
+            // draw lines
+            drawLines(s, myLines, baseColor);
+            // draw sign
+            drawSign(s, containerStopExaggeration, baseColor, signColor, "C");
+            // draw lock icon
+            GNEViewNetHelper::LockIcon::drawLockIcon(this, myAdditionalGeometry, containerStopExaggeration, 0, 0, true);
         }
         // pop draw matrix
         glPopMatrix();
         // Draw name if isn't being drawn for selecting
-        if (!s.drawForRectangleSelection) {
-            drawName(getPositionInView(), s.scale, s.addName);
-        }
-        // check if dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
-            GNEGeometry::drawDottedContourShape(s, myAdditionalGeometry.getShape(), s.stoppingPlaceSettings.containerStopWidth, containerStopExaggeration);
-        }
+        drawName(getPositionInView(), s.scale, s.addName);
         // Pop name
         glPopName();
+        // draw additional name
+        drawAdditionalName(s);
+        // check if dotted contours has to be drawn
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
+            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::INSPECT, s, myAdditionalGeometry.getShape(), s.stoppingPlaceSettings.containerStopWidth, containerStopExaggeration);
+        }
+        if (s.drawDottedContour() || myNet->getViewNet()->getFrontAttributeCarrier() == this) {
+            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::FRONT, s, myAdditionalGeometry.getShape(), s.stoppingPlaceSettings.containerStopWidth, containerStopExaggeration);
+        }
         // draw child demand elements
-        for (const auto& i : getChildDemandElements()) {
-            if (!i->getTagProperty().isPlacedInRTree()) {
-                i->drawGL(s);
+        for (const auto& demandElement : getChildDemandElements()) {
+            if (!demandElement->getTagProperty().isPlacedInRTree()) {
+                demandElement->drawGL(s);
             }
         }
     }
@@ -307,7 +243,7 @@ GNEContainerStop::setAttribute(SumoXMLAttr key, const std::string& value) {
             myNet->getAttributeCarriers()->updateID(this, value);
             break;
         case SUMO_ATTR_LANE:
-            replaceParentLanes(this, value);
+            replaceAdditionalParentLanes(value);
             break;
         case SUMO_ATTR_STARTPOS:
             if (!value.empty()) {

@@ -112,7 +112,7 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
     if (oc.isSet("keep-edges.in-boundary") || oc.isSet("keep-edges.in-geo-boundary")) {
 
         std::string polyPlainString = oc.getValueString(oc.isSet("keep-edges.in-boundary") ?
-                "keep-edges.in-boundary" : "keep-edges.in-geo-boundary");
+                                      "keep-edges.in-boundary" : "keep-edges.in-geo-boundary");
         // try interpreting the boundary like shape attribute with spaces
         bool ok = true;
         PositionVector boundaryShape = GeomConvHelper::parseShapeReporting(polyPlainString, "pruning-boundary", 0, ok, false, false);
@@ -131,7 +131,7 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
         } else {
             // maybe positions are separated by ',' instead of ' '
             std::vector<std::string> polyS = oc.getStringVector(oc.isSet("keep-edges.in-boundary") ?
-                    "keep-edges.in-boundary" : "keep-edges.in-geo-boundary");
+                                             "keep-edges.in-boundary" : "keep-edges.in-geo-boundary");
             std::vector<double> poly;
             for (std::vector<std::string>::iterator i = polyS.begin(); i != polyS.end(); ++i) {
                 poly.push_back(StringUtils::toDouble((*i))); // !!! may throw something anyhow...
@@ -860,11 +860,11 @@ NBEdgeCont::recheckLanes() {
             }
             // check oppositeID stored in other lanes
             for (int i = 0; i < (int)edge->getNumLanes() - 1; i++) {
-              const std::string& oppositeID = edge->getLanes()[i].oppositeID;
-              if (oppositeID != "" && oppositeID != "-") {
-                WRITE_WARNING("Removing unknown opposite lane '" + oppositeID + "' for lane '" + edge->getLaneID(i) + "'.");
-                edge->getLaneStruct(i).oppositeID = "";
-              }
+                const std::string& oppositeID = edge->getLanes()[i].oppositeID;
+                if (oppositeID != "" && oppositeID != "-") {
+                    WRITE_WARNING("Removing unknown opposite lane '" + oppositeID + "' for lane '" + edge->getLaneID(i) + "'.");
+                    edge->getLaneStruct(i).oppositeID = "";
+                }
             }
         }
     }
@@ -953,7 +953,7 @@ NBEdgeCont::joinSameNodeConnectingEdges(NBDistrictCont& dc,
     // count the number of lanes, the speed and the id
     int nolanes = 0;
     double speed = 0;
-    int priority = 0;
+    int priority = -1;
     std::string id;
     sort(edges.begin(), edges.end(), NBContHelper::same_connection_edge_sorter());
     // retrieve the connected nodes
@@ -961,6 +961,7 @@ NBEdgeCont::joinSameNodeConnectingEdges(NBDistrictCont& dc,
     NBNode* from = tpledge->getFromNode();
     NBNode* to = tpledge->getToNode();
     EdgeVector::const_iterator i;
+    int myPriority = (*edges.begin())->getPriority();
     for (i = edges.begin(); i != edges.end(); i++) {
         // some assertions
         assert((*i)->getFromNode() == from);
@@ -975,7 +976,13 @@ NBEdgeCont::joinSameNodeConnectingEdges(NBDistrictCont& dc,
         // compute the speed
         speed += (*i)->getSpeed();
         // build the priority
-        priority = MAX2(priority, (*i)->getPriority());
+        // merged edges should have the same inherited priority 
+        if (myPriority == (*i)->getPriority()) {
+            priority = myPriority; 
+        }
+        else { 
+            priority = -1;
+        }
     }
     speed /= edges.size();
     // build the new edge
@@ -1792,7 +1799,7 @@ NBEdgeCont::joinTramEdges(NBDistrictCont& dc, NBPTLineCont& lc, double maxDist) 
                     std::cout << "    splitting tramEdge=" << tramEdge->getID() << " at " << item.first << " (gap=" << gap << ")\n";
 #endif
                     const std::string firstPartID = tramEdgeID + "#" + toString(tramPart++);
-                    splitAt(dc, tramEdge, gap, road->getFromNode(), firstPartID, tramEdgeID, 1 , 1);
+                    splitAt(dc, tramEdge, gap, road->getFromNode(), firstPartID, tramEdgeID, 1, 1);
                     tramEdge = retrieve(tramEdgeID); // second part;
                     NBEdge* firstPart = retrieve(firstPartID);
                     firstPart->invalidateConnections(true);

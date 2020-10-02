@@ -76,6 +76,7 @@ enum class GUIIcon {
     LOCATEROUTE,
     LOCATESTOP,
     LOCATEPERSON,
+    LOCATECONTAINER,
     LOCATETLS,
     LOCATEADD,
     LOCATEPOI,
@@ -183,6 +184,7 @@ enum class GUIIcon {
     REMOVE,
     BIGARROWLEFT,
     BIGARROWRIGHT,
+    FRONTELEMENT,
     /// @}
 
     /// @name arrows
@@ -410,6 +412,7 @@ enum class GUIIcon {
 
     /// @name icons for grid
     /// @{
+    GRID,
     GRID1,
     GRID2,
     GRID3,

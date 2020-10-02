@@ -31,6 +31,7 @@
 #include <utils/gui/windows/GUISUMOAbstractView.h>
 #include <utils/gui/windows/GUISUMOAbstractView.h>
 
+#include "GNEGeometry.h"
 
 // ===========================================================================
 // enum
@@ -133,6 +134,8 @@ class GNENet;
 class GNEUndoList;
 class GNEViewNet;
 class GNEViewParent;
+class GNEMoveElement;
+class GNEMoveOperation;
 // network elements
 class GNENetworkElement;
 class GNEJunction;
@@ -171,12 +174,13 @@ struct GNEViewNetHelper {
 
     /// @brief class used to group all variables related with objects under cursor after a click over view
     class ObjectsUnderCursor {
+
     public:
         /// @brief constructor
-        ObjectsUnderCursor();
+        ObjectsUnderCursor(GNEViewNet* viewNet);
 
         /// @brief update objects under cursor (Called only in onLeftBtnPress(...) function)
-        void updateObjectUnderCursor(const std::vector<GUIGlObject*>& GUIGlObjects, GNEPoly* editedPolyShape);
+        void updateObjectUnderCursor(const std::vector<GUIGlObject*>& GUIGlObjects);
 
         /// @brief swap lane to edge
         void swapLane2Edge();
@@ -186,6 +190,9 @@ struct GNEViewNetHelper {
 
         /// @brief get front GUI GL object type or a pointer to nullptr
         GUIGlObjectType getGlTypeFront() const;
+
+        /// @brief get front attribute carrier or a pointer to nullptr
+        GUIGlObject* getGUIGlObjectFront() const;
 
         /// @brief get front attribute carrier or a pointer to nullptr
         GNEAttributeCarrier* getAttributeCarrierFront() const;
@@ -223,6 +230,9 @@ struct GNEViewNetHelper {
         /// @brief get front connection or a pointer to nullptr
         GNEConnection* getConnectionFront() const;
 
+        /// @brief get front internal lane or a pointer to nullptr
+        GNEInternalLane* getInternalLaneFront() const;
+
         /// @brief get front TAZ or a pointer to nullptr
         GNETAZ* getTAZFront() const;
 
@@ -241,66 +251,124 @@ struct GNEViewNetHelper {
         /// @brief get vector with clicked ACs
         const std::vector<GNEAttributeCarrier*>& getClickedAttributeCarriers() const;
 
-    private:
-        /// @brief vector with the clicked GUIGlObjects
-        std::vector<GUIGlObject*> myGUIGlObjectLanes, myGUIGlObjectEdges;
+    protected:
+        /// @brief objects container
+        class ObjectsContainer {
 
-        /// @brief vector with the clicked attribute carriers
-        std::vector<GNEAttributeCarrier*> myAttributeCarrierLanes, myAttributeCarrierEdges;
+        public:
+            /// @brief constructor
+            ObjectsContainer();
 
-        /// @brief vector with the clicked network elements
-        std::vector<GNENetworkElement*> myNetworkElementLanes, myNetworkElementEdges;
+            /// @brief clear elements
+            void clearElements();
 
-        /// @brief vector with the clicked additional elements
-        std::vector<GNEAdditional*> myAdditionals;
+            /// @brief vector with the clicked GUIGlObjects
+            std::vector<GUIGlObject*> GUIGlObjects;
 
-        /// @brief vector with the clicked shape elements (Poly and POIs)
-        std::vector<GNEShape*> myShapes;
+            /// @brief vector with the clicked attribute carriers
+            std::vector<GNEAttributeCarrier*> attributeCarriers;
 
-        /// @brief vector with the clicked TAZ elements
-        std::vector<GNETAZElement*> myTAZElements;
+            /// @brief vector with the clicked network elements
+            std::vector<GNENetworkElement*> networkElements;
 
-        /// @brief vector with the clicked demand elements
-        std::vector<GNEDemandElement*> myDemandElements;
+            /// @brief vector with the clicked additional elements
+            std::vector<GNEAdditional*> additionals;
 
-        /// @brief vector with the clicked generic datas
-        std::vector<GNEGenericData*> myGenericDatas;
+            /// @brief vector with the clicked shape elements (Poly and POIs)
+            std::vector<GNEShape*> shapes;
 
-        /// @brief vector with the clicked junctions
-        std::vector<GNEJunction*> myJunctions;
+            /// @brief vector with the clicked TAZ elements
+            std::vector<GNETAZElement*> TAZElements;
 
-        /// @brief vector with the clicked edges
-        std::vector<GNEEdge*> myEdges;
+            /// @brief vector with the clicked demand elements
+            std::vector<GNEDemandElement*> demandElements;
 
-        /// @brief vector with the clicked lanes
-        std::vector<GNELane*> myLanes;
+            /// @brief vector with the clicked generic datas
+            std::vector<GNEGenericData*> genericDatas;
 
-        /// @brief vector with the clicked crossings
-        std::vector<GNECrossing*> myCrossings;
+            /// @brief vector with the clicked junctions
+            std::vector<GNEJunction*> junctions;
 
-        /// @brief vector with the clicked connections
-        std::vector<GNEConnection*> myConnections;
+            /// @brief vector with the clicked edges
+            std::vector<GNEEdge*> edges;
 
-        /// @brief vector with the clicked TAZ elements
-        std::vector<GNETAZ*> myTAZs;
+            /// @brief vector with the clicked lanes
+            std::vector<GNELane*> lanes;
 
-        /// @brief vector with the clicked POIs
-        std::vector<GNEPOI*> myPOIs;
+            /// @brief vector with the clicked crossings
+            std::vector<GNECrossing*> crossings;
 
-        /// @brief vector with the clicked Polys
-        std::vector<GNEPoly*> myPolys;
+            /// @brief vector with the clicked connections
+            std::vector<GNEConnection*> connections;
 
-        /// @brief vector with the clicked edge datas
-        std::vector<GNEEdgeData*> myEdgeDatas;
+            /// @brief vector with the clicked internal lanes
+            std::vector<GNEInternalLane*> internalLanes;
 
-        /// @brief vector with the clicked edge relation datas
-        std::vector<GNEEdgeRelData*> myEdgeRelDatas;
+            /// @brief vector with the clicked TAZ elements
+            std::vector<GNETAZ*> TAZs;
+
+            /// @brief vector with the clicked POIs
+            std::vector<GNEPOI*> POIs;
+
+            /// @brief vector with the clicked polys
+            std::vector<GNEPoly*> polys;
+
+            /// @brief vector with the clicked edge datas
+            std::vector<GNEEdgeData*> edgeDatas;
+
+            /// @brief vector with the clicked edge relation datas
+            std::vector<GNEEdgeRelData*> edgeRelDatas;
+
+        private:
+            /// @brief Invalidated copy constructor.
+            ObjectsContainer(const ObjectsContainer&) = delete;
+
+            /// @brief Invalidated assignment operator.
+            ObjectsContainer& operator=(const ObjectsContainer&) = delete;
+        };
+
+        /// @brief pointer to viewNet
+        const GNEViewNet* myViewNet;
+
+        /// @brief objectContainer for objects selecting edges
+        ObjectsContainer myEdgeObjects;
+
+        /// @brief objectContainer for objects selecting lanes
+        ObjectsContainer myLaneObjects;
 
         /// @brief flag to enable/disable swap lane to edge
         bool mySwapLane2edge;
 
-        /// @brief invert GUIGlObjects
-        void sortGUIGlObjectsByAltitude(const std::vector<GUIGlObject*>& GUIGlObjects);
+    private:
+        /// @brief sort by altitude and update GUIGlObjects
+        void sortGUIGlObjects(const std::vector<GUIGlObject*>& GUIGlObjects);
+
+        /// @brief update attribute carrier elements
+        void updateAttributeCarriers(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief update network elements
+        void updateNetworkElements(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief update additional elements
+        void updateAdditionalElements(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief update TAZ elements
+        void updateTAZElements(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief update shape elements
+        void updateShapeElements(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief update demand elements
+        void updateDemandElements(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief update generic data elements
+        void updateGenericDataElements(ObjectsContainer& container, GNEAttributeCarrier* AC);
+
+        /// @brief updateGUIGlObjects
+        void updateGUIGlObjects(ObjectsContainer& container);
+
+        /// @brief default constructor
+        ObjectsUnderCursor();
 
         /// @brief Invalidated copy constructor.
         ObjectsUnderCursor(const ObjectsUnderCursor&) = delete;
@@ -309,30 +377,36 @@ struct GNEViewNetHelper {
         ObjectsUnderCursor& operator=(const ObjectsUnderCursor&) = delete;
     };
 
-    /// @brief class used to group all variables related with key pressed after certain events
-    struct KeyPressed {
+    /// @brief class used to group all variables related with mouse buttons and key pressed after certain events
+    struct MouseButtonKeyPressed {
 
         /// @brief constructor
-        KeyPressed();
+        MouseButtonKeyPressed();
 
-        /// @brief update status of KeyPressed
+        /// @brief update status of MouseButtonKeyPressed during current event
         void update(void* eventData);
 
-        /// @brief check if SHIFT key was pressed during click
+        /// @brief check if SHIFT is pressed during current event
         bool shiftKeyPressed() const;
 
-        /// @brief check if CONTROL key was pressed during click
+        /// @brief check if CONTROL is pressed during current event
         bool controlKeyPressed() const;
 
+        /// @brief check if mouse left button is pressed during current event
+        bool mouseLeftButtonPressed() const;
+
+        /// @brief check if mouse right button is pressed during current event
+        bool mouseRightButtonPressed() const;
+
     private:
-        /// @brief information of event
+        /// @brief information of event (must be updated)
         FXEvent* myEventInfo;
 
         /// @brief Invalidated copy constructor.
-        KeyPressed(const KeyPressed&) = delete;
+        MouseButtonKeyPressed(const MouseButtonKeyPressed&) = delete;
 
         /// @brief Invalidated assignment operator.
-        KeyPressed& operator=(const KeyPressed&) = delete;
+        MouseButtonKeyPressed& operator=(const MouseButtonKeyPressed&) = delete;
     };
 
     /// @brief struct used to group all variables related with save elements
@@ -753,6 +827,9 @@ struct GNEViewNetHelper {
         /// @brief constructor
         MoveSingleElementValues(GNEViewNet* viewNet);
 
+        /// @brief begin move network elementshape
+        bool beginMoveNetworkElementShape();
+
         /// @brief begin move single element in Network mode
         bool beginMoveSingleElementNetworkMode();
 
@@ -760,53 +837,30 @@ struct GNEViewNetHelper {
         bool beginMoveSingleElementDemandMode();
 
         /// @brief move single element in Network AND Demand mode
-        void moveSingleElement();
+        void moveSingleElement(const bool mouseLeftButtonPressed);
 
         /// @brief finish moving single elements in Network AND Demand mode
         void finishMoveSingleElement();
 
+    protected:
+        /// @brief calculate offset
+        Position calculateOffset() const;
+
+        /// @brief calculate move operation for shape
+        bool calculateMoveOperationShape(GNEMoveElement* moveElement, const PositionVector &shape, const double radius);
+
     private:
-        /// calculate Poly movement values (Position, Index, etc.)
-        bool calculatePolyValues();
-
-        /// calculate Edge movement values (Position, Index, etc.)
-        bool calculateEdgeValues();
-
-        /// calculate TAZ movement values (Position, Index, etc.)
-        bool calculateTAZValues();
-
         /// @brief pointer to net
         GNEViewNet* myViewNet;
 
         /// @brief relative position of Clicked Position regarding to originalGeometryPointPosition (Used when user doesn't click exactly over the center of element)
         Position myRelativeClickedPosition;
 
-        /// @brief bool to indicate that startPos of an edge is being moved
-        bool myMovingStartPos;
-
-        /// @brief bool to indicate that end pos of an edge is being moved
-        bool myMovingEndPos;
-
-        /// @brief the Junction to be moved.
-        GNEJunction* myJunctionToMove;
-
-        /// @brief the edge of which geometry is being moved
-        GNEEdge* myEdgeToMove;
-
-        /// @brief the poly of which geometry is being moved
-        GNEPoly* myPolyToMove;
-
-        /// @brief the poi which position is being moved
-        GNEPOI* myPOIToMove;
-
-        /// @brief the additional element which position is being moved
-        GNEAdditional* myAdditionalToMove;
-
         /// @brief the demand element which position is being moved
         GNEDemandElement* myDemandElementToMove;
 
-        /// @brief the TAZ element which their Shape is being moved (it's the only additional with a shape instead a position)
-        GNETAZ* myTAZElementToMove;
+        /// @brief move operations
+        std::vector<GNEMoveOperation*> myMoveOperations;
     };
 
     /// @brief struct used to group all variables related with movement of groups of elements
@@ -816,16 +870,26 @@ struct GNEViewNetHelper {
         MoveMultipleElementValues(GNEViewNet* viewNet);
 
         /// @brief begin move selection
-        void beginMoveSelection(GNEAttributeCarrier* originAC);
+        void beginMoveSelection();
 
         /// @brief move selection
-        void moveSelection();
+        void moveSelection(const bool mouseLeftButtonPressed);
 
         /// @brief finish moving selection
         void finishMoveSelection();
 
         /// @brief check if currently there is element being moved
         bool isMovingSelection() const;
+
+    protected:
+        /// @brief calculate offset
+        Position calculateOffset() const;
+
+        /// @brief calculate junction selection
+        void calculateJunctionSelection();
+
+        /// @brief calculate edge selection
+        void calculateEdgeSelection(const GNEEdge *clickedEdge);
 
     private:
         /// @brief pointer to net
@@ -834,14 +898,8 @@ struct GNEViewNetHelper {
         /// @brief original clicked position when moveSelection is called (used for calculate offset during moveSelection())
         Position myClickedPosition;
 
-        /// @brief flag to check if a selection is being moved
-        bool myMovingSelection;
-
-        /// @brief container used for move junctions
-        std::vector<GNEJunction*> myMovedJunctions;
-
-        /// @brief container used for move edges
-        std::set<GNEEdge*> myMovedEdges;
+        /// @brief move operations
+        std::vector<GNEMoveOperation*> myMoveOperations;
     };
 
     /// @brief struct used to group all variables related with movement of groups of elements
@@ -1129,32 +1187,54 @@ struct GNEViewNetHelper {
     };
 
     /// @brief struct used to group all variables related with edit shapes of NetworkElements
-    struct EditShapes {
+    struct EditNetworkElementShapes {
 
         /// @brief default constructor
-        EditShapes(GNEViewNet* viewNet);
+        EditNetworkElementShapes(GNEViewNet* viewNet);
 
         /// @brief start edit custom shape
-        void startEditCustomShape(GNENetworkElement* element, const PositionVector& shape, bool fill);
+        void startEditCustomShape(GNENetworkElement* element);
 
         /// @brief edit edit shape
         void stopEditCustomShape();
 
         /// @brief save edited shape
-        void saveEditedShape();
+        void commitEditedShape();
 
-        /// @brief polygon used for edit shapes
-        GNEPoly* editedShapePoly;
-
-        /// @brief flag to edit network element shapes
-        bool editingNetworkElementShapes;
+        /// @brief pointer to edited network element
+        GNENetworkElement* getEditedNetworkElement() const;
 
     private:
+        /// @brief pointer to net
+        GNEViewNet* myViewNet;
+
+        /// @brief pointer to edited network element
+        GNENetworkElement* myEditedNetworkElement;
+
         /// @brief the previous edit mode before edit NetworkElement's shapes
         NetworkEditMode myPreviousNetworkEditMode;
 
-        /// @brief pointer to net
-        GNEViewNet* myViewNet;
+    };
+
+    /// @brief struct for pack all variables and functions related with Block Icon
+    struct LockIcon {
+        /// @brief draw lock icon
+        static void drawLockIcon(const GNEAttributeCarrier *AC, const GNEGeometry::Geometry &geometry,
+            const double exaggeration, const double offsetx, const double offsety, 
+            const bool overlane, const double size = 0.5);
+
+    private:
+        /// @brief constructor
+        LockIcon();
+
+        /// @brief check drawing
+        static bool checkDrawing(const GNEAttributeCarrier *AC, const double exaggeration);
+
+        /// @brief get lock icon
+        static GUIGlID getLockIcon(const GNEAttributeCarrier *AC);
+
+        /// @brief Invalidated assignment operator
+        LockIcon& operator=(const LockIcon& other) = delete;
     };
 
     /// @brief get scaled rainbow colors
@@ -1163,7 +1243,7 @@ struct GNEViewNetHelper {
     /// @brief get rainbow scaled color
     static const RGBColor& getRainbowScaledColor(const double min, const double max, const double value);
 
-    private:
-        /// @brief scale (rainbow) colors
-        static std::vector<RGBColor> myRainbowScaledColors;
+private:
+    /// @brief scale (rainbow) colors
+    static std::vector<RGBColor> myRainbowScaledColors;
 };

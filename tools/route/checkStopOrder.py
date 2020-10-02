@@ -38,14 +38,22 @@ else:
 def get_options(args=None):
     parser = sumolib.options.ArgumentParser(description="Sample routes to match counts")
     parser.add_argument("-r", "--route-files", dest="routeFiles",
-                        help="Input route file file")
+                        help="Input route file")
     parser.add_argument("-H", "--human-readable-time", dest="hrTime", action="store_true", default=False,
                         help="Write time values as hour:minute:second or day:hour:minute:second rathern than seconds")
     parser.add_argument("-p", "--ignore-parking", dest="ignoreParking", action="store_true", default=False,
                         help="Do not report conflicts with parking vehicles")
+    parser.add_argument("--until-from-duration", action="store_true", default=False, dest="untilFromDuration",
+                        help="Use stop arrival+duration instead of 'until' to compute overtaking")
+    parser.add_argument("--stop-table", dest="stopTable",
+                        help="Print timetable information for the given busStop")
 
     options = parser.parse_args(args=args)
-    options.routeFiles = options.routeFiles.split(',')
+    if options.routeFiles:
+        options.routeFiles = options.routeFiles.split(',')
+    else:
+        print("Argument --route-files is mandatory", file=sys.stderr)
+        sys.exit()
 
     return options
 
@@ -62,17 +70,33 @@ def main(options):
             for stop in vehicle.stop:
                 if stop.parking in ["true", "True", "1"] and options.ignoreParking:
                     continue
-                until = parseTime(stop.until)
+                if options.untilFromDuration:
+                    if stop.arrival:
+                        until = parseTime(stop.arrival) + parseTime(stop.duration)
+                    else:
+                        print("Cannot compute 'until' for Vehicle %s because 'arrival' is not defined" % vehicle.id, file=sys.stderr)
+                else:
+                    until = parseTime(stop.until)
                 arrival = parseTime(stop.arrival) if stop.arrival else until - parseTime(stop.duration)
-                stopTimes[stop.busStop].append((arrival, until, vehicle.id))
+                stopTimes[stop.busStop].append((arrival, until, vehicle.id, stop.getAttributeSecure("tripId", "")))
 
     for stop, times in stopTimes.items():
         times.sort()
-        for i, (a, u, v) in enumerate(times):
-            for a2, u2, v2 in times[i + 1:]:
+        for i, (a, u, v, t) in enumerate(times):
+            for a2, u2, v2, t2 in times[i + 1:]:
                 if u2 < u:
                     print("Vehicle %s (%s, %s) overtakes %s (%s, %s) at stop %s" % (
-                        v2, tf(a2), tf(u2), v, tf(a), tf(u), stop))
+                        v2, tf(a2), tf(u2), v, tf(a), tf(u), stop), file=sys.stderr)
+
+    if options.stopTable:
+        if options.stopTable in stopTimes:
+            times = stopTimes[options.stopTable]
+            print("# busStop: %s" % options.stopTable)
+            print("arrival\tuntil\tveh\ttripId")
+            for a, u, v, t in sorted(times):
+                print("%s\t%s\t%s\t%s" % (tf(a), tf(u), v, t))
+        else:
+            print("No vehicle stops at busStop '%s' found" % options.stopTable, file=sys.stderr)
 
 
 if __name__ == "__main__":

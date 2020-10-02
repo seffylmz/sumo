@@ -53,9 +53,6 @@ public:
     /// @{
     /// @brief update pre-computed geometry information
     void updateGeometry();
-
-    /// @brief Returns the boundary to which the view shall be centered in order to show the object
-    Boundary getCenteringBoundary() const;
     /// @}
 
     /// @name inherited from GUIGlObject
@@ -104,6 +101,9 @@ protected:
 private:
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
+
+    /// @brief draw connections between busStops and access
+    void drawConnectionAccess(const GUIVisualizationSettings& s, const RGBColor& color) const;
 
     /// @brief Invalidated copy constructor.
     GNEBusStop(const GNEBusStop&) = delete;

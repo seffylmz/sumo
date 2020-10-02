@@ -20,6 +20,7 @@
 /****************************************************************************/
 #pragma once
 #include "GNENetworkElement.h"
+
 #include <netbuild/NBNode.h>
 
 // ===========================================================================
@@ -74,6 +75,15 @@ public:
     Position getPositionInView() const;
     /// @}
 
+    /// @name Functions related with move elements
+    /// @{
+    /// @brief get move operation for the given shapeOffset (can be nullptr)
+    GNEMoveOperation* getMoveOperation(const double shapeOffset);
+
+    /// @brief remove geometry point in the clicked position
+    void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList);
+    /// @}
+
     /// @name inherited from GUIGlObject
     /// @{
     /**@brief Returns an own popup-menu
@@ -85,12 +95,8 @@ public:
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent);
 
-    /**@brief Returns the boundary to which the view shall be centered in order to show the object
-     *
-     * @return The boundary the object is within
-     * @see GUIGlObject::getCenteringBoundary
-     */
-    Boundary getCenteringBoundary() const;
+    /// @brief update centering boundary (implies change in RTREE)
+    void updateCenteringBoundary(const bool updateGrid);
 
     /**@brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
@@ -117,9 +123,6 @@ public:
     /// @brief remove outgoing GNEEdge
     void removeOutgoingGNEEdge(GNEEdge* edge);
 
-    /// @brief Returns all GNEEdges vinculated with this Junction
-    const std::vector<GNEEdge*>& getGNEEdges() const;
-
     /// @brief Returns incoming GNEEdges
     const std::vector<GNEEdge*>& getGNEIncomingEdges() const;
 
@@ -140,23 +143,6 @@ public:
 
     /// @brief notify the junction of being selected in tls-mode. (used to control drawing)
     void selectTLS(bool selected);
-
-    /// @name functions related with geometry movement
-    /// @{
-
-    /// @brief begin movement (used when user click over edge to start a movement, to avoid problems with problems with GL Tree)
-    void startGeometryMoving(bool extendToNeighbors = true);
-
-    /// @brief begin movement (used when user click over edge to start a movement, to avoid problems with problems with GL Tree)
-    void endGeometryMoving(bool extendToNeighbors = true);
-
-    /// @brief change the position of the element geometry without saving in undoList
-    void moveGeometry(const Position& offset);
-
-    /// @brief registers completed movement with the undoList
-    void commitGeometryMoving(GNEUndoList* undoList);
-
-    /// @}
 
     /// @name inherited from GNEAttributeCarrier
     /// @{
@@ -256,17 +242,14 @@ public:
     /// @brief invalidate path element childs
     void invalidatePathElements();
 
-private:
+protected:
     /// @brief A reference to the represented junction
     NBNode* myNBNode;
 
-    /// @brief vector with the GNEEdges vinculated with this junction
-    std::vector<GNEEdge*> myGNEEdges;
-
-    /// @brief vector with the incomings GNEEdges vinculated with this junction
+    /// @brief vector with the (child) incomings GNEEdges vinculated with this junction
     std::vector<GNEEdge*> myGNEIncomingEdges;
 
-    /// @brief vector with the outgoings GNEEdges vinculated with this junction
+    /// @brief vector with the (child) outgoings GNEEdges vinculated with this junction
     std::vector<GNEEdge*> myGNEOutgoingEdges;
 
     /// @brief the built crossing objects
@@ -303,6 +286,7 @@ private:
     /// @brief whether this junction probably should have some connections but doesn't
     bool myColorForMissingConnections;
 
+private:
     /// @brief draw TLS icon
     void drawTLSIcon(const GUIVisualizationSettings& s) const;
 
@@ -312,11 +296,17 @@ private:
     /// @brief method for setting the attribute and nothing else (used in GNEChange_Attribute)
     void setAttribute(SumoXMLAttr key, const std::string& value);
 
+    /// @brief set move shape
+    void setMoveShape(const GNEMoveResult& moveResult);
+
+    /// @brief commit move shape
+    void commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList);
+
     /**@brief reposition the node at pos without updating GRID and informs the edges
     * @param[in] pos The new position
     * @note: those operations are not added to the undoList.
     */
-    void moveJunctionGeometry(const Position& pos);
+    void moveJunctionGeometry(const Position& pos, const bool updateEdgeBoundaries);
 
     /// @brief sets junction color depending on circumstances
     RGBColor setColor(const GUIVisualizationSettings& s, bool bubble) const;

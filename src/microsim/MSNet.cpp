@@ -90,6 +90,8 @@
 #include <microsim/transportables/MSPerson.h>
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSRailSignal.h>
+#include <microsim/traffic_lights/MSRailSignalConstraint.h>
+#include <microsim/traffic_lights/MSRailSignalControl.h>
 #include <microsim/trigger/MSChargingStation.h>
 #include <microsim/trigger/MSOverheadWire.h>
 #include <utils/router/FareModul.h>
@@ -261,7 +263,7 @@ MSNet::closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionCont
     mySimBeginMillis = SysUtils::getCurrentMillis();
     myHasInternalLinks = hasInternalLinks;
     if (hasNeighs && MSGlobals::gLateralResolution > 0) {
-        WRITE_WARNING("Opposite direction driving does not work together with the sublane model.");
+        throw ProcessError("Opposite direction driving does not work together with the sublane model.");
     }
     myHasElevation = checkElevation();
     myHasPedestrianNetwork = checkWalkingarea();
@@ -552,6 +554,7 @@ MSNet::simulationStep() {
         MSStateHandler::saveState(myStateDumpPrefix + "_" + timeStamp + myStateDumpSuffix, myStep);
     }
     myBeginOfTimestepEvents->execute(myStep);
+    MSRailSignal::recheckGreen();
 #ifdef HAVE_FOX
     MSRoutingEngine::waitForAll();
 #endif
@@ -725,6 +728,8 @@ MSNet::clearAll() {
     MSDevice_SSM::cleanup();
     MSDevice_ToC::cleanup();
     MSStopOut::cleanup();
+    MSRailSignalConstraint::cleanup();
+    MSRailSignalControl::cleanup();
     TraCIServer* t = TraCIServer::getInstance();
     if (t != nullptr) {
         t->cleanup();
@@ -755,6 +760,7 @@ MSNet::clearState(const SUMOTime step) {
             }
         }
     }
+    myLogics->clearState();
     myDetectorControl->updateDetectors(myStep);
     myDetectorControl->writeOutput(myStep, true);
     myDetectorControl->clearState();
@@ -921,13 +927,10 @@ MSNet::writeOutput() {
         OutputDevice& od = OutputDevice::getDeviceByOption("link-output");
         od.openTag("timestep");
         od.writeAttr(SUMO_ATTR_ID, STEPS2TIME(myStep));
-        const MSEdgeVector& edges = myEdges->getEdges();
-        for (MSEdgeVector::const_iterator i = edges.begin(); i != edges.end(); ++i) {
-            const std::vector<MSLane*>& lanes = (*i)->getLanes();
-            for (std::vector<MSLane*>::const_iterator j = lanes.begin(); j != lanes.end(); ++j) {
-                const std::vector<MSLink*>& links = (*j)->getLinkCont();
-                for (std::vector<MSLink*>::const_iterator k = links.begin(); k != links.end(); ++k) {
-                    (*k)->writeApproaching(od, (*j)->getID());
+        for (const MSEdge* const edge : myEdges->getEdges()) {
+            for (const MSLane* const lane : edge->getLanes()) {
+                for (const MSLink* const link : lane->getLinkCont()) {
+                    link->writeApproaching(od, lane->getID());
                 }
             }
         }

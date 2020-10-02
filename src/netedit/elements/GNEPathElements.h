@@ -75,24 +75,6 @@ public:
         PathElement();
     };
 
-    /// @brief typedef junction path element marker
-    class JunctionPathElementMarker {
-
-    public:
-        /// @brief constructor
-        JunctionPathElementMarker();
-
-        /// @brief check if the given tag and path element was previoulsy registered/marked
-        bool exist(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement);
-
-        /// @brief mark the given tag and path element
-        void mark(SumoXMLTag tag, const GNEPathElements::PathElement& pathElement);
-
-    private:
-        /// @brief container for junction path element marker
-        std::map<SumoXMLTag, std::map<GNELane*, std::set<GNELane*> > > myContainer;
-    };
-
     /// @brief Constructor for additional elements
     GNEPathElements(GNEAdditional* additionalElement);
 
@@ -112,23 +94,23 @@ public:
     void drawLanePathChildren(const GUIVisualizationSettings& s, const GNELane* lane, const double offset) const;
 
     /// @brief draw junction path child
-    void drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction, const double offset, GNEPathElements::JunctionPathElementMarker &junctionPathElementMarker) const;
+    void drawJunctionPathChildren(const GUIVisualizationSettings& s, const GNEJunction* junction, const double offset) const;
 
 protected:
     /// @brief calculate path lanes (Dijkstra)
-    void calculatePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
+    void calculatePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*>& viaEdges);
 
     /// @brief calculate consecutive path lanes (used by routes)
-    void calculateConsecutivePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, const std::vector<GNEEdge*> &edges);
+    void calculateConsecutivePathLanes(SUMOVehicleClass vClass, const bool allowedVClass, const std::vector<GNEEdge*>& edges);
 
     /// @brief calculate consecutive path lanes (used by E2Detectors)
-    void calculateConsecutivePathLanes(const std::vector<GNELane*> &lanes);
+    void calculateConsecutivePathLanes(const std::vector<GNELane*>& lanes);
 
     /// @brief reset path lanes
-    void resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
+    void resetPathLanes(SUMOVehicleClass vClass, const bool allowedVClass, GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*>& viaEdges);
 
     /// @brief calculate consecutive path lanes (used by genericdatas)
-    void calculateGenericDataLanePath(const std::vector<GNEEdge*> &edges);
+    void calculateGenericDataLanePath(const std::vector<GNEEdge*>& edges);
 
 private:
     /// @brief pointer to additional element
@@ -153,7 +135,7 @@ private:
     void updatePathElements();
 
     /// @brief calculate from-via-to edges
-    const std::vector<GNEEdge*> calculateFromViaToEdges(GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*> &viaEdges);
+    const std::vector<GNEEdge*> calculateFromViaToEdges(GNELane* fromLane, GNELane* toLane, const std::vector<GNEEdge*>& viaEdges);
 
     /// @brief default constructor
     GNEPathElements();

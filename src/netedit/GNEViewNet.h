@@ -74,6 +74,9 @@ public:
     /// @brief get AttributeCarriers in Boundary
     std::set<std::pair<std::string, GNEAttributeCarrier*> > getAttributeCarriersInBoundary(const Boundary& boundary, bool forceSelectEdges = false);
 
+    /// @brief get objects under cursor
+    const GNEViewNetHelper::ObjectsUnderCursor &getObjectsUnderCursor() const;
+
     /** @brief Builds an entry which allows to (de)select the object
      * @param ret The popup menu to add the entry to
      * @param AC AttributeCarrier that will be select/unselected
@@ -115,10 +118,10 @@ public:
     const GNEViewNetHelper::DataViewOptions& getDataViewOptions() const;
 
     /// @brief get Key Pressed modul
-    const GNEViewNetHelper::KeyPressed& getKeyPressed() const;
+    const GNEViewNetHelper::MouseButtonKeyPressed& getMouseButtonKeyPressed() const;
 
     /// @brief get Edit Shape modul
-    const GNEViewNetHelper::EditShapes& getEditShapes() const;
+    const GNEViewNetHelper::EditNetworkElementShapes& getEditNetworkElementShapes() const;
 
     /// @name overloaded handlers
     /// @{
@@ -374,11 +377,26 @@ public:
     /// @brief get interval bar
     GNEViewNetHelper::IntervalBar& getIntervalBar();
 
-    /// @brief get inspected AttributeCarrier
-    const GNEAttributeCarrier* getInspectedAttributeCarrier() const;
+    /// @brief get inspected attribute carriers
+    const std::vector<GNEAttributeCarrier*> &getInspectedAttributeCarriers() const;
 
-    /// @brief set attributeCarrier under cursor
-    void setInspectedAttributeCarrier(const GNEAttributeCarrier* AC);
+    /// @brief set inspected attributeCarrier
+    void setInspectedAttributeCarriers(const std::vector<GNEAttributeCarrier*> ACs);
+
+    /// @brief check if attribute carrier is being inspected
+    bool isAttributeCarrierInspected(const GNEAttributeCarrier* AC) const;
+
+    /// @brief remove given AC of list of inspected Attribute Carriers
+    void removeFromAttributeCarrierInspected(const GNEAttributeCarrier* AC);
+
+    /// @brief get front attributeCarrier
+    const GNEAttributeCarrier* getFrontAttributeCarrier() const;
+
+    /// @brief set front attributeCarrier
+    void setFrontAttributeCarrier(const GNEAttributeCarrier* AC);
+
+    /// @brief draw front attributeCarrier
+    void drawTranslateFrontAttributeCarrier(const GNEAttributeCarrier* AC, GUIGlObjectType objectType, const double extraOffset = 0);
 
     /// @brief check if lock icon should be visible
     bool showLockIcon() const;
@@ -389,8 +407,8 @@ public:
     /// @brief whether to autoselect nodes or to lanes
     bool autoSelectNodes();
 
-    /// @brief set selection scaling
-    void setSelectionScaling(double selectionScale);
+    /// @brief set selection scaling (in GNESelectorFrame)
+    void setSelectorFrameScale(double selectionScale);
 
     /// @brief update control contents after undo/redo or recompute
     void updateControls();
@@ -400,6 +418,9 @@ public:
 
     /// @brief return true if junction must be showed as bubbles
     bool showJunctionAsBubbles() const;
+
+    /// @brief try to merge moved junction with another junction in that spot return true if merging did take place
+    bool mergeJunctions(GNEJunction* movedJunction, GNEJunction* targetJunction);
 
 protected:
     /// @brief FOX needs this
@@ -426,13 +447,10 @@ private:
     /// @{
 
     /// @brief variable used to save key status after certain events
-    GNEViewNetHelper::KeyPressed myKeyPressed;
+    GNEViewNetHelper::MouseButtonKeyPressed myMouseButtonKeyPressed;
 
     /// @brief variable use to save all pointers to objects under cursor after a click
     GNEViewNetHelper::ObjectsUnderCursor myObjectsUnderCursor;
-
-    /// @brief variable use to save all pointers to objects under cursor after a click with grid enabled
-    GNEViewNetHelper::ObjectsUnderCursor myObjectsUnderGrippedCursor;
     /// @}
 
     /// @name structs related with checkable buttons
@@ -493,7 +511,7 @@ private:
     GNEViewNetHelper::SelectingArea mySelectingArea;
 
     /// @brief struct for grouping all variables related with edit shapes
-    GNEViewNetHelper::EditShapes myEditShapes;
+    GNEViewNetHelper::EditNetworkElementShapes myEditNetworkElementShapes;
 
     /// @brief view parent
     GNEViewParent* myViewParent;
@@ -507,8 +525,11 @@ private:
     /// @brief a reference to the undolist maintained in the application
     GNEUndoList* myUndoList;
 
-    /// @brief get inspected attribute carrier
-    const GNEAttributeCarrier* myInspectedAttributeCarrier;
+    /// @brief current inspected attribute carrier
+    std::vector<GNEAttributeCarrier*> myInspectedAttributeCarriers;
+
+    /// @brief front attribute carrier
+    const GNEAttributeCarrier* myFrontAttributeCarrier;
 
     /// @brief create edit mode buttons and elements
     void buildEditModeControls();
@@ -549,8 +570,8 @@ private:
     /// @brief delete all currently selected shapes
     void deleteSelectedShapes();
 
-    /// @brief try to merge moved junction with another junction in that spot return true if merging did take place
-    bool mergeJunctions(GNEJunction* moved);
+    /// @brief delete all currently selected TAZ Elements
+    void deleteSelectedTAZElements();
 
     /// @brief try to retrieve an edge at popup position
     GNEEdge* getEdgeAtPopupPosition();
@@ -597,8 +618,11 @@ private:
     /// @brief draw connections between lane candidates during selecting lane mode in Additional mode
     void drawLaneCandidates() const;
 
-    /// @brief draw temporal polygon  shape in Polygon Mode
+    /// @brief draw temporal polygon shape in Polygon Mode
     void drawTemporalDrawShape() const;
+
+    /// @brief draw temporal junction in create edge mode
+    void drawTemporalJunction() const;
     /// @}
 
     /// @brief mouse process functions
@@ -611,7 +635,7 @@ private:
     void processLeftButtonReleaseNetwork();
 
     /// @brief process move mouse function in Supermode Network
-    void processMoveMouseNetwork();
+    void processMoveMouseNetwork(const bool mouseLeftButtonPressed);
 
     /// @brief process left button press function in Supermode Demand
     void processLeftButtonPressDemand(void* eventData);
@@ -620,7 +644,7 @@ private:
     void processLeftButtonReleaseDemand();
 
     /// @brief process move mouse function in Supermode Demand
-    void processMoveMouseDemand();
+    void processMoveMouseDemand(const bool mouseLeftButtonPressed);
 
     /// @brief process left button press function in Supermode Data
     void processLeftButtonPressData(void* eventData);
@@ -629,7 +653,7 @@ private:
     void processLeftButtonReleaseData();
 
     /// @brief process move mouse function in Supermode Data
-    void processMoveMouseData();
+    void processMoveMouseData(const bool mouseLeftButtonPressed);
 
     /// @brief Invalidated copy constructor.
     GNEViewNet(const GNEViewNet&) = delete;

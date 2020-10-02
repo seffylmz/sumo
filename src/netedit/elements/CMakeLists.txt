@@ -10,10 +10,10 @@ set(netedit_elements_SRCS
    GNETagProperties.cpp
    GNEAttributeCarrier.h
    GNEAttributeCarrier.cpp
-   GNEHierarchicalParentElements.h
-   GNEHierarchicalParentElements.cpp
-   GNEHierarchicalChildElements.h
-   GNEHierarchicalChildElements.cpp
+   GNEHierarchicalContainer.h
+   GNEHierarchicalContainer.cpp
+   GNEHierarchicalElement.h
+   GNEHierarchicalElement.cpp
    GNEPathElements.h
    GNEPathElements.cpp
    GNECandidateElement.h

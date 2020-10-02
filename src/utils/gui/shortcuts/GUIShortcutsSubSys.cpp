@@ -76,6 +76,9 @@ GUIShortcutsSubSys::buildSUMOAccelerators(GUIApplicationWindow* GUIApp) {
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_a, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEADD));
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_A, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEADD));
 
+    GUIApp->getAccelTable()->addAccel(parseKey(KEY_c, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATECONTAINER));
+    GUIApp->getAccelTable()->addAccel(parseKey(KEY_C, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATECONTAINER));
+
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_e, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEEDGE));
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_E, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEEDGE));
 
@@ -88,8 +91,14 @@ GUIShortcutsSubSys::buildSUMOAccelerators(GUIApplicationWindow* GUIApp) {
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_o, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEPOI));
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_O, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEPOI));
 
+    GUIApp->getAccelTable()->addAccel(parseKey(KEY_p, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEPERSON));
+    GUIApp->getAccelTable()->addAccel(parseKey(KEY_P, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEPERSON));
+
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_t, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATETLS));
     GUIApp->getAccelTable()->addAccel(parseKey(KEY_T, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATETLS));
+
+    GUIApp->getAccelTable()->addAccel(parseKey(KEY_v, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEVEHICLE));
+    GUIApp->getAccelTable()->addAccel(parseKey(KEY_V, KEYMODIFIER_SHIFT), GUIApp, FXSEL(SEL_COMMAND, MID_LOCATEVEHICLE));
 
     // Alt Keys
 
@@ -268,6 +277,7 @@ GUIShortcutsSubSys::buildNETEDITAccelerators(GNEApplicationWindow* GNEApp) {
     GNEApp->getAccelTable()->addAccel(parseKey(KEY_F8),  GNEApp, FXSEL(SEL_COMMAND, MID_HOTKEY_F8_CLEANINVALID_CROSSINGS_DEMANDELEMENTS));
     GNEApp->getAccelTable()->addAccel(parseKey(KEY_F9),  GNEApp, FXSEL(SEL_COMMAND, MID_HOTKEY_F9_EDIT_VIEWSCHEME));
     GNEApp->getAccelTable()->addAccel(parseKey(KEY_F10), GNEApp, FXSEL(SEL_COMMAND, MID_HOTKEY_F10_OPTIONSMENU));
+    GNEApp->getAccelTable()->addAccel(parseKey(KEY_F11), GNEApp, FXSEL(SEL_COMMAND, MID_HOTKEY_F11_FRONTELEMENT));
     GNEApp->getAccelTable()->addAccel(parseKey(KEY_F12), GNEApp, FXSEL(SEL_COMMAND, MID_HOTKEY_F12_ABOUT));
 
     // Shift + Function Hotkeys

@@ -35,64 +35,48 @@
 // ===========================================================================
 
 GNEAdditional::GNEAdditional(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, std::string additionalName, bool blockMovement,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren) :
+                             const std::vector<GNEJunction*>& junctionParents,
+                             const std::vector<GNEEdge*>& edgeParents,
+                             const std::vector<GNELane*>& laneParents,
+                             const std::vector<GNEAdditional*>& additionalParents,
+                             const std::vector<GNEShape*>& shapeParents,
+                             const std::vector<GNETAZElement*>& TAZElementParents,
+                             const std::vector<GNEDemandElement*>& demandElementParents,
+                             const std::vector<GNEGenericData*>& genericDataParents) :
     GUIGlObject(type, id),
-    GNEAttributeCarrier(tag, net),
-    GNEHierarchicalParentElements(this, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
-    GNEHierarchicalChildElements(this, junctionChildren, edgeChildren, laneChildren, additionalChildren, shapeChildren, TAZElementChildren, demandElementChildren, genericDataChildren),
+    GNEHierarchicalElement(net, tag, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
     GNEPathElements(this),
     myAdditionalName(additionalName),
     myBlockMovement(blockMovement),
-    myBlockIcon(this),
     mySpecialColor(nullptr) {
 }
 
 
-GNEAdditional::GNEAdditional(GNEAdditional* additionalParent, GNENet* net, GUIGlObjectType type, SumoXMLTag tag, std::string additionalName, bool blockMovement,
-        const std::vector<GNEJunction*>& junctionParents,
-        const std::vector<GNEEdge*>& edgeParents,
-        const std::vector<GNELane*>& laneParents,
-        const std::vector<GNEAdditional*>& additionalParents,
-        const std::vector<GNEShape*>& shapeParents,
-        const std::vector<GNETAZElement*>& TAZElementParents,
-        const std::vector<GNEDemandElement*>& demandElementParents,
-        const std::vector<GNEGenericData*>& genericDataParents,
-        const std::vector<GNEJunction*>& junctionChildren,
-        const std::vector<GNEEdge*>& edgeChildren,
-        const std::vector<GNELane*>& laneChildren,
-        const std::vector<GNEAdditional*>& additionalChildren,
-        const std::vector<GNEShape*>& shapeChildren,
-        const std::vector<GNETAZElement*>& TAZElementChildren,
-        const std::vector<GNEDemandElement*>& demandElementChildren,
-        const std::vector<GNEGenericData*>& genericDataChildren) :
-    GUIGlObject(type, additionalParent->generateAdditionalChildID(tag)),
-    GNEAttributeCarrier(tag, net),
-    GNEHierarchicalParentElements(this, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
-    GNEHierarchicalChildElements(this, junctionChildren, edgeChildren, laneChildren, additionalChildren, shapeChildren, TAZElementChildren, demandElementChildren, genericDataChildren),
+GNEAdditional::GNEAdditional(GNENet* net, GUIGlObjectType type, SumoXMLTag tag, std::string additionalName, bool blockMovement,
+                             const std::vector<GNEJunction*>& junctionParents,
+                             const std::vector<GNEEdge*>& edgeParents,
+                             const std::vector<GNELane*>& laneParents,
+                             const std::vector<GNEAdditional*>& additionalParents,
+                             const std::vector<GNEShape*>& shapeParents,
+                             const std::vector<GNETAZElement*>& TAZElementParents,
+                             const std::vector<GNEDemandElement*>& demandElementParents,
+                             const std::vector<GNEGenericData*>& genericDataParents) :
+    GUIGlObject(type, additionalParents.front()->getID()),
+    GNEHierarchicalElement(net, tag, junctionParents, edgeParents, laneParents, additionalParents, shapeParents, TAZElementParents, demandElementParents, genericDataParents),
     GNEPathElements(this),
     myAdditionalName(additionalName),
     myBlockMovement(blockMovement),
-    myBlockIcon(this),
     mySpecialColor(nullptr) {
 }
 
 
 GNEAdditional::~GNEAdditional() {}
+
+
+void 
+GNEAdditional::removeGeometryPoint(const Position /*clickedPosition*/, GNEUndoList* /*undoList*/) {
+    // currently there isn't additionals with removable geometry points
+}
 
 
 const std::string&
@@ -104,16 +88,6 @@ GNEAdditional::getID() const {
 GUIGlObject*
 GNEAdditional::getGUIGlObject() {
     return this;
-}
-
-
-std::string
-GNEAdditional::generateAdditionalChildID(SumoXMLTag childTag) {
-    int counter = (int)getChildAdditionals().size();
-    while (myNet->retrieveAdditional(childTag, getID() + toString(childTag) + toString(counter), false) != nullptr) {
-        counter++;
-    }
-    return (getID() + toString(childTag) + toString(counter));
 }
 
 
@@ -147,25 +121,25 @@ GNEAdditional::writeAdditional(OutputDevice& device) const {
         } else {
             device.openTag(myTagProperty.getTag());
         }
-        // iterate over attributes and write it
-        for (const auto& tagProperty : myTagProperty) {
-            // obtain attribute
-            const std::string attributeValue = getAttribute(tagProperty.getAttr());
+        // iterate over attribute properties
+        for (const auto& attrProperty : myTagProperty) {
+            // obtain attribute value
+            const std::string attributeValue = getAttribute(attrProperty.getAttr());
             //  first check if attribute is optional but not vehicle classes
-            if (tagProperty.isOptional() && !tagProperty.isVClasses()) {
+            if (attrProperty.isOptional() && !attrProperty.isVClasses()) {
                 // Only write attributes with default value if is different from original
-                if (tagProperty.getDefaultValue() != attributeValue) {
+                if (attrProperty.getDefaultValue() != attributeValue) {
                     // check if attribute must be written using a synonim
-                    if (tagProperty.hasAttrSynonym()) {
-                        device.writeAttr(tagProperty.getAttrSynonym(), attributeValue);
+                    if (attrProperty.hasAttrSynonym()) {
+                        device.writeAttr(attrProperty.getAttrSynonym(), attributeValue);
                     } else {
                         // SVC permissions uses their own writting function
-                        if (tagProperty.isSVCPermission()) {
+                        if (attrProperty.isSVCPermission()) {
                             // disallow attribute musn't be written
-                            if (tagProperty.getAttr() != SUMO_ATTR_DISALLOW) {
+                            if (attrProperty.getAttr() != SUMO_ATTR_DISALLOW) {
                                 writePermissions(device, parseVehicleClasses(attributeValue));
                             }
-                        } else if (myTagProperty.canMaskXYZPositions() && (tagProperty.getAttr() == SUMO_ATTR_POSITION)) {
+                        } else if (myTagProperty.canMaskXYZPositions() && (attrProperty.getAttr() == SUMO_ATTR_POSITION)) {
                             // get position attribute and write it separate
                             Position pos = parse<Position>(getAttribute(SUMO_ATTR_POSITION));
                             device.writeAttr(SUMO_ATTR_X, toString(pos.x()));
@@ -175,22 +149,22 @@ GNEAdditional::writeAdditional(OutputDevice& device) const {
                                 device.writeAttr(SUMO_ATTR_Z, toString(pos.z()));
                             }
                         } else {
-                            device.writeAttr(tagProperty.getAttr(), attributeValue);
+                            device.writeAttr(attrProperty.getAttr(), attributeValue);
                         }
                     }
                 }
             } else {
                 // Attributes without default values are always writted
-                if (tagProperty.hasAttrSynonym()) {
-                    device.writeAttr(tagProperty.getAttrSynonym(), attributeValue);
+                if (attrProperty.hasAttrSynonym()) {
+                    device.writeAttr(attrProperty.getAttrSynonym(), attributeValue);
                 } else {
                     // SVC permissions uses their own writting function
-                    if (tagProperty.isSVCPermission()) {
+                    if (attrProperty.isSVCPermission()) {
                         // disallow attribute musn't be written
-                        if (tagProperty.getAttr() != SUMO_ATTR_DISALLOW) {
+                        if (attrProperty.getAttr() != SUMO_ATTR_DISALLOW) {
                             writePermissions(device, parseVehicleClasses(attributeValue));
                         }
-                    } else if (myTagProperty.canMaskXYZPositions() && (tagProperty.getAttr() == SUMO_ATTR_POSITION)) {
+                    } else if (myTagProperty.canMaskXYZPositions() && (attrProperty.getAttr() == SUMO_ATTR_POSITION)) {
                         // get position attribute and write it separate
                         Position pos = parse<Position>(getAttribute(SUMO_ATTR_POSITION));
                         device.writeAttr(SUMO_ATTR_X, toString(pos.x()));
@@ -200,7 +174,7 @@ GNEAdditional::writeAdditional(OutputDevice& device) const {
                             device.writeAttr(SUMO_ATTR_Z, toString(pos.z()));
                         }
                     } else {
-                        device.writeAttr(tagProperty.getAttr(), attributeValue);
+                        device.writeAttr(attrProperty.getAttr(), attributeValue);
                     }
                 }
             }
@@ -215,18 +189,21 @@ GNEAdditional::writeAdditional(OutputDevice& device) const {
                 // avoid to write two times additionals that haben two parents (Only write as child of first parent)
                 if (additionalChild->getParentAdditionals().size() < 1) {
                     additionalChild->writeAdditional(deviceChildren);
-                } else if (myTagProperty.getTag() == additionalChild->getTagProperty().getParentTag()) {
+                } else if (myTagProperty.getTag() == additionalChild->getTagProperty().getMasterTags().front()) {
                     additionalChild->writeAdditional(deviceChildren);
                 }
             }
             deviceChildren.close();
         } else {
             for (const auto& additionalChild : getChildAdditionals()) {
-                // avoid to write two times additionals that haben two parents (Only write as child of first parent)
-                if (additionalChild->getParentAdditionals().size() < 2) {
-                    additionalChild->writeAdditional(device);
-                } else if (myTagProperty.getTag() == additionalChild->getTagProperty().getParentTag()) {
-                    additionalChild->writeAdditional(device);
+                // avoid write symbols
+                if (!additionalChild->getTagProperty().isSymbol()) {
+                    // avoid to write two times additionals that haben two parents (Only write as child of first parent)
+                    if (additionalChild->getParentAdditionals().size() < 2) {
+                        additionalChild->writeAdditional(device);
+                    } else if (myTagProperty.getTag() == additionalChild->getTagProperty().getMasterTags().front()) {
+                        additionalChild->writeAdditional(device);
+                    }
                 }
             }
         }
@@ -262,59 +239,15 @@ GNEAdditional::openAdditionalDialog() {
 }
 
 
-void
-GNEAdditional::startGeometryMoving() {
-    // only move if additional is drawable
-    if (myTagProperty.isDrawable()) {
-        // always save original position over view
-        myMove.originalViewPosition = getPositionInView();
-        // check if position over lane or lanes has to be saved
-        if (myTagProperty.hasAttribute(SUMO_ATTR_LANE)) {
-            if (myTagProperty.canMaskStartEndPos()) {
-                // obtain start and end position
-                myMove.firstOriginalLanePosition = getAttribute(SUMO_ATTR_STARTPOS);
-                myMove.secondOriginalPosition = getAttribute(SUMO_ATTR_ENDPOS);
-            } else {
-                // obtain position attribute
-                myMove.firstOriginalLanePosition = getAttribute(SUMO_ATTR_POSITION);
-            }
-        } else if (myTagProperty.hasAttribute(SUMO_ATTR_LANES) &&
-                   myTagProperty.hasAttribute(SUMO_ATTR_POSITION) &&
-                   myTagProperty.hasAttribute(SUMO_ATTR_ENDPOS)) {
-            // obtain start and end position
-            myMove.firstOriginalLanePosition = getAttribute(SUMO_ATTR_POSITION);
-            myMove.secondOriginalPosition = getAttribute(SUMO_ATTR_ENDPOS);
-        }
-        // save current centering boundary if element is placed in RTree
-        if (myTagProperty.isPlacedInRTree()) {
-            myMove.movingGeometryBoundary = getCenteringBoundary();
-        }
-        // start geometry in all children
-        for (const auto& i : getChildDemandElements()) {
-            i->startGeometryMoving();
-        }
-    }
+Boundary 
+GNEAdditional::getCenteringBoundary() const {
+    return myBoundary;
 }
 
 
-void
-GNEAdditional::endGeometryMoving() {
-    // check that endGeometryMoving was called only once
-    if (myTagProperty.isDrawable()) {
-        // check if object must be placed in RTREE
-        if (myTagProperty.isPlacedInRTree()) {
-            // Remove object from net
-            myNet->removeGLObjectFromGrid(this);
-            // reset myMovingGeometryBoundary
-            myMove.movingGeometryBoundary.reset();
-            // add object into grid again (using the new centering boundary)
-            myNet->addGLObjectIntoGrid(this);
-        }
-        // end geometry in all children
-        for (const auto& i : getChildDemandElements()) {
-            i->endGeometryMoving();
-        }
-    }
+Position 
+GNEAdditional::getPositionInView() const {
+    return myBoundary.getCenter();
 }
 
 
@@ -324,7 +257,7 @@ GNEAdditional::isAdditionalBlocked() const {
 }
 
 
-void 
+void
 GNEAdditional::updatePartialGeometry(const GNELane* lane) {
     // currently only for E2 Multilane Detectors
     if (myTagProperty.getTag() == SUMO_TAG_E2DETECTOR_MULTILANE) {
@@ -360,8 +293,8 @@ GNEAdditional::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
         new FXMenuSeparator(ret);
     }
     // Show position parameters
-    if (myTagProperty.hasAttribute(SUMO_ATTR_LANE)) {
-        GNELane* lane = myNet->retrieveLane(getAttribute(SUMO_ATTR_LANE));
+    if (myTagProperty.hasAttribute(SUMO_ATTR_LANE) && (myAdditionalGeometry.getShape().size() > 1)) {
+        const GNELane* lane = myNet->retrieveLane(getAttribute(SUMO_ATTR_LANE));
         // Show menu command inner position
         const double innerPos = myAdditionalGeometry.getShape().nearest_offset_to_point2D(parent.getPositionInformation());
         new FXMenuCommand(ret, ("Cursor position over additional shape: " + toString(innerPos)).c_str(), nullptr, nullptr, 0);
@@ -370,8 +303,8 @@ GNEAdditional::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
             const double lanePos = lane->getLaneShape().nearest_offset_to_point2D(myAdditionalGeometry.getShape().front());
             new FXMenuCommand(ret, ("Cursor position over " + toString(SUMO_TAG_LANE) + ": " + toString(innerPos + lanePos)).c_str(), nullptr, nullptr, 0);
         }
-    } else if (myTagProperty.hasAttribute(SUMO_ATTR_EDGE)) {
-        GNEEdge* edge = myNet->retrieveEdge(getAttribute(SUMO_ATTR_EDGE));
+    } else if (myTagProperty.hasAttribute(SUMO_ATTR_EDGE) && (myAdditionalGeometry.getShape().size() > 1)) {
+        const GNEEdge* edge = myNet->retrieveEdge(getAttribute(SUMO_ATTR_EDGE));
         // Show menu command inner position
         const double innerPos = myAdditionalGeometry.getShape().nearest_offset_to_point2D(parent.getPositionInformation());
         new FXMenuCommand(ret, ("Cursor position over additional shape: " + toString(innerPos)).c_str(), nullptr, nullptr, 0);
@@ -412,14 +345,14 @@ GNEAdditional::getOptionalAdditionalName() const {
 }
 
 
-void 
+void
 GNEAdditional::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const {
     // calculate E2Detector width
     const double E2DetectorWidth = s.addSize.getExaggeration(s, lane);
     // check if E2 can be drawn
     if (s.drawAdditionals(E2DetectorWidth) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
         // obtain color
-        const RGBColor routeColor = drawUsingSelectColor()? s.colorSettings.selectedAdditionalColor : s.detectorSettings.E2Color;
+        const RGBColor routeColor = drawUsingSelectColor() ? s.colorSettings.selectedAdditionalColor : s.detectorSettings.E2Color;
         // Start drawing adding an gl identificator
         glPushName(getGlID());
         // Add a draw matrix
@@ -445,20 +378,20 @@ GNEAdditional::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* l
         // Pop name
         glPopName();
         // check if shape dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
             // iterate over segments
             for (const auto& segment : myAdditionalSegmentGeometry) {
                 if (segment.isLaneSegment() && (segment.getLane() == lane)) {
                     // draw partial segment
                     if (getParentLanes().front() == lane) {
                         // draw front dotted contour
-                        GNEGeometry::drawDottedContourLane(s, GNEGeometry::DottedGeometry(s, segment.getShape(), false), E2DetectorWidth, true, false);
+                        GNEGeometry::drawDottedContourLane(GNEGeometry::DottedContourType::INSPECT, s, GNEGeometry::DottedGeometry(s, segment.getShape(), false), E2DetectorWidth, true, false);
                     } else if (getParentLanes().back() == lane) {
                         // draw back dotted contour
-                        GNEGeometry::drawDottedContourLane(s, GNEGeometry::DottedGeometry(s, segment.getShape(), false), E2DetectorWidth, false, true);
+                        GNEGeometry::drawDottedContourLane(GNEGeometry::DottedContourType::INSPECT, s, GNEGeometry::DottedGeometry(s, segment.getShape(), false), E2DetectorWidth, false, true);
                     } else {
                         // draw dotted contour
-                        GNEGeometry::drawDottedContourLane(s, lane->getDottedLaneGeometry(), E2DetectorWidth, false, false);
+                        GNEGeometry::drawDottedContourLane(GNEGeometry::DottedContourType::INSPECT, s, lane->getDottedLaneGeometry(), E2DetectorWidth, false, false);
                     }
                 }
             }
@@ -467,7 +400,7 @@ GNEAdditional::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* l
 }
 
 
-void 
+void
 GNEAdditional::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* fromLane, const GNELane* toLane, const double offsetFront) const {
     // calculate E2Detector width
     const double E2DetectorWidth = s.addSize.getExaggeration(s, fromLane);
@@ -492,89 +425,19 @@ GNEAdditional::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* f
             // Set invalid person plan color
             GLHelper::setColor(RGBColor::RED);
             // draw line between end of first shape and first position of second shape
-            GLHelper::drawBoxLines({fromLane->getLaneShape().back(), toLane->getLaneShape().front()}, (0.5*E2DetectorWidth));
+            GLHelper::drawBoxLines({fromLane->getLaneShape().back(), toLane->getLaneShape().front()}, (0.5 * E2DetectorWidth));
         }
         // Pop last matrix
         glPopMatrix();
         // Pop name
         glPopName();
         // check if shape dotted contour has to be drawn
-        if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+        if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
             // draw lane2lane dotted geometry
             if (fromLane->getLane2laneConnections().exist(toLane)) {
-                GNEGeometry::drawDottedContourLane(s, fromLane->getLane2laneConnections().getLane2laneDottedGeometry(toLane), E2DetectorWidth, false, false);
+                GNEGeometry::drawDottedContourLane(GNEGeometry::DottedContourType::INSPECT, s, fromLane->getLane2laneConnections().getLane2laneDottedGeometry(toLane), E2DetectorWidth, false, false);
             }
         }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// GNEAdditional::BlockIcon - methods
-// ---------------------------------------------------------------------------
-
-GNEAdditional::BlockIcon::BlockIcon(GNEAdditional* additional) :
-    rotation(0.),
-    myAdditional(additional) {}
-
-
-void
-GNEAdditional::BlockIcon::setRotation(GNELane* additionalLane) {
-    if (myAdditional->myAdditionalGeometry.getShape().size() > 0 && myAdditional->myAdditionalGeometry.getShape().length() != 0) {
-        // If length of the shape is distint to 0, Obtain rotation of center of shape
-        rotation = myAdditional->myAdditionalGeometry.getShape().rotationDegreeAtOffset((myAdditional->myAdditionalGeometry.getShape().length() / 2.)) - 90;
-    } else if (additionalLane) {
-        // If additional is over a lane, set rotation in the position over lane
-        double posOverLane = additionalLane->getLaneShape().nearest_offset_to_point2D(myAdditional->getPositionInView());
-        rotation = additionalLane->getLaneShape().rotationDegreeAtOffset(posOverLane) - 90;
-    } else {
-        // In other case, rotation is 0
-        rotation = 0;
-    }
-}
-
-
-void
-GNEAdditional::BlockIcon::drawIcon(const GUIVisualizationSettings& s, const double exaggeration, const double size) const {
-    // check if block icon can be draw
-    if (!s.drawForRectangleSelection && s.drawDetail(s.detailSettings.lockIcon, exaggeration) && myAdditional->myNet->getViewNet()->showLockIcon()) {
-        // Start pushing matrix
-        glPushMatrix();
-        // Traslate to middle of shape
-        glTranslated(position.x(), position.y(), myAdditional->getType() + 0.1);
-        // Set draw color
-        glColor3d(1, 1, 1);
-        // Rotate depending of rotation
-        glRotated(rotation, 0, 0, -1);
-        // Rotate 180 degrees
-        glRotated(180, 0, 0, 1);
-        // Traslate depending of the offset
-        glTranslated(offset.x(), offset.y(), 0);
-        // Draw icon depending of the state of additional
-        if (myAdditional->drawUsingSelectColor()) {
-            if (!myAdditional->getTagProperty().canBlockMovement()) {
-                // Draw not movable texture if additional isn't movable and is selected
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_NOTMOVINGSELECTED), size);
-            } else if (myAdditional->myBlockMovement) {
-                // Draw lock texture if additional is movable, is blocked and is selected
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_LOCKSELECTED), size);
-            } else {
-                // Draw empty texture if additional is movable, isn't blocked and is selected
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_EMPTYSELECTED), size);
-            }
-        } else {
-            if (!myAdditional->getTagProperty().canBlockMovement()) {
-                // Draw not movable texture if additional isn't movable
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_NOTMOVING), size);
-            } else if (myAdditional->myBlockMovement) {
-                // Draw lock texture if additional is movable and is blocked
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_LOCK), size);
-            } else {
-                // Draw empty texture if additional is movable and isn't blocked
-                GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_EMPTY), size);
-            }
-        }
-        // Pop matrix
-        glPopMatrix();
     }
 }
 
@@ -609,6 +472,85 @@ GNEAdditional::isValidDetectorID(const std::string& newID) const {
         return true;
     } else {
         return false;
+    }
+}
+
+
+void
+GNEAdditional::drawAdditionalName(const GUIVisualizationSettings& s) const {
+    if (s.addFullName.show && (myAdditionalName != "") && !s.drawForRectangleSelection && !s.drawForPositionSelection) {
+        // calculate middle point
+        const double middlePoint = (myAdditionalGeometry.getShape().length2D() * 0.5);
+        // calculate position
+        const Position pos = (myAdditionalGeometry.getShape().size() == 1)? myAdditionalGeometry.getShape().front() : myAdditionalGeometry.getShape().positionAtOffset2D(middlePoint);
+        // calculate rotation
+        const double rot = (myAdditionalGeometry.getShape().size() == 1)? myAdditionalGeometry.getShapeRotations().front() : myAdditionalGeometry.getShape().rotationDegreeAtOffset(middlePoint);
+        // get texture
+        GLHelper::drawText(myAdditionalName, pos, GLO_MAX - getType(), s.addFullName.scaledSize(s.scale), s.addFullName.color, rot);
+    }
+}
+
+
+void
+GNEAdditional::replaceAdditionalParentEdges(const std::string& value) {
+    replaceParentElements(this, parse<std::vector<GNEEdge*> >(getNet(), value));
+}
+
+
+void
+GNEAdditional::replaceAdditionalParentLanes(const std::string& value) {
+    replaceParentElements(this, parse<std::vector<GNELane*> >(getNet(), value));
+}
+
+
+void
+GNEAdditional::replaceAdditionalChildEdges(const std::string& value) {
+    replaceChildElements(this, parse<std::vector<GNEEdge*> >(getNet(), value));
+}
+
+
+void
+GNEAdditional::replaceAdditionalChildLanes(const std::string& value) {
+    replaceChildElements(this, parse<std::vector<GNELane*> >(getNet(), value));
+}
+
+
+void
+GNEAdditional::replaceAdditionalParent(SumoXMLTag tag, const std::string& value, const int parentIndex) {
+    std::vector<GNEAdditional*> parentAdditionals = getParentAdditionals();
+    parentAdditionals[parentIndex] = myNet->retrieveAdditional(tag, value);
+    // replace parent additionals
+    replaceParentElements(this, parentAdditionals);
+}
+
+
+void
+GNEAdditional::replaceDemandElementParent(SumoXMLTag tag, const std::string& value, const int parentIndex) {
+    std::vector<GNEDemandElement*> parentDemandElements = getParentDemandElements();
+    parentDemandElements[parentIndex] = myNet->retrieveDemandElement(tag, value);
+    // replace parent demand elements
+    replaceParentElements(this, parentDemandElements);
+}
+
+
+void
+GNEAdditional::calculatePerpendicularLine(const double endLaneposition) {
+    if (getParentEdges().empty()) {
+        throw ProcessError("Invalid number of edges");
+    } else {
+        // get lanes
+        const GNELane* firstLane = getParentEdges().front()->getLanes().front();
+        const GNELane* lastLane = getParentEdges().front()->getLanes().back();
+        // get first and back lane shapes
+        PositionVector firstLaneShape = firstLane->getLaneShape();
+        PositionVector lastLaneShape = lastLane->getLaneShape();
+        // move shapes
+        firstLaneShape.move2side((firstLane->getParentEdge()->getNBEdge()->getLaneWidth(firstLane->getIndex()) * 0.5) + 1);
+        lastLaneShape.move2side(lastLane->getParentEdge()->getNBEdge()->getLaneWidth(lastLane->getIndex()) * -0.5);
+        // calculate lane postion
+        const double lanePosition = firstLaneShape.length2D() >= endLaneposition ? endLaneposition : firstLaneShape.length2D();
+        // update geometry
+        myAdditionalGeometry.updateGeometry({firstLaneShape.positionAtOffset2D(lanePosition), lastLaneShape.positionAtOffset2D(lanePosition)});
     }
 }
 

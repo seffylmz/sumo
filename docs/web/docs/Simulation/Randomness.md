@@ -98,7 +98,11 @@ When simulating with subsecond time resolution, the random decision for insertio
 The `<flow>`, `<trip>` and `<vehicle>` elements support the value "random" for their attributes `departLane`, `departPos`,
 `departSpeed` and `arrivalPos`. The value will be chosen randomly on every insertion try (for the
 departure attributes) or whenever there is a need to revalidate the
-arrival value (i.e. after rerouting).
+arrival value (i.e. after rerouting). The attribute `departPosLat` also supports the value "random". 
+The lateral offset at departue will only affect simulatoin behavior when using the [sublane model](SublaneModel.md) though it will be visible without this model too.
+
+# Lateral Variation
+When setting the lane change mode attribute `lcSigma` to a positive value, Vehicles will exhibit some random lateral drift.
 
 # Further sources of randomness
 
@@ -109,7 +113,7 @@ arrival value (i.e. after rerouting).
   individual trips from an O/D-Matrix
 - [duarouter](../duarouter.md) adds randomness when performing
   [Demand/Dynamic_User_Assignment](../Demand/Dynamic_User_Assignment.md)
-- [duarouter](../duarouter.md) can randomly disturb the fastest-paths by setting opion **--weights.random-factor**
+- [duarouter](../duarouter.md) can randomly disturb the fastest-paths by setting option **--weights.random-factor**
 - [Simulation routing can be
   randomized](../Demand/Automatic_Routing.md#randomness) to
   ensure usage of alternative routes.

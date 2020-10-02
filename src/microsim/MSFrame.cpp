@@ -69,8 +69,6 @@ MSFrame::fillOptions() {
     oc.addOptionSubTopic("Time");
     oc.addOptionSubTopic("Processing");
     oc.addOptionSubTopic("Routing");
-    SystemFrame::addReportOptions(oc); // fill this subtopic, too
-
 
     // register configuration options
     //  register input options
@@ -103,6 +101,9 @@ MSFrame::fillOptions() {
 
     oc.doRegister("junction-taz", new Option_Bool(false));
     oc.addDescription("junction-taz", "Input", "Initialize a TAZ for every junction to use attributes toJunction and fromJunction");
+
+    // need to do this here to be able to check for network and route input options
+    SystemFrame::addReportOptions(oc);
 
     //  register output options
     oc.doRegister("netstate-dump", new Option_FileName());
@@ -278,6 +279,8 @@ MSFrame::fillOptions() {
     oc.addDescription("save-state.files", "Output", "Files for network states");
     oc.doRegister("save-state.rng", new Option_Bool(false));
     oc.addDescription("save-state.rng", "Output", "Save random number generator states");
+    oc.doRegister("save-state.transportables", new Option_Bool(false));
+    oc.addDescription("save-state.transportables", "Output", "Save person and container states (experimental)");
 
     // register the simulation settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));
@@ -459,6 +462,12 @@ MSFrame::fillOptions() {
     oc.doRegister("persontrip.transfer.walk-taxi", new Option_StringVector());
     oc.addDescription("persontrip.transfer.walk-taxi", "Routing", "Where taxis can pick up customers ('allJunctions, 'ptStops')");
 
+    oc.doRegister("persontrip.default.group", new Option_String());
+    oc.addDescription("persontrip.default.group", "Routing", "When set, trips between the same origin and destination will share a taxi by default");
+
+    oc.doRegister("railway.max-train-length", new Option_Float(5000.0));
+    oc.addDescription("railway.max-train-length", "Routing", "Use FLOAT as a maximum train length when initializing the railway router");
+
     // devices
     oc.addOptionSubTopic("Emissions");
     oc.doRegister("phemlight-path", new Option_FileName(StringVector({ "./PHEMlight/" })));
@@ -516,7 +525,10 @@ MSFrame::fillOptions() {
                       "Enable mesoscopic traffic light and priority junction handling for saturated links. This prevents faulty traffic lights from hindering flow in low-traffic situations");
     oc.doRegister("meso-tls-penalty", new Option_Float(0));
     oc.addDescription("meso-tls-penalty", "Mesoscopic",
-                      "Apply scaled time penalties when driving across tls controlled junctions based on green split instead of checking actual phases");
+                      "Apply scaled travel time penalties when driving across tls controlled junctions based on green split instead of checking actual phases");
+    oc.doRegister("meso-tls-flow-penalty", new Option_Float(0));
+    oc.addDescription("meso-tls-flow-penalty", "Mesoscopic",
+                      "Apply scaled headway penalties when driving across tls controlled junctions based on green split instead of checking actual phases");
     oc.doRegister("meso-minor-penalty", new Option_String("0", "TIME"));
     oc.addDescription("meso-minor-penalty", "Mesoscopic",
                       "Apply fixed time penalty when driving across a minor link. When using --meso-junction-control.limited, the penalty is not applied whenever limited control is active.");
@@ -548,6 +560,9 @@ MSFrame::fillOptions() {
 
     oc.doRegister("start", 'S', new Option_Bool(false));
     oc.addDescription("start", "GUI Only", "Start the simulation after loading");
+
+    oc.doRegister("delay", 'd', new Option_Float(0.0));
+    oc.addDescription("delay", "GUI Only", "Use FLOAT in ms as delay between simulation steps");
 
     oc.doRegister("breakpoints", 'B', new Option_StringVector());
     oc.addDescription("breakpoints", "GUI Only", "Use TIME[] as times when the simulation should halt");
@@ -588,7 +603,7 @@ MSFrame::fillOptions() {
 
     // gui testing - settings output
     oc.doRegister("gui-testing.setting-output", new Option_FileName());
-    oc.addDescription("gui-testing.setting-output", "GUI Only", "Save gui settings in the given settingsoutput file");
+    oc.addDescription("gui-testing.setting-output", "GUI Only", "Save gui settings in the given settings output file");
 }
 
 
@@ -722,9 +737,11 @@ MSFrame::checkOptions() {
     }
     if (string2time(oc.getString("lanechange.duration")) > 0 && oc.getFloat("lateral-resolution") > 0) {
         WRITE_ERROR("Only one of the options 'lanechange.duration' or 'lateral-resolution' may be given.");
+        ok = false;
     }
     if (oc.getBool("mesosim") && (oc.getFloat("lateral-resolution") > 0 || string2time(oc.getString("lanechange.duration")) > 0)) {
         WRITE_ERROR("Sublane dynamics are not supported by mesoscopic simulation");
+        ok = false;
     }
     if (oc.getBool("ignore-accidents")) {
         WRITE_WARNING("The option 'ignore-accidents' is deprecated. Use 'collision.action none' instead.");
@@ -767,6 +784,10 @@ MSFrame::checkOptions() {
             }
         }
     }
+    if (oc.getFloat("delay") < 0.0) {
+        WRITE_ERROR("You need a non-negative delay.");
+        ok = false;
+    }
     for (const std::string& val : oc.getStringVector("breakpoints")) {
         try {
             string2time(val);
@@ -781,11 +802,16 @@ MSFrame::checkOptions() {
         ok = false;
     }
 #endif
+    if (oc.getInt("threads") < 1) {
+        WRITE_ERROR("You need at least one thread.");
+        ok = false;
+    }
     if (oc.getInt("threads") > oc.getInt("thread-rngs")) {
         WRITE_WARNING("Number of threads exceeds number of thread-rngs. Simulation runs with the same seed may produce different results");
     }
     if (oc.getString("game.mode") != "tls" && oc.getString("game.mode") != "drt") {
         WRITE_ERROR("game.mode must be one of ['tls', 'drt']");
+        ok = false;
     }
 
     if (oc.isSet("persontrip.transfer.car-walk")) {
@@ -827,6 +853,7 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     MSGlobals::gMesoLimitedJunctionControl = oc.getBool("meso-junction-control.limited");
     MSGlobals::gMesoOvertaking = oc.getBool("meso-overtaking");
     MSGlobals::gMesoTLSPenalty = oc.getFloat("meso-tls-penalty");
+    MSGlobals::gMesoTLSFlowPenalty = oc.getFloat("meso-tls-flow-penalty");
     MSGlobals::gMesoMinorPenalty = string2time(oc.getString("meso-minor-penalty"));
     if (MSGlobals::gUseMesoSim) {
         MSGlobals::gUsingInternalLanes = false;

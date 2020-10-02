@@ -31,55 +31,37 @@
 // member method definitions
 // ===========================================================================
 
-GNEClosingReroute::GNEClosingReroute(GNERerouterIntervalDialog* rerouterIntervalDialog) :
-    GNEAdditional(rerouterIntervalDialog->getEditedAdditional(), rerouterIntervalDialog->getEditedAdditional()->getNet(), GLO_CALIBRATOR, SUMO_TAG_CLOSING_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalDialog->getEditedAdditional()}, {}, {}, {}, {},    // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                                                // Children
-    myClosedEdge(rerouterIntervalDialog->getEditedAdditional()->getParentAdditionals().at(0)->getChildEdges().at(0)) {
-    // fill closing reroute interval with default values
-    setDefaultValues();
-}
-
-
 GNEClosingReroute::GNEClosingReroute(GNEAdditional* rerouterIntervalParent, GNEEdge* closedEdge, SVCPermissions permissions) :
-    GNEAdditional(rerouterIntervalParent, rerouterIntervalParent->getNet(), GLO_CALIBRATOR, SUMO_TAG_CLOSING_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {},   // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                        // Children
+    GNEAdditional(rerouterIntervalParent->getNet(), GLO_CALIBRATOR, SUMO_TAG_CLOSING_REROUTE, "", false,
+        {}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {}),
     myClosedEdge(closedEdge),
     myPermissions(permissions) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
 GNEClosingReroute::~GNEClosingReroute() {}
 
 
-void
-GNEClosingReroute::moveGeometry(const Position&) {
-    // This additional cannot be moved
-}
-
-
-void
-GNEClosingReroute::commitGeometryMoving(GNEUndoList*) {
-    // This additional cannot be moved
+GNEMoveOperation* 
+GNEClosingReroute::getMoveOperation(const double /* shapeOffset */  ) {
+    // GNEClosingReroutes cannot be moved
+    return nullptr;
 }
 
 
 void
 GNEClosingReroute::updateGeometry() {
-    // This additional doesn't own a geometry
+    // use geometry of rerouter parent
+    myAdditionalGeometry.updateGeometry(getParentAdditionals().front()->getAdditionalGeometry());
 }
 
 
-Position
-GNEClosingReroute::getPositionInView() const {
-    return getParentAdditionals().at(0)->getPositionInView();
-}
-
-
-Boundary
-GNEClosingReroute::getCenteringBoundary() const {
-    return myClosedEdge->getCenteringBoundary();
+void 
+GNEClosingReroute::updateCenteringBoundary(const bool /*updateGrid*/) {
+    // use boundary of parent element
+    myBoundary = getParentAdditionals().front()->getCenteringBoundary();
 }
 
 
@@ -208,6 +190,18 @@ GNEClosingReroute::setAttribute(SumoXMLAttr key, const std::string& value) {
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
+}
+
+
+void 
+GNEClosingReroute::setMoveShape(const GNEMoveResult& /*moveResult*/) {
+    // nothing to do
+}
+
+
+void 
+GNEClosingReroute::commitMoveShape(const GNEMoveResult& /*moveResult*/, GNEUndoList* /*undoList*/) {
+    // nothing to do
 }
 
 

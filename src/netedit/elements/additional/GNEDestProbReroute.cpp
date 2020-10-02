@@ -30,38 +30,25 @@
 // member method definitions
 // ===========================================================================
 
-GNEDestProbReroute::GNEDestProbReroute(GNERerouterIntervalDialog* rerouterIntervalDialog) :
-    GNEAdditional(rerouterIntervalDialog->getEditedAdditional(), rerouterIntervalDialog->getEditedAdditional()->getNet(), GLO_REROUTER, SUMO_TAG_DEST_PROB_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalDialog->getEditedAdditional()}, {}, {}, {}, {},    // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                                                // Children
-    myNewEdgeDestination(rerouterIntervalDialog->getEditedAdditional()->getParentAdditionals().at(0)->getChildEdges().at(0)) {
-    // fill dest prob reroute interval with default values
-    setDefaultValues();
-}
-
-
 GNEDestProbReroute::GNEDestProbReroute(GNEAdditional* rerouterIntervalParent, GNEEdge* newEdgeDestination, double probability):
-    GNEAdditional(rerouterIntervalParent, rerouterIntervalParent->getNet(), GLO_REROUTER, SUMO_TAG_DEST_PROB_REROUTE, "", false,
-        {}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {},   // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                        // Children
+    GNEAdditional(rerouterIntervalParent->getNet(), GLO_REROUTER, SUMO_TAG_DEST_PROB_REROUTE, "", false,
+        {}, {}, {}, {rerouterIntervalParent}, {}, {}, {}, {}),
     myNewEdgeDestination(newEdgeDestination),
     myProbability(probability) {
+    // update centering boundary without updating grid
+    updateCenteringBoundary(false);
 }
 
 
 GNEDestProbReroute::~GNEDestProbReroute() {}
 
 
-void
-GNEDestProbReroute::moveGeometry(const Position&) {
-    // This additional cannot be moved
+GNEMoveOperation*
+GNEDestProbReroute::getMoveOperation(const double /*shapeOffset*/) {
+    // GNEDestProbReroutes cannot be moved
+    return nullptr;
 }
 
-
-void
-GNEDestProbReroute::commitGeometryMoving(GNEUndoList*) {
-    // This additional cannot be moved
-}
 
 void
 GNEDestProbReroute::updateGeometry() {
@@ -69,15 +56,10 @@ GNEDestProbReroute::updateGeometry() {
 }
 
 
-Position
-GNEDestProbReroute::getPositionInView() const {
-    return getParentAdditionals().at(0)->getPositionInView();
-}
-
-
-Boundary
-GNEDestProbReroute::getCenteringBoundary() const {
-    return getParentAdditionals().at(0)->getCenteringBoundary();
+void 
+GNEDestProbReroute::updateCenteringBoundary(const bool /*updateGrid*/) {
+    // use boundary of parent element
+    myBoundary = getParentAdditionals().front()->getCenteringBoundary();
 }
 
 
@@ -198,6 +180,18 @@ GNEDestProbReroute::setAttribute(SumoXMLAttr key, const std::string& value) {
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
+}
+
+
+void 
+GNEDestProbReroute::setMoveShape(const GNEMoveResult& /*moveResult*/) {
+    // nothing to do
+}
+
+
+void 
+GNEDestProbReroute::commitMoveShape(const GNEMoveResult& /*moveResult*/, GNEUndoList* /*undoList*/) {
+    // nothing to do
 }
 
 

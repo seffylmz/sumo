@@ -63,6 +63,9 @@ public:
         /// @brief Called when user change the current GEO Attribute
         long onCmdSetNeteditAttribute(FXObject*, FXSelector, void*);
 
+        /// @brief Called when user press button "Mark front element"
+        long onCmdMarkFrontElement(FXObject*, FXSelector, void*);
+
         /// @brief Called when user press the help button
         long onCmdNeteditAttributeHelp(FXObject*, FXSelector, void*);
         /// @}
@@ -109,6 +112,9 @@ public:
 
         /// @brief pointer to check box "Block movement"
         FXCheckButton* myCheckBoxCloseShape;
+
+        /// @brief button for set element as front button
+        FXButton* myMarkFrontElementButton;
 
         /// @brief button for help
         FXButton* myHelpButton;
@@ -303,14 +309,17 @@ public:
     /// @brief get AttributesEditor
     GNEFrameAttributesModuls::AttributesEditor* getAttributesEditor() const;
 
+    /// @brief get Netedit Attributes editor
+    GNEInspectorFrame::NeteditAttributesEditor* getNeteditAttributesEditor() const;
+
     /// @brief get template editor
     TemplateEditor* getTemplateEditor() const;
 
     /// @brief get OverlappedInspection modul
     GNEFrameModuls::OverlappedInspection* getOverlappedInspection() const;
 
-    /// @brief get AttributeCarrierHierarchy modul
-    GNEFrameModuls::AttributeCarrierHierarchy* getAttributeCarrierHierarchy() const;
+    /// @brief get HierarchicalElementTree modul
+    GNEFrameModuls::HierarchicalElementTree* getHierarchicalElementTree() const;
 
     /// @name FOX-callbacks
     /// @{
@@ -354,7 +363,7 @@ private:
     TemplateEditor* myTemplateEditor;
 
     /// @brief Attribute Carrier Hierarchy
-    GNEFrameModuls::AttributeCarrierHierarchy* myAttributeCarrierHierarchy;
+    GNEFrameModuls::HierarchicalElementTree* myHierarchicalElementTree;
 
     /// @brief back Button
     FXButton* myBackButton;

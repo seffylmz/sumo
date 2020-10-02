@@ -22,7 +22,6 @@
 #include "GNENetworkElement.h"
 
 #include <netbuild/NBEdge.h>
-#include <netedit/GNEMoveShape.h>
 #include <netedit/elements/GNECandidateElement.h>
 
 
@@ -45,7 +44,7 @@ class GNECrossing;
  *
  * @see MSEdge
  */
-class GNEEdge : public GNENetworkElement, public GNECandidateElement, protected GNEMoveShape {
+class GNEEdge : public GNENetworkElement, public GNECandidateElement {
 
     /// @brief Friend class
     friend class GNEChange_Lane;
@@ -77,6 +76,15 @@ public:
     Position getPositionInView() const;
     /// @}
 
+    /// @name Functions related with move elements
+    /// @{
+    /// @brief get move operation for the given shapeOffset (can be nullptr)
+    GNEMoveOperation* getMoveOperation(const double shapeOffset);
+
+    /// @brief remove geometry point in the clicked position
+    void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList);
+    /// @}
+
     /// @name functions for edit start and end shape positions
     /// @{
     /// @brief return true if user clicked over ShapeStart
@@ -84,56 +92,7 @@ public:
 
     /// @brief return true if user clicked over ShapeEnd
     bool clickedOverShapeEnd(const Position& pos);
-
-    /// @brief start move shape begin
-    void startShapeBegin();
-
-    /// @brief start move shape begin
-    void startShapeEnd();
-
-    /// @brief move position of shape start without commiting change
-    void moveShapeBegin(const Position& offset);
-
-    /// @brief move position of shape end without commiting change
-    void moveShapeEnd(const Position& offset);
-
-    /// @brief commit position changing in shape start
-    void commitShapeChangeBegin(GNEUndoList* undoList);
-
-    /// @brief commit position changing in shape end
-    void commitShapeChangeEnd(GNEUndoList* undoList);
     /// @}
-
-    /// @name functions for edit geometry
-    /// @{
-    /**@brief return index of geometry point placed in given position, or -1 if no exist
-     * @param pos position of new/existent vertex
-     * @param snapToGrid enable or disable snapToActiveGrid
-     * @return index of position vector
-     */
-    int getEdgeVertexIndex(Position pos, const bool snapToGrid) const;
-
-    /// @brief begin movement (used when user click over edge to start a movement, to avoid problems with problems with GL Tree)
-    void startEdgeGeometryMoving(const double shapeOffset, const bool invertOffset);
-
-    /**@brief move shape
-     * @param[in] offset the offset of movement
-     * @note always call before startEdgeGeometryMoving() and after endEdgeGeometryMoving()
-     */
-    void moveEdgeShape(const Position& offset);
-
-    /// @brief end movement
-    void endEdgeGeometryMoving();
-
-    /**@brief commit geometry changes in the attributes of an element after use of changeShapeGeometry(...)
-     * @param[in] undoList The undoList on which to register changes
-     */
-    void commitEdgeShapeChange(GNEUndoList* undoList);
-
-    /// @}
-
-    /// @brief delete the geometry point closest to the given pos
-    void deleteEdgeGeometryPoint(const Position& pos, bool allowUndo = true);
 
     /// @brief update edge geometry after junction move
     void updateJunctionPosition(GNEJunction* junction, const Position& origPos);
@@ -149,12 +108,8 @@ public:
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent);
 
-    /**@brief Returns the boundary to which the view shall be centered in order to show the object
-     *
-     * @return The boundary the object is within
-     * @see GUIGlObject::getCenteringBoundary
-     */
-    Boundary getCenteringBoundary() const;
+    /// @brief update centering boundary (implies change in RTREE)
+    void updateCenteringBoundary(const bool updateGrid);
 
     /// @brief Returns the street name
     const std::string getOptionalName() const;
@@ -295,6 +250,9 @@ public:
     // @brief update vehicle geometries
     void updateVehicleStackLabels();
 
+    /// @brief draw edge geometry points (note: This function is called by GNELane::drawGL(...)
+    void drawEdgeGeometryPoints(const GUIVisualizationSettings& s, const GNELane* lane) const;
+
 protected:
     /// @brief the underlying NBEdge
     NBEdge* myNBEdge;
@@ -349,11 +307,17 @@ private:
         const std::vector<GNEDemandElement*>& getDemandElements() const;
     };
 
-    /// @brif flag to enable/disable update geomtetry of lanes (used mainly by setNumLanes)
+    /// @brif flag to enable/disable update geometry of lanes (used mainly by setNumLanes)
     bool myUpdateGeometry;
 
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
+
+    /// @brief set move shape
+    void setMoveShape(const GNEMoveResult& moveResult);
+
+    /// @brief commit move shape
+    void commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList);
 
     /**@brief changes the number of lanes.
      * When reducing the number of lanes, higher-numbered lanes are removed first.
@@ -362,6 +326,12 @@ private:
      * leftmost lane are copied
      */
     void setNumLanes(int numLanes, GNEUndoList* undoList);
+
+    /// @brief update front parent junction
+    void updateFirstParentJunction(const std::string& value);
+
+    /// @brief update last parent junction
+    void updateSecondParentJunction(const std::string& value);
 
     /// @brief@brief increase number of lanes by one use the given attributes and restore the GNELane
     void addLane(GNELane* lane, const NBEdge::Lane& laneAttrs, bool recomputeConnections);
@@ -387,14 +357,8 @@ private:
     /// @brief get vehicles a that start over this edge
     const std::map<const GNELane*, std::vector<GNEDemandElement*> > getVehiclesOverEdgeMap() const;
 
-    /// @brief draw geometry points
-    void drawGeometryPoints(const GUIVisualizationSettings& s) const;
-
     /// @brief draw edge name
     void drawEdgeName(const GUIVisualizationSettings& s) const;
-
-    /// @brief draw Rerouter symbols
-    void drawRerouterSymbol(const GUIVisualizationSettings& s, GNEAdditional* rerouter) const;
 
     /// @brief check if given stacked positions are overlapped
     bool areStackPositionOverlapped(const GNEEdge::StackPosition& vehicleA, const GNEEdge::StackPosition& vehicleB) const;

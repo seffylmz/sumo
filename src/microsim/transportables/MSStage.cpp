@@ -128,7 +128,7 @@ MSStage::getArrived() const {
 }
 
 const std::string
-MSStage::setArrived(MSNet* /* net */, MSTransportable* /* transportable */, SUMOTime now) {
+MSStage::setArrived(MSNet* /* net */, MSTransportable* /* transportable */, SUMOTime now, const bool /* vehicleArrived */) {
     myArrived = now;
     return "";
 }
@@ -173,6 +173,7 @@ MSStageTrip::MSStageTrip(const MSEdge* origin, MSStoppingPlace* fromStop,
                          const MSEdge* destination, MSStoppingPlace* toStop,
                          const SUMOTime duration, const SVCPermissions modeSet,
                          const std::string& vTypes, const double speed, const double walkFactor,
+                         const std::string& group,
                          const double departPosLat, const bool hasArrivalPos, const double arrivalPos):
     MSStage(destination, toStop, arrivalPos, MSStageType::TRIP),
     myOrigin(origin),
@@ -182,6 +183,7 @@ MSStageTrip::MSStageTrip(const MSEdge* origin, MSStoppingPlace* fromStop,
     myVTypes(vTypes),
     mySpeed(speed),
     myWalkFactor(walkFactor),
+    myGroup(group),
     myDepartPosLat(departPosLat),
     myHaveArrivalPos(hasArrivalPos) {
 }
@@ -193,7 +195,7 @@ MSStage*
 MSStageTrip::clone() const {
     return new MSStageTrip(myOrigin, const_cast<MSStoppingPlace*>(myOriginStop),
                            myDestination, myDestinationStop, myDuration,
-                           myModeSet, myVTypes, mySpeed, myWalkFactor, myDepartPosLat, myHaveArrivalPos, myArrivalPos);
+                           myModeSet, myVTypes, mySpeed, myWalkFactor, myGroup, myDepartPosLat, myHaveArrivalPos, myArrivalPos);
 }
 
 
@@ -224,8 +226,8 @@ MSStageTrip::getEdgePos(SUMOTime /* now */) const {
 
 
 const std::string
-MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now) {
-    MSStage::setArrived(net, transportable, now);
+MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now, const bool vehicleArrived) {
+    MSStage::setArrived(net, transportable, now, vehicleArrived);
     MSVehicleControl& vehControl = net->getVehicleControl();
     std::vector<SUMOVehicleParameter*> pars;
     for (StringTokenizer st(myVTypes); st.hasNext();) {
@@ -344,7 +346,7 @@ MSStageTrip::setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now
                                 previous->setArrivalPos(MAX2(0.0, last->getLength() - 10));
                             }
                         }
-                        previous = new MSStageDriving(it->edges.back(), bs, localArrivalPos, std::vector<std::string>({ "taxi" }));
+                        previous = new MSStageDriving(it->edges.back(), bs, localArrivalPos, std::vector<std::string>({ "taxi" }), myGroup);
                         transportable->appendStage(previous, stageIndex++);
                     } else if (vehicle != nullptr && it->line == vehicle->getID()) {
                         if (bs == nullptr && it + 1 != result.end()) {
@@ -470,7 +472,7 @@ MSStageWaiting::tripInfoOutput(OutputDevice& os, const MSTransportable* const) c
 
 
 void
-MSStageWaiting::routeOutput(const bool /* isPerson */, OutputDevice& os, const bool) const {
+MSStageWaiting::routeOutput(const bool /* isPerson */, OutputDevice& os, const bool, const MSStage* const /* previous */) const {
     if (myType != MSStageType::WAITING_FOR_DEPART) {
         os.openTag("stop");
         std::string comment = "";
@@ -575,6 +577,10 @@ MSStageMoving::getSpeed() const {
     return myState == nullptr ? 0. : myState->getSpeed(*this);
 }
 
+const MSLane*
+MSStageMoving::getLane() const {
+    return myState == nullptr ? nullptr : myState->getLane();
+}
 
 void
 MSStageMoving::setRouteIndex(MSTransportable* const transportable, int routeOffset) {
@@ -585,5 +591,14 @@ MSStageMoving::setRouteIndex(MSTransportable* const transportable, int routeOffs
     getEdge()->addPerson(transportable);
 }
 
+void
+MSStageMoving::replaceRoute(MSTransportable* const transportable, const ConstMSEdgeVector& edges, int routeOffset) {
+    assert(routeOffset >= 0);
+    assert(routeOffset < (int)edges.size());
+    getEdge()->removePerson(transportable);
+    myRoute = edges;
+    myRouteStep = myRoute.begin() + routeOffset;
+    getEdge()->addPerson(transportable);
+}
 
 /****************************************************************************/

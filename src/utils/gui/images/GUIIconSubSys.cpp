@@ -55,6 +55,7 @@
 #include "locate_route.xpm"
 #include "locate_stop.xpm"
 #include "locate_person.xpm"
+#include "locate_container.xpm"
 #include "locate_tls.xpm"
 #include "locate_add.xpm"
 #include "locate_poi.xpm"
@@ -127,6 +128,8 @@
 
 #include "bigarrowleft.xpm"
 #include "bigarrowright.xpm"
+
+#include "frontelement.xpm"
 
 #include "lanebike.xpm"
 #include "lanebus.xpm"
@@ -304,6 +307,7 @@
 #include "reset.xpm"
 #include "warning.xpm"
 
+#include "grid.xpm"
 #include "grid1.xpm"
 #include "grid2.xpm"
 #include "grid3.xpm"
@@ -358,6 +362,7 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[GUIIcon::LOCATEROUTE] = new FXXPMIcon(a, locate_route_xpm);
     myIcons[GUIIcon::LOCATESTOP] = new FXXPMIcon(a, locate_stop_xpm);
     myIcons[GUIIcon::LOCATEPERSON] = new FXXPMIcon(a, locate_person_xpm);
+    myIcons[GUIIcon::LOCATECONTAINER] = new FXXPMIcon(a, locate_container_xpm);
     myIcons[GUIIcon::LOCATETLS] = new FXXPMIcon(a, locate_tls_xpm);
     myIcons[GUIIcon::LOCATEADD] = new FXXPMIcon(a, locate_add_xpm);
     myIcons[GUIIcon::LOCATEPOI] = new FXXPMIcon(a, locate_poi_xpm);
@@ -417,8 +422,9 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[GUIIcon::LOCK] = new FXXPMIcon(a, lock_xpm);
     myIcons[GUIIcon::ADD] = new FXXPMIcon(a, add_xpm);
     myIcons[GUIIcon::REMOVE] = new FXXPMIcon(a, remove_xpm);
-    myIcons[GUIIcon::BIGARROWLEFT] = new FXXPMIcon(a, bigarrowleft_xmp);
-    myIcons[GUIIcon::BIGARROWRIGHT] = new FXXPMIcon(a, bigarrowright_xmp);
+    myIcons[GUIIcon::BIGARROWLEFT] = new FXXPMIcon(a, bigarrowleft_xpm);
+    myIcons[GUIIcon::BIGARROWRIGHT] = new FXXPMIcon(a, bigarrowright_xpm);
+    myIcons[GUIIcon::FRONTELEMENT] = new FXXPMIcon(a, frontelement_xpm);
 
     myIcons[GUIIcon::ARROW_UP] = new FXXPMIcon(a, arrowup_xpm);
     myIcons[GUIIcon::ARROW_DOWN] = new FXXPMIcon(a, arrowdown_xpm);
@@ -603,6 +609,7 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[GUIIcon::RESET] = new FXXPMIcon(a, reset_xpm);
     myIcons[GUIIcon::WARNING] = new FXXPMIcon(a, warning_xpm);
 
+    myIcons[GUIIcon::GRID] = new FXXPMIcon(a, grid_xpm);
     myIcons[GUIIcon::GRID1] = new FXXPMIcon(a, grid1_xpm);
     myIcons[GUIIcon::GRID2] = new FXXPMIcon(a, grid2_xpm);
     myIcons[GUIIcon::GRID3] = new FXXPMIcon(a, grid3_xpm);

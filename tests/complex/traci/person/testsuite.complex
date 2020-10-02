@@ -3,3 +3,9 @@ moveToXY
 
 # Tests the person API
 person
+
+# retrieve prior stage information (stop after riding)
+priorStage
+
+# retrieve prior stage (walk after riding)
+priorStage2

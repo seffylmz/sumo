@@ -202,7 +202,9 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
 
     RailwayRouter<ROEdge, ROVehicle>* railRouter = nullptr;
     if (net.hasBidiEdges()) {
-        railRouter = new RailwayRouter<ROEdge, ROVehicle>(ROEdge::getAllEdges(), true, ttFunction, nullptr, false, net.hasPermissions(), oc.isSet("restriction-params"));
+        railRouter = new RailwayRouter<ROEdge, ROVehicle>(ROEdge::getAllEdges(), true, ttFunction, nullptr, false, net.hasPermissions(),
+                oc.isSet("restriction-params"),
+                oc.getFloat("railway.max-train-length"));
     }
     RORouterProvider provider(router, new PedestrianRouter<ROEdge, ROLane, RONode, ROVehicle>(),
                               new ROIntermodalRouter(RONet::adaptIntermodalRouter, carWalk, routingAlgorithm),
@@ -241,7 +243,8 @@ main(int argc, char** argv) {
             SystemFrame::close();
             return 0;
         }
-        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+        SystemFrame::checkOptions();
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"), oc.getString("xml-validation.routes"));
 #ifdef HAVE_FOX
         if (oc.getInt("routing-threads") > 1) {
             // make the output aware of threading
@@ -249,7 +252,7 @@ main(int argc, char** argv) {
         }
 #endif
         MsgHandler::initOutputOptions();
-        if (!(RODUAFrame::checkOptions() && SystemFrame::checkOptions())) {
+        if (!RODUAFrame::checkOptions()) {
             throw ProcessError();
         }
         RandHelper::initRandGlobal();

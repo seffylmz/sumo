@@ -24,6 +24,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <bitset>
 #include <utils/common/StringUtils.h>
 #include <utils/vehicle/SUMOVehicleParameter.h>
 #include <utils/emissions/PollutantsInterface.h>
@@ -60,6 +61,9 @@
 #include "GUINet.h"
 #include "GUIEdge.h"
 #include "GUILane.h"
+
+#define SPEEDMODE_DEFAULT 31
+#define LANECHANGEMODE_DEFAULT 1621
 
 //#define DEBUG_FOES
 
@@ -103,6 +107,9 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
     }
     if (MSGlobals::gLateralResolution > 0) {
         ret->mkItem("target lane [id]", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getTargetLaneID));
+    }
+    if (isSelected()) {
+        ret->mkItem("back lane [id]", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getBackLaneID));
     }
     ret->mkItem("position [m]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getPositionOnLane));
@@ -183,6 +190,14 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                     new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getStateOfCharge));
         ret->mkItem("actual electric current [A]", true,
                     new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getElecHybridCurrent));
+    }
+    if (hasInfluencer()) {
+        if (getInfluencer().getSpeedMode() != SPEEDMODE_DEFAULT) {
+            ret->mkItem("speed mode", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getSpeedMode));
+        }
+        if (getInfluencer().getLaneChangeMode() != LANECHANGEMODE_DEFAULT) {
+            ret->mkItem("lane change mode", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getLaneChangeMode));
+        }
     }
     ret->closeBuilding(&getParameter());
     return ret;
@@ -332,6 +347,9 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
     }
     Position front, back;
     double angle = 0.;
+    // position parking vehicle beside the road or track
+    const double lateralOffset = isParking() ? (SUMO_const_laneWidth * (MSGlobals::gLefthand ? -1 : 1)) : 0;
+
     // draw individual carriages
     double curCLength = firstCarriageLength;
     //std::cout << SIMTIME << " veh=" << getID() << " curCLength=" << curCLength << " loc=" << locomotiveLength << " car=" << carriageLength << " tlen=" << totalLength << " len=" << length << "\n";
@@ -359,8 +377,8 @@ GUIVehicle::drawAction_drawCarriageClass(const GUIVisualizationSettings& s, bool
             }
             backLane = prev;
         }
-        front = lane->geometryPositionAtOffset(carriageOffset);
-        back = backLane->geometryPositionAtOffset(carriageBackOffset);
+        front = lane->geometryPositionAtOffset(carriageOffset, lateralOffset);
+        back = backLane->geometryPositionAtOffset(carriageBackOffset, lateralOffset);
         if (front == back) {
             // no place for drawing available
             continue;
@@ -563,11 +581,17 @@ GUIVehicle::getColorValue(const GUIVisualizationSettings& s, int activeScheme) c
         case 30:
             return getLaneChangeModel().getSpeedLat();
         case 31: // by numerical param value
+            std::string error;
+            std::string val = getPrefixedParameter(s.vehicleParam, error);
             try {
-                return StringUtils::toDouble(myParameter->getParameter(s.vehicleParam, "0"));
+                if (val == "") {
+                    return 0;
+                } else {
+                    return StringUtils::toDouble(val);
+                }
             } catch (NumberFormatException&) {
                 try {
-                    return StringUtils::toBool(myParameter->getParameter(s.vehicleParam, "0"));
+                    return StringUtils::toBool(val);
                 } catch (BoolFormatException&) {
                     WRITE_WARNING("Vehicle parameter '" + myParameter->getParameter(s.vehicleParam, "0") + "' key '" + s.vehicleParam + "' is not a number for vehicle '" + getID() + "'");
                     return -1;
@@ -675,7 +699,7 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
         Position pos = stop.lane->geometryPositionAtOffset(stopLanePos);
         GLHelper::setColor(col);
         GLHelper::drawBoxLines(stop.lane->getShape().getOrthogonal(pos, 10, true, stop.lane->getWidth()), 0.1);
-        std::string label = stop.reached ? "stopped" : "stop " + toString(stopIndex);
+        std::string label = stop.pars.speed > 0 ? "waypoint" : (stop.reached ? "stopped" : "stop " + toString(stopIndex));
 #ifdef _DEBUG
         label += " (" + toString(stop.edge - myCurrEdge) + "e)";
 #endif
@@ -710,9 +734,12 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
                 label += " duration:" + time2string(stop.duration);
             }
         }
+        if (stop.pars.speed > 0) {
+            label += " speed:" + toString(stop.pars.speed);
+        }
         std::pair<const MSLane*, double> stopPos = std::make_pair(stop.lane, stopLanePos);
-        const double textSize = s.vehicleName.size / s.scale;
-        Position pos2 = pos - Position(0, textSize * repeat[stopPos]);
+        const double nameSize = s.vehicleName.size / s.scale;
+        Position pos2 = pos - Position(0, nameSize * repeat[stopPos]);
         if (noLoop && repeat[stopPos] > 0) {
             break;
         }
@@ -927,7 +954,7 @@ GUIVehicle::getRightSublaneOnEdge() const {
             return MAX2(i - 1, 0);
         }
     }
-    return -1;
+    return (int)sublaneSides.size() - 1;
 }
 
 int
@@ -964,6 +991,11 @@ GUIVehicle::getLaneID() const {
 }
 
 std::string
+GUIVehicle::getBackLaneID() const {
+    return myFurtherLanes.size() > 0 ? myFurtherLanes.back()->getID() : getLaneID();
+}
+
+std::string
 GUIVehicle::getShadowLaneID() const {
     return Named::getIDSecure(getLaneChangeModel().getShadowLane(), "");
 }
@@ -976,6 +1008,16 @@ GUIVehicle::getTargetLaneID() const {
 double
 GUIVehicle::getManeuverDist() const {
     return getLaneChangeModel().getManeuverDist();
+}
+
+std::string
+GUIVehicle::getSpeedMode() const {
+    return std::bitset<5>(getInfluencer()->getSpeedMode()).to_string();
+}
+
+std::string
+GUIVehicle::getLaneChangeMode() const {
+    return std::bitset<12>(getInfluencer()->getLaneChangeMode()).to_string();
 }
 
 void

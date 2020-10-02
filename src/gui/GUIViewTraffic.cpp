@@ -45,6 +45,7 @@
 #include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
 #include <utils/common/RGBColor.h>
 #include <utils/geom/PositionVector.h>
+#include <utils/shapes/ShapeContainer.h>
 #include "GUISUMOViewParent.h"
 #include "GUIViewTraffic.h"
 #include <utils/gui/windows/GUISUMOAbstractView.h>
@@ -114,29 +115,29 @@ GUIViewTraffic::buildViewToolBars(GUIGlChildWindow* v) {
     }
     // for junctions
     new FXButton(v->getLocatorPopup(),
-                 "\tLocate Junction\tLocate a junction within the network.",
+                 "\tLocate Junctions\tLocate a junction within the network.",
                  GUIIconSubSys::getIcon(GUIIcon::LOCATEJUNCTION), v, MID_LOCATEJUNCTION,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for edges
     new FXButton(v->getLocatorPopup(),
-                 "\tLocate Street\tLocate a street within the network.",
+                 "\tLocate Edges\tLocate an edge within the network.",
                  GUIIconSubSys::getIcon(GUIIcon::LOCATEEDGE), v, MID_LOCATEEDGE,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
-
     // for vehicles
     new FXButton(v->getLocatorPopup(),
-                 "\tLocate Vehicle\tLocate a vehicle within the network.",
+                 "\tLocate Vehicles\tLocate a vehicle within the network.",
                  GUIIconSubSys::getIcon(GUIIcon::LOCATEVEHICLE), v, MID_LOCATEVEHICLE,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
-
     // for persons
-    if (!MSGlobals::gUseMesoSim) { // there are no persons in mesosim (yet)
-        new FXButton(v->getLocatorPopup(),
-                     "\tLocate Vehicle\tLocate a person within the network.",
-                     GUIIconSubSys::getIcon(GUIIcon::LOCATEPERSON), v, MID_LOCATEPERSON,
-                     ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
-    }
-
+    new FXButton(v->getLocatorPopup(),
+                 "\tLocate Persons\tLocate a person within the network.",
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATEPERSON), v, MID_LOCATEPERSON,
+                 ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
+    // for containers
+    new FXButton(v->getLocatorPopup(),
+                 "\tLocate Container\tLocate a container within the network.",
+                 GUIIconSubSys::getIcon(GUIIcon::LOCATECONTAINER), v, MID_LOCATECONTAINER,
+                 ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for tls
     new FXButton(v->getLocatorPopup(),
                  "\tLocate TLS\tLocate a tls within the network.",
@@ -309,6 +310,17 @@ GUIViewTraffic::getVehicleParamKeys(bool /*vTypeKeys*/) const {
     return std::vector<std::string>(keys.begin(), keys.end());
 }
 
+std::vector<std::string>
+GUIViewTraffic::getPOIParamKeys() const {
+    std::set<std::string> keys;
+    const ShapeContainer::POIs& pois = static_cast<ShapeContainer&>(GUINet::getInstance()->getShapeContainer()).getPOIs();
+    for (auto item : pois) {
+        for (auto kv : item.second->getParametersMap()) {
+            keys.insert(kv.first);
+        }
+    }
+    return std::vector<std::string>(keys.begin(), keys.end());
+}
 
 int
 GUIViewTraffic::doPaintGL(int mode, const Boundary& bound) {
@@ -325,12 +337,11 @@ GUIViewTraffic::doPaintGL(int mode, const Boundary& bound) {
     glEnable(GL_DEPTH_TEST);
 
     // draw decals (if not in grabbing mode)
-    if (!myUseToolTips) {
-        drawDecals();
-        if (myVisualizationSettings->showGrid) {
-            paintGLGrid();
-        }
+    drawDecals();
+    if (myVisualizationSettings->showGrid) {
+        paintGLGrid();
     }
+    
 
     glLineWidth(1);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

@@ -188,7 +188,7 @@ GNEProhibitionFrame::~GNEProhibitionFrame() {}
 void
 GNEProhibitionFrame::handleProhibitionClick(const GNEViewNetHelper::ObjectsUnderCursor& objectsUnderCursor) {
     // build prohibition
-    buildProhibition(objectsUnderCursor.getConnectionFront(), myViewNet->getKeyPressed().shiftKeyPressed(), myViewNet->getKeyPressed().controlKeyPressed(), true);
+    buildProhibition(objectsUnderCursor.getConnectionFront(), myViewNet->getMouseButtonKeyPressed().shiftKeyPressed(), myViewNet->getMouseButtonKeyPressed().controlKeyPressed(), true);
 }
 
 
@@ -236,7 +236,7 @@ GNEProhibitionFrame::buildProhibition(GNEConnection* conn, bool /* mayDefinitely
         myCurrentConn->setSpecialColor(&myViewNet->getVisualisationSettings().colorSettings.selectedProhibitionColor);
 
         // determine prohibition status of all other connections with respect to the selected one
-        GNEJunction* junction = myCurrentConn->getEdgeFrom()->getSecondParentJunction();
+        GNEJunction* junction = myCurrentConn->getEdgeFrom()->getParentJunctions().back();
         std::vector<GNEConnection*> allConns = junction->getGNEConnections();
         NBNode* node = junction->getNBNode();
         NBEdge* currentConnFrom = myCurrentConn->getEdgeFrom()->getNBEdge();

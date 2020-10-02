@@ -230,6 +230,9 @@ NBNode::ApproachingDivider::spread(const std::vector<int>& approachingLanes, int
 }
 
 
+/* -------------------------------------------------------------------------
+ * NBNode::Crossing-methods
+ * ----------------------------------------------------------------------- */
 NBNode::Crossing::Crossing(const NBNode* _node, const EdgeVector& _edges, double _width, bool _priority, int _customTLIndex, int _customTLIndex2, const PositionVector& _customShape) :
     Parameterised(),
     node(_node),
@@ -244,6 +247,7 @@ NBNode::Crossing::Crossing(const NBNode* _node, const EdgeVector& _edges, double
     customTLIndex2(_customTLIndex2),
     valid(true) {
 }
+
 
 /* -------------------------------------------------------------------------
  * NBNode-methods
@@ -1341,8 +1345,9 @@ NBNode::computeLanes2Lanes() {
                             for (int i2 = 0; i2 < (int)currentOutgoing->getNumLanes(); i2++) {
                                 if ((currentOutgoing->getPermissions(i2) & SVC_BICYCLE) != 0) {
                                     // possibly a double-connection
-                                    // XXX could use 'true' here but this requires additional work on tls generation
-                                    incoming->setConnection(i, currentOutgoing, i2, NBEdge::Lane2LaneInfoType::COMPUTED, false);
+                                    const bool allowDouble = (incoming->getPermissions(i) == SVC_BICYCLE
+                                            && (dir == LinkDirection::RIGHT || dir == LinkDirection::PARTRIGHT || dir == LinkDirection::STRAIGHT));
+                                    incoming->setConnection(i, currentOutgoing, i2, NBEdge::Lane2LaneInfoType::COMPUTED, allowDouble);
                                     builtConnection = true;
                                     break;
                                 }
@@ -1861,6 +1866,25 @@ NBNode::rightTurnConflict(const NBEdge* from, const NBEdge* to, int fromLane,
     }
 }
 
+bool
+NBNode::mergeConflictYields(const NBEdge* from, int fromLane, int fromLaneFoe, NBEdge* to, int toLane) const {
+    if (myRequest == nullptr) {
+        return false;
+    }
+    NBEdge::Connection con = from->getConnection(fromLane, to, toLane);
+    NBEdge::Connection prohibitorCon = from->getConnection(fromLaneFoe, to, toLane);
+    return myRequest->mergeConflict(from, con, from, prohibitorCon, false);
+}
+
+
+bool
+NBNode::mergeConflict(const NBEdge* from, const NBEdge::Connection& con,
+        const NBEdge* prohibitorFrom,  const NBEdge::Connection& prohibitorCon, bool foes) const {
+    if (myRequest == nullptr) {
+        return false;
+    }
+    return myRequest->mergeConflict(from, con, prohibitorFrom, prohibitorCon, foes);
+}
 
 bool
 NBNode::turnFoes(const NBEdge* from, const NBEdge* to, int fromLane,
@@ -2536,7 +2560,7 @@ void
 NBNode::buildCrossingsAndWalkingAreas() {
     buildCrossings();
     buildWalkingAreas(OptionsCont::getOptions().getInt("junctions.corner-detail"),
-            OptionsCont::getOptions().getFloat("walkingareas.join-dist"));
+                      OptionsCont::getOptions().getFloat("walkingareas.join-dist"));
     // ensure that all crossings are properly connected
     for (auto& crossing : myCrossings) {
         if (crossing->prevWalkingArea == "" || crossing->nextWalkingArea == "" || !crossing->valid) {
@@ -2760,7 +2784,7 @@ NBNode::buildWalkingAreas(int cornerDetail, double joinMinDist) {
                 start = i;
             }
         } else {
-            if ((l.permissions & SVC_PEDESTRIAN) == 0 
+            if ((l.permissions & SVC_PEDESTRIAN) == 0
                     || crossingBetween(edge, prevEdge)
                     || alreadyConnectedPaths(edge, prevEdge, joinMinDist)) {
                 waIndices.push_back(std::make_pair(start, i - start));

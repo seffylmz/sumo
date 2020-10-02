@@ -50,8 +50,8 @@ StringBijection<GUIGlObjectType>::Entry GUIGlObject::GUIGlObjectTypeNamesInitial
     {"edge",                GLO_EDGE},
     {"lane",                GLO_LANE},
     {"junction",            GLO_JUNCTION},
-    {"crossing",            GLO_CROSSING},
     {"connection",          GLO_CONNECTION},
+    {"crossing",            GLO_CROSSING},
     {"tlLogic",             GLO_TLLOGIC},
     //
     {"edgeData",            GLO_EDGEDATA},
@@ -107,7 +107,9 @@ StringBijection<GUIGlObjectType>::Entry GUIGlObject::GUIGlObjectTypeNamesInitial
     {"person",              GLO_PERSON},
     {"personFlow",          GLO_PERSONFLOW},
     //
-    {"dottedContour",       GLO_DOTTEDCONTOUR},
+    {"textName",            GLO_TEXTNAME},
+    {"frontElement",        GLO_DOTTEDCONTOUR_FRONT},
+    {"dottedContour",       GLO_DOTTEDCONTOUR_INSPECTED},
     {"temporalShape",       GLO_TEMPORALSHAPE},
     {"rectangleSelection",  GLO_RECTANGLESELECTION},
     {"testElement",         GLO_TESTELEMENT},

@@ -52,7 +52,6 @@ ROMAFrame::fillOptions() {
     oc.addOptionSubTopic("Processing");
     oc.addOptionSubTopic("Defaults");
     oc.addOptionSubTopic("Time");
-    SystemFrame::addReportOptions(oc); // fill this subtopic, too
 
     // insert options
     addImportOptions();
@@ -127,6 +126,9 @@ ROMAFrame::addImportOptions() {
 
     oc.doRegister("junction-taz", new Option_Bool(false));
     oc.addDescription("junction-taz", "Input", "Initialize a TAZ for every junction to use attributes toJunction and fromJunction");
+
+    // need to do this here to be able to check for network and route input options
+    SystemFrame::addReportOptions(oc);
 
     // register the time settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));
@@ -248,7 +250,7 @@ ROMAFrame::addAssignmentOptions() {
     oc.addDescription("max-iterations", "Processing", "maximal number of iterations for new route searching in incremental and stochastic user assignment");
 
     oc.doRegister("max-inner-iterations", new Option_Integer(1000));
-    oc.addDescription("max-inner-iterations", "Processing", "maximal number of inner iterations for user equilibrium calcuation in the stochastic user assignment");
+    oc.addDescription("max-inner-iterations", "Processing", "maximal number of inner iterations for user equilibrium calculation in the stochastic user assignment");
 
     // register route choice settings
     oc.doRegister("route-choice-method", new Option_String("logit"));

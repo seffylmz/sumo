@@ -186,7 +186,7 @@ public:
         while (threshIt != myThresholds.end()) {
             dev.openTag(SUMO_TAG_ENTRY);
             dev.writeAttr(SUMO_ATTR_COLOR, *colIt);
-            if (!myIsFixed) {
+            if (!myIsFixed && (*threshIt) != std::numeric_limits<double>::max()) {
                 dev.writeAttr(SUMO_ATTR_THRESHOLD, *threshIt);
             }
             if ((*nameIt) != "") {

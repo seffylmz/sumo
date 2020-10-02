@@ -42,7 +42,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_GenericData, GNEChange, nullptr, 0)
 // ===========================================================================
 
 GNEChange_GenericData::GNEChange_GenericData(GNEGenericData* genericData, bool forward) :
-    GNEChange(genericData, genericData, forward, genericData->isAttributeCarrierSelected()),
+    GNEChange(genericData, forward, genericData->isAttributeCarrierSelected()),
     myGenericData(genericData),
     myDataSetParent(genericData->getDataIntervalParent()->getDataSetParent()),
     myDataIntervalParent(genericData->getDataIntervalParent()),
@@ -59,8 +59,8 @@ GNEChange_GenericData::~GNEChange_GenericData() {
         WRITE_DEBUG("Deleting unreferenced " + myGenericData->getTagStr() + " '" + myGenericData->getID() + "'");
         // check that generic data don't exist
         if (myGenericData->getNet()->getAttributeCarriers()->dataSetExist(myDataSetParent) &&
-            myDataSetParent->dataIntervalChildrenExist(myDataIntervalParent) &&
-            myDataIntervalParent->hasGenericDataChild(myGenericData)) {
+                myDataSetParent->dataIntervalChildrenExist(myDataIntervalParent) &&
+                myDataIntervalParent->hasGenericDataChild(myGenericData)) {
             // delete generic data from interval parent
             myDataIntervalParent->removeGenericDataChild(myGenericData);
             // remove element from path
@@ -70,8 +70,6 @@ GNEChange_GenericData::~GNEChange_GenericData() {
                     pathElement.getJunction()->removePathGenericData(myGenericData);
                 }
             }
-            // remove genericData from parents and children
-            removeElementFromParentsAndChildren(myGenericData);
         }
         // delete generic data
         delete myGenericData;
@@ -97,8 +95,8 @@ GNEChange_GenericData::undo() {
                 pathElement.getJunction()->removePathGenericData(myGenericData);
             }
         }
-        // remove genericData from parents and children
-        removeElementFromParentsAndChildren(myGenericData);
+        // restore container
+        restoreHierarchicalContainers();
     } else {
         // show extra information for tests
         WRITE_DEBUG("Adding " + myGenericData->getTagStr() + " '" + myGenericData->getID() + "' in GNEChange_GenericData");
@@ -108,8 +106,8 @@ GNEChange_GenericData::undo() {
         }
         // insert generic data into interval parent
         myDataIntervalParent->addGenericDataChild(myGenericData);
-        // add genericData in parents and children
-        addElementInParentsAndChildren(myGenericData);
+        // restore container
+        restoreHierarchicalContainers();
     }
     // Requiere always save elements
     myGenericData->getNet()->requireSaveDataElements(true);

@@ -91,6 +91,9 @@ public:
     /// adds a transportable to the list of transportables waiting for a vehicle on the specified edge
     void addWaiting(const MSEdge* edge, MSTransportable* person);
 
+    /// register forced (traci) departure
+    void forceDeparture();
+
     /** @brief board any applicable persons
      * Boards any people who wait on that edge for the given vehicle and removes them from myWaiting
      * @param[in] the edge on which the boarding should take place
@@ -170,7 +173,12 @@ public:
         myJammedNumber++;
     }
 
-    /// @name Retrieval of transportable statistics (always accessable)
+    /// @brief decrement counter to avoid double counting transportables loaded from state
+    void fixLoadCount() {
+        myLoadedNumber--;
+    }
+
+    /// @name Retrieval of transportable statistics (always accessible)
     /// @{
 
     /** @brief Returns the number of build transportables
@@ -180,7 +188,7 @@ public:
         return myLoadedNumber;
     }
 
-    int getDepartedNumber() const; 
+    int getDepartedNumber() const;
 
     /** @brief Returns the number of build and inserted, but not yet deleted transportables
      * @return The number of simulated transportables
@@ -211,7 +219,7 @@ public:
 
     /** @brief Returns the number of transportables moving by themselvs (i.e. walking)
      */
-    int getMovingNumber() const; 
+    int getMovingNumber() const;
 
     /** @brief Returns the number of transportables riding a vehicle
      */
@@ -254,6 +262,14 @@ public:
         myLoadedNumber++;
         myDiscardedNumber++;
     }
+
+    /** @brief Saves the current state into the given stream
+     */
+    void saveState(OutputDevice& out);
+
+    /** @brief Reconstruct the current state
+     */
+    void loadState(const std::string& state);
 
 protected:
     /// all currently created transportables by id
@@ -303,4 +319,7 @@ private:
 
     MSPModel* myNonInteractingModel;
 
+private:
+    /// @brief invalidated assignment operator
+    MSTransportableControl& operator=(const MSTransportableControl& src) = delete;
 };

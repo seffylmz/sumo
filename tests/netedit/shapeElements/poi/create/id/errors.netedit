@@ -3,55 +3,46 @@ GLDebug: 	Inserted junction:gneJ0 into SUMORTree with boundary -12.00,-12.00,12.
 GLDebug: 	Inserted junction:gneJ1 into SUMORTree with boundary 38.00,-12.00,62.00,12.00
 GLDebug: 	Inserted edge:gneE0 into SUMORTree with boundary -10.00,-11.60,60.00,10.00
 GLDebug: 	Inserted edge:gneE1 into SUMORTree with boundary -10.00,-10.00,60.00,11.60
-Debug: Selected item 'DEFAULT_VEHTYPE' in DemandElementSelector
 Debug: Selected item 'DEFAULT_PEDTYPE' in DemandElementSelector
 Debug: net has to be saved
 Debug: Current saving Status: net unsaved, additionals saved, demand elements saved, data sets saved
 Debug: Selected item 'poly' in TagSelector
 Debug: Selected item 'poi' in TagSelector
 Debug: Adding poi 'poi_0' into viewNet
-GLDebug: 	Inserted poi:poi_0 into SUMORTree with boundary -2.00,17.00,4.00,23.00
+GLDebug: 	Inserted poi:poi_0 into SUMORTree with boundary -9.00,9.00,13.00,31.00
 Debug: Additionals has to be saved
 Debug: Current saving Status: net saved, additionals unsaved, demand elements saved, data sets saved
-Debug: Adding poi 'poi_1' into viewNet
-GLDebug: 	Inserted poi:poi_1 into SUMORTree with boundary 0.00,17.00,6.00,23.00
 Debug: Invalid input parameter of poi: invalid id used in id
 Debug: Adding poi 'POI_0' into viewNet
-GLDebug: 	Inserted poi:POI_0 into SUMORTree with boundary 4.00,17.00,10.00,23.00
+GLDebug: 	Inserted poi:POI_0 into SUMORTree with boundary -3.00,9.00,19.00,31.00
 Debug: Adding poi 'customID' into viewNet
-GLDebug: 	Inserted poi:customID into SUMORTree with boundary 7.00,17.00,13.00,23.00
+GLDebug: 	Inserted poi:customID into SUMORTree with boundary -1.00,9.00,21.00,31.00
 Debug: Keys Ctrl+Z (Undo) pressed
 Debug: Calling GNEUndoList::undo()
 Debug: Removing poi 'customID' from viewNet
-GLDebug: 	Removed object poi:customID from SUMORTree with boundary 7.00,17.00,13.00,23.00
+GLDebug: 	Removed object poi:customID from SUMORTree with boundary -1.00,9.00,21.00,31.00
 Debug: Keys Ctrl+Z (Undo) pressed
 Debug: Calling GNEUndoList::undo()
 Debug: Removing poi 'POI_0' from viewNet
-GLDebug: 	Removed object poi:POI_0 from SUMORTree with boundary 4.00,17.00,10.00,23.00
-Debug: Keys Ctrl+Z (Undo) pressed
-Debug: Calling GNEUndoList::undo()
-Debug: Removing poi 'poi_1' from viewNet
-GLDebug: 	Removed object poi:poi_1 from SUMORTree with boundary 0.00,17.00,6.00,23.00
+GLDebug: 	Removed object poi:POI_0 from SUMORTree with boundary -3.00,9.00,19.00,31.00
 Debug: Keys Ctrl+Z (Undo) pressed
 Debug: Calling GNEUndoList::undo()
 Debug: Removing poi 'poi_0' from viewNet
-GLDebug: 	Removed object poi:poi_0 from SUMORTree with boundary -2.00,17.00,4.00,23.00
+GLDebug: 	Removed object poi:poi_0 from SUMORTree with boundary -9.00,9.00,13.00,31.00
+Debug: Keys Ctrl+Z (Undo) pressed
 Debug: Keys Ctrl+Y (Redo) pressed
 Debug: Calling GNEUndoList::redo()
 Debug: Adding poi 'poi_0' into viewNet
-GLDebug: 	Inserted poi:poi_0 into SUMORTree with boundary -2.00,17.00,4.00,23.00
-Debug: Keys Ctrl+Y (Redo) pressed
-Debug: Calling GNEUndoList::redo()
-Debug: Adding poi 'poi_1' into viewNet
-GLDebug: 	Inserted poi:poi_1 into SUMORTree with boundary 0.00,17.00,6.00,23.00
+GLDebug: 	Inserted poi:poi_0 into SUMORTree with boundary -9.00,9.00,13.00,31.00
 Debug: Keys Ctrl+Y (Redo) pressed
 Debug: Calling GNEUndoList::redo()
 Debug: Adding poi 'POI_0' into viewNet
-GLDebug: 	Inserted poi:POI_0 into SUMORTree with boundary 4.00,17.00,10.00,23.00
+GLDebug: 	Inserted poi:POI_0 into SUMORTree with boundary -3.00,9.00,19.00,31.00
 Debug: Keys Ctrl+Y (Redo) pressed
 Debug: Calling GNEUndoList::redo()
 Debug: Adding poi 'customID' into viewNet
-GLDebug: 	Inserted poi:customID into SUMORTree with boundary 7.00,17.00,13.00,23.00
+GLDebug: 	Inserted poi:customID into SUMORTree with boundary -1.00,9.00,21.00,31.00
+Debug: Keys Ctrl+Y (Redo) pressed
 Debug: Additionals saved
 GLDebug: Removing junctions during recomputing
 GLDebug: 	Removed object junction:gneJ0 from SUMORTree with boundary -12.00,-12.00,12.00,12.00
@@ -68,18 +59,15 @@ GLDebug: 	Inserted edge:gneE1 into SUMORTree with boundary -10.00,-10.00,60.00,1
 Debug: Created connection 'fromgneE0_0togneE1_0' in retrieveGNEConnection()
 Debug: Created connection 'fromgneE1_0togneE0_0' in retrieveGNEConnection()
 Debug: Removing poi 'customID' from net in ~GNEChange_Shape()
-GLDebug: 	Removed object poi:customID from SUMORTree with boundary 7.00,17.00,13.00,23.00
+GLDebug: 	Removed object poi:customID from SUMORTree with boundary -1.00,9.00,21.00,31.00
 Debug: Additionals has to be saved
 Debug: Current saving Status: net saved, additionals unsaved, demand elements saved, data sets saved
 Debug: delete poi 'customID' in ~GNEChange_Shape()
 Debug: Removing poi 'POI_0' from net in ~GNEChange_Shape()
-GLDebug: 	Removed object poi:POI_0 from SUMORTree with boundary 4.00,17.00,10.00,23.00
+GLDebug: 	Removed object poi:POI_0 from SUMORTree with boundary -3.00,9.00,19.00,31.00
 Debug: delete poi 'POI_0' in ~GNEChange_Shape()
-Debug: Removing poi 'poi_1' from net in ~GNEChange_Shape()
-GLDebug: 	Removed object poi:poi_1 from SUMORTree with boundary 0.00,17.00,6.00,23.00
-Debug: delete poi 'poi_1' in ~GNEChange_Shape()
 Debug: Removing poi 'poi_0' from net in ~GNEChange_Shape()
-GLDebug: 	Removed object poi:poi_0 from SUMORTree with boundary -2.00,17.00,4.00,23.00
+GLDebug: 	Removed object poi:poi_0 from SUMORTree with boundary -9.00,9.00,13.00,31.00
 Debug: delete poi 'poi_0' in ~GNEChange_Shape()
 Debug: Deleting unreferenced edge 'gneE0' in AttributeCarriers destructor
 Debug: Deleting unreferenced lane 'gneE0_0' in GNEEdge destructor

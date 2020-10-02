@@ -34,7 +34,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_Shape, GNEChange, nullptr, 0)
 // ===========================================================================
 
 GNEChange_Shape::GNEChange_Shape(GNEShape* shape, bool forward) :
-    GNEChange(shape, shape, forward, shape->isAttributeCarrierSelected()),
+    GNEChange(shape, forward, shape->isAttributeCarrierSelected()),
     myShape(shape) {
     myShape->incRef("GNEChange_Shape");
 }
@@ -49,8 +49,6 @@ GNEChange_Shape::~GNEChange_Shape() {
             WRITE_DEBUG("Removing " + myShape->getTagStr() + " '" + myShape->getID() + "' from net in ~GNEChange_Shape()");
             // remove polygon from AttributeCarreirs
             myShape->getNet()->getAttributeCarriers()->deleteShape(myShape);
-            // Remove element from parents and children
-            removeElementFromParentsAndChildren(myShape);
         }
         // show extra information for tests
         WRITE_DEBUG("delete " + myShape->getTagStr() + " '" + myShape->getID() + "' in ~GNEChange_Shape()");
@@ -70,8 +68,8 @@ GNEChange_Shape::undo() {
         }
         // remove shape from net
         myShape->getNet()->getAttributeCarriers()->deleteShape(myShape);
-        // Remove element from parents and children
-        removeElementFromParentsAndChildren(myShape);
+        // restore container
+        restoreHierarchicalContainers();
     } else {
         // show extra information for tests
         WRITE_DEBUG("Adding " + myShape->getTagStr() + " '" + myShape->getID() + "' into viewNet");
@@ -81,8 +79,8 @@ GNEChange_Shape::undo() {
         }
         // Add shape in net
         myShape->getNet()->getAttributeCarriers()->insertShape(myShape);
-        // Add element in parents and children
-        addElementInParentsAndChildren(myShape);
+        // restore container
+        restoreHierarchicalContainers();
     }
 }
 

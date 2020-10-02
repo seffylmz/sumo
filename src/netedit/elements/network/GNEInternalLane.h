@@ -36,7 +36,7 @@ class PositionVector;
  * a popup menu. Messages are routeted to an internal dataTarget and to the
  * editor (hence inheritance from FXDelegator)
  */
-class GNEInternalLane : public GUIGlObject, public FXDelegator {
+class GNEInternalLane : public GNENetworkElement, public FXDelegator {
     /// @brief FOX-declaration
     FXDECLARE(GNEInternalLane)
 
@@ -44,14 +44,33 @@ public:
 
     /**@brief Constructor
      * @param[in] editor The editor to notify about changes
+     * @param[in] junctionParent junction parent
      * @param[in] id The id of this internal lane
      * @param[in] shape The shape of the lane
      * @param[in] tlIndex The tl-index of the lane
      */
-    GNEInternalLane(GNETLSEditorFrame* editor, const std::string& id, const PositionVector& shape, int tlIndex, LinkState state = LINKSTATE_DEADEND);
+    GNEInternalLane(GNETLSEditorFrame* editor, const GNEJunction* junctionParent, const std::string& id, const PositionVector& shape, int tlIndex, LinkState state = LINKSTATE_DEADEND);
 
     /// @brief Destructor
-    virtual ~GNEInternalLane();
+    ~GNEInternalLane();
+
+    /// @name Functions related with geometry of element
+    /// @{
+    /// @brief update pre-computed geometry information
+    void updateGeometry();
+
+    /// @brief Returns position of hierarchical element in view
+    Position getPositionInView() const;
+    /// @}
+
+    /// @name Functions related with move elements
+    /// @{
+    /// @brief get move operation for the given shapeOffset (can be nullptr)
+    GNEMoveOperation* getMoveOperation(const double shapeOffset);
+
+    /// @brief remove geometry point in the clicked position
+    void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList);
+    /// @}
 
     /// @name inherited from GUIGlObject
     /// @{
@@ -73,12 +92,8 @@ public:
      */
     GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView& parent);
 
-    /**@brief Returns the boundary to which the view shall be centered in order to show the object
-     *
-     * @return The boundary the object is within
-     * @see GUIGlObject::getCenteringBoundary
-     */
-    Boundary getCenteringBoundary() const;
+    /// @brief update centering boundary (implies change in RTREE)
+    void updateCenteringBoundary(const bool updateGrid);
 
     /**@brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
@@ -105,11 +120,42 @@ public:
     /// @brief return the color for each linkstate
     static RGBColor colorForLinksState(FXuint state);
 
+    /// @name inherited from GNEAttributeCarrier
+    /// @{
+    /* @brief method for getting the Attribute of an XML key
+    * @param[in] key The attribute key
+    * @return string with the value associated to key
+    */
+    std::string getAttribute(SumoXMLAttr key) const;
+
+    /* @brief method for setting the attribute and letting the object perform additional changes
+    * @param[in] key The attribute key
+    * @param[in] value The new value
+    * @param[in] undoList The undoList on which to register changes
+    */
+    void setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList* undoList);
+
+    /* @brief method for checking if the key and their conrrespond attribute are valids
+    * @param[in] key The attribute key
+    * @param[in] value The value asociated to key key
+    * @return true if the value is valid, false in other case
+    */
+    bool isValid(SumoXMLAttr key, const std::string& value);
+
+    /* @brief method for check if the value for certain attribute is set
+    * @param[in] key The attribute key
+    */
+    bool isAttributeEnabled(SumoXMLAttr key) const;
+    /// @}
+
 protected:
     /// @brief FOX needs this
     GNEInternalLane();
 
 private:
+    /// @brief pointer to junction parent
+    const GNEJunction* myJunctionParent;
+
     /// @brief internal lane geometry
     GNEGeometry::Geometry myInternalLaneGeometry;
 
@@ -136,12 +182,18 @@ private:
     static StringBijection<FXuint>::Entry linkStateNamesValues[];
 
 private:
-    /// @brief return the color for each linkstate
-    static const std::string& longNameForLinkState(FXuint state);
+    /// @brief set attribute after validation
+    void setAttribute(SumoXMLAttr key, const std::string& value);
+
+    /// @brief set move shape
+    void setMoveShape(const GNEMoveResult& moveResult);
+
+    /// @brief commit move shape
+    void commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList);
 
     /// @brief Invalidated copy constructor.
-    GNEInternalLane(const GNEInternalLane&);
+    GNEInternalLane(const GNEInternalLane&) = delete;
 
     /// @brief Invalidated assignment operator.
-    GNEInternalLane& operator=(const GNEInternalLane&);
+    GNEInternalLane& operator=(const GNEInternalLane&) = delete;
 };

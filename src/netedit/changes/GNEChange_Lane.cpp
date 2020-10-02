@@ -47,7 +47,7 @@ GNEChange_Lane::GNEChange_Lane(GNEEdge* edge, const NBEdge::Lane& laneAttrs):
 
 
 GNEChange_Lane::GNEChange_Lane(GNEEdge* edge, GNELane* lane, const NBEdge::Lane& laneAttrs, bool forward, bool recomputeConnections):
-    GNEChange(lane, lane, forward, lane->isAttributeCarrierSelected()),
+    GNEChange(lane, forward, lane->isAttributeCarrierSelected()),
     myEdge(edge),
     myLane(lane),
     myLaneAttrs(laneAttrs),
@@ -64,8 +64,6 @@ GNEChange_Lane::~GNEChange_Lane() {
     if (myEdge->unreferenced()) {
         // show extra information for tests
         WRITE_DEBUG("Deleting unreferenced " + myEdge->getTagStr() + " '" + myEdge->getID() + "' in GNEChange_Lane");
-        // remove edge from parents and children
-        removeElementFromParentsAndChildren(myEdge);
         delete myEdge;
     }
     if (myLane) {
@@ -73,8 +71,6 @@ GNEChange_Lane::~GNEChange_Lane() {
         if (myLane->unreferenced()) {
             // show extra information for tests
             WRITE_DEBUG("Deleting unreferenced " + myLane->getTagStr() + " '" + myLane->getID() + "' in GNEChange_Lane");
-            // remove lane from parents and children
-            removeElementFromParentsAndChildren(myLane);
             // delete lane
             delete myLane;
         }
@@ -92,8 +88,8 @@ GNEChange_Lane::undo() {
             if (mySelectedElement) {
                 myLane->unselectAttributeCarrier();
             }
-            // remove lane from parents and children
-            removeElementFromParentsAndChildren(myLane);
+            // restore container
+            restoreHierarchicalContainers();
         } else {
             WRITE_DEBUG("Removing nullptr " + toString(SUMO_TAG_LANE) + " from " + toString(SUMO_TAG_EDGE));
         }
@@ -107,8 +103,8 @@ GNEChange_Lane::undo() {
             if (mySelectedElement) {
                 myLane->selectAttributeCarrier();
             }
-            // add lane into parents and children
-            addElementInParentsAndChildren(myLane);
+            // restore container
+            restoreHierarchicalContainers();
         } else {
             WRITE_DEBUG("Adding nullptr " + toString(SUMO_TAG_LANE) + " into " + toString(SUMO_TAG_EDGE));
         }

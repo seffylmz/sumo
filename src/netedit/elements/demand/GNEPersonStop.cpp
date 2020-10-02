@@ -36,17 +36,15 @@
 
 GNEPersonStop::GNEPersonStop(GNENet* net, GNEDemandElement* personParent, GNEAdditional* stoppingPlace, const SUMOVehicleParameter::Stop& stopParameter) :
     GNEDemandElement(personParent, net, GLO_PERSONSTOP, GNE_TAG_PERSONSTOP_BUSSTOP,
-        {}, {}, {}, {stoppingPlace}, {}, {}, {personParent}, {},    // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                            // Childrens
-    SUMOVehicleParameter::Stop(stopParameter) {
+{}, {}, {}, {stoppingPlace}, {}, {}, {personParent}, {}),
+SUMOVehicleParameter::Stop(stopParameter) {
 }
 
 
-GNEPersonStop::GNEPersonStop(GNENet* net, GNEDemandElement* personParent, GNEEdge *edge, const SUMOVehicleParameter::Stop& stopParameter) :
+GNEPersonStop::GNEPersonStop(GNENet* net, GNEDemandElement* personParent, GNEEdge* edge, const SUMOVehicleParameter::Stop& stopParameter) :
     GNEDemandElement(personParent, net, GLO_PERSONSTOP, GNE_TAG_PERSONSTOP_EDGE,
-        {}, {edge}, {}, {}, {}, {}, {personParent}, {}, // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),                // Childrens
-    SUMOVehicleParameter::Stop(stopParameter) {
+{}, {edge}, {}, {}, {}, {}, {personParent}, {}),
+SUMOVehicleParameter::Stop(stopParameter) {
 }
 
 
@@ -240,10 +238,10 @@ void
 GNEPersonStop::updateGeometry() {
     // only update Stops over lanes, because other uses the geometry of stopping place parent
     if (getParentEdges().size() > 0) {
-    /*
-        // Cut shape using as delimitators fixed start position and fixed end position
-        myDemandElementGeometry.updateGeometry(getParentLanes().front()->getLaneShape(), getStartGeometryPositionOverLane(), getEndGeometryPositionOverLane());
-    */
+        /*
+            // Cut shape using as delimitators fixed start position and fixed end position
+            myDemandElementGeometry.updateGeometry(getParentLanes().front()->getLaneShape(), getStartGeometryPositionOverLane(), getEndGeometryPositionOverLane());
+        */
     } else if (getParentAdditionals().size() > 0) {
         // use geometry of additional (busStop)
         myDemandElementGeometry.updateGeometry(getParentAdditionals().at(0));
@@ -344,12 +342,12 @@ GNEPersonStop::drawGL(const GUIVisualizationSettings& s) const {
         }
     } else if (myNet->getViewNet()->getDemandViewOptions().showAllPersonPlans()) {
         drawPersonPlan = true;
-    } else if (myNet->getViewNet()->getInspectedAttributeCarrier() == getParentDemandElements().front()) {
+    } else if (myNet->getViewNet()->isAttributeCarrierInspected(getParentDemandElements().front())) {
         drawPersonPlan = true;
     } else if (myNet->getViewNet()->getDemandViewOptions().getLockedPerson() == getParentDemandElements().front()) {
         drawPersonPlan = true;
-    } else if (myNet->getViewNet()->getInspectedAttributeCarrier() && myNet->getViewNet()->getInspectedAttributeCarrier()->getTagProperty().isPersonPlan() &&
-               (myNet->getViewNet()->getInspectedAttributeCarrier()->getAttribute(GNE_ATTR_PARENT) == getAttribute(GNE_ATTR_PARENT))) {
+    } else if (!myNet->getViewNet()->getInspectedAttributeCarriers().empty() && myNet->getViewNet()->getInspectedAttributeCarriers().front()->getTagProperty().isPersonPlan() &&
+               (myNet->getViewNet()->getInspectedAttributeCarriers().front()->getAttribute(GNE_ATTR_PARENT) == getAttribute(GNE_ATTR_PARENT))) {
         drawPersonPlan = true;
     }
     // check if stop can be drawn
@@ -371,7 +369,7 @@ GNEPersonStop::drawGL(const GUIVisualizationSettings& s) const {
         // set Color
         GLHelper::setColor(stopColor);
         // Start with the drawing of the area traslating matrix to origin
-        glTranslated(0, 0, getType());
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, getType());
         // draw depending of details
         if (s.drawDetail(s.detailSettings.stopsDetails, exaggeration) && getParentLanes().size() > 0) {
             // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
@@ -383,8 +381,10 @@ GNEPersonStop::drawGL(const GUIVisualizationSettings& s) const {
             glPopMatrix();
             // Add a draw matrix
             glPushMatrix();
+            // Start with the drawing of the area traslating matrix to origin
+            myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, getType());
             // move to geometry front
-            glTranslated(myDemandElementGeometry.getShape().back().x(), myDemandElementGeometry.getShape().back().y(), getType());
+            glTranslated(myDemandElementGeometry.getShape().back().x(), myDemandElementGeometry.getShape().back().y(), 0);
             glRotated(myDemandElementGeometry.getShapeRotations().back(), 0, 0, 1);
             // draw front of Stop depending if it's placed over a lane or over a stoppingPlace
             if (getParentLanes().size() > 0) {
@@ -414,7 +414,7 @@ GNEPersonStop::drawGL(const GUIVisualizationSettings& s) const {
             // Draw name if isn't being drawn for selecting
             drawName(getCenteringBoundary().getCenter(), s.scale, s.addName);
             // check if dotted contour has to be drawn
-            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
+            if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
                 // draw dooted contour depending if it's placed over a lane or over a stoppingPlace
                 if (getParentLanes().size() > 0) {
                     // GLHelper::drawShapeDottedContourAroundShape(s, getType(), myDemandElementGeometry.getShape(),
@@ -439,13 +439,13 @@ GNEPersonStop::drawGL(const GUIVisualizationSettings& s) const {
 }
 
 
-void 
+void
 GNEPersonStop::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
     // personStops don't use drawPartialGL
 }
 
 
-void 
+void
 GNEPersonStop::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/, const double /*offsetFront*/) const {
     // personStops don't use drawPartialGL
 }
@@ -455,7 +455,7 @@ std::string
 GNEPersonStop::getAttribute(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_ID:
-            return getID();
+            return getParentDemandElements().front()->getID();
         case SUMO_ATTR_DURATION:
             if (parametersSet & STOP_DURATION_SET) {
                 return time2string(duration);
@@ -579,7 +579,6 @@ GNEPersonStop::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoLi
         return; //avoid needless changes, later logic relies on the fact that attributes have changed
     }
     switch (key) {
-        case SUMO_ATTR_ID:
         case SUMO_ATTR_DURATION:
         case SUMO_ATTR_UNTIL:
         case SUMO_ATTR_EXTENSION:
@@ -616,8 +615,6 @@ GNEPersonStop::isValid(SumoXMLAttr key, const std::string& value) {
     // declare string error
     std::string error;
     switch (key) {
-        case SUMO_ATTR_ID:
-            return isValidDemandElementID(value);
         case SUMO_ATTR_DURATION:
         case SUMO_ATTR_UNTIL:
         case SUMO_ATTR_EXTENSION:
@@ -885,9 +882,6 @@ GNEPersonStop::getEndGeometryPositionOverLane() const {
 void
 GNEPersonStop::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
-        case SUMO_ATTR_ID:
-            myNet->getAttributeCarriers()->updateID(this, value);
-            break;
         case SUMO_ATTR_DURATION:
             if (value.empty()) {
                 parametersSet &= ~STOP_DURATION_SET;
@@ -974,12 +968,12 @@ GNEPersonStop::setAttribute(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_CONTAINER_STOP:
         case SUMO_ATTR_CHARGING_STATION:
         case SUMO_ATTR_PARKING_AREA:
-            replaceParentAdditional(this, value, 0);
+            replaceAdditionalParent(SUMO_TAG_BUS_STOP, value, 0);
             updateGeometry();
             break;
         // specific of Stops over lanes
         case SUMO_ATTR_LANE:
-            replaceParentLanes(this, value);
+            replaceDemandParentLanes(value);
             updateGeometry();
             break;
         case SUMO_ATTR_STARTPOS:

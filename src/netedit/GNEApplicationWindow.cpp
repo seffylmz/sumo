@@ -152,6 +152,8 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_Y_REDO,                         GNEApplicationWindow::onUpdRedo),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_G_GAMINGMODE_TOOGLEGRID,        GNEApplicationWindow::onCmdToogleGrid),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_G_GAMINGMODE_TOOGLEGRID,        GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_F11_FRONTELEMENT,                    GNEApplicationWindow::onCmdSetFrontElement),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_F11_FRONTELEMENT,                    GNEApplicationWindow::onUpdNeedsFrontElement),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBAREDIT_LOADADDITIONALS,            GNEApplicationWindow::onCmdLoadAdditionalsInSUMOGUI),
     FXMAPFUNC(SEL_UPDATE,   MID_GNE_TOOLBAREDIT_LOADADDITIONALS,            GNEApplicationWindow::onUpdNeedsNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBAREDIT_LOADDEMAND,                 GNEApplicationWindow::onCmdLoadDemandInSUMOGUI),
@@ -569,7 +571,7 @@ GNEApplicationWindow::onCmdOpenAdditionals(FXObject*, FXSelector, void*) {
         gCurrentFolder = opendialog.getDirectory();
         std::string file = opendialog.getFilename().text();
         // disable validation for additionals
-        XMLSubSys::setValidation("never", "auto");
+        XMLSubSys::setValidation("never", "auto", "auto");
         // Create additional handler
         GNEAdditionalHandler additionalHandler(file, myNet);
         // begin undoList operation
@@ -582,7 +584,7 @@ GNEApplicationWindow::onCmdOpenAdditionals(FXObject*, FXSelector, void*) {
         myUndoList->p_end();
         update();
         // restore validation for additionals
-        XMLSubSys::setValidation("auto", "auto");
+        XMLSubSys::setValidation("auto", "auto", "auto");
     } else {
         // write debug information
         WRITE_DEBUG("Cancel additional dialog");
@@ -646,7 +648,7 @@ GNEApplicationWindow::onCmdOpenDemandElements(FXObject*, FXSelector, void*) {
         gCurrentFolder = opendialog.getDirectory();
         std::string file = opendialog.getFilename().text();
         // disable validation for additionals
-        XMLSubSys::setValidation("never", "auto");
+        XMLSubSys::setValidation("never", "auto", "auto");
         // Create additional handler
         GNERouteHandler demandHandler(file, myNet);
         // begin undoList operation
@@ -659,7 +661,7 @@ GNEApplicationWindow::onCmdOpenDemandElements(FXObject*, FXSelector, void*) {
         myUndoList->p_end();
         update();
         // restore validation for demand
-        XMLSubSys::setValidation("auto", "auto");
+        XMLSubSys::setValidation("auto", "auto", "auto");
     } else {
         // write debug information
         WRITE_DEBUG("Cancel demand element dialog");
@@ -687,7 +689,7 @@ GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
         gCurrentFolder = opendialog.getDirectory();
         std::string file = opendialog.getFilename().text();
         // disable validation for additionals
-        XMLSubSys::setValidation("never", "auto");
+        XMLSubSys::setValidation("never", "auto", "auto");
         // Create additional handler
         GNEDataHandler dataHandler(file, myNet);
         // begin undoList operation
@@ -700,7 +702,7 @@ GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
         myUndoList->p_end();
         update();
         // restore validation for data
-        XMLSubSys::setValidation("auto", "auto");
+        XMLSubSys::setValidation("auto", "auto", "auto");
     } else {
         // write debug information
         WRITE_DEBUG("Cancel data element dialog");
@@ -794,7 +796,7 @@ GNEApplicationWindow::onCmdClearMsgWindow(FXObject*, FXSelector, void*) {
 long
 GNEApplicationWindow::onCmdLoadAdditionalsInSUMOGUI(FXObject*, FXSelector, void*) {
     // write warning if netedit is running in testing mode
-    WRITE_DEBUG("Toogle load additionals in SUMO-GUI");
+    WRITE_DEBUG("Toogle load additionals in sumo-gui");
     return 1;
 }
 
@@ -802,7 +804,7 @@ GNEApplicationWindow::onCmdLoadAdditionalsInSUMOGUI(FXObject*, FXSelector, void*
 long
 GNEApplicationWindow::onCmdLoadDemandInSUMOGUI(FXObject*, FXSelector, void*) {
     // write warning if netedit is running in testing mode
-    WRITE_DEBUG("Toogle load demand in SUMO-GUI");
+    WRITE_DEBUG("Toogle load demand in sumo-gui");
     return 1;
 }
 
@@ -921,13 +923,13 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             WRITE_MESSAGE("Loading additionals and shapes from '" + additionalFile + "'");
             GNEAdditionalHandler additionalHandler(additionalFile, myNet);
             // disable validation for additionals
-            XMLSubSys::setValidation("never", "auto");
+            XMLSubSys::setValidation("never", "auto", "auto");
             // Run parser
             if (!XMLSubSys::runParser(additionalHandler, additionalFile, false)) {
                 WRITE_ERROR("Loading of " + additionalFile + " failed.");
             }
             // disable validation for additionals
-            XMLSubSys::setValidation("auto", "auto");
+            XMLSubSys::setValidation("auto", "auto", "auto");
         }
 
         myUndoList->p_end();
@@ -943,12 +945,12 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             WRITE_MESSAGE("Loading demand elements from '" + demandElementsFile + "'");
             GNERouteHandler routeHandler(demandElementsFile, myNet);
             // disable validation for demand elements
-            XMLSubSys::setValidation("never", "auto");
+            XMLSubSys::setValidation("never", "auto", "auto");
             if (!XMLSubSys::runParser(routeHandler, demandElementsFile, false)) {
                 WRITE_ERROR("Loading of " + demandElementsFile + " failed.");
             }
             // disable validation for demand elements
-            XMLSubSys::setValidation("auto", "auto");
+            XMLSubSys::setValidation("auto", "auto", "auto");
         }
 
         myUndoList->p_end();
@@ -966,12 +968,12 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             WRITE_MESSAGE("Loading data elements from '" + dataElementsFile + "'");
             GNEDataHandler dataHandler(dataElementsFile, myNet);
             // disable validation for data elements
-            XMLSubSys::setValidation("never", "auto");
+            XMLSubSys::setValidation("never", "auto", "auto");
             if (!XMLSubSys::runParser(dataHandler, dataElementsFile, false)) {
                 WRITE_ERROR("Loading of " + dataElementsFile + " failed.");
             }
             // disable validation for data elements
-            XMLSubSys::setValidation("auto", "auto");
+            XMLSubSys::setValidation("auto", "auto", "auto");
         }
         // enable interval bar update
         myViewNet->getIntervalBar().enableIntervalBarUpdate();
@@ -1751,6 +1753,27 @@ GNEApplicationWindow::onCmdToogleGrid(FXObject* obj, FXSelector sel, void* ptr) 
 
 
 long
+GNEApplicationWindow::onCmdSetFrontElement(FXObject* /*obj*/, FXSelector /*sel*/, void* /*ptr*/) {
+    if (myViewNet) {
+        if (myViewNet->getViewParent()->getInspectorFrame()->shown()) {
+            // get inspected AC
+            const GNEAttributeCarrier* inspectedAC = (myViewNet->getInspectedAttributeCarriers().size() == 1) ? myViewNet->getInspectedAttributeCarriers().front() : nullptr;
+            // set or clear front attribute
+            if (myViewNet->getFrontAttributeCarrier() == inspectedAC) {
+                myViewNet->setFrontAttributeCarrier(nullptr);
+            } else {
+                myViewNet->setFrontAttributeCarrier(inspectedAC);
+            }
+            myViewNet->getViewParent()->getInspectorFrame()->getNeteditAttributesEditor()->refreshNeteditAttributesEditor(true);
+        } else {
+            myViewNet->setFrontAttributeCarrier(nullptr);
+        }
+    }
+    return 1;
+}
+
+
+long
 GNEApplicationWindow::onCmdToogleEditOptions(FXObject* obj, FXSelector sel, void* /* ptr */) {
     // first check that we have a ViewNet
     if (myViewNet) {
@@ -2019,7 +2042,24 @@ GNEApplicationWindow::onCmdSaveJoined(FXObject*, FXSelector, void*) {
 
 long
 GNEApplicationWindow::onUpdNeedsNetwork(FXObject* sender, FXSelector, void*) {
-    sender->handle(this, myNet == nullptr ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    // check if net exist
+    if (myNet) {
+        sender->handle(this, FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    } else {
+        sender->handle(this, FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onUpdNeedsFrontElement(FXObject* sender, FXSelector, void*) {
+    // check if net, viewnet and front attribute exist
+    if (myNet && myViewNet && myViewNet->getFrontAttributeCarrier()) {
+        sender->handle(this, FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    } else {
+        sender->handle(this, FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    }
     return 1;
 }
 

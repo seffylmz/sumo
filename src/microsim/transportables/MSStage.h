@@ -105,6 +105,11 @@ public:
     /// returns the angle of the transportable
     virtual double getAngle(SUMOTime now) const = 0;
 
+    /// Returns the current lane (if applicable)
+    virtual const MSLane* getLane() const {
+        return nullptr;
+    }
+
     ///
     MSStageType getStageType() const {
         return myType;
@@ -140,7 +145,7 @@ public:
     void setDeparted(SUMOTime now);
 
     /// logs end of the step
-    virtual const std::string setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now);
+    virtual const std::string setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now, const bool vehicleArrived);
 
     /// Whether the transportable waits for the given vehicle
     virtual bool isWaitingFor(const SUMOVehicle* vehicle) const;
@@ -185,13 +190,28 @@ public:
     virtual void tripInfoOutput(OutputDevice& os, const MSTransportable* const transportable) const = 0;
 
     /** @brief Called on writing vehroute output
+     * @param[in] isPerson Whether we are writing person or container info
      * @param[in] os The stream to write the information into
      * @param[in] withRouteLength whether route length shall be written
+     * @param[in] previous The previous stage for additional info such as from edge
      * @exception IOError not yet implemented
      */
-    virtual void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength) const = 0;
+    virtual void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength, const MSStage* const previous) const = 0;
 
     virtual MSStage* clone() const = 0;
+
+    /** @brief Saves the current state into the given stream, standard implementation does nothing
+     */
+    virtual void saveState(std::ostringstream& out) {
+        UNUSED_PARAMETER(out);
+    }
+
+    /** @brief Reconstructs the current state, standard implementation does nothing
+     */
+    virtual void loadState(MSTransportable* transportable, std::istringstream& state) {
+        UNUSED_PARAMETER(transportable);
+        UNUSED_PARAMETER(state);
+    }
 
 protected:
     /// the next edge to reach by getting transported
@@ -238,6 +258,7 @@ public:
                 const MSEdge* destination, MSStoppingPlace* toStop,
                 const SUMOTime duration, const SVCPermissions modeSet,
                 const std::string& vTypes, const double speed, const double walkFactor,
+                const std::string& group,
                 const double departPosLat, const bool hasArrivalPos, const double arrivalPos);
 
     /// destructor
@@ -270,7 +291,7 @@ public:
     std::string getStageSummary(const bool isPerson) const;
 
     /// logs end of the step
-    const std::string setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now);
+    const std::string setArrived(MSNet* net, MSTransportable* transportable, SUMOTime now, const bool vehicleArrived);
 
     /// change origin for parking area rerouting
     void setOrigin(const MSEdge* origin) {
@@ -295,10 +316,11 @@ public:
     * @param[in] os The stream to write the information into
     * @exception IOError not yet implemented
     */
-    void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength) const {
+    void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength, const MSStage* const previous) const {
         UNUSED_PARAMETER(isPerson);
         UNUSED_PARAMETER(os);
         UNUSED_PARAMETER(withRouteLength);
+        UNUSED_PARAMETER(previous);
     }
 
 private:
@@ -322,6 +344,9 @@ private:
 
     /// @brief The factor to apply to walking durations
     const double myWalkFactor;
+
+    /// @brief The group for this personTrip
+    std::string myGroup;
 
     /// @brief The depart position
     double myDepartPos;
@@ -391,11 +416,13 @@ public:
     void tripInfoOutput(OutputDevice& os, const MSTransportable* const transportable) const;
 
     /** @brief Called on writing vehroute output
-    *
-    * @param[in] os The stream to write the information into
-    * @exception IOError not yet implemented
-    */
-    void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength) const;
+     * @param[in] isPerson Whether we are writing person or container info
+     * @param[in] os The stream to write the information into
+     * @param[in] withRouteLength whether route length shall be written
+     * @param[in] previous The previous stage for additional info such as from edge
+     * @exception IOError not yet implemented
+     */
+    void routeOutput(const bool isPerson, OutputDevice& os, const bool withRouteLength, const MSStage* const previous) const;
 
 private:
     /// the time the person is waiting
@@ -440,6 +467,9 @@ public:
     /// Returns the current edge
     const MSEdge* getEdge() const;
 
+    /// Returns the current lane
+    const MSLane* getLane() const;
+
     /// Returns first edge of the containers route
     const MSEdge* getFromEdge() const;
 
@@ -469,6 +499,8 @@ public:
 
     /// @brief place transportable on a previously passed edge
     virtual void setRouteIndex(MSTransportable* const transportable, int routeOffset);
+
+    virtual void replaceRoute(MSTransportable* const transportable, const ConstMSEdgeVector& edges, int routeOffset);
 
     inline const std::vector<const MSEdge*>& getRoute() const {
         return myRoute;

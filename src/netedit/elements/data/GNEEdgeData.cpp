@@ -47,19 +47,18 @@
 
 GNEEdgeData::GNEEdgeData(GNEDataInterval* dataIntervalParent, GNEEdge* edgeParent, const std::map<std::string, std::string>& parameters) :
     GNEGenericData(SUMO_TAG_MEANDATA_EDGE, GLO_EDGEDATA, dataIntervalParent, parameters,
-        {}, {edgeParent}, {}, {}, {}, {}, {}, {},   // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}) {           // Children
+{}, {edgeParent}, {}, {}, {}, {}, {}, {}) {
 }
 
 
 GNEEdgeData::~GNEEdgeData() {}
 
 
-const RGBColor& 
+const RGBColor&
 GNEEdgeData::getColor() const {
     if (myNet->getViewNet()->getEditModes().dataEditMode == DataEditMode::DATA_EDGEDATA) {
         // get selected data interval and filtered attribute
-        const GNEDataInterval *dataInterval = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getIntervalSelector()->getDataInterval();
+        const GNEDataInterval* dataInterval = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getIntervalSelector()->getDataInterval();
         const std::string filteredAttribute = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getAttributeSelector()->getFilteredAttribute();
         // continue if there is a selected data interval and filtered attribute
         if (dataInterval && (filteredAttribute.size() > 0)) {
@@ -77,7 +76,7 @@ GNEEdgeData::getColor() const {
 }
 
 
-bool 
+bool
 GNEEdgeData::isGenericDataVisible() const {
     // first check if we're in supermode data
     if (!myNet->getViewNet()->getEditModes().isCurrentSupermodeData()) {
@@ -90,7 +89,7 @@ GNEEdgeData::isGenericDataVisible() const {
         return isVisibleInspectDeleteSelect();
     } else if (myDataIntervalParent->getNet()->getViewNet()->getViewParent()->getEdgeDataFrame()->shown()) {
         // get selected data interval and filtered attribute
-        const GNEDataInterval *dataInterval = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getIntervalSelector()->getDataInterval();
+        const GNEDataInterval* dataInterval = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getIntervalSelector()->getDataInterval();
         const std::string filteredAttribute = myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getAttributeSelector()->getFilteredAttribute();
         // check interval
         if ((dataInterval != nullptr) && (dataInterval != myDataIntervalParent)) {
@@ -156,13 +155,13 @@ GNEEdgeData::fixGenericDataProblem() {
 }
 
 
-void 
+void
 GNEEdgeData::drawGL(const GUIVisualizationSettings& /*s*/) const {
     // Nothing to draw
 }
 
 
-void 
+void
 GNEEdgeData::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lane, const double offsetFront) const {
     // get lane width
     const double laneWidth = s.addSize.getExaggeration(s, lane) * (lane->getParentEdge()->getNBEdge()->getLaneWidth(lane->getIndex()) * 0.5);
@@ -171,7 +170,7 @@ GNEEdgeData::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lan
     // Add a draw matrix
     glPushMatrix();
     // Start with the drawing of the area traslating matrix to origin
-    glTranslated(0, 0, getType() + offsetFront);
+    myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_EDGEDATA, offsetFront);
     // Set orange color
     GLHelper::setColor(RGBColor::BLACK);
     // draw box lines
@@ -195,8 +194,8 @@ GNEEdgeData::drawPartialGL(const GUIVisualizationSettings& s, const GNELane* lan
         drawFilteredAttribute(s, lane->getLaneShape(), myNet->getViewNet()->getViewParent()->getEdgeDataFrame()->getAttributeSelector()->getFilteredAttribute());
     }
     // check if shape dotted contour has to be drawn
-    if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
-        GNEGeometry::drawDottedContourEdge(s, lane->getParentEdge(), true, true);
+    if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
+        GNEGeometry::drawDottedContourEdge(GNEGeometry::DottedContourType::INSPECT, s, lane->getParentEdge(), true, true);
     }
 }
 

@@ -161,9 +161,8 @@ GNEPerson::GNESelectedPersonsPopupMenu::onCmdTransform(FXObject* obj, FXSelector
 
 GNEPerson::GNEPerson(SumoXMLTag tag, GNENet* net, GNEDemandElement* pType, const SUMOVehicleParameter& personparameters) :
     GNEDemandElement(personparameters.id, net, (tag == SUMO_TAG_PERSONFLOW) ? GLO_PERSONFLOW : GLO_PERSON, tag,
-        {}, {}, {}, {}, {}, {}, {pType}, {}, // parents
-        {}, {}, {}, {}, {}, {}, {}, {}),     // children
-    SUMOVehicleParameter(personparameters) {
+{}, {}, {}, {}, {}, {}, {pType}, {}),
+SUMOVehicleParameter(personparameters) {
     // set manually vtypeID (needed for saving)
     vtypeid = pType->getID();
 }
@@ -216,8 +215,8 @@ GNEPerson::writeDemandElement(OutputDevice& device) const {
         if (isAttributeEnabled(SUMO_ATTR_NUMBER)) {
             device.writeAttr(SUMO_ATTR_NUMBER, repetitionNumber);
         }
-        if (isAttributeEnabled(SUMO_ATTR_VEHSPERHOUR)) {
-            device.writeAttr(SUMO_ATTR_VEHSPERHOUR, 3600. / STEPS2TIME(repetitionOffset));
+        if (isAttributeEnabled(SUMO_ATTR_PERSONSPERHOUR)) {
+            device.writeAttr(SUMO_ATTR_PERSONSPERHOUR, 3600. / STEPS2TIME(repetitionOffset));
         }
         if (isAttributeEnabled(SUMO_ATTR_PERIOD)) {
             device.writeAttr(SUMO_ATTR_PERIOD, time2string(repetitionOffset));
@@ -418,8 +417,10 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
             glPushName(getGlID());
             // push draw matrix
             glPushMatrix();
+            // Start with the drawing of the area traslating matrix to origin
+            myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, getType());
             // translate and rotate
-            glTranslated(personPosition.x(), personPosition.y(), getType());
+            glTranslated(personPosition.x(), personPosition.y(), 0);
             glRotated(90, 0, 0, 1);
             // set person color
             setColor(s);
@@ -435,30 +436,36 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
             }
             // pop matrix
             glPopMatrix();
+            // pop name
+            glPopName();
+            // draw name
             drawName(personPosition, s.scale, s.personName, s.angle);
             if (s.personValue.show) {
                 Position personValuePosition = personPosition + Position(0, 0.6 * s.personName.scaledSize(s.scale));
                 const double value = getColorValue(s, s.personColorer.getActive());
                 GLHelper::drawTextSettings(s.personValue, toString(value), personValuePosition, s.scale, s.angle, GLO_MAX - getType());
             }
-            // check if dotted contour has to be drawn
-            if (s.drawDottedContour() || (myNet->getViewNet()->getInspectedAttributeCarrier() == this)) {
-                // GLHelper::drawShapeDottedContourRectangle(s, getType(), personPosition, exaggeration, exaggeration);
+            // check if dotted contours has to be drawn
+            if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
+                // draw using drawDottedSquaredShape
+                GNEGeometry::drawDottedSquaredShape(GNEGeometry::DottedContourType::INSPECT, s, personPosition, 0.5, 0.5, 0, 0, 0, exaggeration);
             }
-            // pop name
-            glPopName();
+            if (s.drawDottedContour() || myNet->getViewNet()->getFrontAttributeCarrier() == this) {
+                // draw using drawDottedSquaredShape
+                GNEGeometry::drawDottedSquaredShape(GNEGeometry::DottedContourType::FRONT, s, personPosition, 0.5, 0.5, 0, 0, 0, exaggeration);
+            }
         }
     }
 }
 
 
-void 
+void
 GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*lane*/, const double /*offsetFront*/) const {
     // Stops don't use drawPartialGL
 }
 
 
-void 
+void
 GNEPerson::drawPartialGL(const GUIVisualizationSettings& /*s*/, const GNELane* /*fromLane*/, const GNELane* /*toLane*/, const double /*offsetFront*/) const {
     // Stops don't use drawPartialGL
 }
@@ -493,7 +500,7 @@ GNEPerson::getAttribute(SumoXMLAttr key) const {
             return time2string(depart);
         case SUMO_ATTR_END:
             return time2string(repetitionEnd);
-        case SUMO_ATTR_VEHSPERHOUR:
+        case SUMO_ATTR_PERSONSPERHOUR:
             return toString(3600 / STEPS2TIME(repetitionOffset));
         case SUMO_ATTR_PERIOD:
             return time2string(repetitionOffset);
@@ -543,7 +550,7 @@ GNEPerson::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList* 
         case SUMO_ATTR_BEGIN:
         case SUMO_ATTR_END:
         case SUMO_ATTR_NUMBER:
-        case SUMO_ATTR_VEHSPERHOUR:
+        case SUMO_ATTR_PERSONSPERHOUR:
         case SUMO_ATTR_PERIOD:
         case SUMO_ATTR_PROB:
         //
@@ -605,7 +612,7 @@ GNEPerson::isValid(SumoXMLAttr key, const std::string& value) {
             } else {
                 return false;
             }
-        case SUMO_ATTR_VEHSPERHOUR:
+        case SUMO_ATTR_PERSONSPERHOUR:
             if (value.empty()) {
                 return true;
             } else if (canParse<double>(value)) {
@@ -670,7 +677,7 @@ GNEPerson::isAttributeEnabled(SumoXMLAttr key) const {
             return (parametersSet & VEHPARS_END_SET) != 0;
         case SUMO_ATTR_NUMBER:
             return (parametersSet & VEHPARS_NUMBER_SET) != 0;
-        case SUMO_ATTR_VEHSPERHOUR:
+        case SUMO_ATTR_PERSONSPERHOUR:
             return (parametersSet & VEHPARS_VPH_SET) != 0;
         case SUMO_ATTR_PERIOD:
             return (parametersSet & VEHPARS_PERIOD_SET) != 0;
@@ -693,17 +700,17 @@ GNEPerson::getHierarchyName() const {
     // special case for Trips and flow
     if ((myTagProperty.getTag() == SUMO_TAG_TRIP) || (myTagProperty.getTag() == SUMO_TAG_FLOW)) {
         // check if we're inspecting a Edge
-        if (myNet->getViewNet()->getInspectedAttributeCarrier() &&
-                myNet->getViewNet()->getInspectedAttributeCarrier()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
+        if (myNet->getViewNet()->getInspectedAttributeCarriers().front() &&
+                myNet->getViewNet()->getInspectedAttributeCarriers().front()->getTagProperty().getTag() == SUMO_TAG_EDGE) {
             // check if edge correspond to a "from", "to" or "via" edge
-            if (getParentEdges().front() == myNet->getViewNet()->getInspectedAttributeCarrier()) {
+            if (myNet->getViewNet()->isAttributeCarrierInspected(getParentEdges().front())) {
                 return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (from)";
-            } else if (getParentEdges().front() == myNet->getViewNet()->getInspectedAttributeCarrier()) {
+            } else if (myNet->getViewNet()->isAttributeCarrierInspected(getParentEdges().front())) {
                 return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (to)";
             } else {
                 // iterate over via
                 for (const auto& i : via) {
-                    if (i == myNet->getViewNet()->getInspectedAttributeCarrier()->getID()) {
+                    if (i == myNet->getViewNet()->getInspectedAttributeCarriers().front()->getID()) {
                         return getTagStr() + ": " + getAttribute(SUMO_ATTR_ID) + " (via)";
                     }
                 }
@@ -798,9 +805,13 @@ GNEPerson::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {
         case SUMO_ATTR_ID:
             myNet->getAttributeCarriers()->updateID(this, value);
+            // Change IDs of all person plans children
+            for (const auto& personPlans : getChildDemandElements()) {
+                personPlans->setMicrosimID(getID());
+            }
             break;
         case SUMO_ATTR_TYPE:
-            replaceParentDemandElement(this, value, 0);
+            replaceDemandElementParent(SUMO_TAG_PTYPE, value, 0);
             // set manually vtypeID (needed for saving)
             vtypeid = value;
             break;
@@ -832,22 +843,18 @@ GNEPerson::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         // Specific of persons
         case SUMO_ATTR_DEPART: {
-            std::string oldDepart = getBegin();
             parseDepart(value, toString(SUMO_TAG_VEHICLE), id, depart, departProcedure, error);
-            myNet->getAttributeCarriers()->updateDemandElementBegin(oldDepart, this);
             break;
         }
         // Specific of personFlows
         case SUMO_ATTR_BEGIN: {
-            std::string oldBegin = getBegin();
             depart = string2time(value);
-            myNet->getAttributeCarriers()->updateDemandElementBegin(oldBegin, this);
             break;
         }
         case SUMO_ATTR_END:
             repetitionEnd = string2time(value);
             break;
-        case SUMO_ATTR_VEHSPERHOUR:
+        case SUMO_ATTR_PERSONSPERHOUR:
             repetitionOffset = TIME2STEPS(3600 / parse<double>(value));
             break;
         case SUMO_ATTR_PERIOD:

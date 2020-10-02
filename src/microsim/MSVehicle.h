@@ -489,6 +489,14 @@ public:
     }
 
 
+    /** @brief Sets the influenced previous speed
+     * @param[in] A double value with the speed that overwrites the previous speed
+     */
+    void setPreviousSpeed(double prevspeed) {
+        myState.mySpeed = MAX2(0., prevspeed);
+    }
+
+
     /** @brief Returns the vehicle's acceleration in m/s
      *         (this is computed as the last step's mean acceleration in case that a stop occurs within the middle of the time-step)
      * @return The acceleration
@@ -736,7 +744,7 @@ public:
     /** Returns true if vehicle's speed is below 60km/h. This is only relevant
         on highways. Overtaking on the right is allowed then. */
     bool congested() const {
-        return myState.mySpeed < double(60) / double(3.6);
+        return myState.mySpeed < double(60.0) / double(3.6) || myLane->getSpeedLimit() < (60.1 / 3.6);
     }
 
 
@@ -1141,6 +1149,16 @@ public:
      * @return The leading vehicle together with the gap; (0, -1) if no leader was found.
      */
     std::pair<const MSVehicle* const, double> getLeader(double dist = 0) const;
+
+    /** @brief Returns the follower of the vehicle looking for a fixed distance.
+     *
+     * If the distance is not given it is set to the value of MSCFModel::brakeGap(2*roadSpeed, 4.5, 0)
+     * The gap returned does not include the minGap.
+     * If there are multiple followers, the one that maximizes the term (getSecureGap - gap) is returned.
+     * @param dist    up to which distance to look at least for a leader
+     * @return The leading vehicle together with the gap; (0, -1) if no leader was found.
+     */
+    std::pair<const MSVehicle* const, double> getFollower(double dist = 0) const;
 
     /** @brief Returns the time gap in seconds to the leader of the vehicle on the same lane.
      *
@@ -1788,6 +1806,11 @@ public:
     /** @brief Loads the state of this vehicle from the given description
      */
     void loadState(const SUMOSAXAttributes& attrs, const SUMOTime offset);
+
+    void loadPreviousApproaching(MSLink* link, bool setRequest,
+                                 SUMOTime arrivalTime, double arrivalSpeed,
+                                 SUMOTime arrivalTimeBraking, double arrivalSpeedBraking,
+                                 double dist, double leaveSpeed);
     //@}
 
 protected:

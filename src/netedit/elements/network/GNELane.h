@@ -63,11 +63,11 @@ public:
         // compute lane-marking intersection points)
         const double halfWidth2;
 
-        // Draw as a normal lane, and reduce width to make sure that a selected edge can still be seen
+        /// @brief Draw as a normal lane, and reduce width to make sure that a selected edge can still be seen
         const double halfWidth;
 
     private:
-        // default constructor
+        /// @brief default constructor
         LaneDrawingConstants();
 
         /// @brief Invalidated assignment operator.
@@ -84,6 +84,9 @@ public:
     /// @brief Destructor
     ~GNELane();
 
+    /// @brief get arent edge
+    GNEEdge* getParentEdge() const;
+
     /// @name Functions related with geometry of element
     /// @{
     /// @brief get elements shape
@@ -96,7 +99,7 @@ public:
     const std::vector<double>& getShapeLengths() const;
 
     /// @brief get dotted lane geometry
-    const GNEGeometry::DottedGeometry &getDottedLaneGeometry() const;
+    const GNEGeometry::DottedGeometry& getDottedLaneGeometry() const;
 
     /// @brief update pre-computed geometry information
     void updateGeometry();
@@ -105,8 +108,14 @@ public:
     Position getPositionInView() const;
     /// @}
 
-    /// @brief Returns underlying parent edge
-    GNEEdge* getParentEdge() const;
+    /// @name Functions related with move elements
+    /// @{
+    /// @brief get move operation for the given shapeOffset (can be nullptr)
+    GNEMoveOperation* getMoveOperation(const double shapeOffset);
+
+    /// @brief remove geometry point in the clicked position
+    void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList);
+    /// @}
 
     /// @brief returns a vector with the incoming GNEConnections of this lane
     std::vector<GNEConnection*> getGNEIncomingConnections();
@@ -119,15 +128,6 @@ public:
 
     /// @brief get length geometry factor
     double getLengthGeometryFactor() const;
-
-    /// @name functions for edit geometry
-    /// @{
-    /// @brief begin movement (used when user click over edge to start a movement, to avoid problems with problems with GL Tree)
-    void startGeometryMoving();
-
-    /// @brief begin movement (used when user click over edge to start a movement, to avoid problems with problems with GL Tree)
-    void endGeometryMoving();
-    /// @}
 
     /// @name inherited from GUIGlObject
     /// @{
@@ -147,12 +147,8 @@ public:
     /// @brief multiplexes message to two targets
     long onDefault(FXObject*, FXSelector, void*);
 
-    /**@brief Returns the boundary to which the view shall be centered in order to show the object
-     *
-     * @return The boundary the object is within
-     * @see GUIGlObject::getCenteringBoundary
-     */
-    Boundary getCenteringBoundary() const;
+    /// @brief update centering boundary (implies change in RTREE)
+    void updateCenteringBoundary(const bool updateGrid);
 
     /**@brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
@@ -252,7 +248,7 @@ protected:
     GNELane();
 
 private:
-    /// @brief The Edge that to which this lane belongs
+    /// @brief parent edge (GNELanes cannot use hierarchical structures)
     GNEEdge* myParentEdge;
 
     /// @brief The index of this lane
@@ -298,8 +294,26 @@ private:
     /// @brief set attribute after validation
     void setAttribute(SumoXMLAttr key, const std::string& value);
 
+    /// @brief set move shape
+    void setMoveShape(const GNEMoveResult& moveResult);
+
+    /// @brief commit move shape
+    void commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList);
+
+    /// @brief draw children
+    void drawChildren(const GUIVisualizationSettings& s) const;
+
+    /// @brief path additional elements
+    void drawPathAdditionalElements(const GUIVisualizationSettings& s) const;
+
+    /// @brief path demand elements
+    void drawPathDemandElements(const GUIVisualizationSettings& s) const;
+
+    /// @brief path generic data elements
+    void drawPathGenericDataElements(const GUIVisualizationSettings& s) const;
+
     /// @brief draw lane markings
-    void drawMarkings(const GUIVisualizationSettings& s, double scale) const;
+    void drawMarkings(const GUIVisualizationSettings& s, const double exaggeration, const bool drawRailway) const;
 
     /// @brief draw link Number
     void drawLinkNo(const GUIVisualizationSettings& s) const;
@@ -326,10 +340,13 @@ private:
     bool drawAsWaterway(const GUIVisualizationSettings& s) const;
 
     /// @brief direction indicators for lanes
-    void drawDirectionIndicators(double exaggeration, bool spreadSuperposed) const;
+    void drawDirectionIndicators(const GUIVisualizationSettings& s, double exaggeration, const bool drawAsRailway, const bool spreadSuperposed) const;
 
-    /// @brief draw VSS symbol
-    void drawVSSSymbol(const GUIVisualizationSettings& s, GNEAdditional* vss) const;
+    /// @brief draw lane as railway
+    void drawLaneAsRailway(const GUIVisualizationSettings& s, const LaneDrawingConstants& laneDrawingConstants) const;
+
+    /// @brief draw lane textures
+    void drawTextures(const GUIVisualizationSettings& s, const LaneDrawingConstants& laneDrawingConstants) const;
 
     /// @brief draw start and end shape points
     void drawStartEndShapePoints(const GUIVisualizationSettings& s) const;

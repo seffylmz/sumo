@@ -22,8 +22,6 @@
 /****************************************************************************/
 
 #include <netedit/elements/additional/GNEAdditional.h>
-#include <netedit/elements/additional/GNEShape.h>
-#include <netedit/elements/demand/GNEDemandElement.h>
 #include <netedit/dialogs/GNEDialogACChooser.h>
 #include <netedit/frames/common/GNEDeleteFrame.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
@@ -47,7 +45,6 @@
 #include <netedit/frames/network/GNEProhibitionFrame.h>
 #include <netedit/frames/network/GNETAZFrame.h>
 #include <netedit/frames/network/GNETLSEditorFrame.h>
-#include <netedit/elements/network/GNEEdge.h>
 #include <netedit/elements/network/GNEJunction.h>
 #include <utils/gui/div/GUIDesigns.h>
 #include <utils/gui/windows/GUIAppEnum.h>
@@ -98,8 +95,8 @@ GNEViewParent::GNEViewParent(FXMDIClient* p, FXMDIMenu* mdimenu, const FXString&
     new FXVerticalSeparator(myGripNavigationToolbar, GUIDesignVerticalSeparator);
 
     // Create undo/redo buttons
-    myUndoButton = new FXButton(myGripNavigationToolbar, "\tUndo\tUndo the last Change.", GUIIconSubSys::getIcon(GUIIcon::UNDO), parentWindow, MID_HOTKEY_CTRL_Z_UNDO, GUIDesignButtonToolbar);
-    myRedoButton = new FXButton(myGripNavigationToolbar, "\tRedo\tRedo the last Change.", GUIIconSubSys::getIcon(GUIIcon::REDO), parentWindow, MID_HOTKEY_CTRL_Y_REDO, GUIDesignButtonToolbar);
+    myUndoButton = new FXButton(myGripNavigationToolbar, "\tUndo\tUndo the last change. (Ctrl+Z)", GUIIconSubSys::getIcon(GUIIcon::UNDO), parentWindow, MID_HOTKEY_CTRL_Z_UNDO, GUIDesignButtonToolbar);
+    myRedoButton = new FXButton(myGripNavigationToolbar, "\tRedo\tRedo the last change. (Ctrl+Y)", GUIIconSubSys::getIcon(GUIIcon::REDO), parentWindow, MID_HOTKEY_CTRL_Y_REDO, GUIDesignButtonToolbar);
 
     // Create Frame Splitter
     myFramesSplitter = new FXSplitter(myContentFrame, this, MID_GNE_VIEWPARENT_FRAMEAREAWIDTH, GUIDesignSplitter | SPLITTER_HORIZONTAL);
@@ -312,10 +309,10 @@ GNEViewParent::getTAZRelDataFrame() const {
 
 void
 GNEViewParent::showFramesArea() {
-    const bool frameShown = myCommonFrames.isCommonFrameShown() || 
-        myNetworkFrames.isNetworkFrameShown() || 
-        myDemandFrames.isDemandFrameShown() || 
-        myDataFrames.isDataFrameShown();
+    const bool frameShown = myCommonFrames.isCommonFrameShown() ||
+                            myNetworkFrames.isNetworkFrameShown() ||
+                            myDemandFrames.isDemandFrameShown() ||
+                            myDataFrames.isDataFrameShown();
     // show and recalc framesArea if at least there is a frame shown
     if (frameShown) {
         myFramesArea->recalc();
@@ -326,10 +323,10 @@ GNEViewParent::showFramesArea() {
 
 void
 GNEViewParent::hideFramesArea() {
-    const bool frameShown = myCommonFrames.isCommonFrameShown() || 
-        myNetworkFrames.isNetworkFrameShown() || 
-        myDemandFrames.isDemandFrameShown() || 
-        myDataFrames.isDataFrameShown();
+    const bool frameShown = myCommonFrames.isCommonFrameShown() ||
+                            myNetworkFrames.isNetworkFrameShown() ||
+                            myDemandFrames.isDemandFrameShown() ||
+                            myDataFrames.isDataFrameShown();
     // hide and recalc frames Area if all frames are hidden is enabled
     if (!frameShown) {
         myFramesArea->hide();
@@ -678,7 +675,7 @@ GNEViewParent::CommonFrames::CommonFrames() :
 }
 
 
-void 
+void
 GNEViewParent::CommonFrames::buildCommonFrames(GNEViewParent* viewParent, GNEViewNet* viewNet) {
     inspectorFrame = new GNEInspectorFrame(viewParent->myFramesArea, viewNet);
     selectorFrame = new GNESelectorFrame(viewParent->myFramesArea, viewNet);
@@ -755,7 +752,7 @@ GNEViewParent::NetworkFrames::NetworkFrames() :
 }
 
 
-void 
+void
 GNEViewParent::NetworkFrames::buildNetworkFrames(GNEViewParent* viewParent, GNEViewNet* viewNet) {
     connectorFrame = new GNEConnectorFrame(viewParent->myFramesArea, viewNet);
     prohibitionFrame = new GNEProhibitionFrame(viewParent->myFramesArea, viewNet);
@@ -859,7 +856,7 @@ GNEViewParent::DemandFrames::DemandFrames() :
 }
 
 
-void 
+void
 GNEViewParent::DemandFrames::buildDemandFrames(GNEViewParent* viewParent, GNEViewNet* viewNet) {
     routeFrame = new GNERouteFrame(viewParent->myFramesArea, viewNet);
     vehicleFrame = new GNEVehicleFrame(viewParent->myFramesArea, viewNet);
@@ -952,7 +949,7 @@ GNEViewParent::DataFrames::DataFrames() :
 }
 
 
-void 
+void
 GNEViewParent::DataFrames::buildDataFrames(GNEViewParent* viewParent, GNEViewNet* viewNet) {
     edgeDataFrame = new GNEEdgeDataFrame(viewParent->myFramesArea, viewNet);
     edgeRelDataFrame = new GNEEdgeRelDataFrame(viewParent->myFramesArea, viewNet);

@@ -34,7 +34,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_TAZElement, GNEChange, nullptr, 0)
 // ===========================================================================
 
 GNEChange_TAZElement::GNEChange_TAZElement(GNETAZElement* TAZElement, bool forward) :
-    GNEChange(TAZElement, TAZElement, forward, TAZElement->isAttributeCarrierSelected()),
+    GNEChange(TAZElement, forward, TAZElement->isAttributeCarrierSelected()),
     myTAZElement(TAZElement) {
     myTAZElement->incRef("GNEChange_TAZElement");
 }
@@ -49,8 +49,6 @@ GNEChange_TAZElement::~GNEChange_TAZElement() {
             WRITE_DEBUG("Removing " + myTAZElement->getTagStr() + " '" + myTAZElement->getID() + "' from net in ~GNEChange_TAZElement()");
             // remove TAZElement from AttributeCarreirs
             myTAZElement->getNet()->getAttributeCarriers()->deleteTAZElement(myTAZElement);
-            // Remove element from parents and children
-            removeElementFromParentsAndChildren(myTAZElement);
         }
         // show extra information for tests
         WRITE_DEBUG("delete " + myTAZElement->getTagStr() + " '" + myTAZElement->getID() + "' in ~GNEChange_TAZElement()");
@@ -70,8 +68,8 @@ GNEChange_TAZElement::undo() {
         }
         // remove TAZElement from net
         myTAZElement->getNet()->getAttributeCarriers()->deleteTAZElement(myTAZElement);
-        // Remove element from parents and children
-        removeElementFromParentsAndChildren(myTAZElement);
+        // restore container
+        restoreHierarchicalContainers();
     } else {
         // show extra information for tests
         WRITE_DEBUG("Adding " + myTAZElement->getTagStr() + " '" + myTAZElement->getID() + "' into viewNet");
@@ -81,8 +79,8 @@ GNEChange_TAZElement::undo() {
         }
         // Add TAZElement in net
         myTAZElement->getNet()->getAttributeCarriers()->insertTAZElement(myTAZElement);
-        // Add element in parents and children
-        addElementInParentsAndChildren(myTAZElement);
+        // restore container
+        restoreHierarchicalContainers();
     }
 }
 

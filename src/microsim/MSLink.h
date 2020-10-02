@@ -71,7 +71,7 @@ public:
     static const double ZIPPER_ADAPT_DIST;
 
     struct LinkLeader {
-        LinkLeader(MSVehicle* _veh, double _gap, double _distToCrossing, bool _fromLeft = true, bool _inTheWay=false) :
+        LinkLeader(MSVehicle* _veh, double _gap, double _distToCrossing, bool _fromLeft = true, bool _inTheWay = false) :
             vehAndGap(std::make_pair(_veh, _gap)),
             distToCrossing(_distToCrossing),
             fromLeft(_fromLeft),
@@ -137,7 +137,7 @@ public:
 
     private:
         /// invalidated assignment operator
-        ApproachingVehicleInformation& operator=(const ApproachingVehicleInformation& s);
+        ApproachingVehicleInformation& operator=(const ApproachingVehicleInformation& s) = delete;
 
     };
 
@@ -216,7 +216,7 @@ public:
     }
 
     /** @brief Remove all approaching vehicles before quick-loading state */
-    void clearState(); 
+    void clearState();
 
     /** @brief Returns the information whether the link may be passed
      *
@@ -309,7 +309,10 @@ public:
      *
      * @return The direction of this link
      */
-    LinkDirection getDirection() const;
+    inline LinkDirection getDirection() const {
+        return myDirection;
+    }
+
 
 
     /** @brief Sets the current tl-state
@@ -324,7 +327,9 @@ public:
      *
      * @return The lane approached by this link
      */
-    MSLane* getLane() const;
+    inline MSLane* getLane() const {
+        return myLane;
+    }
 
 
     /** @brief Returns the respond index (for visualization)
@@ -444,7 +449,9 @@ public:
      *
      * @return The inner lane to use to cross the junction
      */
-    MSLane* getViaLane() const;
+    inline MSLane* getViaLane() const {
+        return myInternalLane;
+    }
 
     /** @brief Returns all potential link leaders (vehicles on foeLanes)
      * Valid during the planMove() phase
@@ -454,10 +461,7 @@ public:
      * @param[in] isShadowLink whether this link is a shadowLink for ego
      * @return The all vehicles on foeLanes and their (virtual) distances to the asking vehicle
      */
-    LinkLeaders getLeaderInfo(const MSVehicle* ego, double dist, std::vector<const MSPerson*>* collectBlockers = 0, bool isShadowLink = false) const;
-
-    /// @brief check for persons on walkingarea in the path of ego vehicle
-    void checkWalkingAreaFoe(const MSVehicle* ego, const MSLane* foeLane, std::vector<const MSPerson*>* collectBlockers, LinkLeaders& result) const;
+    const LinkLeaders getLeaderInfo(const MSVehicle* ego, double dist, std::vector<const MSPerson*>* collectBlockers = 0, bool isShadowLink = false) const;
 
     /// @brief return the speed at which ego vehicle must approach the zipper link
     double getZipperSpeed(const MSVehicle* ego, const double dist, double vSafe,
@@ -465,13 +469,21 @@ public:
                           BlockingFoes* collectFoes) const;
 
     /// @brief return the via lane if it exists and the lane otherwise
-    MSLane* getViaLaneOrLane() const;
+    inline MSLane* getViaLaneOrLane() const {
+        return  myInternalLane != nullptr ? myInternalLane : myLane;
+    }
+
 
     /// @brief return the internalLaneBefore if it exists and the laneBefore otherwise
-    const MSLane* getLaneBefore() const;
+    inline const MSLane* getLaneBefore() const {
+        assert (myInternalLaneBefore == nullptr || myLaneBefore == myInternalLaneBefore); // lane before mismatch!
+        return myLaneBefore;
+    }
 
     /// @brief return myInternalLaneBefore (always 0 when compiled without internal lanes)
-    const MSLane* getInternalLaneBefore() const;
+    inline const MSLane* getInternalLaneBefore() const {
+        return myInternalLaneBefore;
+    }
 
     /// @brief return the expected time at which the given vehicle will clear the link
     SUMOTime getLeaveTime(const SUMOTime arrivalTime, const double arrivalSpeed, const double leaveSpeed, const double vehicleLength) const;
@@ -483,7 +495,9 @@ public:
     MSLink* getParallelLink(int direction) const;
 
     /// @brief return whether the fromLane of this link is an internal lane
-    bool fromInternalLane() const;
+    inline bool fromInternalLane() const {
+        return myInternalLaneBefore != nullptr;
+    }
 
     /// @brief return whether the toLane of this link is an internal lane and fromLane is a normal lane
     bool isEntryLink() const;
@@ -539,7 +553,7 @@ public:
     void initParallelLinks();
 
     /// @brief return lateral shift that must be applied when passing this link
-    double getLateralShift() {
+    inline double getLateralShift() const {
         return myLateralShift;
     }
 
@@ -557,6 +571,9 @@ private:
     static bool couldBrakeForLeader(double followDist, double leaderDist, const MSVehicle* follow, const MSVehicle* leader);
 
     MSLink* computeParallelLink(int direction);
+
+    /// @brief check for persons on walkingarea in the path of ego vehicle
+    void checkWalkingAreaFoe(const MSVehicle* ego, const MSLane* foeLane, std::vector<const MSPerson*>* collectBlockers, LinkLeaders& result) const;
 
     bool blockedByFoe(const SUMOVehicle* veh, const ApproachingVehicleInformation& avi,
                       SUMOTime arrivalTime, SUMOTime leaveTime, double arrivalSpeed, double leaveSpeed,

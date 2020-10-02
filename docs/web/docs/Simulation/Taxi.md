@@ -70,7 +70,9 @@ algorithms are available
   travel time) is assigned. If the reservation date is too far in the future,
   the customer is postponed.
 
-- greedyShared: like 'greed' but tries to pick up another passenger while delivering the first passenger to it's destination. The algorithm supports parameters **absLossThreshold** and **relLossThreshold** to configure acceptable detours.
+- greedyShared: like 'greedy' but tries to pick up another passenger while delivering the first passenger to it's destination. The algorithm supports parameters **absLossThreshold** and **relLossThreshold** to configure acceptable detours.
+
+- routeExtension: like greedy but can pick up any passenger along the route and also extend the original route (within personCapacity limit).
 
 - traci: Dispatch is defered to [traci control](#traci). The algorithm only keeps track of pending reservations
 
@@ -81,7 +83,7 @@ algorithms are available
 To make a taxi stay in the simulation it receives a stop with attribute ```triggered="person"``` after servicing a customer.
 It is recommended to also define such a stop in the xml input so that the taxi can wait for the first customer.
 
-By default, taxis will remain in the simulation until all persons have left. To make them leave the simulation at an erliert time, the end time can be defined using a generic parameter in their ```vType``` or ```vehicle```-definition:
+By default, taxis will remain in the simulation until all persons have left. To make them leave the simulation at an earlier time, the end time can be defined using a generic parameter in their ```vType``` or ```vehicle```-definition:
 
 ```
     <vType id="taxi" vClass="taxi">
@@ -93,9 +95,18 @@ By default, taxis will remain in the simulation until all persons have left. To 
 # TraCI
 To couple an external dispatch algorithm to SUMO, the following [TraCI](../TraCI.md) functions are provided:
 
+!!! note
+    To make use of these functions, the option **--device.taxi.dispatch-algorithm traci** must be set
+
 - traci.person.getTaxiReservations(onlyNew)
 - traci.vehicle.getTaxiFleet(taxiState)
 - traci.vehicle.dispatchTaxi(vehID, reservations)
+
+This set of API calls can be used to simplify writing custom dispatch algorithms by letting sumo:
+
+- manage existing reservations
+- manage the taxi fleet
+- dispatch a taxi to service one or more reservations by giving a list of reservation ids (vehicle routing and stopping is then automatic).
 
 # Outputs
 

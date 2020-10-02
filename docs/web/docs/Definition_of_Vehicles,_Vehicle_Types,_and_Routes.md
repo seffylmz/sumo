@@ -78,6 +78,7 @@ A vehicle may be defined using the following attributes:
 | departLane      | int/string (≥0, "random", "free", "allowed", "best", "first")                 | The lane on which the vehicle shall be inserted; see [\#departLane](#departlane). *default: "first"*                                                                                                                                                  |
 | departPos       | float(m)/string ("random", "free", "random_free", "base", "last", "stop")            | The position at which the vehicle shall enter the net; see [\#departPos](#departpos). *default: "base"*                                                                                                                                               |
 | departSpeed     | float(m/s)/string (≥0, "random", "max", "desired", "speedLimit")              | The speed with which the vehicle shall enter the network; see [\#departSpeed](#departspeed). *default: 0*                                                                                                                                             |
+| departEdge     | int (index from \[0, routeLength\[ or "random"    | The initial edge along the route where the vehicle should enter the network (only supported if a complete route is defined); see [\#departEdge](#departEdge). *default: 0*                                                                                                                                             |
 | arrivalLane     | int/string (≥0,"current")                                                     | The lane at which the vehicle shall leave the network; see [\#arrivalLane](#arrivallane). *default: "current"*                                                                                                                                        |
 | arrivalPos      | float(m)/string (≥0<sup>(1)</sup>, "random", "max")                           | The position at which the vehicle shall leave the network; see [\#arrivalPos](#arrivalpos). *default: "max"*                                                                                                                                          |
 | arrivalSpeed    | float(m/s)/string (≥0,"current")                                              | The speed with which the vehicle shall leave the network; see [\#arrivalSpeed](#arrivalspeed). *default: "current"*                                                                                                                                   |
@@ -189,7 +190,7 @@ routing in this case see
 
 [For supported attributes for flows and trips see here.](Demand/Shortest_or_Optimal_Path_Routing.md)
 
-### Traffic assignement zones (TAZ)
+### Traffic assignment zones (TAZ)
 
 It is also possible to let vehicles depart and arrive at [traffic assignment zones (TAZ)](Demand/Importing_O/D_Matrices.md#describing_the_taz).
 This allows the departure and arrival edges to be selected from a
@@ -299,6 +300,16 @@ vehicle.
 - "`desired`": The maxSpeed is used. If that speed is unsafe, departure is delayed.
 - "`speedLimit`": The speed limit of the lane is used. If that speed is unsafe, departure is delayed.
 
+### departEdge
+
+Determines the edge along the vehicles route where the vehicle enters the network (By default this is 0: the first edge).
+
+- integer index `≥0` and `<routeLength`: The vehicle is inserted at the given index
+- "`random`": A random index along the route is usedd. If that speed is unsafe, departure is delayed.
+
+!!! note
+    The attribute `departEdge` is ignored if the vehicle or flow  does not use attribute `route` and does not define the child element `<route>`
+    
 ### arrivalLane
 
 Determines the speed at which the vehicle should end its route;
@@ -312,7 +323,7 @@ it's route on the specified lane
 ### arrivalPos
 
 Determines the position along the destination edge where the vehicle is
-conisdered to have arrived;
+considered to have arrived;
 
 - "`max`": the vehicle will drive up to the
   end of its final lane. *(default behavior)*
@@ -367,7 +378,7 @@ when driving through a city.
 
 The default car following model is based on the work of Krauß but other
 models can be selected as well. Model selection and parameterization is
-done by setting further `vType`-attribures as shown below. The models and their
+done by setting further `vType`-attributes as shown below. The models and their
 parameters are described in the following.
 
 ```
@@ -386,7 +397,7 @@ These values have the following meanings:
 | accel             | float                             | 2.6                                                                 | The acceleration ability of vehicles of this type (in m/s^2)                                                                                                                                                           |
 | decel             | float                             | 4.5                                                                 | The deceleration ability of vehicles of this type (in m/s^2)                                                                                                                                                           |
 | apparentDecel     | float                             | `==decel`                                                           | The apparent deceleration of the vehicle as used by the standard model (in m/s^2). The follower uses this value as expected maximal deceleration of the leader.                                                        |
-| emergencyDecel    | float                             | `==decel`                                                           | The maximal physically possible deceleration for the vehicle (in m/s^2).                                                                                                                                               |
+| emergencyDecel    | float                             | 9.0                                                                 | The maximal physically possible deceleration for the vehicle (in m/s^2).                                                                                                                                               |
 | sigma             | float                             | 0.5                                                                 | [Car-following model](#car-following_models) parameter, see below                                                                                          |
 | tau               | float                             | 1.0                                                                 | [Car-following model](#car-following_models) parameter, see below                                                                                          |
 | length            | float                             | 5.0                                                                 | The vehicle's **netto**-length (length) (in m)                                                                                                                                                                         |
@@ -412,7 +423,7 @@ These values have the following meanings:
 | latAlignment      | string                            | *center*                                                            | The preferred lateral alignment when using the [sublane-model](Simulation/SublaneModel.md). One of (*left, right, center, compact, nice, arbitrary*).                                                          |
 | minGapLat         | float                             | 0.6                                                                 | The desired minimum lateral gap when using the [sublane-model](Simulation/SublaneModel.md)                                                                                                                     |
 | maxSpeedLat       | float                             | 1.0                                                                 | The maximum lateral speed when using the [sublane-model](Simulation/SublaneModel.md)                                                                                                                           |
-| actionStepLength  | float                             | global default (defaults to the simulation step, configurable via **--default.action-step-length**) | The interval length for which vehicle performs its decision logic (acceleration and lane-changing). The given value is processed to the closest (if possible smaller) positive multiple of the simulation step length. |
+| actionStepLength  | float                             | global default (defaults to the simulation step, configurable via **--default.action-step-length**) | The interval length for which vehicle performs its decision logic (acceleration and lane-changing). The given value is processed to the closest (if possible smaller) positive multiple of the simulation step length. See [actionStepLength details](Car-Following-Models.md#actionsteplength)|
 
 Besides values which describe the vehicle's car-following properties,
 one can find definitions of the assigned vehicles' shapes, emissions,
@@ -491,6 +502,17 @@ values for **speedFactor** and **speedDev**. In this case
 deviation. When using this style, capping cannot be controlled and will
 always default to 20% and 200%. Thus the above example can also be
 defined as **speedFactor**="1" **speedDev**="0.1".
+
+### Different distributions for cars and trucks
+The center of the speed distribution is defined relative to the road speed limit. On some roads, different speed limits may apply to cars and trucks.
+To model this, [vClass-specific speed limits may be defined either in the network](Networks/PlainXML.md#vehicle-class_specific_speed_limits) or directly in an additional file:
+
+Note, that the given type id refers to an edge type rather than a vehicle type. The edge type may be [set to an arbitrary value in the network file](netedit.md#inspect).
+```
+<type id="a" priority="3" numLanes="3" speed="38.89"/>
+   <restriction vClass="truck" speed="27.89"/>
+</type>
+```
 
 ### Additional remarks on speed distributions
 
@@ -794,6 +816,9 @@ The parameters are set within the `<vType>`:
 <vType id="myType" lcStrategic="0.5" lcCooperative="0.0"/>
 ```
 
+!!! note
+    parameter 'lcMaxSpeedLatStanding' will not be applied when a vehicle is at the end of its lane (to ensure that there are no deadlocks).
+
 ## Junction Model Parameters
 
 The behavior at intersections may be configured with the parameters
@@ -809,6 +834,7 @@ listed below.
 | jmIgnoreFoeProb        | float                                | 0          | This value causes vehicles to ignore foe vehicles that have right-of-way with the given probability. The check is performed anew every simulation step. (range \[0,1\]).                                                                                                                                                                                                                                                                    |
 | jmIgnoreFoeSpeed       | float (m/s)                          | 0          | This value is used in conjunction with *jmIgnoreFoeProb*. Only vehicles with a speed below or equal to the given value may be ignored.                                                                                                                                                                                                                                                                                                      |
 | jmSigmaMinor           | float, scaling factor (like *sigma*) | sigma      | This value configures driving imperfection (dawdling) while passing a minor link (ahead of the intersection after having comitted to drive and while still on the intersection).                                                                                                                                                                                                                                                            |
+| jmStoplineGap          | float \>= 0 (m)                      | 1          | This value configures stopping distance in front of prioritary / TL-controlled stop line. In case the stop line has been relocated by a [**stopOffset**](Networks/SUMO_Road_Networks.md#stop_offsets) item, the maximum of both distances is applied.                                                                                                                                                                                       |
 | jmTimegapMinor         | float s                              | 1          | This value defines the minimum time gap when passing ahead of a prioritized vehicle.                                                                                                                                                                                                                                                                                                                                                        |
 | impatience             | float or 'off'                       | 0.0        | Willingess of drivers to impede vehicles with higher priority. See below for semantics.  |
 
@@ -960,7 +986,7 @@ Stops can be childs of vehicles, routes, persons or containers.
 | actType            | string            | arbitrary                                                                                    | 'waiting'          | activity displayed for stopped person in GUI and output files (only applies to person simulation)                      |
 | tripId             | string            | arbitrary                                                                                    |                    | parameter to be applied to the vehicle to track the trip id within a cyclical public transport route                   |
 | line               | string            | arbitrary                                                                                    |                    | new line attribute to be set on the vehicle when reaching this stop (for cyclical public transport route)  |
-| speed              | float            | positive | - | speed to be kept while driving between startPos and endPos |
+| speed              | float            | positive | - | speed to be kept while driving between startPos and endPos. This turns the stop into a waypoint. |
 
 - If "duration" *and* "until" are given, the vehicle will stop for at least "duration" seconds.
 - If "duration" is 0 the vehicle will decelerate to reach velocity 0 and then start to accelerate again.
@@ -982,6 +1008,9 @@ Stops can be childs of vehicles, routes, persons or containers.
 - if the vehicle comes to a halt earlier (i.e. due to a jam) then the stop counts as reached if the vehicle front is between startPos and endPos
 - if the vehicle picks up a person or container, it can do so as long as the person is between startPos and endPos
 - if the stop uses attribute 'speed', than that speed will be maintained between startPos and endPos
+
+## Waypoints
+By defining attribute 'speed' with a positive value, the stop definition is turned into a waypoint. The vehicle will drive past the given lane and keep the defined speed while between startPos end endPos. The 'duration' and 'until' values are ignored.
 
 # Colors
 
@@ -1029,7 +1058,8 @@ placeholder `<DEVICENAME>` below
 - [driverstate](Driver_State.md)
 - [fcd](Simulation/Output/FCDOutput.md)
 - [tripinfo](Simulation/Output/TripInfo.md)
-- [Demand Responsive Transport (Taxis)](Simulation/Taxi.md)
+- [vehroute](Simulation/Output/VehRoutes.md)
+- [taxi](Simulation/Taxi.md)
 - [example](Developer/How_To/Device.md)
 
 ## Automatic assignment

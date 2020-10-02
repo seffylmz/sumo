@@ -42,7 +42,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_Edge, GNEChange, nullptr, 0)
 
 /// @brief constructor for creating an edge
 GNEChange_Edge::GNEChange_Edge(GNEEdge* edge, bool forward):
-    GNEChange(edge, edge, forward, edge->isAttributeCarrierSelected()),
+    GNEChange(edge, forward, edge->isAttributeCarrierSelected()),
     myEdge(edge) {
     edge->incRef("GNEChange_Edge");
     // save all hierarchical elements of edge's lane
@@ -64,10 +64,6 @@ GNEChange_Edge::~GNEChange_Edge() {
     if (myEdge->unreferenced()) {
         // show extra information for tests
         WRITE_DEBUG("Deleting unreferenced " + myEdge->getTagStr() + " '" + myEdge->getID() + "' GNEChange_Edge");
-        // remove edge from parents and children
-        removeElementFromParentsAndChildren(myEdge);
-        // remove edge lanes from parents and children
-        removeEdgeLanes();
         // delete edge
         delete myEdge;
     }
@@ -83,8 +79,8 @@ GNEChange_Edge::undo() {
         if (mySelectedElement) {
             myEdge->unselectAttributeCarrier();
         }
-        // remove edge from parents and children
-        removeElementFromParentsAndChildren(myEdge);
+        // restore container
+        restoreHierarchicalContainers();
         // remove edge lanes from parents and children
         removeEdgeLanes();
         // delete edge from net
@@ -98,8 +94,8 @@ GNEChange_Edge::undo() {
         }
         // insert edge into net
         myEdge->getNet()->getAttributeCarriers()->insertEdge(myEdge);
-        // add edge into parents and children
-        addElementInParentsAndChildren(myEdge);
+        // restore container
+        restoreHierarchicalContainers();
         // add edge lanes into parents and children
         addEdgeLanes();
     }

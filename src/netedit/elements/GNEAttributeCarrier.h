@@ -20,13 +20,8 @@
 #pragma once
 #include <config.h>
 
-#include <netedit/GNEGeometry.h>
+#include <fx.h>
 #include <netedit/GNEReferenceCounter.h>
-#include <utils/common/MsgHandler.h>
-#include <utils/common/Parameterised.h>
-#include <utils/common/ToString.h>
-#include <utils/common/UtilExceptions.h>
-#include <utils/gui/settings/GUIVisualizationSettings.h>
 
 #include "GNETagProperties.h"
 
@@ -36,6 +31,8 @@
 // ===========================================================================
 class GNENet;
 class GNEUndoList;
+class GUIGlObject;
+class GNEHierarchicalElement;
 class GNELane;
 class GNEEdge;
 
@@ -58,7 +55,6 @@ public:
 
     /**@brief Constructor
      * @param[in] tag SUMO Tag assigned to this type of object
-     * @param[in] icon GUIIcon associated to the type of object
      * @param[in] net GNENet in which this AttributeCarrier is stored
      */
     GNEAttributeCarrier(const SumoXMLTag tag, GNENet* net);
@@ -186,10 +182,7 @@ public:
     static std::vector<SumoXMLTag> allowedTags(const bool onlyDrawables);
 
     /// @brief get tags of all editable element types using TagProperty Type (NetworkEditMode::NETWORKELEMENT, ADDITIONALELEMENT, etc.)
-    static std::vector<SumoXMLTag> allowedTagsByCategory(const int tagPropertyCategory, const bool onlyDrawables);
-
-    /// @brief get tags of all editable element types in string format using TagProperty Type (NetworkEditMode::NETWORKELEMENT, ADDITIONALELEMENT, etc.)
-    static std::vector<std::string> allowedTagsByCategoryStr(const int tagPropertyCategory, const bool onlyDrawables);
+    static std::vector<std::pair<SumoXMLTag, const std::string> > getAllowedTagsByCategory(const int tagPropertyCategory, const bool onlyDrawables);
 
     /// @brief true if a value of type T can be parsed from string
     template<typename T>
@@ -396,6 +389,39 @@ private:
     /// @brief fill person plan rides
     static void fillPersonPlanRides();
 
+    /// @brief fill person plan edge -> edge
+    static void fillPersonPlanEdgeEdge(SumoXMLTag currentTag);
+
+    /// @brief fill person plan edge -> edge
+    static void fillPersonPlanEdgeBusStop(SumoXMLTag currentTag);
+
+    /// @brief fill person plan edge -> stop
+    static void fillPersonPlanEdgeStop(SumoXMLTag currentTag);
+
+    /// @brief fill person plan busStop -> edge
+    static void fillPersonPlanBusStopEdge(SumoXMLTag currentTag);
+
+    /// @brief fill person plan busStop -> edge
+    static void fillPersonPlanBusStopBusStop(SumoXMLTag currentTag);
+
+    /// @brief fill person plan busStop -> stop
+    static void fillPersonPlanBusStopStop(SumoXMLTag currentTag);
+
+    /// @brief fill person plan stop -> edge
+    static void fillPersonPlanStopEdge(SumoXMLTag currentTag);
+
+    /// @brief fill person plan stop -> edge
+    static void fillPersonPlanStopBusStop(SumoXMLTag currentTag);
+
+    /// @brief fill person plan stop -> stop
+    static void fillPersonPlanStopStop(SumoXMLTag currentTag);
+
+    /// @brief fill specific person trip attributes
+    static void fillPersonTripAttributes(SumoXMLTag currentTag);
+
+    /// @brief fill specific ride attributes
+    static void fillRideAttributes(SumoXMLTag currentTag);
+
     /// @brief fill personStop elements
     static void fillPersonStopElements();
 
@@ -403,7 +429,7 @@ private:
     static void fillCommonVehicleAttributes(SumoXMLTag currentTag);
 
     /// @brief fill common flow attributes (used by flows, routeFlows and personFlows)
-    static void fillCommonFlowAttributes(SumoXMLTag currentTag);
+    static void fillCommonFlowAttributes(SumoXMLTag currentTag, const bool forVehicles);
 
     /// @brief fill Car Following Model of Vehicle/Person Types
     static void fillCarFollowingModelAttributes(SumoXMLTag currentTag);
@@ -418,7 +444,7 @@ private:
     static void fillCommonPersonAttributes(SumoXMLTag currentTag);
 
     /// @brief fill stop person attributes (used by stops and personStps)
-    static void fillCommonStopAttributes(SumoXMLTag currentTag);
+    static void fillCommonStopAttributes(SumoXMLTag currentTag, const bool parking);
 
     /// @brief fill Data elements
     static void fillDataElements();

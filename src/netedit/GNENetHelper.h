@@ -201,19 +201,11 @@ struct GNENetHelper {
         /// @brief get demand elements
         const std::map<SumoXMLTag, std::map<std::string, GNEDemandElement*> >& getDemandElements() const;
 
-        /// @brief get vehicle departures
-        const std::map<std::string, GNEDemandElement*>& getVehicleDepartures() const;
-
         /// @brief clear demand elements
         void clearDemandElements();
 
         /// @brief add default VTypes
         void addDefaultVTypes();
-
-        /**@brief update demand element begin in container
-         * @note this function is automatically called when user changes the begin/departure of an demand element
-         */
-        void updateDemandElementBegin(const std::string& oldBegin, GNEDemandElement* demandElement);
 
         /// @}
 
@@ -265,7 +257,7 @@ struct GNENetHelper {
         /// @{
 
         /// @brief return true if given additional exist
-        bool additionalExist(GNEAdditional* additional) const;
+        bool additionalExist(const GNEAdditional* additional) const;
 
         /**@brief Insert a additional element int GNENet container.
          * @throw processError if route was already inserted
@@ -275,7 +267,7 @@ struct GNENetHelper {
         /**@brief delete additional element of GNENet container
          * @throw processError if additional wasn't previously inserted
          */
-        bool deleteAdditional(GNEAdditional* additional);
+        void deleteAdditional(GNEAdditional* additional);
 
         /// @brief update additional ID in container
         void updateAdditionalID(GNEAttributeCarrier* AC, const std::string& newID);
@@ -286,7 +278,7 @@ struct GNENetHelper {
         /// @{
 
         /// @brief return true if given shape exist
-        bool shapeExist(GNEShape* shape) const;
+        bool shapeExist(const GNEShape* shape) const;
 
         /**@brief Insert a shape element int GNENet container.
          * @throw processError if route was already inserted
@@ -296,7 +288,7 @@ struct GNENetHelper {
         /**@brief delete shape element of GNENet container
          * @throw processError if shape wasn't previously inserted
          */
-        bool deleteShape(GNEShape* shape);
+        void deleteShape(GNEShape* shape);
 
         /// @brief update shape ID in container
         void updateShapeID(GNEAttributeCarrier* AC, const std::string& newID);
@@ -305,7 +297,7 @@ struct GNENetHelper {
         /// @{
 
         /// @brief return true if given TAZElement exist
-        bool TAZElementExist(GNETAZElement* TAZElement) const;
+        bool TAZElementExist(const GNETAZElement* TAZElement) const;
 
         /**@brief Insert a TAZElement element int GNENet container.
          * @throw processError if route was already inserted
@@ -315,7 +307,7 @@ struct GNENetHelper {
         /**@brief delete TAZElement element of GNENet container
          * @throw processError if TAZElement wasn't previously inserted
          */
-        bool deleteTAZElement(GNETAZElement* TAZElement);
+        void deleteTAZElement(GNETAZElement* TAZElement);
 
         /// @brief update TAZElement ID in container
         void updateTAZElementID(GNEAttributeCarrier* AC, const std::string& newID);
@@ -326,7 +318,7 @@ struct GNENetHelper {
         /// @{
 
         /// @brief return true if given demand element exist
-        bool demandElementExist(GNEDemandElement* demandElement) const;
+        bool demandElementExist(const GNEDemandElement* demandElement) const;
 
         /**@brief Insert a demand element element int GNENet container.
          * @throw processError if route was already inserted
@@ -336,7 +328,7 @@ struct GNENetHelper {
         /**@brief delete demand element element of GNENet container
          * @throw processError if demand element wasn't previously inserted
          */
-        bool deleteDemandElement(GNEDemandElement* demandElement);
+        void deleteDemandElement(GNEDemandElement* demandElement);
 
         /// @brief update demand element ID in container
         void updateDemandElementID(GNEAttributeCarrier* AC, const std::string& newID);
@@ -347,7 +339,7 @@ struct GNENetHelper {
         /// @{
 
         /// @brief return true if given demand element exist
-        bool dataSetExist(GNEDataSet* dataSet) const;
+        bool dataSetExist(const GNEDataSet* dataSet) const;
 
         /**@brief Insert a demand element element int GNENet container.
          * @throw processError if route was already inserted
@@ -357,7 +349,7 @@ struct GNENetHelper {
         /**@brief delete demand element element of GNENet container
          * @throw processError if demand element wasn't previously inserted
          */
-        bool deleteDataSet(GNEDataSet* dataSet);
+        void deleteDataSet(GNEDataSet* dataSet);
 
         /// @brief update data element ID in container
         void updateDataSetID(GNEAttributeCarrier* AC, const std::string& newID);
@@ -382,9 +374,6 @@ struct GNENetHelper {
 
         /// @brief map with the ID and pointer to demand elements of net
         std::map<SumoXMLTag, std::map<std::string, GNEDemandElement*> > myDemandElements;
-
-        /// @brief special map used for saving Demand Elements of type "Vehicle" (Vehicles, routeFlows, etc.) sorted by depart time
-        std::map<std::string, GNEDemandElement*> myVehicleDepartures;
 
         /// @brief map with the ID and pointer to data sets of net
         std::map<std::string, GNEDataSet*> myDataSets;
@@ -425,7 +414,7 @@ struct GNENetHelper {
         bool consecutiveEdgesConnected(const SUMOVehicleClass vClass, const GNEEdge* from, const GNEEdge* to) const;
 
         /// @brief check if exist a path between the given busStop and edge (Either a valid lane or an acces) for pedestrians
-        bool busStopConnected(const GNEAdditional *busStop, const GNEEdge* edge) const;
+        bool busStopConnected(const GNEAdditional* busStop, const GNEEdge* edge) const;
 
     private:
         /// @brief pointer to net

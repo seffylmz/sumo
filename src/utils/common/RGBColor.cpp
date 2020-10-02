@@ -67,13 +67,6 @@ RGBColor::RGBColor(unsigned char red, unsigned char green, unsigned char blue, u
     : myRed(red), myGreen(green), myBlue(blue), myAlpha(alpha) {}
 
 
-RGBColor::RGBColor(const RGBColor& col)
-    : myRed(col.myRed), myGreen(col.myGreen), myBlue(col.myBlue), myAlpha(col.myAlpha) {}
-
-
-RGBColor::~RGBColor() {}
-
-
 void
 RGBColor::set(unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
     myRed = r;
@@ -209,10 +202,10 @@ RGBColor::parseColor(std::string coldef) {
     }
     if (coldef == "random") {
         return fromHSV(RandHelper::rand(360, &myRNG),
-                // prefer more saturated colors
-                pow(RandHelper::rand(&myRNG), 0.3),
-                // prefer brighter colors
-                pow(RandHelper::rand(&myRNG), 0.3));
+                       // prefer more saturated colors
+                       pow(RandHelper::rand(&myRNG), 0.3),
+                       // prefer brighter colors
+                       pow(RandHelper::rand(&myRNG), 0.3));
     }
     unsigned char r = 0;
     unsigned char g = 0;

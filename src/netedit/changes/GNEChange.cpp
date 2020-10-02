@@ -21,26 +21,11 @@
 
 #include "GNEChange.h"
 
-
 // ===========================================================================
 // FOX-declarations
 // ===========================================================================
 
 FXIMPLEMENT_ABSTRACT(GNEChange, FXCommand, nullptr, 0)
-
-
-// ===========================================================================
-// static
-// ===========================================================================
-
-const std::vector<GNEEdge*> GNEChange::myEmptyEdges = {};
-const std::vector<GNELane*> GNEChange::myEmptyLanes = {};
-const std::vector<GNEAdditional*> GNEChange::myEmptyAdditionals = {};
-const std::vector<GNEShape*> GNEChange::myEmptyShapes = {};
-const std::vector<GNETAZElement*> GNEChange::myEmptyTAZElements = {};
-const std::vector<GNEDemandElement*> GNEChange::myEmptyDemandElements = {};
-const std::vector<GNEGenericData*> GNEChange::myEmptyGenericDatas = {};
-
 
 // ===========================================================================
 // member method definitions
@@ -48,40 +33,20 @@ const std::vector<GNEGenericData*> GNEChange::myEmptyGenericDatas = {};
 
 GNEChange::GNEChange(bool forward, const bool selectedElement) :
     myForward(forward),
-    mySelectedElement(selectedElement),
-    myParentEdges(myEmptyEdges),
-    myParentLanes(myEmptyLanes),
-    myParentAdditionals(myEmptyAdditionals),
-    myParentShapes(myEmptyShapes),
-    myParentTAZElements(myEmptyTAZElements),
-    myParentDemandElements(myEmptyDemandElements),
-    myParentGenericDatas(myEmptyGenericDatas),
-    myChildEdges(myEmptyEdges),
-    myChildLanes(myEmptyLanes),
-    myChildAdditionals(myEmptyAdditionals),
-    myChildShapes(myEmptyShapes),
-    myChildTAZElements(myEmptyTAZElements),
-    myChildDemandElements(myEmptyDemandElements),
-    myChildGenericDatas(myEmptyGenericDatas) {}
+    mySelectedElement(selectedElement) {}
 
 
-GNEChange::GNEChange(GNEHierarchicalParentElements* parents, GNEHierarchicalChildElements* childs, bool forward, const bool selectedElement) :
+GNEChange::GNEChange(GNEHierarchicalElement* hierarchicalElement, bool forward, const bool selectedElement) :
     myForward(forward),
     mySelectedElement(selectedElement),
-    myParentEdges(parents->getParentEdges()),
-    myParentLanes(parents->getParentLanes()),
-    myParentAdditionals(parents->getParentAdditionals()),
-    myParentShapes(parents->getParentShapes()),
-    myParentTAZElements(parents->getParentTAZElements()),
-    myParentDemandElements(parents->getParentDemandElements()),
-    myParentGenericDatas(parents->getParentGenericDatas()),
-    myChildEdges(childs->getChildEdges()),
-    myChildLanes(childs->getChildLanes()),
-    myChildAdditionals(childs->getChildAdditionals()),
-    myChildShapes(childs->getChildShapes()),
-    myChildTAZElements(childs->getChildTAZElements()),
-    myChildDemandElements(childs->getChildDemandElements()),
-    myChildGenericDatas(childs->getChildGenericDatas()) {}
+    myOriginalHierarchicalContainer(hierarchicalElement->getHierarchicalContainer()) {
+    // get all hierarchical elements (Parents and children)
+    const auto hierarchicalElements = hierarchicalElement->getAllHierarchicalElements();
+    // save all hierarchical containers
+    for (const auto& element : hierarchicalElements) {
+        myHierarchicalContainers[element] = element->getHierarchicalContainer();
+    }
+}
 
 
 GNEChange::~GNEChange() {}
@@ -111,5 +76,14 @@ GNEChange::undo() {}
 
 void
 GNEChange::redo() {}
+
+
+void
+GNEChange::restoreHierarchicalContainers() {
+    // iterate over all parents and children container and restore it
+    for (const auto& container : myHierarchicalContainers) {
+        container.first->restoreHierarchicalContainer(container.second);
+    }
+}
 
 /****************************************************************************/

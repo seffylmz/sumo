@@ -21,8 +21,11 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
+#include <utils/gui/globjects/GLIncludes.h>
+#include <utils/gui/div/GLHelper.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/vehicle/SUMORouteHandler.h>
+#include <foreign/fontstash/fontstash.h>
 
 #include "GNEStoppingPlace.h"
 
@@ -40,19 +43,34 @@ const double GNEStoppingPlace::myCircleInText = 1.6;
 // ===========================================================================
 
 GNEStoppingPlace::GNEStoppingPlace(const std::string& id, GNENet* net, GUIGlObjectType type, SumoXMLTag tag,
-    GNELane* lane, double startPos, double endPos, int parametersSet, const std::string& name,
-    bool friendlyPosition, bool blockMovement) :
+                                   GNELane* lane, double startPos, double endPos, int parametersSet, const std::string& name,
+                                   bool friendlyPosition, bool blockMovement) :
     GNEAdditional(id, net, type, tag, name, blockMovement,
-        {}, {}, {lane}, {}, {}, {}, {}, {}, // Parents
-        {}, {}, {}, {}, {}, {}, {}, {}),    // Children
-myStartPosition(startPos),
-myEndPosition(endPos),
-myParametersSet(parametersSet),
-myFriendlyPosition(friendlyPosition) {
+        {}, {}, {lane}, {}, {}, {}, {}, {}),
+        myStartPosition(startPos),
+        myEndPosition(endPos),
+        myParametersSet(parametersSet),
+        myFriendlyPosition(friendlyPosition) {
 }
 
 
 GNEStoppingPlace::~GNEStoppingPlace() {}
+
+
+GNEMoveOperation* 
+GNEStoppingPlace::getMoveOperation(const double /*shapeOffset*/) {
+    // check conditions
+    if (myParametersSet == 0) {
+        // start and end positions undefined, then nothing to move
+        return nullptr;
+    } else if (myBlockMovement) {
+        // element blocked, then nothing to move
+        return nullptr;
+    } else {
+        // return move operation for additional placed over shape
+        return new GNEMoveOperation(this, getParentLanes().front(), {myStartPosition, myEndPosition});
+    }
+}
 
 
 bool
@@ -135,20 +153,27 @@ GNEStoppingPlace::fixAdditionalProblem() {
 }
 
 
-Position
-GNEStoppingPlace::getPositionInView() const {
-    // calculate start and end positions as absolute values
-    double startPos = fabs((myParametersSet & STOPPINGPLACE_STARTPOS_SET) ? myStartPosition : 0);
-    double endPos = fabs((myParametersSet & STOPPINGPLACE_ENDPOS_SET) ? myEndPosition : getParentLanes().front()->getParentEdge()->getNBEdge()->getFinalLength());
-    // obtain position in view depending if both positions are defined
-    if (myParametersSet == 0) {
-        return getParentLanes().front()->getLaneShape().positionAtOffset(getParentLanes().front()->getLaneShape().length() / 2);
-    } else if ((myParametersSet & STOPPINGPLACE_STARTPOS_SET) == 0) {
-        return getParentLanes().front()->getLaneShape().positionAtOffset(endPos);
-    } else if ((myParametersSet & STOPPINGPLACE_ENDPOS_SET) == 0) {
-        return getParentLanes().front()->getLaneShape().positionAtOffset(startPos);
-    } else {
-        return getParentLanes().front()->getLaneShape().positionAtOffset((startPos + endPos) / 2.0);
+
+void 
+GNEStoppingPlace::updateCenteringBoundary(const bool updateGrid) {
+    // remove additional from grid
+    if (updateGrid && myTagProperty.isPlacedInRTree()) {
+        myNet->removeGLObjectFromGrid(this);
+    }
+    // update geometry
+    updateGeometry();
+    // add shape boundary
+    myBoundary = myAdditionalGeometry.getShape().getBoxBoundary();
+    // grow with "width"
+    if (myTagProperty.hasAttribute(SUMO_ATTR_WIDTH)) {
+        // we cannot use "getAttributeDouble(...)"
+        myBoundary.growWidth(parse<double>(getAttribute(SUMO_ATTR_WIDTH)));
+    }
+    // grow
+    myBoundary.grow(10);
+    // add additional into RTREE again
+    if (updateGrid &&  myTagProperty.isPlacedInRTree()) {
+        myNet->addGLObjectIntoGrid(this);
     }
 }
 
@@ -196,9 +221,10 @@ GNEStoppingPlace::splitEdgeGeometry(const double splitPosition, const GNENetwork
     }
 }
 
+/*
 
 void
-GNEStoppingPlace::moveGeometry(const Position& offset) {
+GNEStoppingPlace::move Geometry(const Position& offset) {
     // only move if at leats start or end positions is defined
     if (myParametersSet > 0) {
         // Calculate new position using old position
@@ -237,8 +263,8 @@ GNEStoppingPlace::moveGeometry(const Position& offset) {
         updateGeometry();
     }
 }
-
-
+*/
+/*
 void
 GNEStoppingPlace::commitGeometryMoving(GNEUndoList* undoList) {
     // only commit geometry moving if at leats start or end positions is defined
@@ -253,7 +279,7 @@ GNEStoppingPlace::commitGeometryMoving(GNEUndoList* undoList) {
         undoList->p_end();
     }
 }
-
+*/
 
 double
 GNEStoppingPlace::getStartPosition() const {
@@ -366,5 +392,113 @@ GNEStoppingPlace::getHierarchyName() const {
     return getTagStr();
 }
 
+
+void
+GNEStoppingPlace::drawLines(const GUIVisualizationSettings& s, const std::vector<std::string>& lines, const RGBColor& color) const {
+    if (!s.drawForPositionSelection) {
+        // calculate middle point
+        const double middlePoint = (myAdditionalGeometry.getShape().length2D() * 0.5);
+        // calculate rotation
+        const double rot =  myAdditionalGeometry.getShape().rotationDegreeAtOffset(middlePoint);
+        // Iterate over every line
+        for (int i = 0; i < (int)lines.size(); ++i) {
+            // push a new matrix for every line
+            glPushMatrix();
+            // translate
+            glTranslated(mySignPos.x(), mySignPos.y(), 0);
+            // rotate over lane
+            GNEGeometry::rotateOverLane(rot);
+            // draw line with a color depending of the selection status
+            if (drawUsingSelectColor()) {
+                GLHelper::drawText(lines[i].c_str(), Position(1.2, (double)i), .1, 1.f, color, 0, FONS_ALIGN_LEFT);
+            } else {
+                GLHelper::drawText(lines[i].c_str(), Position(1.2, (double)i), .1, 1.f, color, 0, FONS_ALIGN_LEFT);
+            }
+            // pop matrix for every line
+            glPopMatrix();
+        }
+    }
+}
+
+
+void
+GNEStoppingPlace::drawSign(const GUIVisualizationSettings& s, const double exaggeration,
+                           const RGBColor& baseColor, const RGBColor& signColor, const std::string& word) const {
+    // calculate middle point
+    const double middlePoint = (myAdditionalGeometry.getShape().length2D() * 0.5);
+    // calculate rotation
+    const double rot =  myAdditionalGeometry.getShape().rotationDegreeAtOffset(middlePoint);
+    if (s.drawForPositionSelection) {
+        // only draw circle depending of distance between sign and mouse cursor
+        if (myNet->getViewNet()->getPositionInformation().distanceSquaredTo2D(mySignPos) <= (myCircleWidthSquared + 2)) {
+            // push matrix
+            glPushMatrix();
+            // Start drawing sign traslating matrix to signal position
+            glTranslated(mySignPos.x(), mySignPos.y(), 0);
+            // rotate over lane
+            GNEGeometry::rotateOverLane(rot);
+            // scale matrix depending of the exaggeration
+            glScaled(exaggeration, exaggeration, 1);
+            // set color
+            GLHelper::setColor(baseColor);
+            // Draw circle
+            GLHelper::drawFilledCircle(myCircleWidth, s.getCircleResolution());
+            // pop draw matrix
+            glPopMatrix();
+        }
+    } else {
+        // push matrix
+        glPushMatrix();
+        // Start drawing sign traslating matrix to signal position
+        glTranslated(mySignPos.x(), mySignPos.y(), 0);
+        // rotate over lane
+        GNEGeometry::rotateOverLane(rot);
+        // scale matrix depending of the exaggeration
+        glScaled(exaggeration, exaggeration, 1);
+        // set color
+        GLHelper::setColor(baseColor);
+        // Draw circle
+        GLHelper::drawFilledCircle(myCircleWidth, s.getCircleResolution());
+        // continue depending of rectangle selection
+        if (!s.drawForRectangleSelection) {
+            // Traslate to front
+            glTranslated(0, 0, .1);
+            // set color
+            GLHelper::setColor(signColor);
+            // draw another circle in the same position, but a little bit more small
+            GLHelper::drawFilledCircle(myCircleInWidth, s.getCircleResolution());
+            // draw H depending of detailSettings
+            GLHelper::drawText(word, Position(), .1, myCircleInText, baseColor);
+        }
+        // pop draw matrix
+        glPopMatrix();
+    }
+}
+
+
+void 
+GNEStoppingPlace::setMoveShape(const GNEMoveResult& moveResult) {
+    // change both position
+    myStartPosition = moveResult.shapeToUpdate.front().x();
+    myEndPosition = moveResult.shapeToUpdate.back().x();
+    // update geometry
+    updateGeometry();
+}
+
+
+void 
+GNEStoppingPlace::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
+    // only commit geometry moving if at leats start or end positions is defined
+    if (myParametersSet > 0) {
+        undoList->p_begin("position of " + getTagStr());
+        if (myParametersSet & STOPPINGPLACE_STARTPOS_SET) {
+            undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_STARTPOS, toString(moveResult.shapeToUpdate.front().x())));
+        }
+        if (myParametersSet & STOPPINGPLACE_ENDPOS_SET) {
+            undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_ENDPOS, toString(moveResult.shapeToUpdate.back().x())));
+        }
+        undoList->p_end();
+    }
+}
 
 /****************************************************************************/
