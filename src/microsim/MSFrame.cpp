@@ -416,6 +416,8 @@ MSFrame::fillOptions() {
     oc.addDescription("pedestrian.striping.jamtime", "Processing", "Time in seconds after which pedestrians start squeezing through a jam when using model 'striping' (non-positive values disable squeezing)");
     oc.doRegister("pedestrian.striping.jamtime.crossing", new Option_String("10", "TIME"));
     oc.addDescription("pedestrian.striping.jamtime.crossing", "Processing", "Time in seconds after which pedestrians start squeezing through a jam while on a pedestrian crossing when using model 'striping' (non-positive values disable squeezing)");
+    oc.doRegister("pedestrian.striping.jamtime.narrow", new Option_String("1", "TIME"));
+    oc.addDescription("pedestrian.striping.jamtime.narrow", "Processing", "Time in seconds after which pedestrians start squeezing through a jam while on a narrow lane when using model 'striping'");
 
     oc.doRegister("pedestrian.striping.reserve-oncoming", new Option_Float(0.0));
     oc.addDescription("pedestrian.striping.reserve-oncoming", "Processing", "Fraction of stripes to reserve for oncoming pedestrians");
@@ -464,6 +466,9 @@ MSFrame::fillOptions() {
 
     oc.doRegister("persontrip.default.group", new Option_String());
     oc.addDescription("persontrip.default.group", "Routing", "When set, trips between the same origin and destination will share a taxi by default");
+
+    oc.doRegister("persontrip.taxi.waiting-time", new Option_String("300", "TIME"));
+    oc.addDescription("persontrip.taxi.waiting-time", "Routing", "Estimated time for taxi pickup");
 
     oc.doRegister("railway.max-train-length", new Option_Float(5000.0));
     oc.addDescription("railway.max-train-length", "Routing", "Use FLOAT as a maximum train length when initializing the railway router");

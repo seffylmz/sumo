@@ -21,7 +21,6 @@
 
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/div/GUIDesigns.h>
-#include <netedit/elements/additional/GNEAdditional.h>
 #include <netedit/GNENet.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEUndoList.h>
@@ -196,7 +195,7 @@ GNEFixAdditionalElements::AdditionalList::AdditionalList(GNEFixAdditionalElement
     myTable->setTableSize(int(myInvalidSingleLaneAdditionals.size() + myInvalidMultiLaneAdditionals.size()), 3);
     // Configure list
     myTable->setVisibleColumns(4);
-    myTable->setColumnWidth(0, GUIDesignTableIconCellWidth);
+    myTable->setColumnWidth(0, GUIDesignHeight);
     myTable->setColumnWidth(1, 160);
     myTable->setColumnWidth(2, 280);
     myTable->setColumnText(0, "");

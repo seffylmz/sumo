@@ -79,11 +79,6 @@ public:
     /// @brief return TraCI API and SUMO version
     std::pair<int, std::string> getVersion();
 
-    const tcpip::Storage& getCommandStorage() const {
-        return myOutput;
-    }
-
-
     /** @class TraCIScopeWrapper
      * @brief An abstract interface for accessing type-dependent values
      *
@@ -612,6 +607,7 @@ public:
         std::pair<std::string, double> getFollower(const std::string& vehicleID, double dist) const;
         int getRoutingMode(const std::string& vehicleID) const;
         double getStopDelay(const std::string& vehicleID) const;
+        double getStopArrivalDelay(const std::string& vehicleID) const;
         std::pair<int, int> getLaneChangeState(const std::string& vehicleID, int direction) const;
         /// @}
 

@@ -23,10 +23,8 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
 #include <utils/gui/globjects/GUIPolygon.h>
 #include <utils/gui/div/GLHelper.h>
-#include <utils/gui/div/GUIParameterTableWindow.h>
 
 #include "GNETAZ.h"
 
@@ -218,7 +216,7 @@ GNETAZ::drawGL(const GUIVisualizationSettings& s) const {
         const RGBColor color = isAttributeCarrierSelected() ? s.colorSettings.selectionColor : getShapeColor();
         const RGBColor invertedColor = color.invertedColor();
         const RGBColor darkerColor = color.changedBrightness(-32);
-        // obtain scaled geometry
+        // obtain scaled geometryte
         GNEGeometry::Geometry scaledGeometry = myTAZGeometry;
         if (TAZExaggeration != 1) {
             scaledGeometry.scaleGeometry(TAZExaggeration);

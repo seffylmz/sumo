@@ -21,10 +21,7 @@
 #pragma once
 #include <config.h>
 
-#include <string>
-#include <vector>
-#include <set>
-#include <utils/gui/windows/GUIDialog_GLObjChooser.h>
+#include <utils/gui/windows/GUIDialog_ChooserAbstract.h>
 
 
 // ===========================================================================
@@ -43,7 +40,7 @@ class GNEViewParent;
  * from a given artifact like vehicles, edges or junctions and allow
  * one of their items
  */
-class GNEDialogACChooser : public GUIDialog_GLObjChooser {
+class GNEDialogACChooser : public GUIDialog_ChooserAbstract {
 
 public:
     /** @brief Constructor
@@ -60,16 +57,24 @@ public:
 protected:
     FOX_CONSTRUCTOR(GNEDialogACChooser)
 
+    /// @brief toogle selection
     void toggleSelection(int listIndex) override;
+
+    /// @brief filter ACs
+    void filterACs(const std::vector<GUIGlID> &GLIDs) override;
 
     /// @bbrief retrieve name for the given object (special case for TLS)
     std::string getObjectName(GUIGlObject* o) const override;
 
 private:
-    /// @brief list of displayed ACs
-    std::vector<GNEAttributeCarrier*> myACs;
+    /// @brief pointer to view parent
     GNEViewParent* myViewParent;
 
+    /// @brief list of displayed ACs
+    std::vector<GNEAttributeCarrier*> myACs;
+
+    /// @brief list of filtered ACs
+    std::vector<GNEAttributeCarrier*> myFilteredACs;
 
     /// @brief whether the current locator is for TLS
     bool myLocateTLS;

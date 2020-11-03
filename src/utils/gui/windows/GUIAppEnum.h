@@ -183,6 +183,8 @@ enum {
     MID_HOTKEY_F10_OPTIONSMENU,
     /// @brief set/clear front element
     MID_HOTKEY_F11_FRONTELEMENT,
+    /// @brief show the hall of fame dialog
+    MID_HOTKEY_SHIFT_F11_HALLOFFAME,
     /// @brief open about dialog
     MID_HOTKEY_F12_ABOUT,
     /// @}
@@ -731,6 +733,8 @@ enum {
     MID_GNE_SET_ATTRIBUTE_BOOL,
     /// @brief attribute edited trought dialog
     MID_GNE_SET_ATTRIBUTE_DIALOG,
+    /// @brief open parameters dialog
+    MID_GNE_OPEN_PARAMETERS_DIALOG,
     /// @brief attribute selected using button (radio button or checkbox)
     MID_GNE_SET_ATTRIBUTE_BUTTON,
     /// @brief abort edge path creation

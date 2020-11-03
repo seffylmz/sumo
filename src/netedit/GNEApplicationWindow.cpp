@@ -45,6 +45,7 @@
 #include <utils/gui/windows/GUIPerspectiveChanger.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/xml/XMLSubSys.h>
+#include <utils/gui/div/GUIDesigns.h>
 
 #include "GNEApplicationWindow.h"
 #include "GNEEvent_NetworkLoaded.h"
@@ -688,6 +689,10 @@ GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
         // udpate current folder
         gCurrentFolder = opendialog.getDirectory();
         std::string file = opendialog.getFilename().text();
+        // disable interval bar update
+        myViewNet->getIntervalBar().disableIntervalBarUpdate();
+        // disable update data
+        myViewNet->getNet()->disableUpdateData();
         // disable validation for additionals
         XMLSubSys::setValidation("never", "auto", "auto");
         // Create additional handler
@@ -698,11 +703,16 @@ GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
         if (!XMLSubSys::runParser(dataHandler, file, false)) {
             WRITE_ERROR("Loading of " + file + " failed.");
         }
-        // end undoList operation and update view
-        myUndoList->p_end();
-        update();
         // restore validation for data
         XMLSubSys::setValidation("auto", "auto", "auto");
+        // end undoList operation and update view
+        myUndoList->p_end();
+        // enable update data
+        myViewNet->getNet()->enableUpdateData();
+        // enable interval bar update
+        myViewNet->getIntervalBar().enableIntervalBarUpdate();
+        // update 
+        update();
     } else {
         // write debug information
         WRITE_DEBUG("Cancel data element dialog");
@@ -959,10 +969,12 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
     if (oc.isSet("data-files") && !oc.getString("data-files").empty() && myNet) {
         // obtain vector of data files
         std::vector<std::string> dataElementsFiles = oc.getStringVector("data-files");
-        // begin undolist
-        myUndoList->p_begin("Loading data elements from '" + toString(dataElementsFiles) + "'");
         // disable interval bar update
         myViewNet->getIntervalBar().disableIntervalBarUpdate();
+        // disable update data
+        myViewNet->getNet()->disableUpdateData();
+        // begin undolist
+        myUndoList->p_begin("Loading data elements from '" + toString(dataElementsFiles) + "'");
         // iterate over every data file
         for (const auto& dataElementsFile : dataElementsFiles) {
             WRITE_MESSAGE("Loading data elements from '" + dataElementsFile + "'");
@@ -975,9 +987,12 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             // disable validation for data elements
             XMLSubSys::setValidation("auto", "auto", "auto");
         }
+        // end undolist
+        myUndoList->p_end();
+        // enable update data
+        myViewNet->getNet()->enableUpdateData();
         // enable interval bar update
         myViewNet->getIntervalBar().enableIntervalBarUpdate();
-        myUndoList->p_end();
     }
     // check if additionals output must be changed
     if (oc.isSet("additionals-output")) {
@@ -1018,12 +1033,9 @@ GNEApplicationWindow::handleEvent_Message(GUIEvent* e) {
 
 void
 GNEApplicationWindow::fillMenuBar() {
-    // declare a FXMenuTitle needed to set height in all menu titles
-    FXMenuTitle* menuTitle;
     // build file menu
     myFileMenu = new FXMenuPane(this, LAYOUT_FIX_HEIGHT);
-    menuTitle = new FXMenuTitle(myToolbarsGrip.menu, "&File", nullptr, myFileMenu, LAYOUT_FIX_HEIGHT);
-    menuTitle->setHeight(23);
+    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&File", nullptr, myFileMenu);
     myFileMenuTLS = new FXMenuPane(this);
     myFileMenuAdditionals = new FXMenuPane(this);
     myFileMenuDemandElements = new FXMenuPane(this);
@@ -1032,20 +1044,19 @@ GNEApplicationWindow::fillMenuBar() {
     // build recent files
     myMenuBarFile.buildRecentFiles(myFileMenu);
     new FXMenuSeparator(myFileMenu);
-    new FXMenuCommand(myFileMenu,
-                      "&Quit\tCtrl+Q\tQuit the Application.",
-                      nullptr, this, MID_HOTKEY_CTRL_Q_CLOSE, 0);
+    GUIDesigns::buildFXMenuCommandShortcut(myFileMenu,
+        "&Quit", "Ctrl+Q", "Quit the Application.",
+        nullptr, this, MID_HOTKEY_CTRL_Q_CLOSE);
     // build edit menu
     myEditMenu = new FXMenuPane(this);
-    menuTitle = new FXMenuTitle(myToolbarsGrip.menu, "&Edit", nullptr, myEditMenu, LAYOUT_FIX_HEIGHT);
-    menuTitle->setHeight(23);
+    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Edit", nullptr, myEditMenu);
     // build undo/redo command
-    myEditMenuCommands.undoLastChange = new FXMenuCommand(myEditMenu,
-            "&Undo\tCtrl+Z\tUndo the last change.",
-            GUIIconSubSys::getIcon(GUIIcon::UNDO), this, MID_HOTKEY_CTRL_Z_UNDO);
-    myEditMenuCommands.redoLastChange = new FXMenuCommand(myEditMenu,
-            "&Redo\tCtrl+Y\tRedo the last change.",
-            GUIIconSubSys::getIcon(GUIIcon::REDO), this, MID_HOTKEY_CTRL_Y_REDO);
+    myEditMenuCommands.undoLastChange = GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
+        "&Undo", "Ctrl+Z", "Undo the last change.",
+        GUIIconSubSys::getIcon(GUIIcon::UNDO), this, MID_HOTKEY_CTRL_Z_UNDO);
+    myEditMenuCommands.redoLastChange = GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
+        "&Redo", "Ctrl+Y", "Redo the last change.",
+        GUIIconSubSys::getIcon(GUIIcon::REDO), this, MID_HOTKEY_CTRL_Y_REDO);
     // build separator
     new FXMenuSeparator(myEditMenu);
     // build Supermode commands and hide it
@@ -1054,30 +1065,26 @@ GNEApplicationWindow::fillMenuBar() {
     myEditMenuCommands.buildEditMenuCommands(myEditMenu);
     // build processing menu (trigger netbuild computations)
     myProcessingMenu = new FXMenuPane(this);
-    menuTitle = new FXMenuTitle(myToolbarsGrip.menu, "&Processing", nullptr, myProcessingMenu, LAYOUT_FIX_HEIGHT);
-    menuTitle->setHeight(23);
+    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Processing", nullptr, myProcessingMenu);
     myProcessingMenuCommands.buildProcessingMenuCommands(myProcessingMenu);
     // build locate menu
     myLocatorMenu = new FXMenuPane(this);
-    menuTitle = new FXMenuTitle(myToolbarsGrip.menu, "&Locate", nullptr, myLocatorMenu, LAYOUT_FIX_HEIGHT);
-    menuTitle->setHeight(23);
+    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Locate", nullptr, myLocatorMenu);
     myLocateMenuCommands.buildLocateMenuCommands(myLocatorMenu);
     // build windows menu
     myWindowsMenu = new FXMenuPane(this);
-    menuTitle = new FXMenuTitle(myToolbarsGrip.menu, "&Windows", nullptr, myWindowsMenu, LAYOUT_FIX_HEIGHT);
-    menuTitle->setHeight(23);
+    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Windows", nullptr, myWindowsMenu);
     myWindowsMenuCommands.buildWindowsMenuCommands(myWindowsMenu, myStatusbar, myMessageWindow);
     // build help menu
     myHelpMenu = new FXMenuPane(this);
-    menuTitle = new FXMenuTitle(myToolbarsGrip.menu, "&Help", nullptr, myHelpMenu, LAYOUT_FIX_HEIGHT);
-    menuTitle->setHeight(23);
+    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Help", nullptr, myHelpMenu);
     // build help menu commands
-    new FXMenuCommand(myHelpMenu,
-                      "&Online Documentation\tF1\tOpen Online documentation.",
-                      nullptr, this, MID_HOTKEY_F1_ONLINEDOCUMENTATION);
-    new FXMenuCommand(myHelpMenu,
-                      "&About\tF12\tAbout netedit.",
-                      GUIIconSubSys::getIcon(GUIIcon::NETEDIT_MINI), this, MID_HOTKEY_F12_ABOUT);
+    GUIDesigns::buildFXMenuCommandShortcut(myHelpMenu,
+        "&Online Documentation", "F1", "Open Online documentation.",
+        nullptr, this, MID_HOTKEY_F1_ONLINEDOCUMENTATION);
+    GUIDesigns::buildFXMenuCommandShortcut(myHelpMenu,
+        "&About", "F12", "About netedit.",
+        GUIIconSubSys::getIcon(GUIIcon::NETEDIT_MINI), this, MID_HOTKEY_F12_ABOUT);
 }
 
 
@@ -1137,7 +1144,6 @@ GNEApplicationWindow::getViewNet() {
 
 GNEApplicationWindowHelper::ToolbarsGrip&
 GNEApplicationWindow::getToolbarsGrip() {
-    myToolbarsGrip.myTopDock = myTopDock;
     return myToolbarsGrip;
 }
 
@@ -1732,21 +1738,15 @@ GNEApplicationWindow::onCmdToogleGrid(FXObject* obj, FXSelector sel, void* ptr) 
     // check that view exists
     if (myViewNet) {
         // Toogle getMenuCheckShowGrid of GNEViewNet
-        if ((myViewNet->getNetworkViewOptions().menuCheckShowGrid->getCheck() == TRUE) ||
-                (myViewNet->getDemandViewOptions().menuCheckShowGrid->getCheck() == TRUE)) {
-            myViewNet->getNetworkViewOptions().menuCheckShowGrid->setCheck(FALSE);
-            myViewNet->getDemandViewOptions().menuCheckShowGrid->setCheck(FALSE);
+        if (myViewNet->getVisualisationSettings().showGrid) {
             // show extra information for tests
             WRITE_DEBUG("Disabled grid throught Ctrl+g hotkey");
         } else {
-            myViewNet->getNetworkViewOptions().menuCheckShowGrid->setCheck(TRUE);
-            myViewNet->getDemandViewOptions().menuCheckShowGrid->setCheck(TRUE);
             // show extra information for tests
             WRITE_DEBUG("Enabled grid throught Ctrl+g hotkey");
         }
-        // Call manually show grid function
-        myViewNet->onCmdToogleShowGridNetwork(obj, sel, ptr);
-        myViewNet->onCmdToogleShowGridDemand(obj, sel, ptr);
+        // Call manually toogle grid function
+        myViewNet->onCmdToogleShowGrid(obj, sel, ptr);
     }
     return 1;
 }
@@ -1784,7 +1784,7 @@ GNEApplicationWindow::onCmdToogleEditOptions(FXObject* obj, FXSelector sel, void
             return 1;
         }
         // declare a vector in which save visible menu commands
-        std::vector<FXMenuCheck*> visibleMenuCommands;
+        std::vector<MFXCheckableButton*> visibleMenuCommands;
         // get common, network and demand visible menu commands
         myViewNet->getNetworkViewOptions().getVisibleNetworkMenuCommands(visibleMenuCommands);
         myViewNet->getDemandViewOptions().getVisibleDemandMenuCommands(visibleMenuCommands);

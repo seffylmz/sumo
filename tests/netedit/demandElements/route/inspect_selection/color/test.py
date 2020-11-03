@@ -35,7 +35,7 @@ netedit.supermodeDemand()
 netedit.routeMode()
 
 # create route using three edges
-netedit.leftClick(referencePosition, 274, 416)
+netedit.leftClick(referencePosition, 274, 392)
 netedit.leftClick(referencePosition, 570, 250)
 
 # press enter to create route
@@ -51,14 +51,14 @@ netedit.typeEnter()
 netedit.selectMode()
 
 # select both routes
-netedit.leftClick(referencePosition, 274, 416)
+netedit.leftClick(referencePosition, 274, 392)
 netedit.leftClick(referencePosition, 274, 388)
 
 # go to inspect mode
 netedit.inspectMode()
 
 # inspect route
-netedit.leftClick(referencePosition, 280, 417)
+netedit.leftClick(referencePosition, 280, 392)
 
 # Change parameter color with a non valid value (empty)
 netedit.modifyAttribute(1, "", True)

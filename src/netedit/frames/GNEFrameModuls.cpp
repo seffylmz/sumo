@@ -25,18 +25,9 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Children.h>
-#include <netedit/elements/additional/GNEAdditional.h>
-#include <netedit/elements/additional/GNEPOI.h>
-#include <netedit/elements/additional/GNETAZ.h>
 #include <netedit/elements/data/GNEDataInterval.h>
-#include <netedit/elements/data/GNEGenericData.h>
-#include <netedit/elements/data/GNEDataSet.h>
-#include <netedit/elements/demand/GNEDemandElement.h>
 #include <netedit/elements/network/GNEConnection.h>
 #include <netedit/elements/network/GNECrossing.h>
-#include <netedit/elements/network/GNEEdge.h>
-#include <netedit/elements/network/GNEJunction.h>
-#include <netedit/elements/network/GNELane.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
 #include <utils/foxtools/MFXMenuHeader.h>
 #include <utils/gui/div/GLHelper.h>
@@ -818,15 +809,15 @@ GNEFrameModuls::HierarchicalElementTree::createPopUpMenu(int X, int Y, GNEAttrib
         // insert separator
         new FXMenuSeparator(pane);
         // create center menu command
-        FXMenuCommand* centerMenuCommand = new FXMenuCommand(pane, "Center", GUIIconSubSys::getIcon(GUIIcon::RECENTERVIEW), this, MID_GNE_CENTER);
+        FXMenuCommand* centerMenuCommand = GUIDesigns::buildFXMenuCommand(pane, "Center", GUIIconSubSys::getIcon(GUIIcon::RECENTERVIEW), this, MID_GNE_CENTER);
         // disable Centering for Vehicle Types, data sets and data intervals
         if (myClickedAC->getTagProperty().isVehicleType() || (myClickedAC->getTagProperty().getTag() == SUMO_TAG_DATASET) ||
                 (myClickedAC->getTagProperty().getTag() == SUMO_TAG_DATAINTERVAL)) {
             centerMenuCommand->disable();
         }
         // create inspect and delete menu commands
-        FXMenuCommand* inspectMenuCommand = new FXMenuCommand(pane, "Inspect", GUIIconSubSys::getIcon(GUIIcon::MODEINSPECT), this, MID_GNE_INSPECT);
-        FXMenuCommand* deleteMenuCommand = new FXMenuCommand(pane, "Delete", GUIIconSubSys::getIcon(GUIIcon::MODEDELETE), this, MID_GNE_DELETE);
+        FXMenuCommand* inspectMenuCommand = GUIDesigns::buildFXMenuCommand(pane, "Inspect", GUIIconSubSys::getIcon(GUIIcon::MODEINSPECT), this, MID_GNE_INSPECT);
+        FXMenuCommand* deleteMenuCommand = GUIDesigns::buildFXMenuCommand(pane, "Delete", GUIIconSubSys::getIcon(GUIIcon::MODEDELETE), this, MID_GNE_DELETE);
         // check if inspect and delete menu commands has to be disabled
         if (GNEFrameAttributesModuls::isSupermodeValid(myFrameParent->myViewNet, myClickedAC) == false) {
             inspectMenuCommand->disable();
@@ -837,8 +828,8 @@ GNEFrameModuls::HierarchicalElementTree::createPopUpMenu(int X, int Y, GNEAttrib
             // insert separator
             new FXMenuSeparator(pane);
             // create both moving menu commands
-            FXMenuCommand* moveUpMenuCommand = new FXMenuCommand(pane, "Move up", GUIIconSubSys::getIcon(GUIIcon::ARROW_UP), this, MID_GNE_ACHIERARCHY_MOVEUP);
-            FXMenuCommand* moveDownMenuCommand = new FXMenuCommand(pane, "Move down", GUIIconSubSys::getIcon(GUIIcon::ARROW_DOWN), this, MID_GNE_ACHIERARCHY_MOVEDOWN);
+            FXMenuCommand* moveUpMenuCommand = GUIDesigns::buildFXMenuCommand(pane, "Move up", GUIIconSubSys::getIcon(GUIIcon::ARROW_UP), this, MID_GNE_ACHIERARCHY_MOVEUP);
+            FXMenuCommand* moveDownMenuCommand = GUIDesigns::buildFXMenuCommand(pane, "Move down", GUIIconSubSys::getIcon(GUIIcon::ARROW_DOWN), this, MID_GNE_ACHIERARCHY_MOVEDOWN);
             // check if both commands has to be disabled
             if (myClickedDemandElement->getTagProperty().isPersonStop()) {
                 moveUpMenuCommand->setText("Move up (Stops cannot be moved)");
@@ -2480,6 +2471,10 @@ GNEFrameModuls::PathCreator::updateEdgeColors() {
 }
 
 
+#if defined(_MSC_VER) && _MSC_VER == 1800
+#pragma warning(push)
+#pragma warning(disable: 4100) // do not warn about "unused" parameters which get optimized away
+#endif
 void
 GNEFrameModuls::PathCreator::drawTemporalRoute(const GUIVisualizationSettings& s) const {
     if (myPath.size() > 0) {
@@ -2548,6 +2543,9 @@ GNEFrameModuls::PathCreator::drawTemporalRoute(const GUIVisualizationSettings& s
         glPopMatrix();
     }
 }
+#if defined(_MSC_VER) && _MSC_VER == 1800
+#pragma warning(pop)
+#endif
 
 
 void

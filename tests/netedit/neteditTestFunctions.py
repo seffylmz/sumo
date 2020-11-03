@@ -214,7 +214,7 @@ def leftClickControl(referencePosition, positionx, positiony):
     """
     @brief do left click over a position relative to referencePosition (pink square) while control key is pressed
     """
-    # Leave Shift key pressed
+    # Leave Control key pressed
     pyautogui.keyDown('ctrl')
     # wait before every operation
     time.sleep(DELAY_MOUSE)
@@ -228,8 +228,36 @@ def leftClickControl(referencePosition, positionx, positiony):
     pyautogui.click(button='left')
     # show debug
     print("TestFunctions: Clicked with Control key pressed over position", clickedPosition[0], '-', clickedPosition[1])
-    # Release Shift key
+    # Release Control key
     pyautogui.keyUp('ctrl')
+    # wait after key up
+    time.sleep(DELAY_KEY)
+
+
+def leftClickAltShift(referencePosition, positionx, positiony):
+    """
+    @brief do left click over a position relative to referencePosition (pink square) while alt key is pressed
+    """
+    # Leave alt key pressed
+    pyautogui.keyDown('alt')
+    # Leave shift key pressed
+    pyautogui.keyDown('shift')
+    # wait before every operation
+    time.sleep(DELAY_MOUSE)
+    # obtain clicked position
+    clickedPosition = [referencePosition[0] + positionx, referencePosition[1] + positiony]
+    # move mouse to position
+    pyautogui.moveTo(clickedPosition)
+    # wait
+    time.sleep(DELAY_MOVE)
+    # click over position
+    pyautogui.click(button='left')
+    # show debug
+    print("TestFunctions: Clicked with alt and shift key pressed over position", clickedPosition[0], '-', clickedPosition[1])
+    # Release alt key
+    pyautogui.keyUp('alt')
+    # Release shift key
+    pyautogui.keyUp('shift')
     # wait after key up
     time.sleep(DELAY_KEY)
 
@@ -1523,7 +1551,7 @@ def saveSelection():
     """
     focusOnFrame()
     # jump to save
-    for _ in range(25):
+    for _ in range(26):
         typeTab()
     typeSpace()
     # jump to filename TextField
@@ -1539,7 +1567,7 @@ def loadSelection():
     """
     focusOnFrame()
     # jump to save
-    for _ in range(26):
+    for _ in range(27):
         typeTab()
     typeSpace()
     # jump to filename TextField
@@ -1662,13 +1690,27 @@ def selectionRectangle(referencePosition, startX, startY, endX, endY):
     time.sleep(DELAY_SELECT)
 
 
+def selectionApply():
+    """
+    @brief apply selection
+    """
+    # focus current frame
+    focusOnFrame()
+    for _ in range(21):
+        typeTab()
+    # type space to select clear option
+    typeSpace()
+    # wait for gl debug
+    time.sleep(DELAY_SELECT)
+	
+	
 def selectionClear():
     """
     @brief clear selection
     """
     # focus current frame
     focusOnFrame()
-    for _ in range(23):
+    for _ in range(24):
         typeTab()
     # type space to select clear option
     typeSpace()
@@ -1682,7 +1724,7 @@ def selectionInvert():
     """
     # focus current frame
     focusOnFrame()
-    for _ in range(24):
+    for _ in range(25):
         typeTab()
     # type space to select invert operation
     typeSpace()
@@ -1710,7 +1752,7 @@ def selectionInvertDemand():
     """
     # focus current frame
     focusOnFrame()
-    for _ in range(25):
+    for _ in range(26):
         typeTab()
     # type space to select invert operation
     typeSpace()
@@ -1737,8 +1779,8 @@ def createTLS():
     """
     # focus current frame
     focusOnFrame()
-    # type tab 3 times to jump to create TLS button
-    for _ in range(3):
+    # type tab 2 times to jump to create TLS button
+    for _ in range(2):
         typeTab()
     # create TLS
     typeSpace()

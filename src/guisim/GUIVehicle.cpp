@@ -43,6 +43,7 @@
 #include <microsim/MSVehicle.h>
 #include <microsim/MSJunction.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSStop.h>
 #include <microsim/logging/CastingFunctionBinding.h>
 #include <microsim/logging/FunctionBinding.h>
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
@@ -579,8 +580,10 @@ GUIVehicle::getColorValue(const GUIVisualizationSettings& s, int activeScheme) c
         case 29:
             return getStopDelay();
         case 30:
+            return getStopArrivalDelay();
+        case 31:
             return getLaneChangeModel().getSpeedLat();
-        case 31: // by numerical param value
+        case 32: // by numerical param value
             std::string error;
             std::string val = getPrefixedParameter(s.vehicleParam, error);
             try {
@@ -689,7 +692,7 @@ GUIVehicle::drawRouteHelper(const GUIVisualizationSettings& s, const MSRoute& r,
     // (vertical shift for repeated stops at the same position
     std::map<std::pair<const MSLane*, double>, int> repeat; // count repeated occurrences of the same position
     int stopIndex = 0;
-    for (const Stop& stop : myStops) {
+    for (const MSStop& stop : myStops) {
         double stopLanePos;
         if (stop.pars.speed > 0) {
             stopLanePos = stop.reached ? stop.pars.endPos : stop.pars.startPos;

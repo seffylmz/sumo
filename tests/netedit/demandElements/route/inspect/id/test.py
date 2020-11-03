@@ -35,14 +35,14 @@ netedit.supermodeDemand()
 netedit.routeMode()
 
 # create route using three edges
-netedit.leftClick(referencePosition, 274, 416)
+netedit.leftClick(referencePosition, 274, 392)
 netedit.leftClick(referencePosition, 570, 250)
 
 # press enter to create route
 netedit.typeEnter()
 
 # create second route
-netedit.leftClick(referencePosition, 280, 60)
+netedit.leftClick(referencePosition, 280, 55)
 
 # press enter to create route
 netedit.typeEnter()
@@ -51,7 +51,7 @@ netedit.typeEnter()
 netedit.inspectMode()
 
 # inspect route
-netedit.leftClick(referencePosition, 280, 417)
+netedit.leftClick(referencePosition, 280, 392)
 
 # Change parameter id with a non valid value (empty)
 netedit.modifyAttribute(0, "", True)

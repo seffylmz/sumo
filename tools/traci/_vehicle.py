@@ -801,10 +801,18 @@ class VehicleDomain(Domain):
 
     def getStopDelay(self, vehID):
         """getStopDelay(string) -> double
-        Returns the expected delay at the next stop (if that stop defines the
+        Returns the expected depart delay at the next stop (if that stop defines the
         until-attribute) in seconds. Returns -1 if the next stop is not applicable
         """
         return self._getUniversal(tc.VAR_STOP_DELAY, vehID)
+
+    def getStopArrivalDelay(self, vehID):
+        """getStopArrivalDelay(string) -> double
+        Returns the expected arrival delay at the next stop (if that stop defines the
+        arrival-attribute) in seconds. The returned value may be negative to
+        indicate early arrival.  Returns INVALID_DOUBLE if the next stop is not applicable
+        """
+        return self._getUniversal(tc.VAR_STOP_ARRIVALDELAY, vehID)
 
     def getNextTLS(self, vehID):
         """getNextTLS(string) ->
@@ -857,8 +865,7 @@ class VehicleDomain(Domain):
         Subscribe for the leading vehicle id together with the distance.
         The dist parameter defines the maximum lookahead, 0 calculates a lookahead from the brake gap.
         """
-        self._connection._subscribe(tc.CMD_SUBSCRIBE_VEHICLE_VARIABLE, begin, end, vehID,
-                                    (tc.VAR_LEADER,), {tc.VAR_LEADER: ("d", dist)})
+        self.subscribe(vehID, (tc.VAR_LEADER,), begin, end, {tc.VAR_LEADER: ("d", dist)})
 
     def getDrivingDistance(self, vehID, edgeID, pos, laneIndex=0):
         """getDrivingDistance(string, string, double, integer) -> double

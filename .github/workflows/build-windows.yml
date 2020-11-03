@@ -1,4 +1,4 @@
-name: build-windows
+name: windows
 
 on: 
   push:            # run on push events
@@ -9,7 +9,7 @@ on:
       - 'docs/**'
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
     strategy:
       matrix:
@@ -150,23 +150,25 @@ jobs:
         path: sumo/dist
 
     - name: Building FMU Compliance Checker
-      if: matrix.build_type == 'extra'
+      if: matrix.build-type == 'extra'
       run: |
         git clone https://github.com/modelica-tools/FMUComplianceChecker.git fmuChecker
         cd fmuChecker
         mkdir build
         cd build
-        cmake ..
-        make install test
+        cmake -G "Visual Studio 16 2019" ..
+        cmake --build . --config MinSizeRel --target install
  
     - name: Checking sumo-fmi2.fmu
-      if: matrix.build_type == 'extra'
+      if: matrix.build-type == 'extra'
       run: |
+        $env:Path = "$env:Path;$pwd\sumo\bin"
+        echo $env:Path
         cd sumo
         ../fmuChecker/install/fmuCheck.win64 bin/sumo-fmi2-win64.fmu 
       
     - name: Uploading FMI 2.0 FMU artifacts
-      if: matrix.build_type == 'extra'
+      if: matrix.build-type == 'extra'
       uses: actions/upload-artifact@v1
       with:
         name: sumo-fmi2-win64

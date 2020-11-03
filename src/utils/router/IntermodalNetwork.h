@@ -408,7 +408,7 @@ public:
         return it->second;
     }
 
-    void addCarEdges(const std::vector<E*>& edges) {
+    void addCarEdges(const std::vector<E*>& edges, double taxiWait) {
         for (const E* const edge : edges) {
             if (edge->getFunction() == SumoXMLEdgeFunc::NORMAL || edge->getFunction() == SumoXMLEdgeFunc::INTERNAL) {
                 myCarLookup[edge] = new CarEdge<E, L, N, V>(myNumericalID++, edge);
@@ -417,12 +417,17 @@ public:
         }
         for (const auto& edgePair : myCarLookup) {
             _IntermodalEdge* const carEdge = edgePair.second;
+            // connectivity within the car network
             for (const auto& suc : edgePair.first->getViaSuccessors()) {
                 _IntermodalEdge* const sucCarEdge = getCarEdge(suc.first);
                 _IntermodalEdge* const sucViaEdge = getCarEdge(suc.second);
                 if (sucCarEdge != nullptr) {
                     carEdge->addSuccessor(sucCarEdge, sucViaEdge);
                 }
+            }
+            // connectivity to the pedestrian network (only for normal edges)
+            if (edgePair.first->getFunction() != SumoXMLEdgeFunc::NORMAL) {
+                continue;
             }
             if ((myCarWalkTransfer & ALL_JUNCTIONS) != 0) {
                 _IntermodalEdge* const walkCon = getWalkingConnector(edgePair.first);
@@ -461,16 +466,18 @@ public:
                     }
                 }
             }
+            // use intermediate access edge that prevents taxi departure
+            _IntermodalEdge* departConn = getDepartConnector(edgePair.first);
+            _AccessEdge* access = new _AccessEdge(myNumericalID++, departConn, carEdge, 0, (SVCAll & ~SVC_TAXI));
+            addEdge(access);
+            departConn->addSuccessor(access);
+            access->addSuccessor(carEdge);
             if ((myCarWalkTransfer & TAXI_PICKUP_PT) == 0) {
-                // taxi (as all other cars) may depart anywhere
-                getDepartConnector(edgePair.first)->addSuccessor(carEdge);
-            } else {
-                // use intermediate access edge that prevents taxi departure
-                _IntermodalEdge* departConn = getDepartConnector(edgePair.first);
-                _AccessEdge* access = new _AccessEdge(myNumericalID++, departConn, carEdge, 0, (SVCAll & ~SVC_TAXI));
-                addEdge(access);
-                departConn->addSuccessor(access);
-                access->addSuccessor(carEdge);
+                // taxi may depart anywhere but there is a time penalty
+                _AccessEdge* taxiAccess = new _AccessEdge(myNumericalID++, departConn, carEdge, 0, SVC_TAXI, SVC_IGNORING, taxiWait);
+                addEdge(taxiAccess);
+                departConn->addSuccessor(taxiAccess);
+                taxiAccess->addSuccessor(carEdge);
             }
             if ((myCarWalkTransfer & TAXI_DROPOFF_PT) == 0) {
                 // taxi (as all other cars) may arrive anywhere
@@ -512,8 +519,10 @@ public:
     * @param[in] stopEdge The edge on which the stop is located
     * @param[in] pos The relative position on the edge where the stop is located
     * @param[in] category The type of stop
+    * @param[in] isAccess Whether an <access> element is being connected
+    * @param[in] taxiWait Expected time to wait for a taxi
     */
-    void addAccess(const std::string& stopId, const E* stopEdge, const double pos, const double length, const SumoXMLTag category) {
+    void addAccess(const std::string& stopId, const E* stopEdge, const double pos, const double length, const SumoXMLTag category, bool isAccess, double taxiWait) {
         assert(stopEdge != nullptr);
         const bool transferCarWalk = ((category == SUMO_TAG_PARKING_AREA && (myCarWalkTransfer & PARKING_AREAS) != 0) ||
                                       (category == SUMO_TAG_BUS_STOP && (myCarWalkTransfer & PT_STOPS) != 0));
@@ -561,8 +570,8 @@ public:
                         }
                     }
                 }
-                if (carSplit != nullptr && transferWalkTaxi) {
-                    _AccessEdge* access = new _AccessEdge(myNumericalID++, stopConn, carSplit, 0, SVC_TAXI);
+                if (carSplit != nullptr && transferWalkTaxi && !isAccess) {
+                    _AccessEdge* access = new _AccessEdge(myNumericalID++, stopConn, carSplit, 0, SVC_TAXI, SVC_IGNORING, taxiWait);
                     addEdge(access);
                     stopConn->addSuccessor(access);
                     access->addSuccessor(carSplit);
@@ -716,13 +725,13 @@ public:
     * @param[in] edge The edge on which the transfer takes place
     * @param[in] svc The permitted vehicle class for transfering
     */
-    void addCarAccess(const E* edge, SUMOVehicleClass svc) {
+    void addCarAccess(const E* edge, SUMOVehicleClass svc, double traveltime) {
         assert(edge != nullptr);
         assert(myCarLookup.count(edge) != 0);
         assert(myBidiLookup.count(edge) != 0);
         EdgePair pedestrianEdges = myBidiLookup[edge];
         _IntermodalEdge* carEdge = myCarLookup[edge];
-        _AccessEdge* access = new _AccessEdge(myNumericalID++, pedestrianEdges.first, carEdge, 0, svc);
+        _AccessEdge* access = new _AccessEdge(myNumericalID++, pedestrianEdges.first, carEdge, 0, svc, SVC_IGNORING, traveltime);
         addEdge(access);
         pedestrianEdges.first->addSuccessor(access);
         pedestrianEdges.second->addSuccessor(access);

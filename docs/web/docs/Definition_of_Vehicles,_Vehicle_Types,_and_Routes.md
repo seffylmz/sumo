@@ -228,6 +228,13 @@ traffic assignment zone.
 ### Routing between Junctions
 Trips and flows may use the attributes `fromJunction`, `toJunction`, and `viaJunctions` to describe origin, destination and intermediate locations. This is a special form of TAZ-routing and it must be enabled by either setting the SUMO option **--junction-taz** or by loading TAZ-definitions that use the respective junction IDs. When using option **--junction-taz**, all edges outgoing from a junction may be used at the origin and all edges incoming to a junction may be used to reach the intermediate and final junctions.
 
+### Implicit Origin and Destination from Stops
+If a trip or flow defines at least one stop as child element, the attributes 'from' and 'to' may be omitted.
+In this case the edge of the first stop will be used as the 'from'-edge and the edge of the last stop will be used as the 'to'-edge.
+
+!!! note
+    A good combination with an implicit origin is also setting the attribute `departPos="stop"` to make the vehicle start at the exact position of the first stop.
+
 ## A Vehicle's depart and arrival parameter
 
 Using the `depart...` and
@@ -763,10 +770,10 @@ model as in [{{SUMO}}/src/microsim/cfmodels/MSCFModel_Krauss.cpp]({{Source}}src/
   without violating safety (the original model allowed for collisions
   in this case)
 - The formula for safe velocity was adapted to maintain safety when
-  using the *Euler*-position update rule. This was done by
+  using the *Ballistic*-position update rule. This was done by
   discretizing some of the continuous terms. The original model was
-  defined for the *Ballistic*-position updated rule and would produce
-  collisions when using *Euler*. See also
+  defined for the *Euler*-position updated rule and would produce
+  collisions when using *Ballistic*. See also
   [Simulation/Basic_Definition\#Defining_the_Integration_Method](Simulation/Basic_Definition.md#defining_the_integration_method).
 
 ## Lane-Changing Models
@@ -831,7 +838,7 @@ listed below.
 | jmDriveAfterRedTime    | float (s)                            | \-1        | This value causes vehicles to violate a red light if the duration of the red phase is lower than the given threshold. When set to 0, vehicles will always drive at yellow but will try to brake at red. If this behavior causes a vehicle to drive so fast that stopping is not possible any more it will not attempt to stop. This value also applies to [the default pedestrian model](Simulation/Pedestrians.md#model_striping). |
 | jmDriveAfterYellowTime | float (s)                            | \-1        | This value causes vehicles to violate a yellow light if the duration of the yellow phase is lower than the given threshold. Vehicles that are too fast to brake always drive at yellow..                                                                                                                                                                                                                                                    |
 | jmDriveRedSpeed        | float (m/s)                          | *maxSpeed* | This value causes vehicles affected by *jmDriveAfterRedTime* to slow down when violating a red light. The given speed will not be exceeded when entering the intersection.                                                                                                                                                                                                                                                                  |
-| jmIgnoreFoeProb        | float                                | 0          | This value causes vehicles to ignore foe vehicles that have right-of-way with the given probability. The check is performed anew every simulation step. (range \[0,1\]).                                                                                                                                                                                                                                                                    |
+| jmIgnoreFoeProb        | float                                | 0          | This value causes vehicles and pedestrians to ignore foe vehicles that have right-of-way with the given probability. The check is performed anew every simulation step. (range \[0,1\]).                                                                                                                                                                                                                                                                    |
 | jmIgnoreFoeSpeed       | float (m/s)                          | 0          | This value is used in conjunction with *jmIgnoreFoeProb*. Only vehicles with a speed below or equal to the given value may be ignored.                                                                                                                                                                                                                                                                                                      |
 | jmSigmaMinor           | float, scaling factor (like *sigma*) | sigma      | This value configures driving imperfection (dawdling) while passing a minor link (ahead of the intersection after having comitted to drive and while still on the intersection).                                                                                                                                                                                                                                                            |
 | jmStoplineGap          | float \>= 0 (m)                      | 1          | This value configures stopping distance in front of prioritary / TL-controlled stop line. In case the stop line has been relocated by a [**stopOffset**](Networks/SUMO_Road_Networks.md#stop_offsets) item, the maximum of both distances is applied.                                                                                                                                                                                       |

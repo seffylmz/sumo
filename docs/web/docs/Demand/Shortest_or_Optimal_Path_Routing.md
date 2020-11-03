@@ -34,6 +34,7 @@ the router using an XML-file. The syntax of a single trip definition is:
 | via            | edge ids                                                | List of intermediate edge ids which shall be part of the route; the edges must be a part of the used network       |
 | fromTaz        | district id                                             | The name of the [district](../Demand/Importing_O/D_Matrices.md#describing_the_taz) the route starts at. [TAZ edges are selected so that travel time is minimized.](../Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md#traffic_assignement_zones_taz)    |
 | toTaz          | district id                                             | The name of the [district](../Demand/Importing_O/D_Matrices.md#describing_the_taz) the route ends at. [TAZ edges are selected so that travel time is minimized.](../Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md#traffic_assignement_zones_taz)       |
+| type           | type id                                                 | The type id of the vehicle to generate            |
 | color          | color                                                   | This generated vehicle's color              |
 | departLane     | int/string (≥0,"random","free","departlane")            | The lane on which the vehicle shall be inserted         |
 | departPos      | float(m)/string ("random","free","random_free","base") | The position at which the vehicle shall enter the net; "free" means the point closest to the start of the departlane where it is possible to insert the vehicle. "random_free" tries forcefully to find a free random position and if that fails, places the vehicle at the next "free" position. "base" sets the vehicle's depart position to the vehicle's length + eps (eps=.1m), this means the vehicle is completely at the begin of the depart lane. |
@@ -113,6 +114,9 @@ Let's review flow parameter:
 | type             | type id                                                 | The type id of the vehicles to generate            |
 | **begin**        | int                                                     | The begin time for the described interval         |
 | end              | int                                                     | The end time for the interval; must be greater than <begin\>; vehicles will be inserted between <begin\> and <end\>-1      |
+| vehsPerHour    | float(\#/h)    | number of vehicles per hour, equally spaced (not together with period or probability)        |
+| period         | float(s)       | insert equally spaced vehicles at that period (not together with vehsPerHour or probability) |
+| probability    | float(\[0,1\]) | probability for emitting a vehicle each second (not together with vehsPerHour or period), see also [Simulation/Randomness](../Simulation/Randomness.md#flows_with_a_random_number_of_vehicles) |
 | number           | int                                                     | The number of vehicles that shall be inserted during this interval         |
 | color            | color                                                   | Defines the color of the vehicles and their routes                       |
 | departLane       | int/string (≥0,"random","free","departlane")            | The lane on which the vehicle shall be inserted                      |

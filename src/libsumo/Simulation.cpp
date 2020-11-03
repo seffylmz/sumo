@@ -130,6 +130,18 @@ Simulation::getSubscriptionResults() {
 }
 
 
+const SubscriptionResults
+Simulation::getAllSubscriptionResults() {
+        return mySubscriptionResults;
+}
+
+
+const ContextSubscriptionResults
+Simulation::getAllContextSubscriptionResults() {
+    return myContextSubscriptionResults;
+}
+            
+            
 std::pair<int, std::string>
 Simulation::getVersion() {
     return std::make_pair(libsumo::TRACI_VERSION, "SUMO " VERSION_STRING);
@@ -289,17 +301,20 @@ Simulation::getBusStopIDList() {
 }
 
 int
-Simulation::getBusStopWaiting(const std::string& id) {
-    MSStoppingPlace* s = MSNet::getInstance()->getStoppingPlace(id, SUMO_TAG_BUS_STOP);
+Simulation::getBusStopWaiting(const std::string& stopID) {
+    MSStoppingPlace* s = MSNet::getInstance()->getStoppingPlace(stopID, SUMO_TAG_BUS_STOP);
     if (s == nullptr) {
-        throw TraCIException("Unknown bus stop '" + id + "'.");
+        throw TraCIException("Unknown bus stop '" + stopID + "'.");
     }
     return s->getTransportableNumber();
 }
 
 std::vector<std::string>
-Simulation::getBusStopWaitingIDList(const std::string& id) {
-    MSStoppingPlace* s = MSNet::getInstance()->getStoppingPlace(id, SUMO_TAG_BUS_STOP);
+Simulation::getBusStopWaitingIDList(const std::string& stopID) {
+    MSStoppingPlace* s = MSNet::getInstance()->getStoppingPlace(stopID, SUMO_TAG_BUS_STOP);
+    if (s == nullptr) {
+        throw TraCIException("Unknown bus stop '" + stopID + "'.");
+    }
     std::vector<MSTransportable*> transportables = s->getTransportables();
     std::vector<std::string> result;
     for (std::vector<MSTransportable*>::iterator it = transportables.begin(); it != transportables.end(); it++) {

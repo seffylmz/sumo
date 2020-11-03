@@ -21,6 +21,7 @@
 #include <netedit/elements/network/GNEJunction.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
+#include <utils/options/OptionsCont.h>
 
 #include "GNEGeometry.h"
 #include "GNENet.h"
@@ -336,6 +337,10 @@ GNEGeometry::DottedGeometry::DottedGeometry() :
 }
 
 
+#if defined(_MSC_VER) && _MSC_VER == 1800
+#pragma warning(push)
+#pragma warning(disable: 4100) // do not warn about "unused" parameters which get optimized away
+#endif
 GNEGeometry::DottedGeometry::DottedGeometry(const GUIVisualizationSettings& s, PositionVector shape, const bool closeShape) :
     myWidth(s.dottedContourSettings.segmentWidth) {
     // check if shape has to be closed
@@ -435,6 +440,9 @@ GNEGeometry::DottedGeometry::updateDottedGeometry(const GUIVisualizationSettings
         calculateShapeRotationsAndLengths();
     }
 }
+#if defined(_MSC_VER) && _MSC_VER == 1800
+#pragma warning(pop)
+#endif
 
 
 void
@@ -1426,12 +1434,17 @@ GNEGeometry::drawDottedContourEdge(const DottedContourType type, const GUIVisual
         GNELane::LaneDrawingConstants laneDrawingConstants(s, edge->getLanes().front());
         GNEGeometry::drawDottedContourLane(type, s, edge->getLanes().front()->getDottedLaneGeometry(), laneDrawingConstants.halfWidth, drawFrontExtreme, drawBackExtreme);
     } else {
+        // set left hand flag
+        const bool lefthand = OptionsCont::getOptions().getBool("lefthand");
+        // obtain lanes
+        const GNELane *topLane =  lefthand? edge->getLanes().back() : edge->getLanes().front();
+        const GNELane *botLane = lefthand? edge->getLanes().front() : edge->getLanes().back();
         // obtain a copy of both geometries
-        GNEGeometry::DottedGeometry dottedGeometryTop = edge->getLanes().front()->getDottedLaneGeometry();
-        GNEGeometry::DottedGeometry dottedGeometryBot = edge->getLanes().back()->getDottedLaneGeometry();
+        GNEGeometry::DottedGeometry dottedGeometryTop = topLane->getDottedLaneGeometry();
+        GNEGeometry::DottedGeometry dottedGeometryBot = botLane->getDottedLaneGeometry();
         // obtain both LaneDrawingConstants
-        GNELane::LaneDrawingConstants laneDrawingConstantsFront(s, edge->getLanes().front());
-        GNELane::LaneDrawingConstants laneDrawingConstantsBack(s, edge->getLanes().back());
+        GNELane::LaneDrawingConstants laneDrawingConstantsFront(s, topLane);
+        GNELane::LaneDrawingConstants laneDrawingConstantsBack(s, botLane);
         // move shapes to side
         dottedGeometryTop.moveShapeToSide(laneDrawingConstantsFront.halfWidth);
         dottedGeometryBot.moveShapeToSide(laneDrawingConstantsBack.halfWidth * -1);

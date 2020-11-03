@@ -770,6 +770,9 @@ modeled by setting a lower `maxSpeed` for trucks, that approach would preclude t
 use of `speedDev` and `speedFactor` to easily model the variation of speeds around the legal
 speed limit.
 
+!!! note
+    vClass-specific speed limit restrictions can also be loaded directly into [sumo](../sumo.md) from an additional file (only type attribute 'id' is needed)
+
 # Connection Descriptions
 
 | **Connection Descriptions** | |
@@ -788,8 +791,8 @@ If you leave some connections unspecified
 [netconvert](../netconvert.md) automatically computes the missing
 information based on heuristics.
 
-!!! caution
-    It is possible to connect two incoming lanes to the same outgoing lane. This should be avoided at traffic lights as it may cause collisions. At priority junctions, SUMO vehicles are aware of the conflicts set up this way and [this can sometimes be a useful tool for network modelling](../Simulation/Motorways.md#combined_on-off-ramps).
+!!! note
+    It is possible to connect two incoming lanes to the same outgoing lane. In many cases (i.e. motorway on-ramps) this should be avoided because the expected vehicle behavior is to change the lane as soon as possible rather than driving to the end of the lane). Netconvert will generate these "double connections" when a bicycle lane ends and bikes must move onto the road. SUMO vehicles are aware of the conflicts set up this way and [this can sometimes be a useful tool for network modelling](../Simulation/Motorways.md#combined_on-off-ramps).
 
 ## Explicitly setting which Edge / Lane is connected to which
 

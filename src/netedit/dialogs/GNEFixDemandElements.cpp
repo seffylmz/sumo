@@ -21,7 +21,6 @@
 
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/div/GUIDesigns.h>
-#include <netedit/elements/demand/GNEDemandElement.h>
 #include <netedit/GNENet.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEUndoList.h>
@@ -255,7 +254,7 @@ GNEFixDemandElements::DemandList::DemandList(GNEFixDemandElements* fixDemandElem
     myTable->setTableSize((int)(myInvalidRoutes.size() + myInvalidVehicles.size() + myInvalidStops.size() + myInvalidPersonPlans.size()), 3);
     // Configure list
     myTable->setVisibleColumns(4);
-    myTable->setColumnWidth(0, GUIDesignTableIconCellWidth);
+    myTable->setColumnWidth(0, GUIDesignHeight);
     myTable->setColumnWidth(1, 160);
     myTable->setColumnWidth(2, 280);
     myTable->setColumnText(0, "");

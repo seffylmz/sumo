@@ -23,10 +23,11 @@
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
 #include <netedit/changes/GNEChange_DemandElement.h>
-#include <netedit/elements/demand/GNEVehicleType.h>
+#include <netedit/dialogs/GNESingleParametersDialog.h>
 #include <utils/emissions/PollutantsInterface.h>
 #include <utils/gui/div/GUIDesigns.h>
 #include <utils/gui/windows/GUIAppEnum.h>
+#include <utils/common/StringTokenizer.h>
 
 #include "GNEVehicleTypeDialog.h"
 
@@ -36,8 +37,9 @@
 // ===========================================================================
 
 FXDEFMAP(GNEVehicleTypeDialog::VTypeAtributes) VTypeAtributesMap[] = {
-    FXMAPFUNC(SEL_COMMAND,  MID_GNE_SET_ATTRIBUTE,          GNEVehicleTypeDialog::VTypeAtributes::onCmdSetAttribute),
-    FXMAPFUNC(SEL_COMMAND,  MID_GNE_SET_ATTRIBUTE_DIALOG,   GNEVehicleTypeDialog::VTypeAtributes::onCmdSetAttributeDialog)
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_SET_ATTRIBUTE,              GNEVehicleTypeDialog::VTypeAtributes::onCmdSetAttribute),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_SET_ATTRIBUTE_DIALOG,       GNEVehicleTypeDialog::VTypeAtributes::onCmdOpenAttributeDialog),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_OPEN_PARAMETERS_DIALOG,     GNEVehicleTypeDialog::VTypeAtributes::onCmdOpenParametersEditor)
 };
 
 FXDEFMAP(GNEVehicleTypeDialog::CarFollowingModelParameters) CarFollowingModelParametersMap[] = {
@@ -404,20 +406,20 @@ GNEVehicleTypeDialog::VTypeAtributes::VTypeAttributeRow::VTypeAttributeRow(VType
     myComboBox(nullptr) {
     // first check if we have to create a button or a label
     if ((rowAttrType == ROWTYPE_COLOR) || (rowAttrType == ROWTYPE_FILENAME)) {
-        myButton = new FXButton(this, filterAttributeName(attr), nullptr, VTypeAtributesParent, MID_GNE_SET_ATTRIBUTE_DIALOG, GUIDesignButtonRectangular150x23);
+        myButton = new FXButton(this, filterAttributeName(attr), nullptr, VTypeAtributesParent, MID_GNE_SET_ATTRIBUTE_DIALOG, GUIDesignButtonRectangular150);
+    } else if (rowAttrType == ROWTYPE_PARAMETERS) {
+        myButton = new FXButton(this, "Edit parameters", nullptr, VTypeAtributesParent, MID_GNE_OPEN_PARAMETERS_DIALOG, GUIDesignButtonRectangular150);
     } else {
         new FXLabel(this, filterAttributeName(attr), nullptr, GUIDesignLabelAttribute150);
     }
     // now check if we have to create a textfield or a ComboBox
-    if ((rowAttrType == ROWTYPE_STRING) || (rowAttrType == ROWTYPE_COLOR)) {
-        myTextField = new FXTextField(this, GUIDesignTextFieldNCol, VTypeAtributesParent, MID_GNE_SET_ATTRIBUTE, GUIDesignTextFielWidth180);
-    } else if (rowAttrType == ROWTYPE_FILENAME) {
+    if ((rowAttrType == ROWTYPE_STRING) || (rowAttrType == ROWTYPE_COLOR) || (rowAttrType == ROWTYPE_FILENAME) || (rowAttrType == ROWTYPE_PARAMETERS)) {
         myTextField = new FXTextField(this, GUIDesignTextFieldNCol, VTypeAtributesParent, MID_GNE_SET_ATTRIBUTE, GUIDesignTextFielWidth180);
     } else if (rowAttrType == ROWTYPE_COMBOBOX) {
         myComboBox = new FXComboBox(this, GUIDesignComboBoxNCol, VTypeAtributesParent, MID_GNE_SET_ATTRIBUTE, GUIDesignComboBoxWidth180);
         // fill combo Box with values
-        for (auto i : values) {
-            myComboBox->appendItem(i.c_str());
+        for (const auto &value : values) {
+            myComboBox->appendItem(value.c_str());
         }
         // set 10 visible elements as maximum
         if (myComboBox->getNumItems() < 10) {
@@ -530,6 +532,25 @@ GNEVehicleTypeDialog::VTypeAtributes::VTypeAttributeRow::updateValue() {
         } else {
             myTextField->setTextColor(FXRGB(195, 195, 195));
         }
+    } else if (myAttr == GNE_ATTR_PARAMETERS) {
+        // get parameters
+        const std::string &parametersStr = myVTypeAtributesParent->myVehicleTypeDialog->myEditedDemandElement->getAttribute(myAttr);
+        // set text of myTextField using current value of VType
+        myTextField->setText(parametersStr.c_str());
+        // set text color
+        myTextField->setTextColor(FXRGB(0, 0, 0));
+         // clear parameters
+         myParameters.clear();
+         // separate value in a vector of string using | as separator
+         StringTokenizer parameters(parametersStr, "|", true);
+         // iterate over all values
+         while (parameters.hasNext()) {
+             // obtain key and value and save it in myParameters
+             const std::vector<std::string> keyValue = StringTokenizer(parameters.next(), "=", true).getVector();
+             if (keyValue.size() == 2) {
+                 myParameters[keyValue.front()] = keyValue.back();
+             }
+         }
     } else {
         // set text of myTextField using current value of VType
         myTextField->setText(myVTypeAtributesParent->myVehicleTypeDialog->myEditedDemandElement->getAttribute(myAttr).c_str());
@@ -649,6 +670,45 @@ GNEVehicleTypeDialog::VTypeAtributes::VTypeAttributeRow::openOSGFileDialog() {
             myTextField->killFocus();
         }
     }
+}
+
+
+std::string 
+GNEVehicleTypeDialog::VTypeAtributes::VTypeAttributeRow::getParametersStr() const {
+    return myTextField->getText().text();
+}
+
+
+std::vector<std::pair<std::string, std::string> >
+GNEVehicleTypeDialog::VTypeAtributes::VTypeAttributeRow::getParametersVectorStr() const {
+    std::vector<std::pair<std::string, std::string> > result;
+    // Generate a vector string using the following structure: "<key1,value1>, <key2, value2>,...
+    for (const auto& parameter : myParameters) {
+        result.push_back(std::make_pair(parameter.first, parameter.second));
+    }
+    return result;
+}
+
+
+void
+GNEVehicleTypeDialog::VTypeAtributes::VTypeAttributeRow::setParameters(const std::vector<std::pair<std::string, std::string> >& parameters) {
+    // first clear parameters
+    myParameters.clear();
+    // declare result
+    std::string result;
+    // iterate over parameters
+    for (const auto& parameter : parameters) {
+        // Generate an string using the following structure: "key1=value1|key2=value2|...
+        result += parameter.first + "=" + parameter.second + "|";
+        // fill parameters
+        myParameters[parameter.first] = parameter.second;
+    }
+    // remove the last "|"
+    if (!result.empty()) {
+        result.pop_back();
+    }
+    // set text field
+    myTextField->setText(result.c_str());
 }
 
 
@@ -840,6 +900,9 @@ GNEVehicleTypeDialog::VTypeAtributes::buildAttributesB(FXVerticalFrame* column) 
 
     // 13 create FXTextField and Label for carriage GAP
     myCarriageGap = new VTypeAttributeRow(this, column, SUMO_ATTR_CARRIAGE_GAP, VTypeAttributeRow::RowAttrType::ROWTYPE_STRING);
+
+    // 24 create FXTextField and Label for parameters
+    myParameters = new VTypeAttributeRow(this, column, GNE_ATTR_PARAMETERS, VTypeAttributeRow::RowAttrType::ROWTYPE_PARAMETERS);
 }
 
 
@@ -1005,6 +1068,8 @@ GNEVehicleTypeDialog::VTypeAtributes::updateValues() {
     myLCATurnAlignmentDistance->updateValue();
     myLCAOvertakeRight->updateValue();
     /* myLCAExperimental->updateValue(); */
+    // parameters
+    myParameters->updateValue();
 }
 
 
@@ -1095,12 +1160,13 @@ GNEVehicleTypeDialog::VTypeAtributes::onCmdSetAttribute(FXObject*, FXSelector, v
     myLCATurnAlignmentDistance->setVariable();
     myLCAOvertakeRight->setVariable();
     /* myLCAExperimental->setVariable(); */
+    myParameters->setVariable();
     return true;
 }
 
 
 long
-GNEVehicleTypeDialog::VTypeAtributes::onCmdSetAttributeDialog(FXObject* obj, FXSelector, void*) {
+GNEVehicleTypeDialog::VTypeAtributes::onCmdOpenAttributeDialog(FXObject* obj, FXSelector, void*) {
     // check what dialog has to be opened
     if (obj == myColor->getButton()) {
         myColor->openColorDialog();
@@ -1108,6 +1174,24 @@ GNEVehicleTypeDialog::VTypeAtributes::onCmdSetAttributeDialog(FXObject* obj, FXS
         myFilename->openImageFileDialog();
     } else if (obj == myOSGFile->getButton()) {
         myFilename->openOSGFileDialog();
+    }
+    return 1;
+}
+
+
+long
+GNEVehicleTypeDialog::VTypeAtributes::onCmdOpenParametersEditor(FXObject*, FXSelector, void*) {
+    // write debug information
+    WRITE_DEBUG("Open parameters dialog");
+    // edit parameters using dialog
+    if (GNESingleParametersDialog(myParameters, myVehicleTypeDialog->getEditedDemandElement()->getNet()->getViewNet()).execute()) {
+        // write debug information
+        WRITE_DEBUG("Close parameters dialog");
+        // set values edited in Parameter dialog in Edited AC
+        myVehicleTypeDialog->getEditedDemandElement()->setAttribute(GNE_ATTR_PARAMETERS, myParameters->getParametersStr(), myVehicleTypeDialog->getEditedDemandElement()->getNet()->getViewNet()->getUndoList());
+    } else {
+        // write debug information
+        WRITE_DEBUG("Cancel parameters dialog");
     }
     return 1;
 }

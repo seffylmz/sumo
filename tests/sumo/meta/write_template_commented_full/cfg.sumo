@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Wed Sep 30 17:03:49 2020 by Eclipse SUMO sumo Version v1_7_0+0372-0e78adb662
+<!-- generated on Tue Nov  3 10:07:45 2020 by Eclipse SUMO sumo Version v1_7_0+0764-5bd512f5cd
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -375,6 +375,9 @@
         <!-- Time in seconds after which pedestrians start squeezing through a jam while on a pedestrian crossing when using model &apos;striping&apos; (non-positive values disable squeezing) -->
         <pedestrian.striping.jamtime.crossing value="10" type="TIME"/>
 
+        <!-- Time in seconds after which pedestrians start squeezing through a jam while on a narrow lane when using model &apos;striping&apos; -->
+        <pedestrian.striping.jamtime.narrow value="1" type="TIME"/>
+
         <!-- Fraction of stripes to reserve for oncoming pedestrians -->
         <pedestrian.striping.reserve-oncoming value="0" type="FLOAT"/>
 
@@ -422,6 +425,9 @@
 
         <!-- When set, trips between the same origin and destination will share a taxi by default -->
         <persontrip.default.group value="" type="STR"/>
+
+        <!-- Estimated time for taxi pickup -->
+        <persontrip.taxi.waiting-time value="300" type="TIME"/>
 
         <!-- Use FLOAT as a maximum train length when initializing the railway router -->
         <railway.max-train-length value="5000" type="FLOAT"/>
@@ -965,9 +971,6 @@
 
         <!-- The aggregation period for value tracker windows -->
         <tracker-interval value="1" type="FLOAT"/>
-
-        <!-- Start with an OpenSceneGraph view instead of the regular 2D view -->
-        <osg-view value="false" type="BOOL"/>
 
         <!-- Enable ovelay for screen recognition -->
         <gui-testing value="false" type="BOOL"/>
