@@ -33,11 +33,11 @@
 
 GNEParkingSpace::GNEParkingSpace(GNENet* net, GNEAdditional* parkingAreaParent, const Position& pos, double width, double length, double angle, bool blockMovement) :
     GNEAdditional(net, GLO_PARKING_SPACE, SUMO_TAG_PARKING_SPACE, "", blockMovement,
-        {}, {}, {}, {parkingAreaParent}, {}, {}, {}, {}),
-    myPosition(pos),
-    myWidth(width),
-    myLength(length),
-    myAngle(angle) {
+{}, {}, {}, {parkingAreaParent}, {}, {}, {}, {}),
+myPosition(pos),
+myWidth(width),
+myLength(length),
+myAngle(angle) {
     // update centering boundary without updating grid
     updateCenteringBoundary(false);
 }
@@ -46,7 +46,7 @@ GNEParkingSpace::GNEParkingSpace(GNENet* net, GNEAdditional* parkingAreaParent, 
 GNEParkingSpace::~GNEParkingSpace() {}
 
 
-GNEMoveOperation* 
+GNEMoveOperation*
 GNEParkingSpace::getMoveOperation(const double /*shapeOffset*/) {
     if (myBlockMovement) {
         // element blocked, then nothing to move
@@ -60,16 +60,12 @@ GNEParkingSpace::getMoveOperation(const double /*shapeOffset*/) {
 
 void
 GNEParkingSpace::updateGeometry() {
-    // Nothing to update
+    updateCenteringBoundary(true);
 }
 
 
-void 
-GNEParkingSpace::updateCenteringBoundary(const bool updateGrid) {
-    // remove additional from grid
-    if (updateGrid) {
-        myNet->removeGLObjectFromGrid(this);
-    }
+void
+GNEParkingSpace::updateCenteringBoundary(const bool /*updateGrid*/) {
     // first reset boundary
     myBoundary.reset();
     // add position
@@ -82,10 +78,8 @@ GNEParkingSpace::updateCenteringBoundary(const bool updateGrid) {
     }
     // grow
     myBoundary.grow(10);
-    // add additional into RTREE again
-    if (updateGrid) {
-        myNet->addGLObjectIntoGrid(this);
-    }
+    // update centering boundary of parent
+    getParentAdditionals().front()->updateCenteringBoundary(true);
 }
 
 
@@ -110,10 +104,6 @@ GNEParkingSpace::drawGL(const GUIVisualizationSettings& s) const {
     const double lengthExaggeration = myLength * parkingAreaExaggeration;
     // first check if additional has to be drawn
     if (s.drawAdditionals(parkingAreaExaggeration) && myNet->getViewNet()->getDataViewOptions().showAdditionals()) {
-        // check if boundary has to be drawn
-        if (s.drawBoundaries) {
-            GLHelper::drawBoundary(getCenteringBoundary());
-        }
         // push name
         glPushName(getGlID());
         // push later matrix
@@ -314,7 +304,7 @@ GNEParkingSpace::setAttribute(SumoXMLAttr key, const std::string& value) {
 }
 
 
-void 
+void
 GNEParkingSpace::setMoveShape(const GNEMoveResult& moveResult) {
     // update position
     myPosition = moveResult.shapeToUpdate.front();
@@ -323,7 +313,7 @@ GNEParkingSpace::setMoveShape(const GNEMoveResult& moveResult) {
 }
 
 
-void 
+void
 GNEParkingSpace::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
     undoList->p_begin("position of " + getTagStr());
     undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(moveResult.shapeToUpdate.front())));

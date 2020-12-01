@@ -118,7 +118,7 @@ public:
      * exists)
      * @param[in] src The starting junction
      * @param[in] dest The ending junction
-     * @param[in] tpl The template edge from which to copy attributes (including lane attrs)
+     * @param[in] edgeTemplate The template edge from which to copy attributes (including lane attrs)
      * @param[in] undoList The undoList in which to mark changes
      * @param[in] suggestedName
      * @param[in] wasSplit Whether the edge was created from a split
@@ -126,7 +126,7 @@ public:
      * @param[in] recomputeConnections Whether connections on the affected junctions must be recomputed
      * @return The newly created edge or 0 if no edge was created
      */
-    GNEEdge* createEdge(GNEJunction* src, GNEJunction* dest, GNEEdge* tpl, GNEUndoList* undoList,
+    GNEEdge* createEdge(GNEJunction* src, GNEJunction* dest, GNEEdge* edgeTemplate, GNEUndoList* undoList,
                         const std::string& suggestedName = "", bool wasSplit = false, bool allowDuplicateGeom = false,
                         bool recomputeConnections = true);
 
@@ -282,6 +282,13 @@ public:
      */
     GNEJunction* retrieveJunction(const std::string& id, bool failHard = true) const;
 
+    /**@brief get edge type by id
+     * @param[in] id The id of the desired edge type
+     * @param[in] failHard Whether attempts to retrieve a nonexisting edge type should result in an exception
+     * @throws UnknownElement
+     */
+    GNEEdgeType* retrieveEdgeType(const std::string& id, bool failHard = true) const;
+
     /**@brief get edge by id
      * @param[in] id The id of the desired edge
      * @param[in] failHard Whether attempts to retrieve a nonexisting edge should result in an exception
@@ -337,12 +344,12 @@ public:
      */
     std::vector<GNEEdge*> retrieveEdges(bool onlySelected = false);
 
-    /**@brief return edges with junction angle between 0º and 179º
+    /**@brief return edges with junction angle between 0 (inclusive) and 180 (exclusive) degrees
      * @param[in] onlySelected Whether to return only selected edges
      */
     std::vector<GNEEdge*> retrieve000180AngleEdges(bool onlySelected = false) const;
 
-    /**@brief return edges with junction angle between 180º and 365º
+    /**@brief return edges with junction angle between 180 (inclusive) and 360 (exclusive) degrees
      * @param[in] onlySelected Whether to return only selected edges
      */
     std::vector<GNEEdge*> retrieve180360AngleEdges(bool onlySelected = false) const;
@@ -507,6 +514,9 @@ public:
 
     /// @brief remove edge id from the list of explicit turnarounds
     void removeExplicitTurnaround(std::string id);
+
+    /// @brief generate edgeType id
+    std::string generateEdgeTypeID() const;
 
     /// @name Functions related to Additional Items
     /// @{
@@ -695,6 +705,16 @@ public:
 
     /// @brief get number of TLS Programs
     int getNumberOfTLSPrograms() const;
+
+    /// @}
+
+    /// @name Functions related to TLS Programs
+    /// @{
+    /**@brief save edgeTypes elements of the network
+    * @param[in] filename name of the file in wich save edgeTypes
+    */
+    void saveEdgeTypes(const std::string& filename);
+
     /// @}
 
     /// @name Functions related to Enable or disable update geometry of elements after insertio

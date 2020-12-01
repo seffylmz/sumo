@@ -74,6 +74,9 @@ public:
     /** @brief remove the given car and clean up the relevant data structures */
     void vaporizeCar(MEVehicle* v, MSMoveReminder::Notification reason);
 
+    /// @brief whether the given edge is entering a roundabout
+    static bool isEnteringRoundabout(const MSEdge& e);
+
     /** @brief Compute number of segments per edge (best value stay close to the configured segment length) */
     static int numSegmentsFor(const double length, const double slength);
 
@@ -82,6 +85,12 @@ public:
      * @param[in] e the edge to build for
      */
     void buildSegmentsFor(const MSEdge& e, const OptionsCont& oc);
+
+    /** @brief Update segments after loading meso edge type parameters from
+     * additional file
+     * @param[in] e the edge to update
+     */
+    void updateSegementsForEdge(const MSEdge& e);
 
     /** @brief Get the segment for a given edge at a given position
      *
@@ -97,13 +106,6 @@ public:
      */
     SUMOTime changeSegment(MEVehicle* veh, SUMOTime leaveTime, MESegment* const toSegment,
                            MSMoveReminder::Notification reason, const bool ignoreLink = false) const;
-
-    /** @brief registers vehicle with the given link
-     *
-     * @param[in] veh the car to register
-     * @param[in] link the link on which the car shall register its approach
-     */
-    static void setApproaching(MEVehicle* veh, MSLink* link);
 
     /** @brief Remove all vehicles before quick-loading state */
     void clearState();
@@ -137,9 +139,6 @@ private:
      * @param[in] toSegment The first segment where the vehicle may reenter the network
      */
     void teleportVehicle(MEVehicle* veh, MESegment* const toSegment);
-
-    /// @brief whether the given edge is entering a roundabout
-    static bool isEnteringRoundabout(const MSEdge& e);
 
 private:
     /// @brief leader cars in the segments sorted by exit time

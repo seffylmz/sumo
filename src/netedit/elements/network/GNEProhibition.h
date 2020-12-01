@@ -28,3 +28,16 @@
 // ===========================================================================
 // class definitions
 // ===========================================================================
+/**
+ * @class GNEProhibition
+ * @brief This object is responsible for drawing ...
+ */
+class GNEProhibition : public GNENetworkElement {
+
+public:
+    /**@brief Constructor
+     * @param[in] net The net to inform about gui updates
+     */
+    GNEProhibition(GNENet* net);
+
+};

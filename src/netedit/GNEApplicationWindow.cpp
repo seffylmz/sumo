@@ -18,20 +18,28 @@
 // Functions from main window of NETEDIT
 /****************************************************************************/
 #include <netbuild/NBFrame.h>
+#include <netbuild/NBNetBuilder.h>
+#include <netedit/dialogs/GNEAbout.h>
+#include <netedit/elements/network/GNEEdgeType.h>
+#include <netedit/elements/network/GNELaneType.h>
 #include <netedit/elements/additional/GNEAdditionalHandler.h>
 #include <netedit/elements/data/GNEDataHandler.h>
 #include <netedit/elements/demand/GNERouteHandler.h>
-#include <netedit/dialogs/GNEAbout.h>
+#include <netedit/frames/common/GNEInspectorFrame.h>
+#include <netedit/frames/network/GNECreateEdgeFrame.h>
 #include <netedit/frames/network/GNETAZFrame.h>
 #include <netedit/frames/network/GNETLSEditorFrame.h>
-#include <netedit/frames/common/GNEInspectorFrame.h>
+#include <netedit/changes/GNEChange_EdgeType.h>
+#include <netedit/changes/GNEChange_LaneType.h>
 #include <netimport/NIFrame.h>
+#include <netimport/NIXMLTypesHandler.h>
+#include <netimport/NITypeLoader.h>
 #include <netwrite/NWFrame.h>
 #include <utils/common/SystemFrame.h>
 #include <utils/foxtools/FXLinkLabel.h>
 #include <utils/gui/cursors/GUICursorSubSys.h>
-#include <utils/gui/shortcuts/GUIShortcutsSubSys.h>
 #include <utils/gui/div/GLHelper.h>
+#include <utils/gui/div/GUIDesigns.h>
 #include <utils/gui/div/GUIDesigns.h>
 #include <utils/gui/div/GUIDialog_GLChosenEditor.h>
 #include <utils/gui/div/GUIGlobalSelection.h>
@@ -40,12 +48,12 @@
 #include <utils/gui/images/GUITextureSubSys.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
 #include <utils/gui/settings/GUISettingsHandler.h>
+#include <utils/gui/shortcuts/GUIShortcutsSubSys.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/windows/GUIDialog_Options.h>
 #include <utils/gui/windows/GUIPerspectiveChanger.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/xml/XMLSubSys.h>
-#include <utils/gui/div/GUIDesigns.h>
 
 #include "GNEApplicationWindow.h"
 #include "GNEEvent_NetworkLoaded.h"
@@ -97,6 +105,13 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_K_OPENTLSPROGRAMS,                  GNEApplicationWindow::onUpdNeedsNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_K_SAVETLS,                    GNEApplicationWindow::onCmdSaveTLSPrograms),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_SHIFT_K_SAVETLS,                    GNEApplicationWindow::onUpdNeedsNetwork),
+    // edge types
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_H_OPENEDGETYPES,                    GNEApplicationWindow::onCmdOpenEdgeTypes),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_H_OPENEDGETYPES,                    GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_H_SAVEEDGETYPES,              GNEApplicationWindow::onCmdSaveEdgeTypes),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_SHIFT_H_SAVEEDGETYPES,              GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_SAVEEDGETYPES_AS,               GNEApplicationWindow::onCmdSaveEdgeTypesAs),
+    FXMAPFUNC(SEL_UPDATE,   MID_GNE_TOOLBARFILE_SAVEEDGETYPES_AS,               GNEApplicationWindow::onUpdNeedsNetwork),
     // additionals
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_A_STARTSIMULATION_OPENADDITIONALS,  GNEApplicationWindow::onCmdOpenAdditionals),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_A_STARTSIMULATION_OPENADDITIONALS,  GNEApplicationWindow::onUpdNeedsNetwork),
@@ -247,8 +262,12 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_SHIFT_F3_TEMPLATE_CLEAR,     GNEApplicationWindow::onCmdClearTemplate),
 
     // Other
-    FXMAPFUNC(SEL_CLIPBOARD_REQUEST,    0,                                      GNEApplicationWindow::onClipboardRequest),
-    FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_SHIFT_F12_FOCUSUPPERELEMENT, GNEApplicationWindow::onCmdFocusFrame),
+    FXMAPFUNC(SEL_CLIPBOARD_REQUEST,    0,                                                  GNEApplicationWindow::onClipboardRequest),
+    FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_CTRL_SHIFT_T_FORCESAVENETEWORK,          GNEApplicationWindow::onCmdForceSaveNetwork),
+    FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_CTRL_SHIFT_U_FORCESAVEADDITIONALS,       GNEApplicationWindow::onCmdForceSaveAdditionals),
+    FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_CTRL_SHIFT_V_FORCESAVEDEMANDELEMENTS,    GNEApplicationWindow::onCmdForceSaveDemandElements),
+    FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_CTRL_SHIFT_W_FORCESAVEDATAELEMENTS,      GNEApplicationWindow::onCmdForceSaveDataElements),
+    FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_SHIFT_F12_FOCUSUPPERELEMENT,             GNEApplicationWindow::onCmdFocusFrame),
 };
 
 // Object implementation
@@ -265,6 +284,7 @@ GNEApplicationWindow::GNEApplicationWindow(FXApp* a, const std::string& configPa
     myAmLoading(false),
     myFileMenu(nullptr),
     myFileMenuTLS(nullptr),
+    myFileMenuEdgeTypes(nullptr),
     myFileMenuAdditionals(nullptr),
     myFileMenuDemandElements(nullptr),
     myFileMenuDataElements(nullptr),
@@ -320,7 +340,7 @@ GNEApplicationWindow::dependentBuild() {
     {
         myGeoFrame =
             new FXHorizontalFrame(myStatusbar, GUIDesignHorizontalFrameStatusBar);
-        myGeoCoordinate = new FXLabel(myGeoFrame, "N/A\t\tOriginal coordinate (before coordinate transformation in NETCONVERT)", nullptr, LAYOUT_CENTER_Y);
+        myGeoCoordinate = new FXLabel(myGeoFrame, "N/A\t\tOriginal coordinate (before coordinate transformation in netconvert)", nullptr, LAYOUT_CENTER_Y);
         myCartesianFrame =
             new FXHorizontalFrame(myStatusbar, GUIDesignHorizontalFrameStatusBar);
         myCartesianCoordinate = new FXLabel(myCartesianFrame, "N/A\t\tNetwork coordinate", nullptr, LAYOUT_CENTER_Y);
@@ -342,6 +362,7 @@ GNEApplicationWindow::dependentBuild() {
     setTitle(myTitlePrefix);
     // set Netedit ICON
     setIcon(GUIIconSubSys::getIcon(GUIIcon::NETEDIT));
+    setMiniIcon(GUIIconSubSys::getIcon(GUIIcon::NETEDIT_MINI));
     // build NETEDIT Accelerators (hotkeys)
     GUIShortcutsSubSys::buildNETEDITAccelerators(this);
 }
@@ -355,6 +376,7 @@ GNEApplicationWindow::create() {
     myFileMenu->create();
     myEditMenu->create();
     myFileMenuTLS->create();
+    myFileMenuEdgeTypes->create();
     myFileMenuAdditionals->create();
     myFileMenuDemandElements->create();
     myFileMenuDataElements->create();
@@ -387,6 +409,7 @@ GNEApplicationWindow::~GNEApplicationWindow() {
     // must delete menus to avoid segfault on removing accelerators
     // (http://www.fox-toolkit.net/faq#TOC-What-happens-when-the-application-s)
     delete myFileMenuTLS;
+    delete myFileMenuEdgeTypes;
     delete myFileMenuAdditionals;
     delete myFileMenuDemandElements;
     delete myFileMenuDataElements;
@@ -631,6 +654,50 @@ GNEApplicationWindow::onCmdOpenTLSPrograms(FXObject*, FXSelector, void*) {
 
 
 long
+GNEApplicationWindow::onCmdOpenEdgeTypes(FXObject*, FXSelector, void*) {
+    // open dialog
+    FXFileDialog opendialog(this, "Load edgeType file");
+    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::MODECREATEEDGE));
+    opendialog.setSelectMode(SELECTFILE_EXISTING);
+    opendialog.setPatternList("*.xml");
+    if (gCurrentFolder.length() != 0) {
+        opendialog.setDirectory(gCurrentFolder);
+    }
+    if (opendialog.execute()) {
+        // declare type container
+        NBTypeCont typeContainerAux;
+        // declare type handler
+        NIXMLTypesHandler* handler = new NIXMLTypesHandler(typeContainerAux);
+        // load edge types
+        NITypeLoader::load(handler, {opendialog.getFilename().text()}, "types");
+        // write information
+        WRITE_MESSAGE("Loaded " + toString(typeContainerAux.size()) + " edge types");
+        // now create GNETypes based on typeContainerAux
+        myViewNet->getUndoList()->p_begin("load edgeTypes");
+        // iterate over typeContainerAux
+        for (const auto &auxEdgeType : typeContainerAux) {
+            // create new edge type
+            GNEEdgeType* edgeType = new GNEEdgeType(myNet, auxEdgeType.first, auxEdgeType.second);
+            // add it using undoList
+            myViewNet->getUndoList()->add(new GNEChange_EdgeType(edgeType, true), true);
+            // iterate over lanes auxType
+            for (const auto &auxLaneType : auxEdgeType.second->laneTypeDefinitions) {
+                // also create a new laneType
+                GNELaneType* laneType = new GNELaneType(edgeType, auxLaneType);
+                // add it using undoList
+                myViewNet->getUndoList()->add(new GNEChange_LaneType(laneType, (int)edgeType->getLaneTypes().size(), true), true);
+            }
+        }
+        // end undo list
+        myViewNet->getUndoList()->p_end();
+        // refresh edge type selector
+        myViewNet->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->refreshEdgeTypeSelector();
+    }
+    return 0;
+}
+
+
+long
 GNEApplicationWindow::onCmdOpenDemandElements(FXObject*, FXSelector, void*) {
     // write debug information
     WRITE_DEBUG("Open demand element dialog");
@@ -711,7 +778,7 @@ GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
         myViewNet->getNet()->enableUpdateData();
         // enable interval bar update
         myViewNet->getIntervalBar().enableIntervalBarUpdate();
-        // update 
+        // update
         update();
     } else {
         // write debug information
@@ -941,8 +1008,10 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             // disable validation for additionals
             XMLSubSys::setValidation("auto", "auto", "auto");
         }
-
+        // end undo list
         myUndoList->p_end();
+        // disable save additionals (because additionals were loaded through console)
+        myNet->requireSaveAdditionals(false);
     }
     // check if demand elements has to be loaded at start
     if (oc.isSet("route-files") && !oc.getString("route-files").empty() && myNet) {
@@ -962,8 +1031,10 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             // disable validation for demand elements
             XMLSubSys::setValidation("auto", "auto", "auto");
         }
-
+        // end undo list
         myUndoList->p_end();
+        // disable save demand elements (because demand elements were loaded through console)
+        myNet->requireSaveDemandElements(false);
     }
     // check if data elements has to be loaded at start
     if (oc.isSet("data-files") && !oc.getString("data-files").empty() && myNet) {
@@ -989,6 +1060,8 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
         }
         // end undolist
         myUndoList->p_end();
+        // disable save data elements (because data elements were loaded through console)
+        myNet->requireSaveDataElements(false);
         // enable update data
         myViewNet->getNet()->enableUpdateData();
         // enable interval bar update
@@ -1037,26 +1110,27 @@ GNEApplicationWindow::fillMenuBar() {
     myFileMenu = new FXMenuPane(this, LAYOUT_FIX_HEIGHT);
     GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&File", nullptr, myFileMenu);
     myFileMenuTLS = new FXMenuPane(this);
+    myFileMenuEdgeTypes = new FXMenuPane(this);
     myFileMenuAdditionals = new FXMenuPane(this);
     myFileMenuDemandElements = new FXMenuPane(this);
     myFileMenuDataElements = new FXMenuPane(this);
-    myFileMenuCommands.buildFileMenuCommands(myFileMenu, myFileMenuTLS, myFileMenuAdditionals, myFileMenuDemandElements, myFileMenuDataElements);
+    myFileMenuCommands.buildFileMenuCommands(myFileMenu, myFileMenuTLS, myFileMenuEdgeTypes, myFileMenuAdditionals, myFileMenuDemandElements, myFileMenuDataElements);
     // build recent files
     myMenuBarFile.buildRecentFiles(myFileMenu);
     new FXMenuSeparator(myFileMenu);
     GUIDesigns::buildFXMenuCommandShortcut(myFileMenu,
-        "&Quit", "Ctrl+Q", "Quit the Application.",
-        nullptr, this, MID_HOTKEY_CTRL_Q_CLOSE);
+                                           "&Quit", "Ctrl+Q", "Quit the Application.",
+                                           nullptr, this, MID_HOTKEY_CTRL_Q_CLOSE);
     // build edit menu
     myEditMenu = new FXMenuPane(this);
     GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Edit", nullptr, myEditMenu);
     // build undo/redo command
     myEditMenuCommands.undoLastChange = GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
-        "&Undo", "Ctrl+Z", "Undo the last change.",
-        GUIIconSubSys::getIcon(GUIIcon::UNDO), this, MID_HOTKEY_CTRL_Z_UNDO);
+                                        "&Undo", "Ctrl+Z", "Undo the last change.",
+                                        GUIIconSubSys::getIcon(GUIIcon::UNDO), this, MID_HOTKEY_CTRL_Z_UNDO);
     myEditMenuCommands.redoLastChange = GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
-        "&Redo", "Ctrl+Y", "Redo the last change.",
-        GUIIconSubSys::getIcon(GUIIcon::REDO), this, MID_HOTKEY_CTRL_Y_REDO);
+                                        "&Redo", "Ctrl+Y", "Redo the last change.",
+                                        GUIIconSubSys::getIcon(GUIIcon::REDO), this, MID_HOTKEY_CTRL_Y_REDO);
     // build separator
     new FXMenuSeparator(myEditMenu);
     // build Supermode commands and hide it
@@ -1080,11 +1154,11 @@ GNEApplicationWindow::fillMenuBar() {
     GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Help", nullptr, myHelpMenu);
     // build help menu commands
     GUIDesigns::buildFXMenuCommandShortcut(myHelpMenu,
-        "&Online Documentation", "F1", "Open Online documentation.",
-        nullptr, this, MID_HOTKEY_F1_ONLINEDOCUMENTATION);
+                                           "&Online Documentation", "F1", "Open Online documentation.",
+                                           nullptr, this, MID_HOTKEY_F1_ONLINEDOCUMENTATION);
     GUIDesigns::buildFXMenuCommandShortcut(myHelpMenu,
-        "&About", "F12", "About netedit.",
-        GUIIconSubSys::getIcon(GUIIcon::NETEDIT_MINI), this, MID_HOTKEY_F12_ABOUT);
+                                           "&About", "F12", "About netedit.",
+                                           GUIIconSubSys::getIcon(GUIIcon::NETEDIT_MINI), this, MID_HOTKEY_F12_ABOUT);
 }
 
 
@@ -1702,6 +1776,49 @@ GNEApplicationWindow::onCmdBackspace(FXObject*, FXSelector, void*) {
     return 1;
 }
 
+long
+GNEApplicationWindow::onCmdForceSaveNetwork(FXObject* /*sender*/, FXSelector /*sel*/, void* /*ptr*/) {
+    // check that view exists
+    if (myViewNet) {
+        myViewNet->getNet()->requireSaveNet(true);
+        myViewNet->update();
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onCmdForceSaveAdditionals(FXObject* /*sender*/, FXSelector /*sel*/, void* /*ptr*/) {
+    // check that view exists
+    if (myViewNet) {
+        myViewNet->getNet()->requireSaveAdditionals(true);
+        update();
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onCmdForceSaveDemandElements(FXObject* /*sender*/, FXSelector /*sel*/, void* /*ptr*/) {
+    // check that view exists
+    if (myViewNet) {
+        myViewNet->getNet()->requireSaveDemandElements(true);
+        update();
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onCmdForceSaveDataElements(FXObject* /*sender*/, FXSelector /*sel*/, void* /*ptr*/) {
+    // check that view exists
+    if (myViewNet) {
+        myViewNet->getNet()->requireSaveDataElements(true);
+        update();
+    }
+    return 1;
+}
+
 
 long
 GNEApplicationWindow::onCmdFocusFrame(FXObject*, FXSelector, void*) {
@@ -2189,10 +2306,57 @@ GNEApplicationWindow::onCmdSaveTLSPrograms(FXObject*, FXSelector, void*) {
 
 
 long
+GNEApplicationWindow::onCmdSaveEdgeTypes(FXObject*, FXSelector, void*) {
+    // obtain option container
+    OptionsCont& oc = OptionsCont::getOptions();
+    // check if save additional menu is enabled
+    if (myFileMenuCommands.saveEdgeTypes->isEnabled()) {
+        // Check if edgeType file was already set at start of netedit or with a previous save
+        if (oc.getString("edgeTypes-output").empty()) {
+            FXString file = MFXUtils::getFilename2Write(this,
+                "Select name of the edgeType file", ".xml",
+                GUIIconSubSys::getIcon(GUIIcon::MODECREATEEDGE),
+                gCurrentFolder);
+            // add xml extension
+            std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".xml");
+            // check tat file is valid
+            if (file == "") {
+                // None edgeType Programs file was selected, then stop function
+                return 0;
+            } else {
+                // change value of "edgeTypes-output"
+                oc.resetWritable();
+                oc.set("edgeTypes-output", fileWithExtension);
+            }
+        }
+        // Start saving edgeTypes
+        getApp()->beginWaitCursor();
+        try {
+            myNet->saveEdgeTypes(oc.getString("edgeTypes-output"));
+            myMessageWindow->appendMsg(EVENT_MESSAGE_OCCURRED, "EdgeType saved in " + oc.getString("edgeTypes-output") + ".\n");
+            myFileMenuCommands.saveEdgeTypes->disable();
+        } catch (IOError& e) {
+            // write warning if netedit is running in testing mode
+            WRITE_DEBUG("Opening FXMessageBox 'error saving edgeTypes'");
+            // open error message box
+            FXMessageBox::error(this, MBOX_OK, "Saving edgeTypes failed!", "%s", e.what());
+            // write warning if netedit is running in testing mode
+            WRITE_DEBUG("Closed FXMessageBox 'error saving edgeTypes' with 'OK'");
+        }
+        myMessageWindow->addSeparator();
+        getApp()->endWaitCursor();
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+long
 GNEApplicationWindow::onCmdSaveTLSProgramsAs(FXObject*, FXSelector, void*) {
     // Open window to select TLS Programs file
     FXString file = MFXUtils::getFilename2Write(this,
-                    "Select name of the TLS Progarm file", ".xml",
+                    "Select name of the TLS Program file", ".xml",
                     GUIIconSubSys::getIcon(GUIIcon::MODETLS),
                     gCurrentFolder);
     // add xml extension
@@ -2203,6 +2367,27 @@ GNEApplicationWindow::onCmdSaveTLSProgramsAs(FXObject*, FXSelector, void*) {
         OptionsCont::getOptions().set("TLSPrograms-output", fileWithExtension);
         // save TLS Programs
         return onCmdSaveTLSPrograms(nullptr, 0, nullptr);
+    } else {
+        return 1;
+    }
+}
+
+
+long
+GNEApplicationWindow::onCmdSaveEdgeTypesAs(FXObject*, FXSelector, void*) {
+    // Open window to select edgeType file
+    FXString file = MFXUtils::getFilename2Write(this,
+        "Select name of the edgeType file", ".xml",
+        GUIIconSubSys::getIcon(GUIIcon::MODECREATEEDGE),
+        gCurrentFolder);
+    // add xml extension
+    std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".xml");
+    // check tat file is valid
+    if (fileWithExtension != "") {
+        // change value of "edgeTypes-files"
+        OptionsCont::getOptions().set("edgeTypes-output", fileWithExtension);
+        // save edgeTypes
+        return onCmdSaveEdgeTypes(nullptr, 0, nullptr);
     } else {
         return 1;
     }

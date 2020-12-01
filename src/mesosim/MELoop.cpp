@@ -202,21 +202,9 @@ MELoop::teleportVehicle(MEVehicle* veh, MESegment* const toSegment) {
 void
 MELoop::addLeaderCar(MEVehicle* veh, MSLink* link) {
     myLeaderCars[veh->getEventTime()].push_back(veh);
-    setApproaching(veh, link);
+    veh->setApproaching(link);
 }
 
-
-void
-MELoop::setApproaching(MEVehicle* veh, MSLink* link) {
-    if (link != nullptr) {
-        link->setApproaching(veh, veh->getEventTime() + (link->getState() == LINKSTATE_ALLWAY_STOP ?
-                             (SUMOTime)RandHelper::rand((int)2) : 0), // tie braker
-                             veh->getSpeed(), veh->getSpeed(), true,
-                             veh->getEventTime(), veh->getSpeed(), veh->getWaitingTime(),
-                             // @note: dist is not used by meso (getZipperSpeed is never called)
-                             veh->getSegment()->getLength());
-    }
-}
 
 void
 MELoop::clearState() {
@@ -276,6 +264,7 @@ MELoop::numSegmentsFor(const double length, const double sLength) {
 
 void
 MELoop::buildSegmentsFor(const MSEdge& e, const OptionsCont& oc) {
+    const MSNet::MesoEdgeType& edgeType = MSNet::getInstance()->getMesoType(e.getEdgeType());
     const double length = e.getLength();
     const int numSegments = numSegmentsFor(length, oc.getFloat("meso-edgelength"));
     const double slength = length / (double)numSegments;
@@ -283,23 +272,29 @@ MELoop::buildSegmentsFor(const MSEdge& e, const OptionsCont& oc) {
     MESegment* nextSegment = nullptr;
     const bool laneQueue = oc.getBool("meso-lane-queue");
     bool multiQueue = laneQueue || (oc.getBool("meso-multi-queue") && e.getLanes().size() > 1 && e.getNumSuccessors() > 1);
-    bool junctionControl = oc.getBool("meso-junction-control") || isEnteringRoundabout(e);
     for (int s = numSegments - 1; s >= 0; s--) {
         std::string id = e.getID() + ":" + toString(s);
-        newSegment =
-            new MESegment(id, e, nextSegment, slength,
-                          e.getLanes()[0]->getSpeedLimit(), s,
-                          string2time(oc.getString("meso-tauff")), string2time(oc.getString("meso-taufj")),
-                          string2time(oc.getString("meso-taujf")), string2time(oc.getString("meso-taujj")),
-                          oc.getFloat("meso-jam-threshold"), multiQueue, junctionControl);
+        newSegment = new MESegment(id, e, nextSegment, slength, e.getLanes()[0]->getSpeedLimit(), s, multiQueue, edgeType);
         multiQueue = laneQueue;
-        junctionControl = false;
         nextSegment = newSegment;
     }
     while (e.getNumericalID() >= static_cast<int>(myEdges2FirstSegments.size())) {
         myEdges2FirstSegments.push_back(0);
     }
     myEdges2FirstSegments[e.getNumericalID()] = newSegment;
+}
+
+
+void
+MELoop::updateSegementsForEdge(const MSEdge& e) {
+    if (e.getNumericalID() < (int)myEdges2FirstSegments.size()) {
+        const MSNet::MesoEdgeType& edgeType = MSNet::getInstance()->getMesoType(e.getEdgeType());
+        MESegment* s = myEdges2FirstSegments[e.getNumericalID()];
+        while (s != nullptr) {
+            s->initSegment(edgeType, e);
+            s = s->getNextSegment();
+        }
+    }
 }
 
 

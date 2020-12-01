@@ -423,8 +423,18 @@ connections exist.
   junction visualization option *Show link tls index*.
   
 ### Check connected components
-Since version 1.4 you can show all network components that are reachable from a particular lane by right-clicking on a lane and then using the 'select reachable' menu option. A new menu opens where you have to select the vehicle class to check. After choosing a vehicle class, all reachable lanes will be added to the lane selection and the edge coloring mode will be set to 'color by selection'. 
+You can show all network components that are reachable from a particular lane by right-clicking on a lane and then using the 'select reachable' menu option. A new menu opens where you have to select the vehicle class to check. After choosing a vehicle class, all reachable lanes will be added to the lane selection and the edge coloring mode will be set to 'color by selection'. 
 Consequently, all reachable lanes will be colored blue and all unreachable lanes will be gray.
+
+### Color by reachability
+After using the ['select reachable' function](#check_connected_components), you can also set edge-coloring mode to 'color by reachability'.
+This will color each edge according to the travel time from the point of origin.
+The following coloring options are useful in this regard:
+
+- Recalibrate Rainbow: Configure colors to the data range of encountered travel times
+- 'hide below threshold' (0): color unreachable edges grey as their value is set to -1. (must be activated before using 'Recalibrate Rainbow')
+- 'show edge color value': show the actual travel times for each edge
+- disable 'constant text size' for 'show edge color value': avoid cluttering the display when zoomed out
 
 # Changing the appearance/visualisation of the simulation
 
@@ -494,6 +504,7 @@ value/range
 | arrival position as HSV        | \-      | The arrival position of each vehicle, relative to the network center, is used to color the vehicle. Direction will be used as H(ue), distance from the center as S(aturation), V(alue) is always 1.           |
 | direction/distance as HSV      | \-      | The direction and distance between a vehicle's departure and arrival position, are used to color the vehicle. Direction will be used as H(ue), distance from the center as S(aturation), V(alue) is always 1. |
 | by speed                       | m/s     | The current vehicle speed                                                                                                                                                                                     |
+| by action step                 | \-      | Action in current step, next stop or otherwise
 | by waiting time                | s       | The time for which a vehicle is halting                                                                                                                                                                       |
 | by accumulated waiting time    | s       | The total time for which a vehicle has been halting recently (default: within the last 300s.)                                                                                                                 |
 | by time since last lanechange  | s       | The time since the last lane change. The color also indicates the direction of the last lane-change (negative values indicated a change to the right).                                                        |
@@ -508,9 +519,17 @@ value/range
 | by noise emissions             | dbA     | The noise produced by the vehicle                                                                                                                                                                             |
 | by reroute number              | count   | The number of times this vehicle has bee rerouted                                                                                                                                                             |
 | by selection                   | \-      | Colors selected and unselected vehicles differently                                                                                                                                                           |
-| by offset from best lane       | count   | By the number of immediate lane changes the vehicle must perform in order to follow its route                                                                                                                 |
-| by acceleration                 | m/s^2   |                                                                                                                                                                                                               |
-| by time gap                    | s       | By the time to collide with the leader vehicle assuming constant speeds                                                                                                                                       |
+| by offset from best lane       | count   | The number of immediate lane changes the vehicle must perform in order to follow its route                                                                                                                 |
+| by acceleration                | m/s^2   | The xurrent vehicle acceleration                                                                                                                                                                                                              |
+| by time gap                    | s       | The time to collide with the leader vehicle assuming constant speeds                                                                                                                                       |
+| by depart delay                | s       | The difference of actual insertion time and intended depart time                                                                                                                                       |
+| by time loss                   | s       | The total time loss from driving slower than desired since departure                                                                                                                                       |
+| by stop delay                  | s       | The departure delay for next (or current) public transport stop (with defined 'until' time)                                                                                                                                        |
+| by stop arrival delay          | s       | The arrival delay for next (or current) public transport stop (with defined 'arrival' time)                                                                                                                                        |
+| by lateral speed               | m/s     | The lateral speed of the vehicle                                                                                                                                        |
+| by param (numerical)           | value   | The numerical value of the given vehicle, [device or model](TraCI/Vehicle_Value_Retrieval.md#device_and_lanechangemodel_parameter_retrieval_0x7e) parameter                                                                                                                                       |
+| random                         | \-      | Random vehicle color                                                                                                                                       |
+| by angle                       | \-      | Color by heading angle of the vehicle                                                                                                                                       |
 
 In addition to the vehicle shape and coloring one can display blinker
 and brake lights, the minimum gap, and the vehicle name. The vehicle
@@ -790,7 +809,7 @@ Several applications generated edge-related measures for one or more
 time-intervals.
 
 - [edgeData-output
-  files](Simulation/Output/Lane-_or_Edge-based_Traffic_Measures.md)
+  files](Simulation/Output/Lane-_or_Edge-based_Traffic_Measures.md)  
 - edge-probability files generated by
   [randomTrips.py](Tools/Trip.md#customized_weights)
 - [marouter netload-output](marouter.md#macroscopic_outputs)
@@ -798,6 +817,7 @@ time-intervals.
   device.rerouting](Demand/Automatic_Routing.md) when running
   [sumo](sumo.md) with option **--device.rerouting.output**.
 - [showDepartsAndArrivalsPerEdge.py](Tools/Routes.md#showdepartsandarrivalsperedge)
+- [netedit](netedit.md#data_specific_modes) can be used to create and modify edgeData files
 
 These files can be used with
 [duarouter](Demand/Shortest_or_Optimal_Path_Routing.md#custom_edge_weights)

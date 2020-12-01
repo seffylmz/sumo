@@ -37,6 +37,7 @@
 #include <microsim/devices/MSDevice_BTreceiver.h>
 #include <microsim/devices/MSDevice_ToC.h>
 #include <microsim/transportables/MSTransportableControl.h>
+#include <microsim/traffic_lights/MSRailSignalControl.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSGlobals.h>
@@ -81,7 +82,7 @@ MSStateHandler::saveState(const std::string& file, SUMOTime step) {
     OutputDevice& out = OutputDevice::getDevice(file);
     out.writeHeader<MSEdge>(SUMO_TAG_SNAPSHOT);
     out.writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo.dlr.de/xsd/state_file.xsd");
-    out.writeAttr(SUMO_ATTR_VERSION, VERSION_STRING).writeAttr(SUMO_ATTR_TIME, time2string(step));
+    out.writeAttr(SUMO_ATTR_VERSION, VERSION_STRING).writeAttr(SUMO_ATTR_TIME, time2string(step)).writeAttr(SUMO_ATTR_TYPE, MSGlobals::gUseMesoSim ? "meso" : "micro");
     if (OptionsCont::getOptions().getBool("save-state.rng")) {
         saveRNGs(out);
     }
@@ -137,26 +138,26 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             break;
         }
         case SUMO_TAG_RNGSTATE: {
-            if (attrs.hasAttribute(SUMO_ATTR_RNG_DEFAULT)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT));
+            if (attrs.hasAttribute(SUMO_ATTR_DEFAULT)) {
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_DEFAULT));
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_ROUTEHANDLER)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT), MSRouteHandler::getParsingRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_ROUTEHANDLER), MSRouteHandler::getParsingRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_INSERTIONCONTROL)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT), MSNet::getInstance()->getInsertionControl().getFlowRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_INSERTIONCONTROL), MSNet::getInstance()->getInsertionControl().getFlowRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_DEVICE)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT), MSDevice::getEquipmentRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEVICE), MSDevice::getEquipmentRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_DEVICE_BT)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT), MSDevice_BTreceiver::getEquipmentRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEVICE_BT), MSDevice_BTreceiver::getEquipmentRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_DRIVERSTATE)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT), OUProcess::getRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DRIVERSTATE), OUProcess::getRNG());
             }
             if (attrs.hasAttribute(SUMO_ATTR_RNG_DEVICE_TOC)) {
-                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEFAULT), MSDevice_ToC::getResponseTimeRNG());
+                RandHelper::loadState(attrs.getString(SUMO_ATTR_RNG_DEVICE_TOC), MSDevice_ToC::getResponseTimeRNG());
             }
             break;
         }
@@ -336,7 +337,7 @@ MSStateHandler::myEndElement(int element) {
 
 void
 MSStateHandler::closeVehicle() {
-    assert(myVehicleParameter != 0);
+    assert(myVehicleParameter != nullptr);
     myVehicleParameter->depart -= myOffset;
     // the vehicle was already counted in MSVehicleControl::setState
     MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
@@ -357,6 +358,10 @@ MSStateHandler::closeVehicle() {
                 routingDevice->notifyEnter(*v, MSMoveReminder::NOTIFICATION_DEPARTED);
             }
             MSNet::getInstance()->getInsertionControl().alreadyDeparted(v);
+            if (MSRailSignalControl::hasInstance()) {
+                // register route for deadlock prevention (vehicleStateChanged would not be called otherwise)
+                MSRailSignalControl::getInstance().vehicleStateChanged(v, MSNet::VEHICLE_STATE_NEWROUTE, "loadState");
+            }
         }
         while (!myDeviceAttrs.empty()) {
             const std::string attrID = myDeviceAttrs.back()->getString(SUMO_ATTR_ID);
@@ -380,7 +385,7 @@ MSStateHandler::closeVehicle() {
 void
 MSStateHandler::saveRNGs(OutputDevice& out) {
     out.openTag(SUMO_TAG_RNGSTATE);
-    out.writeAttr(SUMO_ATTR_RNG_DEFAULT, RandHelper::saveState());
+    out.writeAttr(SUMO_ATTR_DEFAULT, RandHelper::saveState());
     out.writeAttr(SUMO_ATTR_RNG_ROUTEHANDLER, RandHelper::saveState(MSRouteHandler::getParsingRNG()));
     out.writeAttr(SUMO_ATTR_RNG_INSERTIONCONTROL, RandHelper::saveState(MSNet::getInstance()->getInsertionControl().getFlowRNG()));
     out.writeAttr(SUMO_ATTR_RNG_DEVICE, RandHelper::saveState(MSDevice::getEquipmentRNG()));

@@ -81,6 +81,8 @@ enum {
     MID_HOTKEY_CTRL_D_SINGLESIMULATIONSTEP_OPENDEMANDELEMENTS,
     /// @brief Toogle Gaming mode in SUMO and grid in NETEDIT
     MID_HOTKEY_CTRL_G_GAMINGMODE_TOOGLEGRID,
+    /// @brief open edge type files
+    MID_HOTKEY_CTRL_H_OPENEDGETYPES,
     /// @brief Open viewport editor
     MID_HOTKEY_CTRL_I_EDITVIEWPORT,
     /// @brief Fullscreen mode - menu entry
@@ -147,6 +149,8 @@ enum {
 
     /// @brief Save Additional Elements
     MID_HOTKEY_CTRL_SHIFT_A_SAVEADDITIONALS,
+    /// @brief save Edge Types
+    MID_HOTKEY_CTRL_SHIFT_H_SAVEEDGETYPES,
     /// @brief save Data Elements
     MID_HOTKEY_CTRL_SHIFT_B_SAVEDATAELEMENTS,
     /// @brief Save Demand Elements
@@ -155,6 +159,14 @@ enum {
     MID_HOTKEY_CTRL_SHIFT_K_SAVETLS,
     /// @brief save network as
     MID_HOTKEY_CTRL_SHIFT_S_SAVENETWORK_AS,
+    /// @brief Force save network (flag)
+    MID_HOTKEY_CTRL_SHIFT_T_FORCESAVENETEWORK,
+    /// @brief Force save additionals (flag)
+    MID_HOTKEY_CTRL_SHIFT_U_FORCESAVEADDITIONALS,
+    /// @brief Force save demand elements (flag)
+    MID_HOTKEY_CTRL_SHIFT_V_FORCESAVEDEMANDELEMENTS,
+    /// @brief Force save data elements (flag)
+    MID_HOTKEY_CTRL_SHIFT_W_FORCESAVEDATAELEMENTS,
 
     /// @}
 
@@ -586,6 +598,8 @@ enum {
     MID_GNE_TOOLBARFILE_SAVEADDITIONALS_AS,
     /// @brief save TLS Programs as
     MID_GNE_TOOLBARFILE_SAVETLSPROGRAMS_AS,
+    /// @brief save edgeTypes as
+    MID_GNE_TOOLBARFILE_SAVEEDGETYPES_AS,
     /// @brief save demand elements as
     MID_GNE_TOOLBARFILE_SAVEDEMAND_AS,
     /// @brief save data elements as
@@ -816,6 +830,25 @@ enum {
 
     /// @brief go back to the previous element
     MID_GNE_INSPECTORFRAME_GOBACK,
+
+    /// @}
+
+    /// @name GNECreateEdgeFrame messages
+    /// @{
+    /// @brief selected radio button
+    MID_GNE_CREATEEDGEFRAME_SELECTRADIOBUTTON,
+    /// @brief add new edge type
+    MID_GNE_CREATEEDGEFRAME_ADDEDGETYPE,
+    /// @brief delete edge type
+    MID_GNE_CREATEEDGEFRAME_DELETEEDGETYPE,
+    /// @brief reset edge type
+    MID_GNE_CREATEEDGEFRAME_RESETEDGETYPE,
+    /// @brief select edge type
+    MID_GNE_CREATEEDGEFRAME_SELECTEDGETYPE,
+    /// @brief delete lane type
+    MID_GNE_CREATEEDGEFRAME_DELETELANETYPE,
+    /// @brief reset lane type
+    MID_GNE_CREATEEDGEFRAME_RESETLANETYPE,
 
     /// @}
 

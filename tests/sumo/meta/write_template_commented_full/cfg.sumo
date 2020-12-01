@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Tue Nov  3 10:07:45 2020 by Eclipse SUMO sumo Version v1_7_0+0764-5bd512f5cd
+<!-- generated on Mon Nov 30 17:47:43 2020 by Eclipse SUMO sumo Version v1_7_0+1385-c75ca7897d
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -122,6 +122,9 @@
 
         <!-- Add acceleration to the FCD output -->
         <fcd-output.acceleration value="false" type="BOOL"/>
+
+        <!-- Add leader vehicle information to the FCD output (within the given distance) -->
+        <fcd-output.max-leader-distance value="-1" type="FLOAT"/>
 
         <!-- Add generic parameter values to the FCD output -->
         <fcd-output.params value="" type="STR[]"/>
@@ -857,6 +860,18 @@
 
     </tripinfo_device>
 
+    <vehroutes_device>
+        <!-- The probability for a vehicle to have a &apos;vehroute&apos; device -->
+        <device.vehroute.probability value="-1" type="FLOAT"/>
+
+        <!-- Assign a &apos;vehroute&apos; device to named vehicles -->
+        <device.vehroute.explicit value="" synonymes="device.vehroute.knownveh" type="STR[]"/>
+
+        <!-- The &apos;vehroute&apos; devices are set deterministic using a fraction of 1000 -->
+        <device.vehroute.deterministic value="false" type="BOOL"/>
+
+    </vehroutes_device>
+
     <traci_server>
         <!-- Enables TraCI Server if set -->
         <remote-port value="0" type="INT"/>
@@ -972,7 +987,10 @@
         <!-- The aggregation period for value tracker windows -->
         <tracker-interval value="1" type="FLOAT"/>
 
-        <!-- Enable ovelay for screen recognition -->
+        <!-- Start with an OpenSceneGraph view instead of the regular 2D view -->
+        <osg-view value="false" type="BOOL"/>
+
+        <!-- Enable overlay for screen recognition -->
         <gui-testing value="false" type="BOOL"/>
 
         <!-- Enable output messages during GUI-Testing -->

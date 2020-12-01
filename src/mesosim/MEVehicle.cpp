@@ -13,6 +13,7 @@
 /****************************************************************************/
 /// @file    MEVehicle.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Tue, May 2005
 ///
 // A vehicle from the mesoscopic point of view
@@ -152,7 +153,6 @@ MEVehicle::moveRoutePointer() {
 }
 
 
-
 bool
 MEVehicle::hasArrived() const {
     // mySegment may be 0 due to teleporting or arrival
@@ -162,51 +162,50 @@ MEVehicle::hasArrived() const {
                || getPositionOnLane() > myArrivalPos - POSITION_EPS);
 }
 
+
 bool
 MEVehicle::isOnRoad() const {
     return getSegment() != nullptr;
 }
+
 
 bool
 MEVehicle::isIdling() const {
     return false;
 }
 
-bool
-MEVehicle::isParking() const {
-    return false; // parking attribute of a stop is not yet evaluated /implemented
+
+void
+MEVehicle::setApproaching(MSLink* link) {
+    if (link != nullptr) {
+        const double speed = getSpeed();
+        link->setApproaching(this, getEventTime() + (link->getState() == LINKSTATE_ALLWAY_STOP ?
+                             (SUMOTime)RandHelper::rand((int)2) : 0), // tie braker
+                             speed, speed, true,
+                             getEventTime(), speed, getWaitingTime(),
+                             // @note: dist is not used by meso (getZipperSpeed is never called)
+                             getSegment()->getLength());
+    }
 }
 
 
 bool
 MEVehicle::replaceRoute(const MSRoute* newRoute, const std::string& info,  bool onInit, int offset, bool addRouteStops, bool removeStops) {
+    MSLink* const oldLink = mySegment != nullptr ? mySegment->getLink(this) : nullptr;
     if (MSBaseVehicle::replaceRoute(newRoute, info, onInit, offset, addRouteStops, removeStops)) {
         if (mySegment != nullptr) {
-            MSLink* const oldLink = mySegment->getLink(this);
             MSLink* const newLink = mySegment->getLink(this);
             // update approaching vehicle information
             if (oldLink != newLink) {
                 if (oldLink != nullptr) {
                     oldLink->removeApproaching(this);
                 }
-                MELoop::setApproaching(this, newLink);
+                setApproaching(newLink);
             }
         }
         return true;
     }
     return false;
-}
-
-
-bool
-MEVehicle::isStoppedTriggered() const {
-    return false;
-}
-
-
-bool
-MEVehicle::isStoppedInRange(const double /* pos */, const double /* tolerance */) const {
-    return isStopped();
 }
 
 
@@ -223,6 +222,10 @@ MEVehicle::checkStop(SUMOTime time) {
             time = stop.pars.until;
         }
         stop.reached = true;
+        stop.pars.actualArrival = myLastEntryTime;
+        if (MSStopOut::active()) {
+            MSStopOut::getInstance()->stopStarted(this, getPersonNumber(), getContainerNumber(), myLastEntryTime);
+        }
     }
     return time;
 }
@@ -258,10 +261,6 @@ MEVehicle::processStop() {
             break;
         }
         lastPos = stop.pars.endPos;
-        stop.pars.actualArrival = myLastEntryTime;
-        if (MSStopOut::active()) {
-            MSStopOut::getInstance()->stopStarted(this, getPersonNumber(), getContainerNumber(), myLastEntryTime);
-        }
         MSNet* const net = MSNet::getInstance();
         SUMOTime dummy = -1; // boarding- and loading-time are not considered
         if (net->hasPersons()) {
@@ -323,9 +322,6 @@ MEVehicle::updateDetectorForWriting(MSMoveReminder* rem, SUMOTime currentTime, S
 void
 MEVehicle::updateDetectors(SUMOTime currentTime, const bool isLeave, const MSMoveReminder::Notification reason) {
     // segments of the same edge have the same reminder so no cleaning up must take place
-    if (reason == MSMoveReminder::NOTIFICATION_JUNCTION || reason == MSMoveReminder::NOTIFICATION_TELEPORT) {
-        myOdometer += getEdge()->getLength();
-    }
     const bool cleanUp = isLeave && (reason != MSMoveReminder::NOTIFICATION_SEGMENT);
     for (MoveReminderCont::iterator rem = myMoveReminders.begin(); rem != myMoveReminders.end();) {
         if (currentTime != getLastEntryTime()) {
@@ -353,6 +349,9 @@ MEVehicle::updateDetectors(SUMOTime currentTime, const bool isLeave, const MSMov
 #endif
             rem = myMoveReminders.erase(rem);
         }
+    }
+    if (reason == MSMoveReminder::NOTIFICATION_JUNCTION || reason == MSMoveReminder::NOTIFICATION_TELEPORT) {
+        myOdometer += getEdge()->getLength();
     }
 }
 
@@ -452,10 +451,16 @@ MEVehicle::loadState(const SUMOSAXAttributes& attrs, const SUMOTime offset) {
             assert(myEventTime != SUMOTime_MIN);
             MSGlobals::gMesoNet->addLeaderCar(this, nullptr);
         }
+        // see MSBaseVehicle constructor
+        if (myParameter->wasSet(VEHPARS_FORCE_REROUTE)) {
+            calculateArrivalParams();
+        }
     }
     if (myBlockTime != SUMOTime_MAX) {
         myBlockTime -= offset;
     }
+    std::istringstream dis(attrs.getString(SUMO_ATTR_DISTANCE));
+    dis >> myOdometer >> myNumberReroutes;
 }
 
 

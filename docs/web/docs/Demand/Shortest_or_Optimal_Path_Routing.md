@@ -72,7 +72,7 @@ into an {{AdditionalFile}}.
 
 !!! note
     By default, [duarouter](../duarouter.md) will write `vType` definitions into the output route file ahead of the first vehicle using that type. By using the option **--vtype-output** these definitions can be put into another file.
-
+    
 # Flow Definitions
 
 Flow amounts share most of the parameter with trip definitions. The

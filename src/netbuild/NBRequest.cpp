@@ -250,7 +250,8 @@ NBRequest::setBlocking(NBEdge* from1, NBEdge* to1,
         }
     }
 #ifdef DEBUG_SETBLOCKING
-    if (DEBUGCOND) std::cout << "setBlocking"
+    if (DEBUGCOND) std::cout << "setBlocking type=" << toString(myJunction->getType())
+                                 << " bentPrio=" << myJunction->isBentPriority()
                                  << " 1:" << from1->getID() << "->" << to1->getID()
                                  << " 2:" << from2->getID() << "->" << to2->getID() << "\n";
 #endif
@@ -259,10 +260,9 @@ NBRequest::setBlocking(NBEdge* from1, NBEdge* to1,
         int from1p = from1->getJunctionPriority(myJunction);
         int from2p = from2->getJunctionPriority(myJunction);
 #ifdef DEBUG_SETBLOCKING
-        if (DEBUGCOND) std::cout << "setBlocking"
-                                     << " 1:" << from1->getID() << "->" << to1->getID()
-                                     << " 2:" << from2->getID() << "->" << to2->getID()
-                                     << " p1=" << from1p << " p2=" << from2p << "\n";
+        if (DEBUGCOND) {
+            std::cout << "     p1=" << from1p << " p2=" << from2p << "\n";
+        }
 #endif
         // check if one of the connections is higher priorised when incoming into
         //  the junction, the connection road will yield
@@ -634,7 +634,9 @@ NBRequest::getResponseString(const NBEdge* const from, const NBEdge::Connection&
                 if (c.mayDefinitelyPass) {
                     result += '0';
 #ifdef DEBUG_RESPONSE
-                    if (DEBUGCOND) std::cout << " c=" << queryCon.getDescription(from) << " pass\n";
+                    if (DEBUGCOND) {
+                        std::cout << " c=" << queryCon.getDescription(from) << " pass\n";
+                    }
 #endif
                 } else if ((*i) == from && fromLane == j) {
                     // do not prohibit a connection by others from same lane

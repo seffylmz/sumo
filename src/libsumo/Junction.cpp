@@ -80,6 +80,21 @@ Junction::getJunction(const std::string& id) {
 }
 
 
+std::string
+Junction::getParameter(const std::string& junctionID, const std::string& param) {
+    return getJunction(junctionID)->getParameter(param, "");
+}
+
+
+LIBSUMO_GET_PARAMETER_WITH_KEY_IMPLEMENTATION(Junction)
+
+
+void
+Junction::setParameter(const std::string& junctionID, const std::string& name, const std::string& value) {
+    getJunction(junctionID)->setParameter(name, value);
+}
+
+
 LIBSUMO_SUBSCRIPTION_IMPLEMENTATION(Junction, JUNCTION)
 
 
@@ -123,7 +138,8 @@ Junction::handleVariable(const std::string& objID, const int variable, VariableW
         case ID_COUNT:
             return wrapper->wrapInt(objID, variable, getIDCount());
         case VAR_POSITION:
-            return wrapper->wrapPosition(objID, variable, getPosition(objID));
+        case VAR_POSITION3D:
+            return wrapper->wrapPosition(objID, variable, getPosition(objID, variable == VAR_POSITION3D));
         default:
             return false;
     }

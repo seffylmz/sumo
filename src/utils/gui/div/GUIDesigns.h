@@ -35,6 +35,12 @@
 /// @brief text field extended over Frame with thick frame
 #define GUIDesignTextField              (FRAME_THICK | LAYOUT_FILL_X | LAYOUT_FIX_HEIGHT), 0, 0, 0, GUIDesignHeight, 2, 2, 2, 2
 
+/// @brief text field extended over Frame with thick frame (int)
+#define GUIDesignTextFieldInt           (FRAME_THICK | LAYOUT_FILL_X | LAYOUT_FIX_HEIGHT | TEXTFIELD_INTEGER), 0, 0, 0, GUIDesignHeight, 2, 2, 2, 2
+
+/// @brief text field extended over Frame with thick frame (real)
+#define GUIDesignTextFieldReal          (FRAME_THICK | LAYOUT_FILL_X | LAYOUT_FIX_HEIGHT | TEXTFIELD_REAL), 0, 0, 0, GUIDesignHeight, 2, 2, 2, 2
+
 /// @brief text field with thick frame and width 50
 #define GUIDesignTextFielWidth50        (FRAME_THICK | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 50, GUIDesignHeight, 2, 2, 2, 2
 
@@ -61,7 +67,7 @@
 /// @brief little button rectangula used in frames (For example, in "help" buttons)
 #define GUIDesignButtonRectangular      (FRAME_THICK | FRAME_RAISED | ICON_BEFORE_TEXT | JUSTIFY_CENTER_X | JUSTIFY_CENTER_Y | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 46, GUIDesignHeight, 2, 2, 2, 2
 
-/// @brief button only with icon 
+/// @brief button only with icon
 #define GUIDesignButtonIcon             (FRAME_THICK | FRAME_RAISED | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, GUIDesignHeight, GUIDesignHeight, 2, 2, 2, 2
 
 /// @brief button only with icon
@@ -126,8 +132,14 @@
 /// @brief checkButton placed in left position
 #define GUIDesignCheckButton                (CHECKBUTTON_NORMAL | JUSTIFY_CENTER_Y | LAYOUT_FIX_HEIGHT | JUSTIFY_LEFT), 0, 0, 0, GUIDesignHeight, 2, 2, 2, 2
 
+/// @brief checkButton placed in left position with double size
+#define GUIDesignCheckButtonExtraHeight    (CHECKBUTTON_NORMAL | JUSTIFY_CENTER_Y | LAYOUT_FIX_HEIGHT | JUSTIFY_LEFT), 0, 0, 0, GUIDesignHeight + 10, 2, 2, 2, 2
+
 /// @brief checkButton without thick extended over the frame used for attributes
 #define GUIDesignCheckButtonAttribute       (CHECKBUTTON_NORMAL | JUSTIFY_CENTER_Y |  LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | JUSTIFY_LEFT | ICON_BEFORE_TEXT | FRAME_THICK), 0, 0, 100, GUIDesignHeight, 2, 2, 2, 2
+
+/// @brief checkButton placed in center position with size GUIDesignHeight x GUIDesignHeight
+#define GUIDesignCheckButtonIcon            (CHECKBUTTON_NORMAL | JUSTIFY_CENTER_Y | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | JUSTIFY_CENTER_X), 0, 0, GUIDesignHeight, GUIDesignHeight, 2, 2, 2, 2
 
 /// @brief CheckButton for Frames without thick extended over the frame
 #define GUIDesignCheckButtonViewSettings    (CHECKBUTTON_NORMAL | LAYOUT_CENTER_Y)
@@ -179,6 +191,9 @@
 
 /// @brief label extended over frame with thick and with text justify to center
 #define GUIDesignLabelCenterThick       (FRAME_THICK | JUSTIFY_NORMAL | LAYOUT_FILL_X | ICON_BEFORE_TEXT | LAYOUT_FIX_HEIGHT), 0, 0, 0, GUIDesignHeight, 2, 2, 2, 2
+
+/// @brief label squared over frame with thick and with text justify to center
+#define GUIDesignLabelIconThick         (FRAME_THICK | JUSTIFY_NORMAL | LAYOUT_FILL_X | ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, GUIDesignHeight, GUIDesignHeight, 2, 2, 2, 2
 
 /// @brief label extended over the matrix column with thick frame
 #define GUIDesignLabelAttribute         (FRAME_THICK | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | ICON_BEFORE_TEXT), 0, 0, 100, GUIDesignHeight, 2, 2, 2, 2
@@ -366,7 +381,16 @@
 /// @name designs for Spin dials
 /// @{
 /// @brief desing for standard spin dial
-#define GUIDesignSpinDial   (FRAME_THICK | FRAME_SUNKEN | LAYOUT_TOP | LAYOUT_CENTER_Y | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 60, GUIDesignHeight, 0, 0, 0, 0
+#define GUIDesignSpinDial               (FRAME_THICK | FRAME_SUNKEN | LAYOUT_TOP | LAYOUT_CENTER_Y | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 100, GUIDesignHeight, 0, 0, 0, 0
+
+/// @brief desing for standard spin dial
+#define GUIDesignSpinDialViewPortZoom   (FRAME_THICK | FRAME_SUNKEN | LAYOUT_TOP | LAYOUT_CENTER_Y | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 100, GUIDesignHeight, 0, 0, 0, 0
+
+/// @brief desing for standard spin dial
+#define GUIDesignSpinDialViewPort       (FRAME_THICK | FRAME_SUNKEN | LAYOUT_TOP | LAYOUT_CENTER_Y | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | SPIN_NOMIN | SPIN_NOMAX), 0, 0, 100, GUIDesignHeight, 0, 0, 0, 0
+
+/// @brief desing for spin dial attribute
+#define GUIDesignSpinDialAttribute       (FRAME_THICK | FRAME_SUNKEN | LAYOUT_TOP | LAYOUT_CENTER_Y | LAYOUT_FILL_X | LAYOUT_FIX_HEIGHT | SPIN_NOMIN | SPIN_NOMAX), 0, 0, 0, GUIDesignHeight, 0, 0, 0, 0
 
 /// @}
 
@@ -566,10 +590,10 @@ public:
 
     /// @brief build menu command
     static FXMenuCommand* buildFXMenuCommandShortcut(FXComposite* p, const std::string& text, const std::string& shortcut, const std::string& info, FXIcon* icon, FXObject* tgt, FXSelector sel);
-    
+
     /// @brief build menu command
-    static FXMenuCommand* buildFXMenuCommand(FXComposite* p, const std::string& text,FXIcon* icon, FXObject* tgt, FXSelector sel);
-    
+    static FXMenuCommand* buildFXMenuCommand(FXComposite* p, const std::string& text, FXIcon* icon, FXObject* tgt, FXSelector sel);
+
     /// @brief build menu command (for recent files)
     static FXMenuCommand* buildFXMenuCommandRecentFile(FXComposite* p, const std::string& text, FXObject* tgt, FXSelector sel);
 };

@@ -535,6 +535,7 @@
         <xsd:attribute name="departLane" type="departLaneType"/>
         <xsd:attribute name="departPos" type="departPosType"/>
         <xsd:attribute name="departSpeed" type="departSpeedType"/>
+        <xsd:attribute name="departEdge" type="departEdgeType"/>
         <xsd:attribute name="arrivalLane" type="arrivalLaneType"/>
         <xsd:attribute name="arrivalPos" type="arrivalPosType"/>
         <xsd:attribute name="arrivalSpeed" type="arrivalSpeedType"/>
@@ -723,6 +724,7 @@
 
     <xsd:complexType name="stopType">
         <xsd:attribute name="lane" type="xsd:string"/>
+        <xsd:attribute name="edge" type="xsd:string"/>
         <xsd:attribute name="busStop" type="xsd:string"/>
         <xsd:attribute name="containerStop" type="xsd:string"/>
         <xsd:attribute name="chargingStation" type="xsd:string"/>
@@ -804,8 +806,8 @@
                 <xsd:complexType>
                     <xsd:attribute name="from" type="xsd:string"/>
                     <xsd:attribute name="to" type="xsd:string"/>
-					<xsd:attribute name="fromTaz" type="xsd:string"/>
-					<xsd:attribute name="toTaz" type="xsd:string"/>
+                    <xsd:attribute name="fromTaz" type="xsd:string"/>
+                    <xsd:attribute name="toTaz" type="xsd:string"/>
                     <xsd:attribute name="fromXY" type="positionType"/>
                     <xsd:attribute name="toXY" type="positionType"/>
                     <xsd:attribute name="fromLonLat" type="positionType"/>

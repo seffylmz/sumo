@@ -15,6 +15,10 @@ set(netedit_elements_network_SRCS
    GNEJunction.cpp
    GNEProhibition.h
    GNEProhibition.cpp
+   GNEEdgeType.h
+   GNEEdgeType.cpp
+   GNELaneType.h
+   GNELaneType.cpp
    )
 
 add_library(netedit_elements_network STATIC ${netedit_elements_network_SRCS})

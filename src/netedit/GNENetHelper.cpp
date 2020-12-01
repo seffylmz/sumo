@@ -25,12 +25,15 @@
 #include <netedit/GNEViewNet.h>
 #include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Shape.h>
+#include <netedit/frames/network/GNECreateEdgeFrame.h>
 #include <netedit/elements/additional/GNEPOI.h>
 #include <netedit/elements/additional/GNEPoly.h>
 #include <netedit/elements/data/GNEDataInterval.h>
 #include <netedit/elements/demand/GNEVehicleType.h>
 #include <netedit/elements/network/GNEConnection.h>
+#include <netedit/elements/network/GNEEdgeType.h>
 #include <netedit/elements/network/GNEJunction.h>
+#include <netedit/elements/network/GNELaneType.h>
 #include <netedit/frames/common/GNEInspectorFrame.h>
 #include <utils/router/DijkstraRouter.h>
 
@@ -71,6 +74,13 @@ GNENetHelper::AttributeCarriers::AttributeCarriers(GNENet* net) :
 
 
 GNENetHelper::AttributeCarriers::~AttributeCarriers() {
+    // Drop EdgeTypes
+    for (const auto& edgeType : myEdgeTypes) {
+        edgeType.second->decRef("GNENetHelper::~GNENet");
+        // show extra information for tests
+        WRITE_DEBUG("Deleting unreferenced " + edgeType.second->getTagStr() + " '" + edgeType.second->getID() + "' in AttributeCarriers destructor");
+        delete edgeType.second;
+    }
     // Drop Edges
     for (const auto& edge : myEdges) {
         edge.second->decRef("GNENetHelper::~GNENet");
@@ -124,6 +134,8 @@ GNENetHelper::AttributeCarriers::updateID(GNEAttributeCarrier* AC, const std::st
         updateJunctionID(AC, newID);
     } else if (AC->getTagProperty().getTag() == SUMO_TAG_EDGE) {
         updateEdgeID(AC, newID);
+    } else if (AC->getTagProperty().getTag() == SUMO_TAG_TYPE) {
+        updateEdgeTypeID(AC, newID);
     } else if (AC->getTagProperty().isAdditionalElement()) {
         updateAdditionalID(AC, newID);
     } else if (AC->getTagProperty().isShape()) {
@@ -184,14 +196,28 @@ GNENetHelper::AttributeCarriers::getJunctions() const {
 
 void
 GNENetHelper::AttributeCarriers::clearJunctions() {
-    /*
-        // removes all junctions of net  (It was already removed from grid)
-        auto copyOfJunctions = myAttributeCarriers->getJunctions();
-        for (auto junction : copyOfJunctions) {
-            myAttributeCarriers->getJunctions().erase(junction.second->getMicrosimID());
-        }
-    */
     myJunctions.clear();
+}
+
+
+GNEEdgeType*
+GNENetHelper::AttributeCarriers::registerEdgeType(GNEEdgeType* edgeType) {
+    // increase reference
+    edgeType->incRef("GNENet::registerEdgeType");
+    // add it in container
+    myEdgeTypes[edgeType->getMicrosimID()] = edgeType;
+    return edgeType;
+}
+
+
+const std::map<std::string, GNEEdgeType*>&
+GNENetHelper::AttributeCarriers::getEdgeTypes() const {
+    return myEdgeTypes;
+}
+
+
+void GNENetHelper::AttributeCarriers::clearEdgeTypes() {
+    myEdgeTypes.clear();
 }
 
 
@@ -219,13 +245,6 @@ GNENetHelper::AttributeCarriers::getEdges() const {
 
 
 void GNENetHelper::AttributeCarriers::clearEdges() {
-    /*
-        // remove all edges of net (It was already removed from grid)
-        auto copyOfEdges = myAttributeCarriers->getEdges();
-        for (auto edge : copyOfEdges) {
-            myAttributeCarriers->getEdges().erase(edge.second->getMicrosimID());
-        }
-    */
     myEdges.clear();
 }
 
@@ -257,10 +276,8 @@ bool
 GNENetHelper::AttributeCarriers::addPOI(const std::string& id, const std::string& type, const RGBColor& color, const Position& pos, bool geo,
                                         const std::string& lane, double posOverLane, double posLat, double layer, double angle,
                                         const std::string& imgFile, bool relativePath, double width, double height, bool /*ignorePruning*/) {
-    // get POITag (Depending of attribute lane)
-    const SumoXMLTag POITag = lane.empty() ? SUMO_TAG_POI : SUMO_TAG_POILANE;
     // check if ID is duplicated
-    if (myShapes.at(POITag).count(id) == 0) {
+    if (myShapes.at(SUMO_TAG_POI).count(id) == 0) {
         // create POI or POILane depending of parameter lane
         if (lane.empty()) {
             // create POI
@@ -493,6 +510,65 @@ GNENetHelper::AttributeCarriers::updateJunctionID(GNEAttributeCarrier* AC, const
 }
 
 
+bool
+GNENetHelper::AttributeCarriers::edgeTypeExist(const GNEEdgeType* edgeType) const {
+    return (myEdgeTypes.count(edgeType->getID()) > 0);
+}
+
+
+void
+GNENetHelper::AttributeCarriers::insertEdgeType(GNEEdgeType* edgeType) {
+    // insert in myEdgeTypes
+    myEdgeTypes[edgeType->getMicrosimID()] = edgeType;
+    // update edge selector
+    if (myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->shown()) {
+        myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->refreshEdgeTypeSelector();
+    }
+}
+
+
+void
+GNENetHelper::AttributeCarriers::deleteEdgeType(GNEEdgeType* edgeType) {
+    // remove it from inspected elements and HierarchicalElementTree
+    myNet->getViewNet()->removeFromAttributeCarrierInspected(edgeType);
+    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(edgeType);
+    // remove from edge types
+    myEdgeTypes.erase(edgeType->getMicrosimID());
+    // check if this is the selected edge type in edgeSelector
+    if (myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->getEdgeTypeSelected() == edgeType) {
+        myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->clearEdgeTypeSelected();
+        myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->refreshEdgeTypeSelector();
+    }
+    // update edge selector
+    if (myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->shown()) {
+        myNet->getViewNet()->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->refreshEdgeTypeSelector();
+    }  
+}
+
+
+void
+GNENetHelper::AttributeCarriers::updateEdgeTypeID(GNEAttributeCarrier* AC, const std::string& newID) {
+    if (myEdgeTypes.count(AC->getID()) == 0) {
+        throw ProcessError(AC->getTagStr() + " with ID='" + AC->getID() + "' doesn't exist in AttributeCarriers.edgeType");
+    } else if (myEdgeTypes.count(newID) != 0) {
+        throw ProcessError("There is another " + AC->getTagStr() + " with new ID='" + newID + "' in myEdgeTypes");
+    } else {
+        // retrieve edgeType
+        GNEEdgeType* edgeType = myEdgeTypes.at(AC->getID());
+        // remove edgeType from container
+        myEdgeTypes.erase(edgeType->getID());
+        // rename in typeCont
+        myNet->getNetBuilder()->getTypeCont().updateEdgeTypeID(edgeType->getID(), newID);
+        // update microsim ID
+        edgeType->setMicrosimID(newID);
+        // add it into myEdgeTypes again
+        myEdgeTypes[AC->getID()] = edgeType;
+        // net has to be saved
+        myNet->requireSaveNet(true);
+    }
+}
+
+
 void
 GNENetHelper::AttributeCarriers::insertEdge(GNEEdge* edge) {
     NBEdge* nbe = edge->getNBEdge();
@@ -634,10 +710,11 @@ GNENetHelper::AttributeCarriers::updateAdditionalID(GNEAttributeCarrier* AC, con
 
 bool
 GNENetHelper::AttributeCarriers::shapeExist(const GNEShape* shape) const {
+    // get tag (due POIs)
+    SumoXMLTag shapeTag = (shape->getTagProperty().getTag() == SUMO_TAG_POILANE)? SUMO_TAG_POI : shape->getTagProperty().getTag();
     // first check that shape pointer is valid
     if (shape) {
-        return myShapes.at(shape->getTagProperty().getTag()).find(shape->getID()) !=
-               myShapes.at(shape->getTagProperty().getTag()).end();
+        return myShapes.at(shapeTag).find(shape->getID()) != myShapes.at(shapeTag).end();
     } else {
         throw ProcessError("Invalid shape pointer");
     }
@@ -646,9 +723,11 @@ GNENetHelper::AttributeCarriers::shapeExist(const GNEShape* shape) const {
 
 void
 GNENetHelper::AttributeCarriers::insertShape(GNEShape* shape) {
+    // get tag (due POIs)
+    SumoXMLTag shapeTag = (shape->getTagProperty().getTag() == SUMO_TAG_POILANE)? SUMO_TAG_POI : shape->getTagProperty().getTag();
     // Check if shape element exists before insertion
     if (!shapeExist(shape)) {
-        myShapes.at(shape->getTagProperty().getTag()).insert(std::make_pair(shape->getID(), shape));
+        myShapes.at(shapeTag).insert(std::make_pair(shape->getID(), shape));
         // add element in grid
         myNet->addGLObjectIntoGrid(shape);
         // update geometry after insertion of shapes if myUpdateGeometryEnabled is enabled
@@ -665,14 +744,16 @@ GNENetHelper::AttributeCarriers::insertShape(GNEShape* shape) {
 
 void
 GNENetHelper::AttributeCarriers::deleteShape(GNEShape* shape) {
+    // get tag (due POIs)
+    SumoXMLTag shapeTag = (shape->getTagProperty().getTag() == SUMO_TAG_POILANE)? SUMO_TAG_POI : shape->getTagProperty().getTag();
     // first check that shape pointer is valid
     if (shapeExist(shape)) {
         // remove it from inspected elements and HierarchicalElementTree
         myNet->getViewNet()->removeFromAttributeCarrierInspected(shape);
         myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(shape);
         // obtain demand element and erase it from container
-        auto it = myShapes.at(shape->getTagProperty().getTag()).find(shape->getID());
-        myShapes.at(shape->getTagProperty().getTag()).erase(it);
+        auto it = myShapes.at(shapeTag).find(shape->getID());
+        myShapes.at(shapeTag).erase(it);
         // remove element from grid
         myNet->removeGLObjectFromGrid(shape);
         // shapes has to be saved
@@ -685,19 +766,22 @@ GNENetHelper::AttributeCarriers::deleteShape(GNEShape* shape) {
 
 void
 GNENetHelper::AttributeCarriers::updateShapeID(GNEAttributeCarrier* AC, const std::string& newID) {
-    if (myShapes.at(AC->getTagProperty().getTag()).count(AC->getID()) == 0) {
+    // get tag (due POIs)
+    SumoXMLTag shapeTag = (AC->getTagProperty().getTag() == SUMO_TAG_POILANE)? SUMO_TAG_POI : AC->getTagProperty().getTag();
+    // continue
+    if (myShapes.at(shapeTag).count(AC->getID()) == 0) {
         throw ProcessError(AC->getTagStr() + " with ID='" + AC->getID() + "' doesn't exist in AttributeCarriers.shapes");
-    } else if (myShapes.at(AC->getTagProperty().getTag()).count(newID) != 0) {
+    } else if (myShapes.at(shapeTag).count(newID) != 0) {
         throw ProcessError("There is another " + AC->getTagStr() + " with new ID='" + newID + "' in AttributeCarriers.shapes");
     } else {
         // retrieve shape
-        GNEShape* shape = myShapes.at(AC->getTagProperty().getTag()).at(AC->getID());
+        GNEShape* shape = myShapes.at(shapeTag).at(AC->getID());
         // remove shape from container
-        myShapes.at(shape->getTagProperty().getTag()).erase(shape->getID());
+        myShapes.at(shapeTag).erase(shape->getID());
         // set new ID in shape
         shape->getGUIGlObject()->setMicrosimID(newID);
         // insert shape again in container
-        myShapes.at(shape->getTagProperty().getTag()).insert(std::make_pair(shape->getID(), shape));
+        myShapes.at(shapeTag).insert(std::make_pair(shape->getID(), shape));
         // shapes has to be saved
         myNet->requireSaveAdditionals(true);
     }

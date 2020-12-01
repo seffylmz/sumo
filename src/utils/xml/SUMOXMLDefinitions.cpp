@@ -45,6 +45,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "poly",                           SUMO_TAG_POLY },
     { "junction",                       SUMO_TAG_JUNCTION },
     { "restriction",                    SUMO_TAG_RESTRICTION },
+    { "meso",                           SUMO_TAG_MESO },
     { "e1Detector",                     SUMO_TAG_E1DETECTOR },
     { "inductionLoop",                  SUMO_TAG_INDUCTION_LOOP },
     { "e2Detector",                     SUMO_TAG_E2DETECTOR },
@@ -125,6 +126,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "split",                          SUMO_TAG_SPLIT },
     { "node",                           SUMO_TAG_NODE },
     { "type",                           SUMO_TAG_TYPE },
+    { "laneType",                       SUMO_TAG_LANETYPE },
     { "detectorDefinition",             SUMO_TAG_DETECTOR_DEFINITION },
     { "routeDistribution",              SUMO_TAG_ROUTE_DISTRIBUTION },
     { "vTypeDistribution",              SUMO_TAG_VTYPE_DISTRIBUTION },
@@ -284,12 +286,15 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
 
 
 StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
+    // meta value for attribute enum
+    { "default",                SUMO_ATTR_DEFAULT },
     // meandata
     { "sampledSeconds",         SUMO_ATTR_SAMPLEDSECONDS },
     { "density",                SUMO_ATTR_DENSITY },
     { "laneDensity",            SUMO_ATTR_LANEDENSITY },
     { "occupancy",              SUMO_ATTR_OCCUPANCY },
     { "waitingTime",            SUMO_ATTR_WAITINGTIME },
+    { "timeLoss",               SUMO_ATTR_TIMELOSS },
     { "speed",                  SUMO_ATTR_SPEED },
     { "departed",               SUMO_ATTR_DEPARTED },
     { "arrived",                SUMO_ATTR_ARRIVED },
@@ -324,12 +329,28 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "noise",                  SUMO_ATTR_NOISE },
     { "amount",                 SUMO_ATTR_AMOUNT },
     { "averageSpeed",           SUMO_ATTR_AVERAGESPEED },
+    // FCD
+    { "x",                      SUMO_ATTR_X },
+    { "y",                      SUMO_ATTR_Y },
+    { "z",                      SUMO_ATTR_Z },
+    { "angle",                  SUMO_ATTR_ANGLE },
+    { "type",                   SUMO_ATTR_TYPE },
+    { "pos",                    SUMO_ATTR_POSITION },
+    { "edge",                   SUMO_ATTR_EDGE },
+    { "lane",                   SUMO_ATTR_LANE },
+    { "slope",                  SUMO_ATTR_SLOPE },
+    { "signals",                SUMO_ATTR_SIGNALS },
+    { "acceleration",           SUMO_ATTR_ACCELERATION },
+    { "accelerationLat",        SUMO_ATTR_ACCELERATION_LAT },
+    { "distance",               SUMO_ATTR_DISTANCE },
+    { "leaderID",               SUMO_ATTR_LEADER_ID },
+    { "leaderSpeed",            SUMO_ATTR_LEADER_SPEED },
+    { "leaderGap",              SUMO_ATTR_LEADER_GAP },
 
     // Edge
     { "id",                     SUMO_ATTR_ID },
     { "refId",                  SUMO_ATTR_REFID },
     { "name",                   SUMO_ATTR_NAME },
-    { "type",                   SUMO_ATTR_TYPE },
     { "version",                SUMO_ATTR_VERSION },
     { "priority",               SUMO_ATTR_PRIORITY },
     { "numLanes",               SUMO_ATTR_NUMLANES },
@@ -343,14 +364,10 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "remove",                 SUMO_ATTR_REMOVE },
     { "length",                 SUMO_ATTR_LENGTH },
     { "bidi",                   SUMO_ATTR_BIDI },
-    { "distance",               SUMO_ATTR_DISTANCE },
     // Split
     { "idBefore",               SUMO_ATTR_ID_BEFORE },
     { "idAfter",                SUMO_ATTR_ID_AFTER },
     // Positions
-    { "x",                      SUMO_ATTR_X },
-    { "y",                      SUMO_ATTR_Y },
-    { "z",                      SUMO_ATTR_Z },
     { "centerX",                SUMO_ATTR_CENTER_X },
     { "centerY",                SUMO_ATTR_CENTER_Y },
     { "centerZ",                SUMO_ATTR_CENTER_Z },
@@ -367,7 +384,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     { "weight",                 SUMO_ATTR_WEIGHT },
     { "node",                   SUMO_ATTR_NODE },
-    { "edge",                   SUMO_ATTR_EDGE },
     { "edges",                  SUMO_ATTR_EDGES },
     // Vehicle
     { "depart",                 SUMO_ATTR_DEPART },
@@ -533,7 +549,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "routes",                 SUMO_ATTR_ROUTES },
     { "vTypes",                 SUMO_ATTR_VTYPES },
 
-    { "lane",                   SUMO_ATTR_LANE },
     { "lanes",                  SUMO_ATTR_LANES },
     { "from",                   SUMO_ATTR_FROM },
     { "to",                     SUMO_ATTR_TO },
@@ -558,7 +573,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "walkFactor",             SUMO_ATTR_WALKFACTOR },
 
     { "function",               SUMO_ATTR_FUNCTION },
-    { "pos",                    SUMO_ATTR_POSITION },
     { "posLat",                 SUMO_ATTR_POSITION_LAT },
     { "freq",                   SUMO_ATTR_FREQUENCY },
     { "style",                  SUMO_ATTR_STYLE },
@@ -661,7 +675,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "osgFile",                SUMO_ATTR_OSGFILE },
     { "imgFile",                SUMO_ATTR_IMGFILE },
     { "relativePath",           SUMO_ATTR_RELATIVEPATH },
-    { "angle",                  SUMO_ATTR_ANGLE },
     { "emissionClass",          SUMO_ATTR_EMISSIONCLASS },
     { "impatience",             SUMO_ATTR_IMPATIENCE },
     { "startPos",               SUMO_ATTR_STARTPOS },
@@ -741,7 +754,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     { "generateWalks",          SUMO_ATTR_GENERATE_WALKS },
     { "actType",                SUMO_ATTR_ACTTYPE },
-    { "slope",                  SUMO_ATTR_SLOPE },
     { "junctionCornerDetail",   SUMO_ATTR_CORNERDETAIL },
     { "junctionLinkDetail",     SUMO_ATTR_LINKDETAIL },
     { "rectangularLaneCut",     SUMO_ATTR_RECTANGULAR_LANE_CUT },
@@ -758,7 +770,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "startTime",              SUMO_ATTR_STARTTIME },
     { "vehicleClass",           SUMO_ATTR_VEHICLECLASS },
     { "fuel",                   SUMO_ATTR_FUEL },
-    { "acceleration",           SUMO_ATTR_ACCELERATION },
     { "origin",                 SUMO_ATTR_ORIGIN },
     { "destination",            SUMO_ATTR_DESTINATION },
     { "visible",                SUMO_ATTR_VISIBLE },
@@ -836,13 +847,25 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     //@name RNG state saving attributes
     // @{
-    { "default",           SUMO_ATTR_RNG_DEFAULT },
     { "routeHandler",      SUMO_ATTR_RNG_ROUTEHANDLER },
     { "insertionControl",  SUMO_ATTR_RNG_INSERTIONCONTROL },
     { "device",            SUMO_ATTR_RNG_DEVICE },
     { "device.btreceiver", SUMO_ATTR_RNG_DEVICE_BT },
     { "device.toc",        SUMO_ATTR_RNG_DEVICE_TOC },
     { "driverState",       SUMO_ATTR_RNG_DRIVERSTATE },
+    // @}
+
+    //@name meso edge type attributes
+    // @{
+    { "tauff",             SUMO_ATTR_MESO_TAUFF },
+    { "taufj",             SUMO_ATTR_MESO_TAUFJ },
+    { "taujf",             SUMO_ATTR_MESO_TAUJF },
+    { "taujj",             SUMO_ATTR_MESO_TAUJJ },
+    { "junctionControl",   SUMO_ATTR_MESO_JUNCTION_CONTROL },
+    { "tlsPenalty",        SUMO_ATTR_MESO_TLS_PENALTY },
+    { "tlsFlowPenalty",    SUMO_ATTR_MESO_TLS_FLOW_PENALTY },
+    { "minorPenalty",      SUMO_ATTR_MESO_MINOR_PENALTY },
+    { "overtaking",        SUMO_ATTR_MESO_OVERTAKING },
     // @}
 
     // Other
@@ -905,6 +928,7 @@ StringBijection<PersonMode>::Entry SUMOXMLDefinitions::personModeValuesInitializ
     {"walk",    PersonMode::WALK},
     {"bicycle", PersonMode::BICYCLE },
     {"car",     PersonMode::CAR },
+    {"taxi",    PersonMode::TAXI },
     {"public",  PersonMode::PUBLIC} // (must be the last one)
 };
 
@@ -973,7 +997,7 @@ StringBijection<TrafficLightLayout>::Entry SUMOXMLDefinitions::trafficLightLayou
     { "opposites",       TrafficLightLayout::OPPOSITES },
     { "incoming",        TrafficLightLayout::INCOMING },
     { "alternateOneWay", TrafficLightLayout::ALTERNATE_ONEWAY },
-    { "<invalid>",       TrafficLightLayout::INVALID } //< must be the last one
+    { "",                TrafficLightLayout::DEFAULT } //< must be the last one
 };
 
 
@@ -1081,7 +1105,7 @@ StringBijection<TrafficLightType> SUMOXMLDefinitions::TrafficLightTypes(
     SUMOXMLDefinitions::trafficLightTypesValues, TrafficLightType::INVALID);
 
 StringBijection<TrafficLightLayout> SUMOXMLDefinitions::TrafficLightLayouts(
-    SUMOXMLDefinitions::trafficLightLayoutValues, TrafficLightLayout::INVALID);
+    SUMOXMLDefinitions::trafficLightLayoutValues, TrafficLightLayout::DEFAULT);
 
 StringBijection<LaneChangeModel> SUMOXMLDefinitions::LaneChangeModels(
     SUMOXMLDefinitions::laneChangeModelValues, LCM_DEFAULT);

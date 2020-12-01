@@ -49,18 +49,19 @@
 //#define DEBUG_SSM
 //#define DEBUG_SSM_OPPOSITE
 //#define DEBUG_ENCOUNTER
-#define DEBUG_SSM_SURROUNDING
+//#define DEBUG_SSM_SURROUNDING
 //#define DEBUG_SSM_DRAC
 //#define DEBUG_SSM_NOTIFICATIONS
 //#define DEBUG_COND(ego) MSNet::getInstance()->getCurrentTimeStep() > 308000
-#define DEBUG_COND(ego) (ego!=nullptr && ego->isSelected())
-#define DEBUG_COND_FIND(ego) (ego.isSelected())
-#define DEBUG_EGO_ID "EW.3"
-#define DEBUG_FOE_ID "WE.0"
+//#define DEBUG_COND(ego) (ego!=nullptr && ego->isSelected())
+//#define DEBUG_COND_FIND(ego) (ego.isSelected())
+#define DEBUG_COND_FIND(ego) (ego.getID() == DEBUG_EGO_ID)
+#define DEBUG_EGO_ID "286"
+#define DEBUG_FOE_ID "205"
 
-//#define DEBUG_COND(ego) ((ego)!=nullptr && (ego)->getID() == DEBUG_EGO_ID)
+#define DEBUG_COND(ego) ((ego)!=nullptr && (ego)->getID() == DEBUG_EGO_ID)
 
-//#define DEBUG_COND_ENCOUNTER(e) ((DEBUG_EGO_ID == std::string("") || e->egoID == DEBUG_EGO_ID) && (DEBUG_FOE_ID == std::string("") || e->foeID == DEBUG_FOE_ID))
+#define DEBUG_COND_ENCOUNTER(e) ((DEBUG_EGO_ID == std::string("") || e->egoID == DEBUG_EGO_ID) && (DEBUG_FOE_ID == std::string("") || e->foeID == DEBUG_FOE_ID))
 //#define DEBUG_COND_ENCOUNTER(e) (e->ego != nullptr && e->ego->isSelected() && e->foe != nullptr && e->foe->isSelected())
 
 // ===========================================================================
@@ -471,8 +472,9 @@ MSDevice_SSM::computeGlobalMeasures() {
             leader = myHolderMS->getLeader(leaderSearchDist);
         }
 
+        // negative gap indicates theoretical car-following relationship for paths that cross at an intersection
         if (myComputeSGAP) {
-            if (leader.first == nullptr) {
+            if (leader.first == nullptr || leader.second < 0) {
                 mySGAPspan.push_back(INVALID_DOUBLE);
             } else {
                 double sgap = leader.second + myHolder.getVehicleType().getMinGap();
@@ -484,7 +486,7 @@ MSDevice_SSM::computeGlobalMeasures() {
         }
 
         if (myComputeTGAP) {
-            if (leader.first == nullptr || myHolderMS->getSpeed() == 0.) {
+            if (leader.first == nullptr || myHolderMS->getSpeed() == 0. || leader.second < 0) {
                 myTGAPspan.push_back(INVALID_DOUBLE);
             } else {
                 const double tgap = (leader.second + myHolder.getVehicleType().getMinGap()) / myHolderMS->getSpeed();
@@ -2098,8 +2100,10 @@ MSDevice_SSM::classifyEncounter(const FoeInfo* foeInfo, EncounterApproachInfo& e
                     // Both must be already on the junction in a lead / follow situation on a connection
                     // (since they approach via the same link, findSurroundingVehicles() would have determined a
                     // different conflictLane if both are not on the junction)
-                    assert(egoLane == egoConflictLane);
-                    assert(foeLane == foeConflictLane);
+                    if (egoLane != egoConflictLane || foeLane != foeConflictLane) {
+                        WRITE_WARNINGF("Cannot classify SSM encounter between ego vehicle % and foe vehicle % at time %\n", e->ego->getID(), e->foe->getID(), SIMTIME);
+                        return ENCOUNTER_TYPE_NOCONFLICT_AHEAD;
+                    }
                     if (egoLane == foeLane) {
                         // both on the same internal lane
                         if (e->ego->getPositionOnLane() > e->foe->getPositionOnLane()) {
@@ -2461,7 +2465,7 @@ MSDevice_SSM::findFoeConflictLane(const MSVehicle* foe, const MSLane* egoConflic
         }
     }
 
-    MSLane* foeLane = foe->getLane();
+    const MSLane* foeLane = foe->getLane();
     std::vector<MSLane*>::const_iterator laneIter = foe->getBestLanesContinuation().begin();
     std::vector<MSLane*>::const_iterator foeBestLanesEnd = foe->getBestLanesContinuation().end();
     assert(foeLane->isInternal() || *laneIter == foeLane);
@@ -2820,7 +2824,9 @@ MSDevice_SSM::notifyEnter(SUMOTrafficObject& veh, MSMoveReminder::Notification r
     assert(veh.isVehicle());
 #ifdef DEBUG_SSM_NOTIFICATIONS
     MSBaseVehicle* v = (MSBaseVehicle*) &veh;
-    std::cout << "device '" << getID() << "' notifyEnter: reason=" << reason << " currentEdge=" << v->getLane()->getEdge().getID() << "\n";
+    if (DEBUG_COND(v)) {
+            std::cout << SIMTIME << "device '" << getID() << "' notifyEnter: reason=" << reason << " currentEdge=" << v->getLane()->getEdge().getID() << "\n";
+    }
 #else
     UNUSED_PARAMETER(veh);
     UNUSED_PARAMETER(reason);
@@ -2834,7 +2840,9 @@ MSDevice_SSM::notifyLeave(SUMOTrafficObject& veh, double /*lastPos*/,
     assert(veh.isVehicle());
 #ifdef DEBUG_SSM_NOTIFICATIONS
     MSBaseVehicle* v = (MSBaseVehicle*) &veh;
-    std::cout << "device '" << getID() << "' notifyLeave: reason=" << reason << " currentEdge=" << v->getLane()->getEdge().getID() << "\n";
+    if (DEBUG_COND(v)) {
+        std::cout << SIMTIME << "device '" << getID() << "' notifyLeave: reason=" << reason << " currentEdge=" << v->getLane()->getEdge().getID() << "\n";
+    }
 #else
     UNUSED_PARAMETER(veh);
     UNUSED_PARAMETER(reason);
@@ -2843,11 +2851,15 @@ MSDevice_SSM::notifyLeave(SUMOTrafficObject& veh, double /*lastPos*/,
 }
 
 bool
-MSDevice_SSM::notifyMove(SUMOTrafficObject& /* veh */, double /* oldPos */,
+MSDevice_SSM::notifyMove(SUMOTrafficObject& veh, double /* oldPos */,
                          double /* newPos */, double newSpeed) {
 #ifdef DEBUG_SSM_NOTIFICATIONS
-    std::cout << "device '" << getID() << "' notifyMove: newSpeed=" << newSpeed << "\n";
+    MSBaseVehicle* v = (MSBaseVehicle*) &veh;
+    if (DEBUG_COND(v)) {
+        std::cout << SIMTIME << "device '" << getID() << "' notifyMove: newSpeed=" << newSpeed << "\n";
+    }
 #else
+    UNUSED_PARAMETER(veh);
     UNUSED_PARAMETER(newSpeed);
 #endif
     return true; // keep the device
@@ -3036,7 +3048,10 @@ MSDevice_SSM::findSurroundingVehicles(const MSVehicle& veh, double range, FoeInf
                         link = lane->getOpposite()->getLinkTo(nextNonInternalLane);
                     }
                 }
-                assert(link != 0 || link->getLength() == 0.);
+                if (link == nullptr) {
+                    // disconnected route
+                    break;
+                }
 
                 // First lane of the connection
                 lane = link->getViaLane();
@@ -3134,6 +3149,7 @@ MSDevice_SSM::getUpstreamVehicles(const UpstreamScanStartInfo& scanStart, FoeInf
 #ifdef DEBUG_SSM_SURROUNDING
     if (gDebugFlag3) {
         std::cout << SIMTIME << " getUpstreamVehicles() for edge '" << scanStart.edge->getID() << "'"
+                  << " egoConflictLane=" << scanStart.egoConflictLane->getID()
                   << " pos = " << scanStart.pos << " range = " << scanStart.range
                   << std::endl;
     }
@@ -3255,7 +3271,8 @@ void
 MSDevice_SSM::getVehiclesOnJunction(const MSJunction* junction, const MSLane* const egoJunctionLane, double egoDistToConflictLane, const MSLane* const egoConflictLane, FoeInfoMap& foeCollector, std::set<const MSLane*>& seenLanes) {
 #ifdef DEBUG_SSM_SURROUNDING
     if (gDebugFlag3) {
-        std::cout << SIMTIME << " getVehiclesOnJunction() for junction '" << junction->getID() << "'"
+        std::cout << SIMTIME << " getVehiclesOnJunction() for junction '" << junction->getID()
+                  << "' egoJunctionLane=" << Named::getIDSecure(egoJunctionLane)
                   << "\nFound vehicles:"
                   << std::endl;
     }
@@ -3272,7 +3289,7 @@ MSDevice_SSM::getVehiclesOnJunction(const MSJunction* junction, const MSLane* co
             foeCollector[veh] = c;
 #ifdef DEBUG_SSM_SURROUNDING
             if (gDebugFlag3) {
-                std::cout << "\t" << veh->getID() << "\n";
+                std::cout << "\t" << veh->getID() << " egoConflictLane=" << Named::getIDSecure(egoConflictLane) << "\n";
             }
 #endif
         }
@@ -3379,6 +3396,14 @@ MSDevice_SSM::getOutputFilename(const SUMOVehicle& v, std::string deviceID) {
         if (!oc.isSet("device.ssm.file") && (issuedParameterWarnFlags & SSM_WARN_FILE) == 0) {
             std::cout << "vehicle '" << v.getID() << "' does not supply vehicle parameter 'device.ssm.file'. Using default of '" << file << "'\n";
             issuedParameterWarnFlags |= SSM_WARN_FILE;
+        }
+    }
+    if (OptionsCont::getOptions().isSet("configuration-file")) {
+        file = FileHelpers::checkForRelativity(file, OptionsCont::getOptions().getString("configuration-file"));
+        try {
+            file = StringUtils::urlDecode(file);
+        } catch (NumberFormatException& e) {
+            WRITE_WARNING(toString(e.what()) + " when trying to decode filename '" + file + "'.");
         }
     }
     return file;

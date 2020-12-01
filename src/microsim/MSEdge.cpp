@@ -114,22 +114,24 @@ void MSEdge::recalcCache() {
     }
     myLength = myLanes->front()->getLength();
     myEmptyTraveltime = myLength / MAX2(getSpeedLimit(), NUMERICAL_EPS);
-
-    if (MSGlobals::gMesoTLSPenalty > 0 || MSGlobals::gMesoMinorPenalty > 0) {
-        // add tls penalties to the minimum travel time
-        SUMOTime minPenalty = -1;
-        for (const MSLane* const l : *myLanes) {
-            for (const MSLink* const link : l->getLinkCont()) {
-                SUMOTime linkPenalty = link->getMesoTLSPenalty() + (link->havePriority() ? 0 : MSGlobals::gMesoMinorPenalty);
-                if (minPenalty == -1) {
-                    minPenalty = linkPenalty;
-                } else {
-                    minPenalty = MIN2(minPenalty, linkPenalty);
+    if (MSGlobals::gUseMesoSim) {
+        const MSNet::MesoEdgeType& edgeType = MSNet::getInstance()->getMesoType(getEdgeType());
+        if (edgeType.tlsPenalty > 0 || edgeType.minorPenalty > 0) {
+            // add tls penalties to the minimum travel time
+            SUMOTime minPenalty = -1;
+            for (const MSLane* const l : *myLanes) {
+                for (const MSLink* const link : l->getLinkCont()) {
+                    SUMOTime linkPenalty = link->getMesoTLSPenalty() + (link->havePriority() ? 0 : edgeType.minorPenalty);
+                    if (minPenalty == -1) {
+                        minPenalty = linkPenalty;
+                    } else {
+                        minPenalty = MIN2(minPenalty, linkPenalty);
+                    }
                 }
             }
-        }
-        if (minPenalty > 0) {
-            myEmptyTraveltime += STEPS2TIME(minPenalty);
+            if (minPenalty > 0) {
+                myEmptyTraveltime += STEPS2TIME(minPenalty);
+            }
         }
     } else if (isInternal() && MSGlobals::gUsingInternalLanes) {
         const MSLink* link = myLanes->front()->getIncomingLanes()[0].viaLink;
@@ -176,6 +178,15 @@ MSEdge::closeBuilding() {
     // segment building depends on the finished list of successors (for multi-queue)
     if (MSGlobals::gUseMesoSim && !myLanes->empty()) {
         MSGlobals::gMesoNet->buildSegmentsFor(*this, OptionsCont::getOptions());
+    }
+}
+
+
+void
+MSEdge::updateMesoType() {
+    assert(MSGlobals::gUseMesoSim);
+    if (!myLanes->empty()) {
+        MSGlobals::gMesoNet->updateSegementsForEdge(*this);
     }
 }
 

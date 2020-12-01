@@ -36,6 +36,8 @@
 #include "GNEConnection.h"
 #include "GNECrossing.h"
 #include "GNEEdge.h"
+#include "GNEEdgeType.h"
+#include "GNELaneType.h"
 
 //#define DEBUG_SMOOTH_GEOM
 //#define DEBUGCOND(obj) (true)
@@ -53,14 +55,14 @@ const double GNEEdge::SNAP_RADIUS = SUMO_const_halfLaneWidth;
 GNEEdge::GNEEdge(GNENet* net, NBEdge* nbe, bool wasSplit, bool loaded):
     GNENetworkElement(net, nbe->getID(), GLO_EDGE, SUMO_TAG_EDGE, {
     net->retrieveJunction(nbe->getFromNode()->getID()), net->retrieveJunction(nbe->getToNode()->getID())
-    },
-    {}, {}, {}, {}, {}, {}, {}),
-    myNBEdge(nbe),
-    myLanes(0),
-    myAmResponsible(false),
-    myWasSplit(wasSplit),
-    myConnectionStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
-    myUpdateGeometry(true) {
+},
+{}, {}, {}, {}, {}, {}, {}),
+myNBEdge(nbe),
+myLanes(0),
+myAmResponsible(false),
+myWasSplit(wasSplit),
+myConnectionStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
+myUpdateGeometry(true) {
     // Create lanes
     int numLanes = myNBEdge->getNumLanes();
     myLanes.reserve(numLanes);
@@ -145,8 +147,8 @@ GNEEdge::getPositionInView() const {
 GNEMoveOperation*
 GNEEdge::getMoveOperation(const double shapeOffset) {
     if (isAttributeCarrierSelected() &&
-        getParentJunctions().front()->isAttributeCarrierSelected() && 
-        getParentJunctions().back()->isAttributeCarrierSelected()) {
+            getParentJunctions().front()->isAttributeCarrierSelected() &&
+            getParentJunctions().back()->isAttributeCarrierSelected()) {
         // declare a vector for saving geometry points to move
         std::vector<int> geometryPointsToMove;
         // if edge is selected, check conditions
@@ -171,7 +173,7 @@ GNEEdge::getMoveOperation(const double shapeOffset) {
             // declare new index
             int newIndex = index;
             // check if we have to create a new index
-            if (positionAtOffset.distanceSquaredTo2D(shapeToMove[index]) > (SNAP_RADIUS*SNAP_RADIUS)) {
+            if (positionAtOffset.distanceSquaredTo2D(shapeToMove[index]) > (SNAP_RADIUS * SNAP_RADIUS)) {
                 newIndex = shapeToMove.insertAtClosest(positionAtOffset, true);
             }
             // check if attribute carrier is selected
@@ -205,7 +207,7 @@ GNEEdge::getMoveOperation(const double shapeOffset) {
 }
 
 
-void 
+void
 GNEEdge::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList) {
     // declare shape to move
     PositionVector shape = myNBEdge->getGeometry();
@@ -447,12 +449,12 @@ GNEEdge::editEndpoint(Position pos, GNEUndoList* undoList) {
                 setAttribute(GNE_ATTR_SHAPE_START, toString(newPos), undoList);
                 getParentJunctions().front()->invalidateShape();
             }
-/*
-            // possibly existing inner point is no longer needed
-            if (myNBEdge->getInnerGeometry().size() > 0 && getEdgeVertexIndex(pos, false) != -1) {
-                deleteEdgeGeometryPoint(pos, false);
-            }
-*/
+            /*
+                        // possibly existing inner point is no longer needed
+                        if (myNBEdge->getInnerGeometry().size() > 0 && getEdgeVertexIndex(pos, false) != -1) {
+                            deleteEdgeGeometryPoint(pos, false);
+                        }
+            */
             undoList->p_end();
         }
     }
@@ -647,27 +649,63 @@ GNEEdge::getGNECrossings() {
 
 
 void
-GNEEdge::copyTemplate(GNEEdge* tpl, GNEUndoList* undoList) {
-    // begin undo list
-    undoList->p_begin("copy template");
+GNEEdge::copyTemplate(const GNEInspectorFrame::TemplateEditor::EdgeTemplate& edgeTemplate, GNEUndoList* undoList) {
     // copy edge-specific attributes
-    setAttribute(SUMO_ATTR_NUMLANES,   tpl->getAttribute(SUMO_ATTR_NUMLANES), undoList);
-    setAttribute(SUMO_ATTR_TYPE,       tpl->getAttribute(SUMO_ATTR_TYPE), undoList);
-    setAttribute(SUMO_ATTR_PRIORITY,   tpl->getAttribute(SUMO_ATTR_PRIORITY), undoList);
-    setAttribute(SUMO_ATTR_SPREADTYPE, tpl->getAttribute(SUMO_ATTR_SPREADTYPE), undoList);
+    setAttribute(SUMO_ATTR_NUMLANES,   edgeTemplate.edgeParameters.at(SUMO_ATTR_NUMLANES), undoList);
+    setAttribute(SUMO_ATTR_TYPE,       edgeTemplate.edgeParameters.at(SUMO_ATTR_TYPE), undoList);
+    setAttribute(SUMO_ATTR_PRIORITY,   edgeTemplate.edgeParameters.at(SUMO_ATTR_PRIORITY), undoList);
+    setAttribute(SUMO_ATTR_SPREADTYPE, edgeTemplate.edgeParameters.at(SUMO_ATTR_SPREADTYPE), undoList);
     // copy raw values for lane-specific attributes
-    setAttribute(SUMO_ATTR_SPEED,      toString(myNBEdge->getSpeed()), undoList);
-    setAttribute(SUMO_ATTR_WIDTH,      toString(myNBEdge->getLaneWidth()), undoList);
-    setAttribute(SUMO_ATTR_ENDOFFSET,  toString(myNBEdge->getEndOffset()), undoList);
+    if (isValid(SUMO_ATTR_SPEED, edgeTemplate.edgeParameters.at(SUMO_ATTR_SPEED))) {
+        setAttribute(SUMO_ATTR_SPEED,      edgeTemplate.edgeParameters.at(SUMO_ATTR_SPEED), undoList);
+    }
+    if (isValid(SUMO_ATTR_WIDTH, edgeTemplate.edgeParameters.at(SUMO_ATTR_WIDTH))) {
+        setAttribute(SUMO_ATTR_WIDTH,      edgeTemplate.edgeParameters.at(SUMO_ATTR_WIDTH), undoList);
+    }
+    if (isValid(SUMO_ATTR_ENDOFFSET, edgeTemplate.edgeParameters.at(SUMO_ATTR_ENDOFFSET))) {
+        setAttribute(SUMO_ATTR_ENDOFFSET,  edgeTemplate.edgeParameters.at(SUMO_ATTR_ENDOFFSET), undoList);
+    }
     // copy lane attributes as well
     for (int i = 0; i < (int)myLanes.size(); i++) {
-        myLanes[i]->setAttribute(SUMO_ATTR_ALLOW, tpl->myLanes[i]->getAttribute(SUMO_ATTR_ALLOW), undoList);
-        myLanes[i]->setAttribute(SUMO_ATTR_SPEED, tpl->myLanes[i]->getAttribute(SUMO_ATTR_SPEED), undoList);
-        myLanes[i]->setAttribute(SUMO_ATTR_WIDTH, tpl->myLanes[i]->getAttribute(SUMO_ATTR_WIDTH), undoList);
-        myLanes[i]->setAttribute(SUMO_ATTR_ENDOFFSET, tpl->myLanes[i]->getAttribute(SUMO_ATTR_ENDOFFSET), undoList);
+        myLanes[i]->setAttribute(SUMO_ATTR_ALLOW,       edgeTemplate.laneParameters.at(i).at(SUMO_ATTR_ALLOW),      undoList);
+        myLanes[i]->setAttribute(SUMO_ATTR_SPEED,       edgeTemplate.laneParameters.at(i).at(SUMO_ATTR_SPEED),      undoList);
+        myLanes[i]->setAttribute(SUMO_ATTR_WIDTH,       edgeTemplate.laneParameters.at(i).at(SUMO_ATTR_WIDTH),      undoList);
+        myLanes[i]->setAttribute(SUMO_ATTR_ENDOFFSET,   edgeTemplate.laneParameters.at(i).at(SUMO_ATTR_ENDOFFSET),  undoList);
     }
-    // end undo list
-    undoList->p_end();
+}
+
+
+void 
+GNEEdge::copyEdgeType(const GNEEdgeType *edgeType, GNEUndoList* undoList) {
+    // set type (only for info)
+    setAttribute(SUMO_ATTR_TYPE, edgeType->getAttribute(SUMO_ATTR_ID), undoList);
+    // set num lanes
+    setAttribute(SUMO_ATTR_NUMLANES, edgeType->getAttribute(SUMO_ATTR_NUMLANES), undoList);
+    // set speed
+    setAttribute(SUMO_ATTR_SPEED, edgeType->getAttribute(SUMO_ATTR_SPEED), undoList);
+    // set allow (no disallow)
+    setAttribute(SUMO_ATTR_ALLOW, edgeType->getAttribute(SUMO_ATTR_ALLOW), undoList);
+    // set width
+    setAttribute(SUMO_ATTR_WIDTH, edgeType->getAttribute(SUMO_ATTR_WIDTH), undoList);
+    // set priority
+    setAttribute(SUMO_ATTR_PRIORITY, edgeType->getAttribute(SUMO_ATTR_PRIORITY), undoList);
+    // set parameters
+    setAttribute(GNE_ATTR_PARAMETERS, edgeType->getAttribute(GNE_ATTR_PARAMETERS), undoList);
+    // copy lane attributes as well
+    for (int i = 0; i < (int)myLanes.size(); i++) {
+        if (edgeType->getLaneTypes().at(i)->getAttribute(SUMO_ATTR_SPEED).size() > 0) {
+            myLanes[i]->setAttribute(SUMO_ATTR_SPEED,       edgeType->getLaneTypes().at(i)->getAttribute(SUMO_ATTR_SPEED),      undoList);
+        }
+        if (edgeType->getLaneTypes().at(i)->getAttribute(SUMO_ATTR_ALLOW).size() > 0) {
+            myLanes[i]->setAttribute(SUMO_ATTR_ALLOW,       edgeType->getLaneTypes().at(i)->getAttribute(SUMO_ATTR_ALLOW),      undoList);
+        }
+        if (edgeType->getLaneTypes().at(i)->getAttribute(SUMO_ATTR_WIDTH).size() > 0) {
+            myLanes[i]->setAttribute(SUMO_ATTR_WIDTH,       edgeType->getLaneTypes().at(i)->getAttribute(SUMO_ATTR_WIDTH),      undoList);
+        }
+        if (edgeType->getLaneTypes().at(i)->getAttribute(GNE_ATTR_PARAMETERS).size() > 0) {
+            myLanes[i]->setAttribute(GNE_ATTR_PARAMETERS,   edgeType->getLaneTypes().at(i)->getAttribute(GNE_ATTR_PARAMETERS),  undoList);
+        }
+    }
 }
 
 
@@ -982,6 +1020,12 @@ GNEEdge::isAttributeEnabled(SumoXMLAttr key) const {
 }
 
 
+const std::map<std::string, std::string>&
+GNEEdge::getACParametersMap() const {
+    return myNBEdge->getParametersMap();
+}
+
+
 void
 GNEEdge::setResponsible(bool newVal) {
     myAmResponsible = newVal;
@@ -1119,7 +1163,7 @@ GNEEdge::drawEdgeGeometryPoints(const GUIVisualizationSettings& s, const GNELane
             drawBigGeometryPoints = true;
         }
         if ((myNet->getViewNet()->getEditModes().networkEditMode == NetworkEditMode::NETWORK_DELETE) &&
-            (myNet->getViewNet()->getViewParent()->getDeleteFrame()->getDeleteOptions()->deleteOnlyGeometryPoints())) {
+                (myNet->getViewNet()->getViewParent()->getDeleteFrame()->getDeleteOptions()->deleteOnlyGeometryPoints())) {
             drawBigGeometryPoints = true;
         }
         double circleWidth = drawBigGeometryPoints ? SNAP_RADIUS * MIN2((double)1, s.laneWidthExaggeration) : 0.5;
@@ -1383,7 +1427,7 @@ GNEEdge::setAttribute(SumoXMLAttr key, const std::string& value) {
 }
 
 
-void 
+void
 GNEEdge::setMoveShape(const GNEMoveResult& moveResult) {
     // get start and end points
     const Position shapeStart = moveResult.shapeToUpdate.front();
@@ -1405,7 +1449,7 @@ GNEEdge::setMoveShape(const GNEMoveResult& moveResult) {
 }
 
 
-void 
+void
 GNEEdge::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
     // make sure that newShape isn't empty
     if (moveResult.shapeToUpdate.size() > 0) {
@@ -1542,6 +1586,9 @@ GNEEdge::removeLane(GNELane* lane, bool recomputeConnections) {
     if (lane->isAttributeCarrierSelected()) {
         lane->unselectAttributeCarrier();
     }
+    // before removing, check that lane isn't being inspected
+    myNet->getViewNet()->removeFromAttributeCarrierInspected(lane);
+    myNet->getViewNet()->getViewParent()->getInspectorFrame()->getHierarchicalElementTree()->removeCurrentEditedAttributeCarrier(lane);
     // Delete lane of edge's container
     // unless the connections are fully recomputed, existing indices must be shifted
     myNBEdge->deleteLane(lane->getIndex(), recomputeConnections, !recomputeConnections);

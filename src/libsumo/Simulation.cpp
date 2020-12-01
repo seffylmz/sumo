@@ -120,7 +120,7 @@ Simulation::close(const std::string& reason) {
 
 void
 Simulation::subscribe(const std::vector<int>& varIDs, double begin, double end) {
-    libsumo::Helper::subscribe(CMD_SUBSCRIBE_SIM_VARIABLE, "", varIDs, begin, end);
+    libsumo::Helper::subscribe(CMD_SUBSCRIBE_SIM_VARIABLE, "", varIDs, begin, end, libsumo::TraCIResults());
 }
 
 
@@ -132,7 +132,7 @@ Simulation::getSubscriptionResults() {
 
 const SubscriptionResults
 Simulation::getAllSubscriptionResults() {
-        return mySubscriptionResults;
+    return mySubscriptionResults;
 }
 
 
@@ -140,8 +140,8 @@ const ContextSubscriptionResults
 Simulation::getAllContextSubscriptionResults() {
     return myContextSubscriptionResults;
 }
-            
-            
+
+
 std::pair<int, std::string>
 Simulation::getVersion() {
     return std::make_pair(libsumo::TRACI_VERSION, "SUMO " VERSION_STRING);
@@ -294,7 +294,7 @@ Simulation::getEndingTeleportIDList() {
 std::vector<std::string>
 Simulation::getBusStopIDList() {
     std::vector<std::string> result;
-    for (const auto pair : MSNet::getInstance()->getStoppingPlaces(SUMO_TAG_BUS_STOP)) {
+    for (const auto& pair : MSNet::getInstance()->getStoppingPlaces(SUMO_TAG_BUS_STOP)) {
         result.push_back(pair.first);
     }
     return result;
@@ -523,6 +523,11 @@ Simulation::findIntermodalRoute(const std::string& from, const std::string& to,
             pars.back()->vtypeid = DEFAULT_BIKETYPE_ID;
             pars.back()->id = mode;
             modeSet |= SVC_BICYCLE;
+        } else if (mode == toString(PersonMode::TAXI)) {
+            pars.push_back(new SUMOVehicleParameter());
+            pars.back()->vtypeid = DEFAULT_TAXITYPE_ID;
+            pars.back()->id = mode;
+            modeSet |= SVC_TAXI;
         } else if (mode == toString(PersonMode::PUBLIC)) {
             pars.push_back(nullptr);
             modeSet |= SVC_BUS;
@@ -685,9 +690,6 @@ Simulation::getParameter(const std::string& objectID, const std::string& key) {
         throw TraCIException("Parameter '" + key + "' is not supported.");
     }
 }
-
-
-LIBSUMO_GET_PARAMETER_WITH_KEY_IMPLEMENTATION(Simulation)
 
 
 void

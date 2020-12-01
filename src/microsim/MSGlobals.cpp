@@ -47,10 +47,6 @@ double MSGlobals::gLateralResolution;
 bool MSGlobals::gStateLoaded;
 bool MSGlobals::gUseMesoSim;
 bool MSGlobals::gMesoLimitedJunctionControl;
-bool MSGlobals::gMesoOvertaking;
-double MSGlobals::gMesoTLSPenalty;
-double MSGlobals::gMesoTLSFlowPenalty;
-SUMOTime MSGlobals::gMesoMinorPenalty;
 MELoop* MSGlobals::gMesoNet;
 
 bool MSGlobals::gOverheadWireSolver;

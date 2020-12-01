@@ -289,12 +289,12 @@ NIImporter_VISUM::parse_Types() {
     // try to retrieve the number of lanes
     const int numLanes = myCapacity2Lanes.get(getNamedFloat("Kap-IV", KEYS.getString(VISUM_CAPACITY)));
     // insert the type
-    myNetBuilder.getTypeCont().insert(myCurrentID, numLanes, speed / (double) 3.6, priority, permissions, NBEdge::UNSPECIFIED_WIDTH, false, NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_WIDTH, 0, 0, 0);
-    myNetBuilder.getTypeCont().markAsSet(myCurrentID, SUMO_ATTR_NUMLANES);
-    myNetBuilder.getTypeCont().markAsSet(myCurrentID, SUMO_ATTR_SPEED);
-    myNetBuilder.getTypeCont().markAsSet(myCurrentID, SUMO_ATTR_PRIORITY);
-    myNetBuilder.getTypeCont().markAsSet(myCurrentID, SUMO_ATTR_ONEWAY);
-    myNetBuilder.getTypeCont().markAsSet(myCurrentID, SUMO_ATTR_ALLOW);
+    myNetBuilder.getTypeCont().insertEdgeType(myCurrentID, numLanes, speed / (double) 3.6, priority, permissions, NBEdge::UNSPECIFIED_WIDTH, false, NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_WIDTH, 0, 0, 0);
+    myNetBuilder.getTypeCont().markEdgeTypeAsSet(myCurrentID, SUMO_ATTR_NUMLANES);
+    myNetBuilder.getTypeCont().markEdgeTypeAsSet(myCurrentID, SUMO_ATTR_SPEED);
+    myNetBuilder.getTypeCont().markEdgeTypeAsSet(myCurrentID, SUMO_ATTR_PRIORITY);
+    myNetBuilder.getTypeCont().markEdgeTypeAsSet(myCurrentID, SUMO_ATTR_ONEWAY);
+    myNetBuilder.getTypeCont().markEdgeTypeAsSet(myCurrentID, SUMO_ATTR_ALLOW);
 }
 
 
@@ -378,7 +378,7 @@ NIImporter_VISUM::parse_Edges() {
     // get the type
     std::string type = myLineParser.know(KEYS.getString(VISUM_TYP)) ? myLineParser.get(KEYS.getString(VISUM_TYP)) : myLineParser.get(KEYS.getString(VISUM_TYPE));
     // get the speed
-    double speed = myNetBuilder.getTypeCont().getSpeed(type);
+    double speed = myNetBuilder.getTypeCont().getEdgeTypeSpeed(type);
     if (!OptionsCont::getOptions().getBool("visum.use-type-speed")) {
         try {
             std::string speedS = myLineParser.know("v0-IV") ? myLineParser.get("v0-IV") : myLineParser.get(KEYS.getString(VISUM_V0));
@@ -389,7 +389,7 @@ NIImporter_VISUM::parse_Edges() {
         } catch (OutOfBoundsException&) {}
     }
     if (speed <= 0) {
-        speed = myNetBuilder.getTypeCont().getSpeed(type);
+        speed = myNetBuilder.getTypeCont().getEdgeTypeSpeed(type);
     }
 
     // get the information whether the edge is a one-way
@@ -397,7 +397,7 @@ NIImporter_VISUM::parse_Edges() {
                   ? StringUtils::toBool(myLineParser.get("Einbahn"))
                   : true;
     // get the number of lanes
-    int nolanes = myNetBuilder.getTypeCont().getNumLanes(type);
+    int nolanes = myNetBuilder.getTypeCont().getEdgeTypeNumLanes(type);
     if (!OptionsCont::getOptions().getBool("visum.recompute-lane-number")) {
         if (!OptionsCont::getOptions().getBool("visum.use-type-laneno")) {
             if (myLineParser.know("Fahrstreifen")) {
@@ -434,8 +434,8 @@ NIImporter_VISUM::parse_Edges() {
         oneway_checked = false;
     }
     // add the edge
-    const SVCPermissions permissions = getPermissions(KEYS.getString(VISUM_TYPES), false, myNetBuilder.getTypeCont().getPermissions(type));
-    int prio = myUseVisumPrio ? myNetBuilder.getTypeCont().getPriority(type) : -1;
+    const SVCPermissions permissions = getPermissions(KEYS.getString(VISUM_TYPES), false, myNetBuilder.getTypeCont().getEdgeTypePermissions(type));
+    int prio = myUseVisumPrio ? myNetBuilder.getTypeCont().getEdgeTypePriority(type) : -1;
     if (nolanes != 0 && speed != 0) {
         LaneSpreadFunction lsf = oneway_checked ? LaneSpreadFunction::CENTER : LaneSpreadFunction::RIGHT;
         // @todo parse name from visum files

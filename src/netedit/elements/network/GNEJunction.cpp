@@ -49,15 +49,15 @@
 
 GNEJunction::GNEJunction(GNENet* net, NBNode* nbn, bool loaded) :
     GNENetworkElement(net, nbn->getID(), GLO_JUNCTION, SUMO_TAG_JUNCTION,
-        {}, {}, {}, {}, {}, {}, {}, {}),
-    myNBNode(nbn),
-    myMaxDrawingSize(1),
-    myAmCreateEdgeSource(false),
-    myLogicStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
-    myAmResponsible(false),
-    myHasValidLogic(loaded),
-    myAmTLSSelected(false),
-    myColorForMissingConnections(false) {
+{}, {}, {}, {}, {}, {}, {}, {}),
+myNBNode(nbn),
+myMaxDrawingSize(1),
+myAmCreateEdgeSource(false),
+myLogicStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
+myAmResponsible(false),
+myHasValidLogic(loaded),
+myAmTLSSelected(false),
+myColorForMissingConnections(false) {
     // update centering boundary without updating grid
     updateCenteringBoundary(false);
 }
@@ -109,7 +109,7 @@ GNEJunction::getPositionInView() const {
 }
 
 
-GNEMoveOperation* 
+GNEMoveOperation*
 GNEJunction::getMoveOperation(const double shapeOffset) {
     // edit depending if shape is being edited
     if (isShapeEdited()) {
@@ -141,7 +141,7 @@ GNEJunction::getMoveOperation(const double shapeOffset) {
 }
 
 
-void 
+void
 GNEJunction::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList) {
     // edit depending if shape is being edited
     if (isShapeEdited()) {
@@ -1046,6 +1046,12 @@ GNEJunction::getAttribute(SumoXMLAttr key) const {
             } else {
                 return "No TLS";
             }
+        case SUMO_ATTR_TLLAYOUT:
+            if (isAttributeEnabled(SUMO_ATTR_TLLAYOUT)) {
+                return toString((*myNBNode->getControllingTLS().begin())->getLayout());
+            } else {
+                return "No TLS";
+            }
         case SUMO_ATTR_TLID:
             if (isAttributeEnabled(SUMO_ATTR_TLID)) {
                 return toString((*myNBNode->getControllingTLS().begin())->getID());
@@ -1164,6 +1170,26 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList
             undoList->p_end();
             break;
         }
+        case SUMO_ATTR_TLLAYOUT: {
+            undoList->p_begin("change " + getTagStr() + " tlLayout");
+            const std::set<NBTrafficLightDefinition*> copyOfTls = myNBNode->getControllingTLS();
+            for (const auto& oldTLS : copyOfTls) {
+                std::vector<NBNode*> copyOfNodes = oldTLS->getNodes();
+                NBOwnTLDef* newTLS = new NBOwnTLDef(oldTLS->getID(), oldTLS->getOffset(), oldTLS->getType());
+                newTLS->setLayout(SUMOXMLDefinitions::TrafficLightLayouts.get(value));
+                newTLS->setProgramID(oldTLS->getProgramID());
+                for (const auto& node : copyOfNodes) {
+                    GNEJunction* oldJunction = myNet->retrieveJunction(node->getID());
+                    undoList->add(new GNEChange_TLS(oldJunction, oldTLS, false), true);
+                }
+                for (const auto& node : copyOfNodes) {
+                    GNEJunction* oldJunction = myNet->retrieveJunction(node->getID());
+                    undoList->add(new GNEChange_TLS(oldJunction, newTLS, true), true);
+                }
+            }
+            undoList->p_end();
+            break;
+        }
         case SUMO_ATTR_TLID: {
             undoList->p_begin("change " + toString(SUMO_TAG_TRAFFIC_LIGHT) + " id");
             const std::set<NBTrafficLightDefinition*> copyOfTls = myNBNode->getControllingTLS();
@@ -1248,6 +1274,8 @@ GNEJunction::isValid(SumoXMLAttr key, const std::string& value) {
             return canParse<double>(value) && (parse<double>(value) >= -1);
         case SUMO_ATTR_TLTYPE:
             return myNBNode->isTLControlled() && SUMOXMLDefinitions::TrafficLightTypes.hasString(value);
+        case SUMO_ATTR_TLLAYOUT:
+            return myNBNode->isTLControlled() && SUMOXMLDefinitions::TrafficLightLayouts.hasString(value);
         case SUMO_ATTR_TLID:
             return myNBNode->isTLControlled() && (value != "");
         case SUMO_ATTR_KEEP_CLEAR:
@@ -1272,6 +1300,7 @@ bool
 GNEJunction::isAttributeEnabled(SumoXMLAttr key) const {
     switch (key) {
         case SUMO_ATTR_TLTYPE:
+        case SUMO_ATTR_TLLAYOUT:
         case SUMO_ATTR_TLID:
             return myNBNode->isTLControlled();
         case SUMO_ATTR_KEEP_CLEAR: {
@@ -1286,6 +1315,12 @@ GNEJunction::isAttributeEnabled(SumoXMLAttr key) const {
         default:
             return true;
     }
+}
+
+
+const std::map<std::string, std::string>&
+GNEJunction::getACParametersMap() const {
+    return myNBNode->getParametersMap();
 }
 
 
@@ -1305,7 +1340,7 @@ GNEJunction::drawTLSIcon(const GUIVisualizationSettings& s) const {
             (myNBNode->isTLControlled()) && !myAmTLSSelected && !s.drawForRectangleSelection) {
         glPushMatrix();
         Position pos = myNBNode->getPosition();
-        glTranslated(pos.x(), pos.y(), 0.1);
+        glTranslated(pos.x(), pos.y(), 0.2);
         glColor3d(1, 1, 1);
         const double halfWidth = 32 / s.scale;
         const double halfHeight = 64 / s.scale;
@@ -1413,6 +1448,9 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value) {
             }
             break;
         }
+        case SUMO_ATTR_TLLAYOUT:
+            // should not be triggered (handled via GNEChange_TLS)
+            break;
         case SUMO_ATTR_RIGHT_OF_WAY:
             myNBNode->setRightOfWay(SUMOXMLDefinitions::RightOfWayValues.get(value));
             break;
@@ -1438,7 +1476,7 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value) {
 }
 
 
-void 
+void
 GNEJunction::setMoveShape(const GNEMoveResult& moveResult) {
     // set new position in NBNode without updating grid
     if (isShapeEdited()) {
@@ -1451,7 +1489,7 @@ GNEJunction::setMoveShape(const GNEMoveResult& moveResult) {
 }
 
 
-void 
+void
 GNEJunction::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
     // make sure that newShape isn't empty
     if (moveResult.shapeToUpdate.size() > 0) {
@@ -1515,6 +1553,9 @@ GNEJunction::getColorValue(const GUIVisualizationSettings& /* s */, int activeSc
                     return 11;
                 case SumoXMLNodeType::RAIL_CROSSING:
                     return 12;
+                default:
+                    assert(false);
+                    return 0;
             }
         case 3:
             return myNBNode->getPosition().z();

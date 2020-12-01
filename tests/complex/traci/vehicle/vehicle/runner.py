@@ -130,6 +130,7 @@ def check(vehID):
 def checkOffRoad(vehID):
     print(("veh", vehID,
            "speed", traci.vehicle.getSpeed(vehID),
+           "acceleration", traci.vehicle.getAcceleration(vehID),
            "pos", posToString(traci.vehicle.getPosition(vehID)),
            "pos3d", posToString(traci.vehicle.getPosition3D(vehID)),
            "angle", traci.vehicle.getAngle(vehID),
@@ -147,6 +148,9 @@ traci.start([sumolib.checkBinary('sumo'), "-c", "sumo.sumocfg",
              '--additional-files',
              'input_additional.add.xml,input_additional2.add.xml',
              "--default.speeddev", "0"] + sys.argv[1:])
+
+useMeso = "--mesosim" in sys.argv
+
 for i in range(3):
     print("step", step())
 vehID = "horiz"
@@ -237,22 +241,24 @@ print("speedmode", traci.vehicle.getSpeedMode(vehID))
 print("lanechangemode", traci.vehicle.getLaneChangeMode(vehID))
 print("slope", traci.vehicle.getSlope(vehID))
 print("leader", traci.vehicle.getLeader("2"))
-leaderID, dist = traci.vehicle.getLeader("2")
 
-print("followSpeed", traci.vehicle.getFollowSpeed("2",
-                                                  traci.vehicle.getSpeed("2"),
-                                                  dist,
+if not useMeso:
+    leaderID, dist = traci.vehicle.getLeader("2")
+
+    print("followSpeed", traci.vehicle.getFollowSpeed("2",
+                                                      traci.vehicle.getSpeed("2"),
+                                                      dist,
+                                                      traci.vehicle.getSpeed(leaderID),
+                                                      traci.vehicle.getDecel(leaderID),
+                                                      leaderID))
+
+    print("secureGap", traci.vehicle.getSecureGap("2",
+                                                  traci.vehicle.getSpeed("2") * 3,  # return something other than 0
                                                   traci.vehicle.getSpeed(leaderID),
                                                   traci.vehicle.getDecel(leaderID),
                                                   leaderID))
 
-print("secureGap", traci.vehicle.getSecureGap("2",
-                                              traci.vehicle.getSpeed("2") * 3,  # return something other than 0
-                                              traci.vehicle.getSpeed(leaderID),
-                                              traci.vehicle.getDecel(leaderID),
-                                              leaderID))
-
-print("stopSpeed", traci.vehicle.getStopSpeed("2", 15, 20))
+    print("stopSpeed", traci.vehicle.getStopSpeed("2", 15, 20))
 
 traci.vehicle.subscribeLeader("2")
 for i in range(6):

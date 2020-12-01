@@ -27,6 +27,9 @@ ride_ignore_line
 # person rides and then stops
 ride_and_stop
 
+# person rides and exits the vehicle with some tolerance
+ride_and_stop_tolerance
+
 # person ride triggers a vehicle scaled with 3
 ride_triggered_scale
 
@@ -88,6 +91,9 @@ persons_triggered
 # person stops for a given duration
 stop_duration
 
+# person stops for a given duration, specified via attribute edge
+stop_edge
+
 # If a vehicle leaves the simulation before delivering all passengers a warning should be triggered
 ride_wrong_destination
 
@@ -120,4 +126,10 @@ stop_teleport_stop
 
 # wait at busStop in a lefthand network
 lefthand_wait
+
+# last edge of the walk differs from first edge of the ride
+atJunction_walk_ride
+
+# last edge of the ride differs from first edge of the walk
+atJunction_ride_walk
 errors

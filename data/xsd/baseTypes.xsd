@@ -248,7 +248,14 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
-        <xsd:attribute name="next" type="nonNegativeIntType" use="optional"/>
+        <xsd:attribute name="next" use="optional">
+            <xsd:simpleType>
+                <!-- non-negative int list -->
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="(\d+)( (\d+))*"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
         <xsd:attribute name="name" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
@@ -257,9 +264,22 @@
         <xsd:attribute name="value" type="xsd:string" use="required"/>
     </xsd:complexType>
 
+    <xsd:complexType name="laneTypeType">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="restriction" type="restrictionType"/>
+        </xsd:choice>
+        <xsd:attribute name="index" type="nonNegativeIntType" use="required"/>
+        <xsd:attribute name="allow" type="xsd:string"/>
+        <xsd:attribute name="disallow" type="xsd:string"/>
+        <xsd:attribute name="speed" type="xsd:float"/>
+        <xsd:attribute name="width" type="xsd:float"/>
+    </xsd:complexType>
+
     <xsd:complexType name="typeType">
         <xsd:choice minOccurs="0" maxOccurs="unbounded">
             <xsd:element name="restriction" type="restrictionType"/>
+            <xsd:element name="meso" type="mesoType"/>
+            <xsd:element name="laneType" type="laneTypeType"/>
         </xsd:choice>
         <xsd:attribute name="id" type="xsd:string" use="required"/>
         <xsd:attribute name="allow" type="xsd:string"/>
@@ -280,6 +300,19 @@
     <xsd:complexType name="restrictionType">
         <xsd:attribute name="vClass" type="xsd:string" use="required"/>
         <xsd:attribute name="speed" type="xsd:float" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="mesoType">
+        <xsd:attribute name="tauff" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="taufj" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="taujf" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="taujj" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="jamThreshold" type="xsd:float" use="optional"/>
+        <xsd:attribute name="junctionControl" type="boolType" use="optional"/>
+        <xsd:attribute name="tlsPenalty" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="tlsFlowPenalty" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="minorPenalty" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="overtaking" type="boolType" use="optional"/>
     </xsd:complexType>
 
     <xsd:simpleType name="nodeTypeType">

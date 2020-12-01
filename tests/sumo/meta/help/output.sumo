@@ -1,4 +1,4 @@
-Eclipse SUMO sumo Version v1_7_0+0764-5bd512f5cd
+Eclipse SUMO sumo Version v1_7_0+1385-c75ca7897d
  Copyright (C) 2001-2020 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 A microscopic, multi-modal traffic simulation.
 
@@ -71,6 +71,8 @@ Output Options:
   --fcd-output.distance                Add kilometrage to the FCD output
                                         (linear referencing)
   --fcd-output.acceleration            Add acceleration to the FCD output
+  --fcd-output.max-leader-distance FLOAT  Add leader vehicle information to the
+                                        FCD output (within the given distance)
   --fcd-output.params STR[]            Add generic parameter values to the FCD
                                         output
   --fcd-output.filter-edges.input-file FILE  Restrict fcd output to the edge
@@ -601,6 +603,14 @@ Tripinfo Device Options:
   --device.tripinfo.deterministic      The 'tripinfo' devices are set
                                         deterministic using a fraction of 1000
 
+Vehroutes Device Options:
+  --device.vehroute.probability FLOAT  The probability for a vehicle to have a
+                                        'vehroute' device
+  --device.vehroute.explicit STR[]     Assign a 'vehroute' device to named
+                                        vehicles
+  --device.vehroute.deterministic      The 'vehroute' devices are set
+                                        deterministic using a fraction of 1000
+
 TraCI Server Options:
   --remote-port INT                    Enables TraCI Server if set
   --num-clients INT                    Expected number of connecting clients
@@ -681,7 +691,9 @@ GUI Only Options:
                                         position
   --tracker-interval FLOAT             The aggregation period for value tracker
                                         windows
-  --gui-testing                        Enable ovelay for screen recognition
+  --osg-view                           Start with an OpenSceneGraph view
+                                        instead of the regular 2D view
+  --gui-testing                        Enable overlay for screen recognition
   --gui-testing-debug                  Enable output messages during
                                         GUI-Testing
   --gui-testing.setting-output FILE    Save gui settings in the given settings

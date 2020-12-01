@@ -160,25 +160,9 @@ public:
      * @brief Stores the waiting intervals over the previous seconds (memory is to be specified in ms.).
      */
     class WaitingTimeCollector {
-        friend class MSVehicle;
-
-        typedef std::list<std::pair<SUMOTime, SUMOTime> > waitingIntervalList;
-
     public:
         /// Constructor.
         WaitingTimeCollector(SUMOTime memory = MSGlobals::gWaitingTimeMemory);
-
-        /// Copy constructor.
-        WaitingTimeCollector(const WaitingTimeCollector& wt);
-
-        /// Assignment operator.
-        WaitingTimeCollector& operator=(const WaitingTimeCollector& wt);
-
-        /// Operator !=
-        bool operator!=(const WaitingTimeCollector& wt) const;
-
-        /// Assignment operator (in place!)
-        WaitingTimeCollector& operator=(SUMOTime t);
 
         // return the waiting time within the last memory millisecs
         SUMOTime cumulatedWaitingTime(SUMOTime memory = -1) const;
@@ -186,15 +170,9 @@ public:
         // process time passing for dt millisecs
         void passTime(SUMOTime dt, bool waiting);
 
-        // maximal memory time stored
-        SUMOTime getMemorySize() const {
-            return myMemorySize;
-        }
+        const std::string getState() const;
 
-        // maximal memory time stored
-        const waitingIntervalList& getWaitingIntervals() const {
-            return myWaitingIntervals;
-        }
+        void setState(const std::string& state);
 
     private:
         /// the maximal memory to store
@@ -203,7 +181,7 @@ public:
         /// the stored waiting intervals within the last memory milliseconds
         /// If the current (ongoing) waiting interval has begun at time t - dt (where t is the current time)
         /// then waitingIntervalList[0]->first = 0., waitingIntervalList[0]->second = dt
-        waitingIntervalList myWaitingIntervals;
+        std::deque<std::pair<SUMOTime, SUMOTime> > myWaitingIntervals;
 
         /// append an amount of dt millisecs to the stored waiting times
         void appendWaitingTime(SUMOTime dt);
@@ -569,7 +547,15 @@ public:
     /** @brief Returns the lane the vehicle is on
      * @return The vehicle's current lane
      */
-    MSLane* getLane() const {
+    const MSLane* getLane() const {
+        return myLane;
+    }
+
+    /** @brief Returns the lane the vehicle is on
+     * Non const version indicates that something volatile is going on
+     * @return The vehicle's current lane
+     */
+    MSLane* getMutableLane() const {
         return myLane;
     }
 
@@ -1008,11 +994,6 @@ public:
      */
     SUMOTime collisionStopTime() const;
 
-    /** @brief Returns whether the vehicle is parking
-     * @return whether the vehicle is parking
-     */
-    bool isParking() const;
-
     /** @brief Returns the information whether the vehicle is fully controlled via TraCI
      * @return Whether the vehicle is remote-controlled
      */
@@ -1027,15 +1008,6 @@ public:
     double nextStopDist() const {
         return myStopDist;
     }
-
-    /** @brief Returns whether the vehicle is on a triggered stop
-     * @return whether the vehicle is on a triggered stop
-     */
-    bool isStoppedTriggered() const;
-
-    /** @brief return whether the given position is within range of the current stop
-     */
-    bool isStoppedInRange(const double pos, const double tolerance) const;
     /// @}
 
     int getLaneIndex() const;
@@ -1702,6 +1674,9 @@ public:
     /// @brief whether this vehicle is except from collision checks
     bool ignoreCollision();
 
+    /// @brief update state while parking
+    void updateParkingState();
+
     /// @name state io
     //@{
 
@@ -1759,10 +1734,9 @@ protected:
      *         and adapts the given in/out parameters to the appropriate values.
      *
      *  @param[out] passedLanes Lanes, which the vehicle touched at some moment of the executed simstep
-     *  @param[out] moved Whether the vehicle did move to another lane
      *  @param[out] emergencyReason Reason for a possible emergency stop
      */
-    void processLaneAdvances(std::vector<MSLane*>& passedLanes, bool& moved, std::string& emergencyReason);
+    void processLaneAdvances(std::vector<MSLane*>& passedLanes, std::string& emergencyReason);
 
 
     /** @brief Check for speed advices from the traci client and adjust the speed vNext in

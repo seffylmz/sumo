@@ -46,8 +46,8 @@ namespace libtraci {
  */
 class Connection {
 public:
-    static void connect(const std::string& host, int port, int numRetries, const std::string& label) {
-        myConnections.emplace(label, Connection(host, port, numRetries, label));
+    static void connect(const std::string& host, int port, int numRetries, const std::string& label, FILE* const pipe) {
+        myConnections[label] = new Connection(host, port, numRetries, label, pipe);
     }
 
     static Connection& getActive() {
@@ -59,7 +59,7 @@ public:
     }
 
     static void switchCon(const std::string& label) {
-        myActive = &myConnections.find(label)->second;
+        myActive = myConnections.find(label)->second;
     }
 
     const std::string& getLabel() {
@@ -76,7 +76,7 @@ public:
     libsumo::ContextSubscriptionResults& getAllContextSubscriptionResults(const int domain) {
         return myContextSubscriptionResults[domain];
     }
-    
+
     /// @name Command sending methods
     /// @{
 
@@ -107,7 +107,7 @@ public:
      * @param[in] endTime The end time step of subscriptions
      * @param[in] vars The variables to subscribe
      */
-    void subscribeObjectVariable(int domID, const std::string& objID, double beginTime, double endTime, const std::vector<int>& vars);
+    void subscribeObjectVariable(int domID, const std::string& objID, double beginTime, double endTime, const std::vector<int>& vars, const libsumo::TraCIResults& params);
 
 
     /** @brief Sends a SubscribeContext request
@@ -120,7 +120,7 @@ public:
      * @param[in] vars The variables to subscribe
      */
     void subscribeObjectContext(int domID, const std::string& objID, double beginTime, double endTime,
-                                            int domain, double range, const std::vector<int>& vars);
+                                int domain, double range, const std::vector<int>& vars, const libsumo::TraCIResults& params);
     /// @}
 
 
@@ -141,38 +141,37 @@ public:
     int check_commandGetResult(tcpip::Storage& inMsg, int command, int expectedType = -1, bool ignoreCommandId = false) const;
 
     bool processGet(int command, int expectedType, bool ignoreCommandId = false);
-    bool processSet(int command);
     /// @}
 
-    int getUnsignedByte(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    int getUnsignedByte(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_UBYTE)) {
             return myInput.readUnsignedByte();
         }
         return libsumo::INVALID_INT_VALUE;
     }
-    int getByte(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    int getByte(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_BYTE)) {
             return myInput.readByte();
         }
         return libsumo::INVALID_INT_VALUE;
     }
-    int getInt(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    int getInt(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_INTEGER)) {
             return myInput.readInt();
         }
         return libsumo::INVALID_INT_VALUE;
     }
-    double getDouble(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    double getDouble(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_DOUBLE)) {
             return myInput.readDouble();
         }
         return libsumo::INVALID_DOUBLE_VALUE;
     }
-    libsumo::TraCIPositionVector getPolygon(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    libsumo::TraCIPositionVector getPolygon(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         libsumo::TraCIPositionVector ret;
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_POLYGON)) {
@@ -190,18 +189,17 @@ public:
         }
         return ret;
     }
-    libsumo::TraCIPosition getPos(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    libsumo::TraCIPosition getPos(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         libsumo::TraCIPosition p;
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::POSITION_2D)) {
             p.x = myInput.readDouble();
             p.y = myInput.readDouble();
-            p.z = 0;
         }
         return p;
     }
 
-    libsumo::TraCIPosition getPos3D(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    libsumo::TraCIPosition getPos3D(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         libsumo::TraCIPosition p;
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::POSITION_3D)) {
@@ -211,14 +209,14 @@ public:
         }
         return p;
     }
-    std::string getString(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    std::string getString(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_STRING)) {
             return myInput.readString();
         }
         return "";
     }
-    std::vector<std::string> getStringVector(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    std::vector<std::string> getStringVector(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         std::vector<std::string> r;
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_STRINGLIST)) {
@@ -230,7 +228,7 @@ public:
         return r;
     }
 
-    libsumo::TraCIColor getCol(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    libsumo::TraCIColor getCol(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         libsumo::TraCIColor c;
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_COLOR)) {
@@ -242,7 +240,7 @@ public:
         return c;
     }
 
-    libsumo::TraCIStage getTraCIStage(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
+    libsumo::TraCIStage getTraCIStage(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
         libsumo::TraCIStage s;
         createCommand(command, var, id, add);
         if (processGet(command, libsumo::TYPE_COMPOUND)) {
@@ -289,45 +287,47 @@ public:
         return s;
     }
 
-    tcpip::Storage& doCommand(int command, int var, const std::string& id, tcpip::Storage* add = 0) {
-        createCommand(command, var, id, add);
-        processSet(command);
-        return myInput;
-    }
+    tcpip::Storage& doCommand(int command, int var, const std::string& id, tcpip::Storage* add = nullptr);
 
     void setInt(int command, int var, const std::string& id, int value) {
         tcpip::Storage content;
         content.writeUnsignedByte(libsumo::TYPE_INTEGER);
         content.writeInt(value);
-        createCommand(command, var, id, &content);
-        processSet(command);
+        doCommand(command, var, id, &content);
     }
     void setDouble(int command, int var, const std::string& id, double value) {
         tcpip::Storage content;
         content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
         content.writeDouble(value);
-        createCommand(command, var, id, &content);
-        processSet(command);
+        doCommand(command, var, id, &content);
     }
 
     void setString(int command, int var, const std::string& id, const std::string& value) {
         tcpip::Storage content;
         content.writeUnsignedByte(libsumo::TYPE_STRING);
         content.writeString(value);
-        createCommand(command, var, id, &content);
-        processSet(command);
+        doCommand(command, var, id, &content);
     }
 
     void setStringVector(int command, int var, const std::string& id, const std::vector<std::string>& value) {
         tcpip::Storage content;
         content.writeUnsignedByte(libsumo::TYPE_STRINGLIST);
         content.writeStringList(value);
-        createCommand(command, var, id, &content);
-        processSet(command);
+        doCommand(command, var, id, &content);
     }
 
-    void readVariableSubscription(int cmdId, tcpip::Storage& inMsg);
-    void readContextSubscription(int cmdId, tcpip::Storage& inMsg);
+    void setCol(int command, int var, const std::string& id, const libsumo::TraCIColor c) {
+        tcpip::Storage content;
+        content.writeUnsignedByte(libsumo::TYPE_COLOR);
+        content.writeUnsignedByte(c.r);
+        content.writeUnsignedByte(c.g);
+        content.writeUnsignedByte(c.b);
+        content.writeUnsignedByte(c.a);
+        doCommand(command, var, id, &content);
+    }
+
+    void readVariableSubscription(int responseID, tcpip::Storage& inMsg);
+    void readContextSubscription(int responseID, tcpip::Storage& inMsg);
     void readVariables(tcpip::Storage& inMsg, const std::string& objectID, int variableCount, libsumo::SubscriptionResults& into);
 
 private:
@@ -345,10 +345,11 @@ private:
      * @param[in] port The port to connect to
      * @exception tcpip::SocketException if the connection fails
      */
-    Connection(const std::string& host, int port, int numRetries, const std::string& label);
+    Connection(const std::string& host, int port, int numRetries, const std::string& label, FILE* const pipe);
 
 private:
     const std::string myLabel;
+    FILE* const myProcessPipe;
     /// @brief The socket
     tcpip::Socket mySocket;
     /// @brief The reusable output storage
@@ -360,7 +361,7 @@ private:
     std::map<int, libsumo::ContextSubscriptionResults> myContextSubscriptionResults;
 
     static Connection* myActive;
-    static std::map<const std::string, Connection> myConnections;
+    static std::map<const std::string, Connection*> myConnections;
 
 private:
     /// @brief Invalidated assignment operator.

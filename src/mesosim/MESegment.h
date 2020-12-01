@@ -127,12 +127,11 @@ public:
               const MSEdge& parent, MESegment* next,
               const double length, const double speed,
               const int idx,
-              const SUMOTime tauff, const SUMOTime taufj,
-              const SUMOTime taujf, const SUMOTime taujj,
-              const double jamThresh,
               const bool multiQueue,
-              const bool junctionControl);
+              const MSNet::MesoEdgeType& edgeTyp);
 
+    /// @brief set model parameters (may be updated from additional file after network loading is complete)
+    void initSegment(const MSNet::MesoEdgeType& edgeType, const MSEdge& parent);
 
     /// @name Measure collection
     /// @{
@@ -469,9 +468,6 @@ private:
     /// @brief whether the given link may be passed because the option meso-junction-control.limited is set
     bool limitedControlOverride(const MSLink* link) const;
 
-    /// @brief return the maximum tls penalty for all links from this edge
-    double getMaxPenaltySeconds() const;
-
     /// @brief convert net time gap (leader back to follower front) to gross time gap (leader front to follower front)
     inline SUMOTime tauWithVehLength(SUMOTime tau, double lengthWithGap) const {
         return tau + (SUMOTime)(lengthWithGap * myTau_length);
@@ -490,13 +486,31 @@ private:
     /// @brief Running number of the segment in the edge
     const int myIndex;
 
+    /// @name Model constants that may be reset once via additional file
+    /// @{
+
     /// @brief The time headway parameters, see the Eissfeldt thesis
-    const SUMOTime myTau_ff, myTau_fj, myTau_jf, myTau_jj;
-    /// @brief Headway parameter for computing gross time headyway from net time headway, length and edge speed
-    double myTau_length;
+    SUMOTime myTau_ff, myTau_fj, myTau_jf, myTau_jj;
 
     /// @brief slope and axis offset for the jam-jam headway function
     double myA, myB;
+
+    /// @brief Whether tls penalty is enabled
+    bool myTLSPenalty;
+
+    /// @brief penalty for minor links
+    bool myCheckMinorPenalty; // for legacy compatibility (#7802, 7804)
+    SUMOTime myMinorPenalty;
+
+    /// @brief Whether junction control is enabled
+    bool myJunctionControl;
+
+    /// @brief Whether overtaking is permitted on this segment
+    bool myOvertaking;
+    /// @}
+
+    /// @brief Headway parameter for computing gross time headyway from net time headway, length and edge speed
+    double myTau_length;
 
     /// @brief The capacity of the segment in number of cars, used only in time headway calculation
     /// This parameter has only an effect if tau_jf != tau_jj, which is not(!) the case per default
@@ -506,16 +520,7 @@ private:
     const double myCapacity;
 
     /// @brief The number of lanes represented by the queue * the length of the lane
-    const double myQueueCapacity;
-
-    /// @brief Whether junction control is enabled
-    const bool myJunctionControl;
-
-    /// @brief Whether tls penalty is enabled
-    const bool myTLSPenalty;
-
-    /// @brief Whether minor penalty is enabled
-    const bool myMinorPenalty;
+    double myQueueCapacity;
 
     /// @brief The space (in m) which needs to be occupied before the segment is considered jammed
     double myJamThreshold;

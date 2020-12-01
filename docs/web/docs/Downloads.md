@@ -10,7 +10,8 @@ permalink: /Downloads/
 ### MS Windows binaries
 
 Contains the binaries (32 or 64 bit), all dlls needed, the examples,
-tools, and documentation in HTML format.
+tools, and documentation in HTML format. For an explanation of the contents and the
+licensing, especially concerning the "extra" build, see [the notes below](Downloads.md#note_on_licensing)
 
 <ul>
 <li>Download 64 bit installer: <a class="no-arrow-link" href="https://sumo.dlr.de/releases/{{Version}}/sumo-win64-{{Version}}.msi">sumo-win64-{{Version}}.msi </a><span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-win64-{{Version}}.msi","r");?></span></li>
@@ -20,7 +21,7 @@ tools, and documentation in HTML format.
 <li>Download 32 bit zip: <a class="no-arrow-link" href="https://sumo.dlr.de/releases/{{Version}}/sumo-win32-{{Version}}.zip">sumo-win32-{{Version}}.zip </a><span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-win32-{{Version}}.zip","r");?></span></li>
 </ul>
 
-**SUMO-Game**
+### SUMO-Game
 
 <ul><li>MS Windows binaries: <a class="no-arrow-link" href="https://sumo.dlr.de/releases/{{Version}}/sumo-game-{{Version}}.zip">sumo-game-{{Version}}.zip </a><span class="badge badge-pill badge-secondary"><?php getFileSize("sumo-game-{{Version}}.zip","r");?></span></li></ul>
 
@@ -89,7 +90,7 @@ repositories include a nightly build as well (called sumo_nightly).
 
 Ubuntu, Debian and Arch users please see the community repositories above.
 
-## macOS binaries
+## macOS
 
 You can read the Homebrew-based installation guide [here](Installing.md#macos) or follow the Build instructions [here](Installing/MacOS_Build.md).
 
@@ -100,6 +101,19 @@ from source with minimal requirements (fox, proj, xerces-c). If you need
 optional libraries, you can specify these on the brew command line and
 brew will compile SUMO from source. For details, see the [Formula's
 README](https://github.com/DLR-TS/homebrew-sumo/blob/master/README.md).
+
+### Application launchers
+
+In order to have a more native feel on macOS, we provide some application launchers (icons / shortcuts). These launchers ***work with all versions of SUMO and do not need to be updated***.
+
+<ul>
+<li><a class="no-arrow-link" href="https://sumo.dlr.de/daily/SUMO_launchers.dmg">Download SUMO launchers </a><span class="badge badge-pill badge-secondary"><?php getFileSize("SUMO_launchers.dmg","d");?></span></li>
+</ul>
+
+These launchers allow you to select **sumo-gui** as the default application to open `.sumocfg` files on macOS, and even add **sumo-gui**, **netedit** and the **OSM Web Wizard** to the dock.
+
+!!! caution "Important notice"
+    In order to use the launchers, make sure you have installed SUMO beforehand (any version) and have set the [SUMO_HOME](Basics/Basic_Computer_Skills.md#sumo_home) environment variable.
 
 ## SUMO - Alternative download and older releases
 
@@ -182,13 +196,15 @@ binary downloads above which already contain the runtime dependencies.
 ## Note on Licensing
 
 SUMO is licensed under the
-[EPL-2.0](https://eclipse.org/legal/epl-v20.html) using only [open
+[EPL-2.0](https://eclipse.org/legal/epl-v20.html) with GPL v2 or later as a secondary license option using only [open
 source libraries](Libraries_Licenses.md).
 
-The standard build only contains code and windows binaries with Eclipse
+The standard Windows build only contains code and Windows binaries with Eclipse
 approved licenses (especially no GPL and LGPL code). If you need
-features like shapefile import or the OpenSceneGraph 3D GUI download the
-"extra" build.
+features like shapefile import, GeoTIFF processing, the OpenSceneGraph 3D GUI, or
+video generation, download the "extra" build.
+
+The Linux packages do not contain external libraries at all.
 
 <?php
 function getFileDate($fname, $type){

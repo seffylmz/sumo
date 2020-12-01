@@ -347,6 +347,108 @@ GNEAttributeCarrier::lanesConsecutives(const std::vector<GNELane*>& lanes) {
 }
 
 
+template<> std::string
+GNEAttributeCarrier::getACParameters() const {
+    std::string result;
+    // Generate an string using the following structure: "key1=value1|key2=value2|...
+    for (const auto& parameter : getACParametersMap()) {
+        result += parameter.first + "=" + parameter.second + "|";
+    }
+    // remove the last "|"
+    if (!result.empty()) {
+        result.pop_back();
+    }
+    return result;
+}
+
+
+template<> std::vector<std::pair<std::string, std::string> >
+GNEAttributeCarrier::getACParameters() const {
+    std::vector<std::pair<std::string, std::string> > result;
+    // Generate a vector string using the following structure: "<key1,value1>, <key2, value2>,...
+    for (const auto& parameter : getACParametersMap()) {
+        result.push_back(std::make_pair(parameter.first, parameter.second));
+    }
+    return result;
+}
+
+
+void
+GNEAttributeCarrier::setACParameters(const std::string& parameters, GNEUndoList* undoList) {
+    // declare map
+    std::map<std::string, std::string> parametersMap;
+    // separate value in a vector of string using | as separator
+    StringTokenizer parametersTokenizer(parameters, "|", true);
+    // iterate over all values
+    while (parametersTokenizer.hasNext()) {
+        // obtain key and value and save it in myParameters
+        const std::vector<std::string> keyValue = StringTokenizer(parametersTokenizer.next(), "=", true).getVector();
+        if (keyValue.size() == 2) {
+            parametersMap[keyValue.front()] = keyValue.back();
+        }
+    }
+    // set setACParameters map
+    setACParameters(parametersMap, undoList);
+}
+
+
+void
+GNEAttributeCarrier::setACParameters(const std::vector<std::pair<std::string, std::string> >& parameters, GNEUndoList* undoList) {
+    // declare parametersMap
+    std::map<std::string, std::string> parametersMap;
+    // Generate an string using the following structure: "key1=value1|key2=value2|...
+    for (const auto& parameter : parameters) {
+        parametersMap[parameter.first] = parameter.second;
+    }
+    // set setACParameters map
+    setACParameters(parametersMap, undoList);
+}
+
+
+void
+GNEAttributeCarrier::setACParameters(const std::map<std::string, std::string>& parameters, GNEUndoList* undoList) {
+    // declare result string
+    std::string paramsStr;
+    // Generate an string using the following structure: "key1=value1|key2=value2|...
+    for (const auto& parameter : parameters) {
+        paramsStr += parameter.first + "=" + parameter.second + "|";
+    }
+    // remove the last "|"
+    if (!paramsStr.empty()) {
+        paramsStr.pop_back();
+    }
+    // set parameters
+    setAttribute(GNE_ATTR_PARAMETERS, paramsStr, undoList);
+}
+
+
+void
+GNEAttributeCarrier::addACParameters(const std::string& key, const std::string& attribute, GNEUndoList* undoList) {
+    // get parametersMap
+    std::map<std::string, std::string> parametersMap = getACParametersMap();
+    // add (or update) attribute
+    parametersMap[key] = attribute;
+    // set attribute
+    setACParameters(parametersMap, undoList);
+}
+
+
+void
+GNEAttributeCarrier::removeACParametersKeys(const std::vector<std::string>& keepKeys, GNEUndoList* undoList) {
+    // declare parametersMap
+    std::map<std::string, std::string> newParametersMap;
+    // iterate over parameters map
+    for (const auto& parameter : getACParametersMap()) {
+        // copy to newParametersMap if key is in keepKeys
+        if (std::find(keepKeys.begin(), keepKeys.end(), parameter.first) != keepKeys.end()) {
+            newParametersMap.insert(parameter);
+        }
+    }
+    // set newParametersMap map
+    setACParameters(newParametersMap, undoList);
+}
+
+
 std::string
 GNEAttributeCarrier::getAlternativeValueForDisabledAttributes(SumoXMLAttr key) const {
     switch (key) {
@@ -685,7 +787,170 @@ GNEAttributeCarrier::fillNetworkElements() {
     nodeTypes.erase(std::find(nodeTypes.begin(), nodeTypes.end(), toString(SumoXMLNodeType::DEAD_END)));
     nodeTypes.erase(std::find(nodeTypes.begin(), nodeTypes.end(), toString(SumoXMLNodeType::INTERNAL)));
     // fill networkElement ACs
-    SumoXMLTag currentTag = SUMO_TAG_EDGE;
+    SumoXMLTag currentTag = SUMO_TAG_JUNCTION;
+    {
+        // set values of tag
+        myTagProperties[currentTag] = GNETagProperties(currentTag,
+                                      GNETagProperties::NETWORKELEMENT,
+                                      GNETagProperties::DRAWABLE | GNETagProperties::RTREE | GNETagProperties::SELECTABLE,
+                                      GUIIcon::JUNCTION);
+        // set values of attributes
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_ID,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::UNIQUE,
+                                              "The id of the node");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_POSITION,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::UNIQUE | GNEAttributeProperties::POSITION | GNEAttributeProperties::UPDATEGEOMETRY, // virtual attribute from the combination of the actually attributes SUMO_ATTR_X, SUMO_ATTR_Y
+                                              "The x-y-z position of the node on the plane in meters");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_TYPE,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "An optional type for the node");
+        attrProperty.setDiscreteValues(nodeTypes);
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_SHAPE,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::POSITION | GNEAttributeProperties::LIST | GNEAttributeProperties::UNIQUE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::UPDATEGEOMETRY,
+                                              "A custom shape for that node");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_RADIUS,
+                                              GNEAttributeProperties::FLOAT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::UPDATEGEOMETRY,
+                                              "Optional turning radius (for all corners) for that node in meters",
+                                              "1.5");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_KEEP_CLEAR,
+                                              GNEAttributeProperties::BOOL | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "Whether the junction-blocking-heuristic should be activated at this node",
+                                              "1");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_RIGHT_OF_WAY,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "How to compute right of way rules at this node",
+                                              SUMOXMLDefinitions::RightOfWayValues.getString(RightOfWay::DEFAULT));
+        attrProperty.setDiscreteValues(SUMOXMLDefinitions::RightOfWayValues.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_FRINGE,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "Whether this junction is at the fringe of the network",
+                                              SUMOXMLDefinitions::FringeTypeValues.getString(FringeType::DEFAULT));
+        attrProperty.setDiscreteValues(SUMOXMLDefinitions::FringeTypeValues.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_NAME,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::XMLOPTIONAL,
+                                              "Optional name of " + toString(currentTag));
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_TLTYPE,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "An optional type for the traffic light algorithm");
+        attrProperty.setDiscreteValues({toString(TrafficLightType::STATIC), toString(TrafficLightType::ACTUATED), toString(TrafficLightType::DELAYBASED)});
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_TLLAYOUT,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "An optional layout for the traffic light plan");
+        attrProperty.setDiscreteValues({toString(TrafficLightLayout::DEFAULT),
+                                        toString(TrafficLightLayout::OPPOSITES),
+                                        toString(TrafficLightLayout::INCOMING),
+                                        toString(TrafficLightLayout::ALTERNATE_ONEWAY)});
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_TLID,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "An optional id for the traffic light program");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+    }
+    currentTag = SUMO_TAG_TYPE;
+    {
+        // set values of tag
+        myTagProperties[currentTag] = GNETagProperties(currentTag,
+                                      GNETagProperties::NETWORKELEMENT,
+                                      0,
+                                      GUIIcon::TYPE);
+        // set values of attributes
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_ID,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::UNIQUE,
+                                              "The id of the edge");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_NUMLANES,
+                                              GNEAttributeProperties::INT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "The number of lanes of the edge",
+                                              toString(oc.getInt("default.lanenumber")));
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_SPEED,
+                                              GNEAttributeProperties::FLOAT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "The maximum speed allowed on the edge in m/s",
+                                              toString(oc.getFloat("default.speed")));
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_ALLOW,
+                                              GNEAttributeProperties::VCLASS | GNEAttributeProperties::LIST | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::VCLASSES,
+                                              "Explicitly allows the given vehicle classes (not given will be not allowed)",
+                                              "all");
+        attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_DISALLOW,
+                                              GNEAttributeProperties::VCLASS | GNEAttributeProperties::LIST | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::VCLASSES,
+                                              "Explicitly disallows the given vehicle classes (not given will be allowed)");
+        attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_PRIORITY,
+                                              GNEAttributeProperties::INT | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "The priority of the edge",
+                                              toString(oc.getInt("default.priority")));
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_WIDTH,
+                                              GNEAttributeProperties::FLOAT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::UPDATEGEOMETRY,
+                                              "Lane width for all lanes of this edge in meters (used for visualization)",
+                                              "-1");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+    }
+    currentTag = SUMO_TAG_LANETYPE;
+    {
+        // set values of tag
+        myTagProperties[currentTag] = GNETagProperties(currentTag,
+                                      GNETagProperties::NETWORKELEMENT,
+                                      0,
+                                      GUIIcon::LANETYPE);
+        // set values of attributes
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_SPEED,
+                                              GNEAttributeProperties::FLOAT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "The maximum speed allowed on the lane in m/s",
+                                              toString(oc.getFloat("default.speed")));
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_ALLOW,
+                                              GNEAttributeProperties::VCLASS | GNEAttributeProperties::LIST | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::VCLASSES,
+                                              "Explicitly allows the given vehicle classes (not given will be not allowed)",
+                                              "all");
+        attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_DISALLOW,
+                                              GNEAttributeProperties::VCLASS | GNEAttributeProperties::LIST | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::VCLASSES,
+                                              "Explicitly disallows the given vehicle classes (not given will be allowed)");
+        attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_WIDTH,
+                                              GNEAttributeProperties::FLOAT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::UPDATEGEOMETRY,
+                                              "Lane width for all lanes of this lane in meters (used for visualization)",
+                                              "-1");
+        myTagProperties[currentTag].addAttribute(attrProperty);
+    }
+    currentTag = SUMO_TAG_EDGE;
     {
         // set values of tag
         myTagProperties[currentTag] = GNETagProperties(currentTag,
@@ -799,77 +1064,6 @@ GNEAttributeCarrier::fillNetworkElements() {
                                               "0");
         myTagProperties[currentTag].addAttribute(attrProperty);
 
-    }
-    currentTag = SUMO_TAG_JUNCTION;
-    {
-        // set values of tag
-        myTagProperties[currentTag] = GNETagProperties(currentTag,
-                                      GNETagProperties::NETWORKELEMENT,
-                                      GNETagProperties::DRAWABLE | GNETagProperties::RTREE | GNETagProperties::SELECTABLE,
-                                      GUIIcon::JUNCTION);
-        // set values of attributes
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_ID,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::UNIQUE,
-                                              "The id of the node");
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_POSITION,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::UNIQUE | GNEAttributeProperties::POSITION | GNEAttributeProperties::UPDATEGEOMETRY, // virtual attribute from the combination of the actually attributes SUMO_ATTR_X, SUMO_ATTR_Y
-                                              "The x-y-z position of the node on the plane in meters");
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_TYPE,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
-                                              "An optional type for the node");
-        attrProperty.setDiscreteValues(nodeTypes);
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_SHAPE,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::POSITION | GNEAttributeProperties::LIST | GNEAttributeProperties::UNIQUE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::UPDATEGEOMETRY,
-                                              "A custom shape for that node");
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_RADIUS,
-                                              GNEAttributeProperties::FLOAT | GNEAttributeProperties::POSITIVE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::UPDATEGEOMETRY,
-                                              "Optional turning radius (for all corners) for that node in meters",
-                                              "1.5");
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_KEEP_CLEAR,
-                                              GNEAttributeProperties::BOOL | GNEAttributeProperties::DEFAULTVALUESTATIC,
-                                              "Whether the junction-blocking-heuristic should be activated at this node",
-                                              "1");
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_RIGHT_OF_WAY,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
-                                              "How to compute right of way rules at this node",
-                                              SUMOXMLDefinitions::RightOfWayValues.getString(RightOfWay::DEFAULT));
-        attrProperty.setDiscreteValues(SUMOXMLDefinitions::RightOfWayValues.getStrings());
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_FRINGE,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
-                                              "Whether this junction is at the fringe of the network",
-                                              SUMOXMLDefinitions::FringeTypeValues.getString(FringeType::DEFAULT));
-        attrProperty.setDiscreteValues(SUMOXMLDefinitions::FringeTypeValues.getStrings());
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_NAME,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::XMLOPTIONAL,
-                                              "Optional name of " + toString(currentTag));
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_TLTYPE,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC,
-                                              "An optional type for the traffic light algorithm");
-        attrProperty.setDiscreteValues({toString(TrafficLightType::STATIC), toString(TrafficLightType::ACTUATED), toString(TrafficLightType::DELAYBASED)});
-        myTagProperties[currentTag].addAttribute(attrProperty);
-
-        attrProperty = GNEAttributeProperties(SUMO_ATTR_TLID,
-                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DEFAULTVALUESTATIC,
-                                              "An optional id for the traffic light program");
-        myTagProperties[currentTag].addAttribute(attrProperty);
     }
     currentTag = SUMO_TAG_LANE;
     {
@@ -1380,7 +1574,7 @@ GNEAttributeCarrier::fillAdditionals() {
         // set values of tag
         myTagProperties[currentTag] = GNETagProperties(currentTag,
                                       GNETagProperties::ADDITIONALELEMENT,
-                                      GNETagProperties::DRAWABLE | GNETagProperties::RTREE | GNETagProperties::MASKXYZPOSITION | GNETagProperties::SELECTABLE | GNETagProperties::SLAVE | GNETagProperties::REPARENT | GNETagProperties::BLOCKMOVEMENT,
+                                      GNETagProperties::DRAWABLE | GNETagProperties::MASKXYZPOSITION | GNETagProperties::SELECTABLE | GNETagProperties::SLAVE | GNETagProperties::REPARENT | GNETagProperties::BLOCKMOVEMENT,
                                       GUIIcon::PARKINGSPACE, {SUMO_TAG_PARKING_AREA});
         // set values of attributes
         attrProperty = GNEAttributeProperties(SUMO_ATTR_POSITION,

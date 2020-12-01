@@ -47,6 +47,8 @@ A person can also use a taxi by including it as a [personTrip](../Specification/
     </person>
 ```
 
+Whenever a person enters a taxi during the intermodal route search, a time penalty is applied to account for the expected time loss from waiting for the taxi and embarking. The default value is set 300s and can be configure with option **--persontrip.taxi.waiting-time**. This prevents rapid switching between travel modes.
+
 ## Groups of Persons
 Multiple persons can travel together as a group using attribute `group` (if the taxi has sufficient capacity):
 
@@ -118,3 +120,16 @@ form:
         <taxi customers="5" occupiedDistance="6748.77" occupiedTime="595.00"/>
     </tripinfo>
 ```
+
+## Parameter Retrieval
+The following parameters can be retrieved via `traci.vehicle.getParameter` and written via **--fcd-output.params**.
+It is also possible to color vehicles in [SUMO-GUI 'by param (numerical)'](../sumo-gui.md#vehicle_visualisation_settings) by setting these keys.
+
+- device.taxi.state:
+  - 0: empty
+  - 1: driving to pickup customer
+  - 2: occupied
+  - 3: pickup + occupied (during ride sharing)
+- device.taxi.customers: total number of customers served
+- device.taxi.occupiedDistance: total distance driven in m with customer on board
+- device.taxi.occupiedTime: total time driven in s with customers on board

@@ -146,6 +146,12 @@ NLBuilder::build() {
         if (myXMLHandler.haveSeenAdditionalSpeedRestrictions()) {
             myNet.getEdgeControl().setAdditionalRestrictions();
         }
+        if (MSGlobals::gUseMesoSim && myXMLHandler.haveSeenMesoEdgeType()) {
+            myNet.getEdgeControl().setMesoTypes();
+            for (MSTrafficLightLogic* tll : myNet.getTLSControl().getAllLogics()) {
+                tll->initMesoTLSPenalties();
+            }
+        }
     }
     if (myOptions.getBool("junction-taz")) {
         // create a TAZ for every junction

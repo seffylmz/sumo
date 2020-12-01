@@ -22,6 +22,7 @@
 /****************************************************************************/
 #include <thread>
 #include <chrono>
+#include <array>
 #include <libsumo/TraCIDefs.h>
 #include "Connection.h"
 
@@ -31,7 +32,7 @@ namespace libtraci {
 // static member initializations
 // ===========================================================================
 Connection* Connection::myActive = nullptr;
-std::map<const std::string, Connection> Connection::myConnections;
+std::map<const std::string, Connection*> Connection::myConnections;
 
 
 // ===========================================================================
@@ -41,8 +42,8 @@ std::map<const std::string, Connection> Connection::myConnections;
 /* Disable "decorated name length exceeded, name was truncated" warnings for the whole file. */
 #pragma warning(disable: 4503)
 #endif
-Connection::Connection(const std::string& host, int port, int numRetries, const std::string& label) :
-    myLabel(label), mySocket(host, port) {
+Connection::Connection(const std::string& host, int port, int numRetries, const std::string& label, FILE* const pipe) :
+    myLabel(label), myProcessPipe(pipe), mySocket(host, port) {
     for (int i = 0; i <= numRetries; i++) {
         try {
             mySocket.connect();
@@ -73,6 +74,26 @@ Connection::close() {
     std::string acknowledgement;
     check_resultState(inMsg, libsumo::CMD_CLOSE, false, &acknowledgement);
     mySocket.close();
+    if (myProcessPipe != nullptr) {
+        std::array<char, 128> buffer;
+        std::stringstream result;
+        while (fgets(buffer.data(), (int)buffer.size(), myProcessPipe) != nullptr) {
+            result << buffer.data();
+        }
+        std::string line;
+        while (std::getline(result, line)) {
+            if (line.compare(0, 6, "Error:") == 0) {
+                std::cerr << line << std::endl;
+            } else {
+                std::cout << line << std::endl;
+            }
+        }
+#ifdef WIN32
+        _pclose(myProcessPipe);
+#else
+        pclose(myProcessPipe);
+#endif
+    }
 }
 
 
@@ -93,11 +114,12 @@ Connection::simulationStep(double time) {
     myContextSubscriptionResults.clear();
     int numSubs = inMsg.readInt();
     while (numSubs > 0) {
-        int cmdId = check_commandGetResult(inMsg, 0, -1, true);
-        if (cmdId >= libsumo::RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE && cmdId <= libsumo::RESPONSE_SUBSCRIBE_PERSON_VARIABLE) {
-            readVariableSubscription(cmdId, inMsg);
+        const int responseID = check_commandGetResult(inMsg, 0, -1, true);
+        if ((responseID >= libsumo::RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE && responseID <= libsumo::RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE) ||
+                (responseID >= libsumo::RESPONSE_SUBSCRIBE_PARKINGAREA_VARIABLE && responseID <= libsumo::RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE)) {
+            readVariableSubscription(responseID, inMsg);
         } else {
-            readContextSubscription(cmdId + 0x50, inMsg);
+            readContextSubscription(responseID, inMsg);
         }
         numSubs--;
     }
@@ -171,15 +193,15 @@ Connection::createFilterCommand(int cmdID, int varID, tcpip::Storage* add) const
 
 void
 Connection::subscribeObjectVariable(int domID, const std::string& objID, double beginTime, double endTime,
-        const std::vector<int>& vars) {
+                                    const std::vector<int>& vars, const libsumo::TraCIResults& params) {
     if (!mySocket.has_client_connection()) {
         throw tcpip::SocketException("Socket is not initialised");
     }
     tcpip::Storage outMsg;
     // command length (domID, objID, beginTime, endTime, length, vars)
-    int varNo = (int) vars.size();
+    const int numVars = (int) vars.size();
     outMsg.writeUnsignedByte(0);
-    outMsg.writeInt(5 + 1 + 8 + 8 + 4 + (int) objID.length() + 1 + varNo);
+    outMsg.writeInt(5 + 1 + 8 + 8 + 4 + (int) objID.length() + 1 + numVars);
     // command id
     outMsg.writeUnsignedByte(domID);
     // time
@@ -188,25 +210,44 @@ Connection::subscribeObjectVariable(int domID, const std::string& objID, double 
     // object id
     outMsg.writeString(objID);
     // command id
-    outMsg.writeUnsignedByte((int)vars.size());
-    for (int i = 0; i < varNo; ++i) {
-        outMsg.writeUnsignedByte(vars[i]);
+    if (numVars == 1 && vars.front() == -1) {
+        if (domID == libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE) {
+            // default for vehicles is edge id and lane position
+            outMsg.writeUnsignedByte(2);
+            outMsg.writeUnsignedByte(libsumo::VAR_ROAD_ID);
+            outMsg.writeUnsignedByte(libsumo::VAR_LANEPOSITION);
+        } else {
+            // default for detectors is vehicle number, for all others (and contexts) id list
+            outMsg.writeUnsignedByte(1);
+            const bool isDetector = domID == libsumo::CMD_SUBSCRIBE_INDUCTIONLOOP_VARIABLE || domID == libsumo::CMD_SUBSCRIBE_LANEAREA_VARIABLE || domID == libsumo::CMD_SUBSCRIBE_MULTIENTRYEXIT_VARIABLE;
+            outMsg.writeUnsignedByte(isDetector ? libsumo::LAST_STEP_VEHICLE_NUMBER : libsumo::TRACI_ID_LIST);
+        }
+    } else {
+        outMsg.writeUnsignedByte(numVars);
+        for (int i = 0; i < numVars; ++i) {
+            outMsg.writeUnsignedByte(vars[i]);
+            const auto& paramEntry = params.find(vars[i]);
+            if (paramEntry != params.end()) {
+                // TODO implement toPacket and adapt the message length above
+                outMsg.writePacket(paramEntry->second->toPacket());
+            }
+        }
     }
     // send message
     mySocket.sendExact(outMsg);
 
     tcpip::Storage inMsg;
     check_resultState(inMsg, domID);
-    if (vars.size() > 0) {
-        check_commandGetResult(inMsg, domID);
-        readVariableSubscription(domID, inMsg);
+    if (numVars > 0) {
+        const int responseID = check_commandGetResult(inMsg, domID);
+        readVariableSubscription(responseID, inMsg);
     }
 }
 
 
 void
 Connection::subscribeObjectContext(int domID, const std::string& objID, double beginTime, double endTime,
-        int domain, double range, const std::vector<int>& vars) {
+                                   int domain, double range, const std::vector<int>& vars, const libsumo::TraCIResults& params) {
     if (!mySocket.has_client_connection()) {
         throw tcpip::SocketException("Socket is not initialised");
     }
@@ -229,6 +270,11 @@ Connection::subscribeObjectContext(int domID, const std::string& objID, double b
     outMsg.writeUnsignedByte((int)vars.size());
     for (int i = 0; i < varNo; ++i) {
         outMsg.writeUnsignedByte(vars[i]);
+        const auto& paramEntry = params.find(vars[i]);
+        if (paramEntry != params.end()) {
+            // TODO implement toPacket and adapt the message length above
+            outMsg.writePacket(paramEntry->second->toPacket());
+        }
     }
     // send message
     mySocket.sendExact(outMsg);
@@ -316,15 +362,15 @@ Connection::processGet(int command, int expectedType, bool ignoreCommandId) {
 }
 
 
-bool
-Connection::processSet(int command) {
+tcpip::Storage&
+Connection::doCommand(int command, int var, const std::string& id, tcpip::Storage* add) {
+    createCommand(command, var, id, add);
     if (mySocket.has_client_connection()) {
         mySocket.sendExact(myOutput);
         myInput.reset();
         check_resultState(myInput, command);
-        return true;
     }
-    return false;
+    return myInput;
 }
 
 
@@ -397,15 +443,15 @@ Connection::readVariables(tcpip::Storage& inMsg, const std::string& objectID, in
 
 
 void
-Connection::readVariableSubscription(int cmdId, tcpip::Storage& inMsg) {
+Connection::readVariableSubscription(int responseID, tcpip::Storage& inMsg) {
     const std::string objectID = inMsg.readString();
     const int variableCount = inMsg.readUnsignedByte();
-    readVariables(inMsg, objectID, variableCount, mySubscriptionResults[cmdId]);
+    readVariables(inMsg, objectID, variableCount, mySubscriptionResults[responseID]);
 }
 
 
 void
-Connection::readContextSubscription(int cmdId, tcpip::Storage& inMsg) {
+Connection::readContextSubscription(int responseID, tcpip::Storage& inMsg) {
     const std::string contextID = inMsg.readString();
     inMsg.readUnsignedByte(); // context domain
     const int variableCount = inMsg.readUnsignedByte();
@@ -413,7 +459,7 @@ Connection::readContextSubscription(int cmdId, tcpip::Storage& inMsg) {
 
     while (numObjects > 0) {
         std::string objectID = inMsg.readString();
-        readVariables(inMsg, objectID, variableCount, myContextSubscriptionResults[cmdId][contextID]);
+        readVariables(inMsg, objectID, variableCount, myContextSubscriptionResults[responseID][contextID]);
         numObjects--;
     }
 }

@@ -749,7 +749,9 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         }
         if (isRail && !hadRailSignal && MSRailSignal::hasInsertionConstraint(*link, aVehicle)) {
 #ifdef DEBUG_INSERTION
-            if DEBUG_COND2(aVehicle) std::cout << " insertion constraint at link " << (*link)->getDescription() << " not cleared \n";
+            if DEBUG_COND2(aVehicle) {
+                std::cout << " insertion constraint at link " << (*link)->getDescription() << " not cleared \n";
+            }
 #endif
             return false;
         }
@@ -783,7 +785,9 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             if (currentLane == this && MSRailSignal::hasOncomingRailTraffic(*link)) {
                 // allow guarding bidirectional tracks at the network border with railSignal
 #ifdef DEBUG_INSERTION
-                if DEBUG_COND2(aVehicle) std::cout << " oncoming rail traffic at link " << (*link)->getDescription() << "\n";
+                if DEBUG_COND2(aVehicle) {
+                    std::cout << " oncoming rail traffic at link " << (*link)->getDescription() << "\n";
+                }
 #endif
                 return false;
             }
@@ -1037,7 +1041,9 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         return false;
     }
     // enter
-    incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
+    incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle * const v) {
+        return v->getPositionOnLane() >= pos;
+    }), notification);
 #ifdef DEBUG_INSERTION
     if (DEBUG_COND2(aVehicle)) std::cout << SIMTIME
                                              << " isInsertionSuccess lane=" << getID()
@@ -1062,7 +1068,9 @@ MSLane::forceVehicleInsertion(MSVehicle* veh, double pos, MSMoveReminder::Notifi
     veh->updateBestLanes(true, this);
     bool dummy;
     const double speed = veh->hasDeparted() ? veh->getSpeed() : getDepartSpeed(*veh, dummy);
-    incorporateVehicle(veh, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
+    incorporateVehicle(veh, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle * const v) {
+        return v->getPositionOnLane() >= pos;
+    }), notification);
 }
 
 
@@ -1512,7 +1520,7 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
 
     for (std::set<const MSVehicle*, ComparatorNumericalIdLess>::iterator it = toRemove.begin(); it != toRemove.end(); ++it) {
         MSVehicle* veh = const_cast<MSVehicle*>(*it);
-        MSLane* vehLane = veh->getLane();
+        MSLane* vehLane = veh->getMutableLane();
         vehLane->removeVehicle(veh, MSMoveReminder::NOTIFICATION_TELEPORT, false);
         if (toTeleport.count(veh) > 0) {
             MSVehicleTransfer::getInstance()->add(timestep, veh);
@@ -1759,7 +1767,7 @@ MSLane::executeMovements(const SUMOTime t) {
         const double length = veh->getVehicleType().getLengthWithGap();
         const double nettoLength = veh->getVehicleType().getLength();
         const bool moved = veh->executeMove();
-        MSLane* const target = veh->getLane();
+        MSLane* const target = veh->getMutableLane();
         if (veh->hasArrived()) {
             // vehicle has reached its arrival position
 #ifdef DEBUG_EXEC_MOVE
@@ -1953,7 +1961,7 @@ template void MSLane::fill<LANE_RTREE_QUAL>(LANE_RTREE_QUAL& into);
 
 // ------   ------
 bool
-MSLane::appropriate(const MSVehicle* veh) {
+MSLane::appropriate(const MSVehicle* veh) const {
     if (myEdge->isInternal()) {
         return true;
     }

@@ -38,9 +38,9 @@
 GNECrossing::GNECrossing(GNEJunction* parentJunction, std::vector<NBEdge*> crossingEdges) :
     GNENetworkElement(parentJunction->getNet(), parentJunction->getNBNode()->getCrossing(crossingEdges)->id,
                       GLO_CROSSING, SUMO_TAG_CROSSING,
-    {}, {}, {}, {}, {}, {}, {}, {}),
-    myParentJunction(parentJunction),
-    myCrossingEdges(crossingEdges) {
+{}, {}, {}, {}, {}, {}, {}, {}),
+myParentJunction(parentJunction),
+myCrossingEdges(crossingEdges) {
     // update centering boundary without updating grid
     updateCenteringBoundary(false);
 }
@@ -76,7 +76,7 @@ GNECrossing::getPositionInView() const {
 }
 
 
-GNEMoveOperation* 
+GNEMoveOperation*
 GNECrossing::getMoveOperation(const double shapeOffset) {
     // edit depending if shape is being edited
     if (isShapeEdited()) {
@@ -109,7 +109,7 @@ GNECrossing::getMoveOperation(const double shapeOffset) {
 }
 
 
-void 
+void
 GNECrossing::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList) {
     // edit depending if shape is being edited
     if (isShapeEdited()) {
@@ -353,9 +353,9 @@ GNECrossing::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_EDGES:
             return toString(crossing->edges);
         case SUMO_ATTR_TLLINKINDEX:
-            return toString(crossing->customTLIndex);
+            return toString(crossing->customTLIndex < 0 ? crossing->tlLinkIndex : crossing->customTLIndex);
         case SUMO_ATTR_TLLINKINDEX2:
-            return toString(crossing->customTLIndex2);
+            return toString(crossing->customTLIndex2 < 0 ? crossing->tlLinkIndex2 : crossing->customTLIndex2);
         case SUMO_ATTR_CUSTOMSHAPE:
             return toString(crossing->customShape);
         case GNE_ATTR_SELECTED:
@@ -443,7 +443,7 @@ GNECrossing::isValid(SumoXMLAttr key, const std::string& value) {
             // -1 means that tlLinkIndex2 takes on the same value as tlLinkIndex when setting idnices
             return (isAttributeEnabled(key) &&
                     canParse<int>(value)
-                    && ((parse<double>(value) >= 0) || ((parse<double>(value) == -1) && (key == SUMO_ATTR_TLLINKINDEX2)))
+                    && (parse<double>(value) >= 0 || parse<double>(value) == -1)
                     && myParentJunction->getNBNode()->getControllingTLS().size() > 0
                     && (*myParentJunction->getNBNode()->getControllingTLS().begin())->getMaxValidIndex() >= parse<int>(value));
         case SUMO_ATTR_CUSTOMSHAPE: {
@@ -457,6 +457,12 @@ GNECrossing::isValid(SumoXMLAttr key, const std::string& value) {
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
+}
+
+
+const std::map<std::string, std::string>&
+GNECrossing::getACParametersMap() const {
+    return myParentJunction->getNBNode()->getCrossing(myCrossingEdges)->getParametersMap();
 }
 
 
@@ -563,7 +569,7 @@ GNECrossing::setMoveShape(const GNEMoveResult& moveResult) {
 }
 
 
-void 
+void
 GNECrossing::commitMoveShape(const GNEMoveResult& moveResult, GNEUndoList* undoList) {
     // commit new shape
     undoList->p_begin("moving " + toString(SUMO_ATTR_CUSTOMSHAPE) + " of " + getTagStr());

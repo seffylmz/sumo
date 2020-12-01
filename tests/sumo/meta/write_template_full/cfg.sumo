@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Tue Nov  3 10:07:45 2020 by Eclipse SUMO sumo Version v1_7_0+0764-5bd512f5cd
+<!-- generated on Mon Nov 30 17:47:43 2020 by Eclipse SUMO sumo Version v1_7_0+1385-c75ca7897d
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -49,6 +49,7 @@
         <fcd-output.signals value="false" type="BOOL" help="Add the vehicle signal state to the FCD output (brake lights etc.)"/>
         <fcd-output.distance value="false" type="BOOL" help="Add kilometrage to the FCD output (linear referencing)"/>
         <fcd-output.acceleration value="false" type="BOOL" help="Add acceleration to the FCD output"/>
+        <fcd-output.max-leader-distance value="-1" type="FLOAT" help="Add leader vehicle information to the FCD output (within the given distance)"/>
         <fcd-output.params value="" type="STR[]" help="Add generic parameter values to the FCD output"/>
         <fcd-output.filter-edges.input-file value="" type="FILE" help="Restrict fcd output to the edge selection from the given input file"/>
         <full-output value="" type="FILE" help="Save a lot of information for each timestep (very redundant)"/>
@@ -327,6 +328,12 @@
         <device.tripinfo.deterministic value="false" type="BOOL" help="The &apos;tripinfo&apos; devices are set deterministic using a fraction of 1000"/>
     </tripinfo_device>
 
+    <vehroutes_device>
+        <device.vehroute.probability value="-1" type="FLOAT" help="The probability for a vehicle to have a &apos;vehroute&apos; device"/>
+        <device.vehroute.explicit value="" synonymes="device.vehroute.knownveh" type="STR[]" help="Assign a &apos;vehroute&apos; device to named vehicles"/>
+        <device.vehroute.deterministic value="false" type="BOOL" help="The &apos;vehroute&apos; devices are set deterministic using a fraction of 1000"/>
+    </vehroutes_device>
+
     <traci_server>
         <remote-port value="0" type="INT" help="Enables TraCI Server if set"/>
         <num-clients value="1" type="INT" help="Expected number of connecting clients"/>
@@ -372,7 +379,8 @@
         <window-size value="" type="STR[]" help="Create initial window with the given x,y size"/>
         <window-pos value="" type="STR[]" help="Create initial window at the given x,y position"/>
         <tracker-interval value="1" type="FLOAT" help="The aggregation period for value tracker windows"/>
-        <gui-testing value="false" type="BOOL" help="Enable ovelay for screen recognition"/>
+        <osg-view value="false" type="BOOL" help="Start with an OpenSceneGraph view instead of the regular 2D view"/>
+        <gui-testing value="false" type="BOOL" help="Enable overlay for screen recognition"/>
         <gui-testing-debug value="false" type="BOOL" help="Enable output messages during GUI-Testing"/>
         <gui-testing.setting-output value="" type="FILE" help="Save gui settings in the given settings output file"/>
     </gui_only>

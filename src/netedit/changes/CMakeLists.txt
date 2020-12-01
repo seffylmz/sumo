@@ -5,6 +5,10 @@ set(netedit_changes_SRCS
    GNEChange_Junction.cpp
    GNEChange_Edge.h
    GNEChange_Edge.cpp
+   GNEChange_EdgeType.h
+   GNEChange_EdgeType.cpp
+   GNEChange_LaneType.h
+   GNEChange_LaneType.cpp
    GNEChange_Crossing.h
    GNEChange_Crossing.cpp
    GNEChange_Lane.h

@@ -314,6 +314,9 @@ parameters](../Simulation/GenericParameters.md):
 - locomotiveLength
 - carriageGap
 
+# Miscellaneous
+- Error checking for [railway schedules](Public_Transport.md#single_vehicles_and_trips) can be done with the tool [checkStopOrder.py](../Tools/Routes.md#checkstoporderpy) 
+
 # Limitations
 
 - Individual rail cars / coupling / uncoupling cannot currently be

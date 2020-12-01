@@ -294,6 +294,12 @@ GNEDataInterval::getHierarchyName() const {
 }
 
 
+const std::map<std::string, std::string>&
+GNEDataInterval::getACParametersMap() const {
+    return getParametersMap();
+}
+
+
 void
 GNEDataInterval::setAttribute(SumoXMLAttr key, const std::string& value) {
     switch (key) {

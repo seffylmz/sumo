@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Fri Apr 17 07:57:35 2020 by Eclipse SUMO Version v1_5_0+1182-c674b91ce6
+<!-- generated on Thu Nov 26 14:03:49 2020 by Eclipse SUMO sumo Version v1_7_0+1315-1a43f45f4c
 This data file and the accompanying materials
 are made available under the terms of the Eclipse Public License v2.0
 which accompanies this distribution, and is available at
@@ -31,6 +31,7 @@ SPDX-License-Identifier: EPL-2.0
 
     <report>
         <xml-validation value="never"/>
+        <xml-validation.routes value="never"/>
         <duration-log.disable value="true"/>
         <no-step-log value="true"/>
     </report>

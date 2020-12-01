@@ -115,8 +115,11 @@ public:
     /// @brief called when the command/FXCall open additionals is executed
     long onCmdOpenAdditionals(FXObject*, FXSelector, void*);
 
-    /// @brief called when the command/FXCall open additionals is executed
+    /// @brief called when the command/FXCall open TLS programs is executed
     long onCmdOpenTLSPrograms(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall open edgeType is executed
+    long onCmdOpenEdgeTypes(FXObject*, FXSelector, void*);
 
     /// @brief called when the command/FXCall open demand is executed
     long onCmdOpenDemandElements(FXObject*, FXSelector, void*);
@@ -148,8 +151,14 @@ public:
     /// @brief called when the command/FXCall save TLSPrograms is executed
     long onCmdSaveTLSPrograms(FXObject*, FXSelector, void*);
 
+    /// @brief called when the command/FXCall save edge types is executed
+    long onCmdSaveEdgeTypes(FXObject*, FXSelector, void*);
+
     /// @brief called when the command/FXCall save TLSPrograms as is executed
     long onCmdSaveTLSProgramsAs(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall save edgeTypes as is executed
+    long onCmdSaveEdgeTypesAs(FXObject*, FXSelector, void*);
 
     /// @brief called when the command/FXCall save additionals is executed
     long onCmdSaveAdditionals(FXObject*, FXSelector, void*);
@@ -264,6 +273,18 @@ public:
     /// @brief called if the user hits backspace
     long onCmdBackspace(FXObject* sender, FXSelector sel, void* ptr);
 
+    /// @brief force save network (flag)
+    long onCmdForceSaveNetwork(FXObject* sender, FXSelector sel, void* ptr);
+
+    /// @brief force save additionals (flag)
+    long onCmdForceSaveAdditionals(FXObject* sender, FXSelector sel, void* ptr);
+
+    /// @brief force save demand elements (flag)
+    long onCmdForceSaveDemandElements(FXObject* sender, FXSelector sel, void* ptr);
+
+    /// @brief force save data elements (flag)
+    long onCmdForceSaveDataElements(FXObject* sender, FXSelector sel, void* ptr);
+
     /// @brief called if the user hits f
     long onCmdFocusFrame(FXObject* sender, FXSelector sel, void* ptr);
 
@@ -360,6 +381,7 @@ protected:
     /// @brief the submenus
     FXMenuPane* myFileMenu,
                 *myFileMenuTLS,
+                *myFileMenuEdgeTypes,
                 *myFileMenuAdditionals,
                 *myFileMenuDemandElements,
                 *myFileMenuDataElements,

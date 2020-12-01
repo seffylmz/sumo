@@ -51,8 +51,10 @@ class GNEApplicationWindow;
 class GNEAttributeCarrier;
 class GNEConnection;
 class GNECrossing;
-class GNEEdge;
 class GNEJunction;
+class GNEEdgeType;
+class GNELaneType;
+class GNEEdge;
 class GNELane;
 class GNENetworkElement;
 class GNEPOI;
@@ -75,6 +77,8 @@ struct GNENetHelper {
         friend class GNEAdditionalHandler;
         friend class GNERouteHandler;
         friend class GNEChange_Junction;
+        friend class GNEChange_EdgeType;
+        friend class GNEChange_LaneType;
         friend class GNEChange_Edge;
         friend class GNEChange_Additional;
         friend class GNEChange_Shape;
@@ -99,7 +103,7 @@ struct GNENetHelper {
 
         /// @name function for junctions
         /// @{
-        /// @brief registers a junction with GNENet containers
+        /// @brief registers a junction in GNENet containers
         GNEJunction* registerJunction(GNEJunction* junction);
 
         /// @brief map with the ID and pointer to junctions of net
@@ -107,6 +111,19 @@ struct GNENetHelper {
 
         /// @brief clear junctions
         void clearJunctions();
+
+        /// @}
+
+        /// @name function for edgeTypes
+        /// @{
+        /// @brief registers a edge in GNENet containers
+        GNEEdgeType* registerEdgeType(GNEEdgeType* edgeType);
+
+        /// @brief map with the ID and pointer to edgeTypes of net
+        const std::map<std::string, GNEEdgeType*>& getEdgeTypes() const;
+
+        /// @brief clear edgeTypes
+        void clearEdgeTypes();
 
         /// @}
 
@@ -118,7 +135,7 @@ struct GNENetHelper {
         /// @brief map with the ID and pointer to edges of net
         const std::map<std::string, GNEEdge*>& getEdges() const;
 
-        /// @brief clear junctions
+        /// @brief clear edges
         void clearEdges();
 
         /// @}
@@ -238,7 +255,23 @@ struct GNENetHelper {
         /// @brief update junction ID in container
         void updateJunctionID(GNEAttributeCarrier* AC, const std::string& newID);
 
+        /// @}
+
+        /// @name Insertion and erasing of GNEEdgeTypes
         /// @{
+        /// @brief return true if given edgeType exist
+        bool edgeTypeExist(const GNEEdgeType* edgeType) const;
+
+        /// @brief inserts a single edgeType into the net and into the underlying netbuild-container
+        void insertEdgeType(GNEEdgeType* edgeType);
+
+        /// @brief deletes edgeType
+        void deleteEdgeType(GNEEdgeType* edgeType);
+
+        /// @brief update edgeType ID in container
+        void updateEdgeTypeID(GNEAttributeCarrier* AC, const std::string& newID);
+
+        /// @}
 
         /// @name Insertion and erasing of GNEEdges
         /// @{
@@ -251,7 +284,7 @@ struct GNENetHelper {
         /// @brief update edge ID in container
         void updateEdgeID(GNEAttributeCarrier* AC, const std::string& newID);
 
-        /// @{
+        /// @}
 
         /// @name Insertion and erasing of GNEAdditionals items
         /// @{
@@ -359,6 +392,9 @@ struct GNENetHelper {
     private:
         /// @brief map with the ID and pointer to junctions of net
         std::map<std::string, GNEJunction*> myJunctions;
+
+        /// @brief map with the ID and pointer to edgeTypes of net
+        std::map<std::string, GNEEdgeType*> myEdgeTypes;
 
         /// @brief map with the ID and pointer to edges of net
         std::map<std::string, GNEEdge*> myEdges;

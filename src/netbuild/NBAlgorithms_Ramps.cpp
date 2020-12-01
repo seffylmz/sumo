@@ -49,8 +49,8 @@ const std::string NBRampsComputer::ADDED_ON_RAMP_EDGE("-AddedOnRampEdge");
 // NBRampsComputer
 // ---------------------------------------------------------------------------
 void
-NBRampsComputer::computeRamps(NBNetBuilder& nb, OptionsCont& oc) {
-    const bool guessAndAdd = oc.getBool("ramps.guess");
+NBRampsComputer::computeRamps(NBNetBuilder& nb, OptionsCont& oc, bool mayAddOrRemove) {
+    const bool guessAndAdd = oc.getBool("ramps.guess") && mayAddOrRemove;
     const double minHighwaySpeed = oc.getFloat("ramps.min-highway-speed");
     const double maxRampSpeed = oc.getFloat("ramps.max-ramp-speed");
     const double rampLength = oc.getFloat("ramps.ramp-length");
@@ -106,7 +106,7 @@ NBRampsComputer::computeRamps(NBNetBuilder& nb, OptionsCont& oc) {
         }
     }
     // check whether on-off ramps are specified
-    if (oc.isSet("ramps.set")) {
+    if (oc.isSet("ramps.set") && mayAddOrRemove) {
         std::vector<std::string> edges = oc.getStringVector("ramps.set");
         NBNodeCont& nc = nb.getNodeCont();
         NBEdgeCont& ec = nb.getEdgeCont();
@@ -228,7 +228,7 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
                     curr = nullptr;
                 }
             } else {
-                // ambigous; and, in fact, what should it be? ...stop
+                // ambiguous; and, in fact, what should it be? ...stop
                 curr = nullptr;
             }
         }
@@ -334,7 +334,7 @@ NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDis
                     curr = nullptr;
                 }
             } else {
-                // ambigous; and, in fact, what should it be? ...stop
+                // ambiguous; and, in fact, what should it be? ...stop
                 curr = nullptr;
             }
         }

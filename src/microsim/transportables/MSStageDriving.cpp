@@ -43,11 +43,12 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-MSStageDriving::MSStageDriving(const MSEdge* destination,
+MSStageDriving::MSStageDriving(const MSEdge* origin, const MSEdge* destination,
                                MSStoppingPlace* toStop, const double arrivalPos, const std::vector<std::string>& lines,
                                const std::string& group,
                                const std::string& intendedVeh, SUMOTime intendedDepart) :
     MSStage(destination, toStop, arrivalPos, MSStageType::DRIVING, group),
+    myOrigin(origin),
     myLines(lines.begin(), lines.end()),
     myVehicle(nullptr),
     myVehicleID("NULL"),
@@ -65,7 +66,7 @@ MSStageDriving::MSStageDriving(const MSEdge* destination,
 
 MSStage*
 MSStageDriving::clone() const {
-    return new MSStageDriving(myDestination, myDestinationStop, myArrivalPos, std::vector<std::string>(myLines.begin(), myLines.end()),
+    return new MSStageDriving(myOrigin, myDestination, myDestinationStop, myArrivalPos, std::vector<std::string>(myLines.begin(), myLines.end()),
                               myGroup, myIntendedVehicleID, myIntendedDepart);
 }
 
@@ -176,8 +177,8 @@ MSStageDriving::getStageSummary(const bool isPerson) const {
 void
 MSStageDriving::proceed(MSNet* net, MSTransportable* transportable, SUMOTime now, MSStage* previous) {
     myOriginStop = (previous->getStageType() == MSStageType::TRIP
-                                    ? previous->getOriginStop()
-                                    : previous->getDestinationStop());
+                    ? previous->getOriginStop()
+                    : previous->getDestinationStop());
     myWaitingSince = now;
     const bool isPerson = transportable->isPerson();
     if (transportable->getParameter().departProcedure == DEPART_TRIGGERED
@@ -206,6 +207,11 @@ MSStageDriving::proceed(MSNet* net, MSTransportable* transportable, SUMOTime now
         myStopWaitPos = Position::INVALID;
         myWaitingPos = previous->getEdgePos(now);
     }
+    if (myOrigin != nullptr && myOrigin != myWaitingEdge) {
+        // transfer at junction
+        myWaitingEdge = myOrigin;
+        myWaitingPos = 0;
+    }
     SUMOVehicle* const availableVehicle = myWaitingEdge->getWaitingVehicle(transportable, myWaitingPos);
     const bool triggered = availableVehicle != nullptr &&
                            ((isPerson && availableVehicle->getParameter().departProcedure == DEPART_TRIGGERED) ||
@@ -223,12 +229,12 @@ MSStageDriving::proceed(MSNet* net, MSTransportable* transportable, SUMOTime now
         if (isPerson) {
             net->getPersonControl().addWaiting(myWaitingEdge, transportable);
             myWaitingEdge->addPerson(transportable);
-            // check if the ride can be conducted and reserve it
-            MSDevice_Taxi::addReservation(transportable, getLines(), now, now, myWaitingEdge, myWaitingPos, getDestination(), getArrivalPos(), myGroup);
         } else {
             net->getContainerControl().addWaiting(myWaitingEdge, transportable);
             myWaitingEdge->addContainer(transportable);
         }
+        // check if the ride can be conducted and reserve it
+        MSDevice_Taxi::addReservation(transportable, getLines(), now, now, myWaitingEdge, myWaitingPos, getDestination(), getArrivalPos(), myGroup);
     }
 }
 

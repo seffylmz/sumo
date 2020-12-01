@@ -55,7 +55,7 @@ NBOwnTLDef::NBOwnTLDef(const std::string& id,
                        TrafficLightType type) :
     NBTrafficLightDefinition(id, junctions, DefaultProgramID, offset, type),
     myHaveSinglePhase(false),
-    myLayout(TrafficLightLayout::INVALID) {
+    myLayout(TrafficLightLayout::DEFAULT) {
 }
 
 
@@ -63,7 +63,7 @@ NBOwnTLDef::NBOwnTLDef(const std::string& id, NBNode* junction, SUMOTime offset,
                        TrafficLightType type) :
     NBTrafficLightDefinition(id, junction, DefaultProgramID, offset, type),
     myHaveSinglePhase(false),
-    myLayout(TrafficLightLayout::INVALID) {
+    myLayout(TrafficLightLayout::DEFAULT) {
 }
 
 
@@ -71,7 +71,7 @@ NBOwnTLDef::NBOwnTLDef(const std::string& id, SUMOTime offset,
                        TrafficLightType type) :
     NBTrafficLightDefinition(id, DefaultProgramID, offset, type),
     myHaveSinglePhase(false),
-    myLayout(TrafficLightLayout::INVALID) {
+    myLayout(TrafficLightLayout::DEFAULT) {
 }
 
 
@@ -315,11 +315,11 @@ NBOwnTLDef::computeLogicAndConts(int brakingTimeSeconds, bool onlyConts) {
     SUMOTime allRedTime = TIME2STEPS(OptionsCont::getOptions().getInt("tls.allred.time"));
     const double minorLeftSpeedThreshold = OptionsCont::getOptions().getFloat("tls.minor-left.max-speed");
     // left-turn phases do not work well for joined tls, so we build incoming instead
-    if (myLayout == TrafficLightLayout::INVALID) {
+    if (myLayout == TrafficLightLayout::DEFAULT) {
         // @note this prevents updating after loading plain-xml into netedit computing tls and then changing the default layout
         myLayout = SUMOXMLDefinitions::TrafficLightLayouts.get(OptionsCont::getOptions().getString("tls.layout"));
     }
-    const double groupOpposites = (myLayout == TrafficLightLayout::OPPOSITES && (myControlledNodes.size() <= 2 || corridorLike()));
+    const bool groupOpposites = (myLayout == TrafficLightLayout::OPPOSITES && (myControlledNodes.size() <= 2 || corridorLike()));
 
     // build all phases
     std::vector<int> greenPhases; // indices of green phases
@@ -974,10 +974,10 @@ NBOwnTLDef::correctConflicting(std::string state, const EdgeVector& fromEdges, c
                             haveForbiddenLeftMover = true;
                         }
                     } else if (fromEdges[i1] == fromEdges[i2]
-                            && fromLanes[i1] != fromLanes[i2]
-                            && toEdges[i1] == toEdges[i2]
-                            && toLanes[i1] == toLanes[i2]
-                            && fromEdges[i1]->getToNode()->mergeConflictYields(fromEdges[i1], fromLanes[i1], fromLanes[i2], toEdges[i1], toLanes[i1])) {
+                               && fromLanes[i1] != fromLanes[i2]
+                               && toEdges[i1] == toEdges[i2]
+                               && toLanes[i1] == toLanes[i2]
+                               && fromEdges[i1]->getToNode()->mergeConflictYields(fromEdges[i1], fromLanes[i1], fromLanes[i2], toEdges[i1], toLanes[i1])) {
                         mergeConflicts[i1] = true;
                         state[i1] = 'g';
                     }
