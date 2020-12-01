@@ -76,9 +76,11 @@ MSAmitranTrajectories::writeVehicle(OutputDevice& of, const SUMOVehicle& veh, co
             myWrittenVehicles[veh.getID()] = index;
         }
         of.openTag(SUMO_TAG_MOTIONSTATE).writeAttr(SUMO_ATTR_VEHICLE, myWrittenVehicles[veh.getID()])
-        .writeAttr(SUMO_ATTR_SPEED, int(100.*veh.getSpeed() + 0.5))
-        .writeAttr(SUMO_ATTR_TIME, STEPS2MS(timestep))
-        .writeAttr(SUMO_ATTR_ACCELERATION, int(1000.*veh.getAcceleration() + 0.5));
+            .writeAttr(SUMO_ATTR_SPEED, int(100. * veh.getSpeed() + 0.5))
+            .writeAttr(SUMO_ATTR_TIME, STEPS2MS(timestep))
+            .writeAttr(SUMO_ATTR_ACCELERATION, int(1000. * veh.getAcceleration() + 0.5))
+            .writeAttr(SUMO_ATTR_X, veh.getPosition().x())
+            .writeAttr(SUMO_ATTR_Y, veh.getPosition().y());
         of.closeTag();
     }
 }
