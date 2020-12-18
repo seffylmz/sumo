@@ -30,6 +30,7 @@
 #include <microsim/MSGlobals.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSEdge.h>
+#include <microsim/MSLane.h>
 #include <microsim/MSStop.h>
 
 #include "MSDispatch.h"
@@ -73,7 +74,7 @@ MSDevice_Taxi::insertOptions(OptionsCont& oc) {
     oc.doRegister("device.taxi.dispatch-algorithm", new Option_String("greedy"));
     oc.addDescription("device.taxi.dispatch-algorithm", "Taxi Device", "The dispatch algorithm [greedy|greedyClosest|greedyShared|routeExtension|traci]");
 
-    oc.doRegister("device.taxi.dispatch-algorithm.output", new Option_String(""));
+    oc.doRegister("device.taxi.dispatch-algorithm.output", new Option_FileName());
     oc.addDescription("device.taxi.dispatch-algorithm.output", "Taxi Device", "Write information from the dispatch algorithm to FILE");
 
     oc.doRegister("device.taxi.dispatch-algorithm.params", new Option_String(""));
@@ -85,7 +86,7 @@ MSDevice_Taxi::insertOptions(OptionsCont& oc) {
     oc.doRegister("device.taxi.idle-algorithm", new Option_String("stop"));
     oc.addDescription("device.taxi.idle-algorithm", "Taxi Device", "The behavior of idle taxis [stop|randomCircling]");
 
-    oc.doRegister("device.taxi.idle-algorithm.output", new Option_String(""));
+    oc.doRegister("device.taxi.idle-algorithm.output", new Option_FileName());
     oc.addDescription("device.taxi.idle-algorithm.output", "Taxi Device", "Write information from the idling algorithm to FILE");
 }
 
@@ -265,8 +266,8 @@ MSDevice_Taxi::dispatchShared(const std::vector<const Reservation*>& reservation
             }
             if (isPickup) {
                 prepareStop(tmpEdges, stops, lastPos, res->from, res->fromPos, "pickup " + toString(res->persons));
-                for (MSTransportable* t : res->persons) {
-                    if (t->isPerson()) {
+                for (const MSTransportable* const transportable : res->persons) {
+                    if (transportable->isPerson()) {
                         stops.back().triggered = true;
                     } else {
                         stops.back().containerTriggered = true;

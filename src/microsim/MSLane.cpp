@@ -757,7 +757,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         }
         hadRailSignal |= (*link)->getTLLogic() != nullptr;
 
-        if (!(*link)->opened(arrivalTime, speed, speed, aVehicle->getVehicleType().getLength(), aVehicle->getImpatience(), cfModel.getMaxDecel(), 0, posLat)
+        if (!(*link)->opened(arrivalTime, speed, speed, aVehicle->getVehicleType().getLength(), aVehicle->getImpatience(),
+                    cfModel.getMaxDecel(), 0, posLat, nullptr, false, aVehicle)
                 || !(*link)->havePriority()) {
             // have to stop at junction
             std::string errorMsg = "";
@@ -1399,7 +1400,7 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
     if (myVehicles.size() == 0) {
         return;
     }
-    if (!MSAbstractLaneChangeModel::haveLateralDynamics()) {
+    if (!MSGlobals::gSublane) {
         // no sublanes
         VehCont::reverse_iterator lastVeh = myVehicles.rend() - 1;
         for (VehCont::reverse_iterator pred = myVehicles.rbegin(); pred != lastVeh; ++pred) {
@@ -1505,14 +1506,17 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
             }
 #endif
             if (leader.first != 0 && leader.second < length) {
-                WRITE_WARNING(
-                    "Vehicle '" + v->getID()
-                    + "' collision with person '" + leader.first->getID()
-                    + "', lane='" + getID()
-                    + "', gap=" + toString(leader.second - length)
-                    + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep())
-                    + " stage=" + stage + ".");
-                MSNet::getInstance()->getVehicleControl().registerCollision();
+                const bool newCollision = MSNet::getInstance()->registerCollision(v, leader.first, "sharedLane", this, leader.first->getEdgePos());
+                if (newCollision) {
+                    WRITE_WARNING(
+                            "Vehicle '" + v->getID()
+                            + "' collision with person '" + leader.first->getID()
+                            + "', lane='" + getID()
+                            + "', gap=" + toString(leader.second - length)
+                            + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep())
+                            + " stage=" + stage + ".");
+                    MSNet::getInstance()->getVehicleControl().registerCollision();
+                }
             }
         }
     }
@@ -1553,13 +1557,22 @@ MSLane::detectPedestrianJunctionCollision(const MSVehicle* collider, const Posit
             }
 #endif
             if (colliderBoundary.overlapsWith((*it_p)->getBoundingBox())) {
-                WRITE_WARNING(
-                    "Vehicle '" + collider->getID()
-                    + "' collision with person '" + (*it_p)->getID()
-                    + "', lane='" + getID()
-                    + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep())
-                    + " stage=" + stage + ".");
-                MSNet::getInstance()->getVehicleControl().registerCollision();
+                std::string collisionType = "junctionPedestrian";
+                if (foeLane->getEdge().isCrossing()) {
+                    collisionType = "crossing";
+                } else if (foeLane->getEdge().isWalkingArea()) {
+                    collisionType = "walkingarea";
+                }
+                const bool newCollision = MSNet::getInstance()->registerCollision(collider, *it_p, collisionType, foeLane, (*it_p)->getEdgePos());
+                if (newCollision) {
+                    WRITE_WARNING(
+                            "Vehicle '" + collider->getID()
+                            + "' collision with person '" + (*it_p)->getID()
+                            + "', lane='" + getID()
+                            + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep())
+                            + " stage=" + stage + ".");
+                    MSNet::getInstance()->getVehicleControl().registerCollision();
+                }
             }
         }
     }
@@ -1586,8 +1599,15 @@ MSLane::detectCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
         std::swap(victim, collider);
     }
     const double colliderPos = colliderOpposite ? collider->getBackPositionOnLane(this) : collider->getPositionOnLane(this);
-    double minGapFactor = myCollisionMinGapFactor >= 0 ? myCollisionMinGapFactor : collider->getCarFollowModel().getCollisionMinGapFactor();
-    double gap = victim->getBackPositionOnLane(this) - colliderPos - minGapFactor * collider->getVehicleType().getMinGap();
+    const double minGapFactor = myCollisionMinGapFactor >= 0 ? myCollisionMinGapFactor : collider->getCarFollowModel().getCollisionMinGapFactor();
+    double victimBack = victim->getBackPositionOnLane(this);
+    if (victim->getLateralOverlap() > 0 || collider->getLateralOverlap() > 0) {
+        if (&collider->getLane()->getEdge() == myEdge && collider->getLane()->getLength() > getLength()) {
+            // interpret victim position on the longer lane
+            victimBack *= collider->getLane()->getLength() / getLength();
+        }
+    }
+    double gap = victimBack - colliderPos - minGapFactor * collider->getVehicleType().getMinGap();
     if (bothOpposite) {
         gap = -gap - 2 * myCollisionMinGapFactor * collider->getVehicleType().getMinGap();
     }
@@ -1611,7 +1631,7 @@ MSLane::detectCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
 #endif
     if (gap < -NUMERICAL_EPS) {
         double latGap = 0;
-        if (MSAbstractLaneChangeModel::haveLateralDynamics()) {
+        if (MSGlobals::gSublane) {
             latGap = (fabs(victim->getCenterOnEdge(this) - collider->getCenterOnEdge(this))
                       - 0.5 * fabs(victim->getVehicleType().getWidth() + collider->getVehicleType().getWidth()));
             if (latGap + NUMERICAL_EPS > 0) {
@@ -1645,8 +1665,9 @@ MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
         return;
     }
     std::string collisionType = ((collider->getLaneChangeModel().isOpposite() != victim->getLaneChangeModel().isOpposite()
-                                  || (&collider->getLane()->getEdge() == victim->getLane()->getEdge().getBidiEdge()))
-                                 ?  "frontal collision" : "collision");
+                || (&collider->getLane()->getEdge() == victim->getLane()->getEdge().getBidiEdge()))
+            ?  "frontal collision"
+            : (isInternal() ? "junction collision" : "collision"));
     // in frontal collisions the opposite vehicle is the collider
     if (victim->getLaneChangeModel().isOpposite() && !collider->getLaneChangeModel().isOpposite()) {
         std::swap(collider, victim);
@@ -1734,12 +1755,23 @@ MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
                 break;
         }
     }
-    WRITE_WARNING(prefix
-                  + "', lane='" + getID()
-                  + "', gap=" + toString(gap)
-                  + (MSAbstractLaneChangeModel::haveLateralDynamics() ? "', latGap=" + toString(latGap) : "")
-                  + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep())
-                  + " stage=" + stage + ".");
+    if (collisionType == "frontal collision") {
+        collisionType = "frontal";
+    } else if (collisionType == "junction collision") {
+        collisionType = "junction";
+    }
+    const bool newCollision = MSNet::getInstance()->registerCollision(collider, victim, collisionType, this, collider->getPositionOnLane(this));
+    if (newCollision) {
+        WRITE_WARNING(prefix
+                + "', lane='" + getID()
+                + "', gap=" + toString(gap)
+                + (MSGlobals::gSublane ? "', latGap=" + toString(latGap) : "")
+                + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep())
+                + " stage=" + stage + ".");
+        MSNet::getInstance()->informVehicleStateListener(victim, MSNet::VEHICLE_STATE_COLLISION);
+        MSNet::getInstance()->informVehicleStateListener(collider, MSNet::VEHICLE_STATE_COLLISION);
+        MSNet::getInstance()->getVehicleControl().registerCollision();
+    }
 #ifdef DEBUG_COLLISIONS
     if (DEBUG_COND2(collider)) {
         toRemove.erase(collider);
@@ -1750,9 +1782,6 @@ MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
         toTeleport.erase(victim);
     }
 #endif
-    MSNet::getInstance()->informVehicleStateListener(victim, MSNet::VEHICLE_STATE_COLLISION);
-    MSNet::getInstance()->informVehicleStateListener(collider, MSNet::VEHICLE_STATE_COLLISION);
-    MSNet::getInstance()->getVehicleControl().registerCollision();
 }
 
 
@@ -2373,7 +2402,7 @@ MSLane::getLeaderOnConsecutive(double dist, double seen, double speed, const MSV
         // get the next link used
         std::vector<MSLink*>::const_iterator link = succLinkSec(veh, view, *nextLane, bestLaneConts);
         if (nextLane->isLinkEnd(link) || !(*link)->opened(arrivalTime, speed, speed, veh.getVehicleType().getLength(),
-                veh.getImpatience(), veh.getCarFollowModel().getMaxDecel(), 0, veh.getLateralPositionOnLane()) || (*link)->haveRed()) {
+                veh.getImpatience(), veh.getCarFollowModel().getMaxDecel(), 0, veh.getLateralPositionOnLane(), nullptr, false, &veh) || (*link)->haveRed()) {
 #ifdef DEBUG_CONTEXT
             if (DEBUG_COND2(&veh)) {
                 std::cout << "    cannot continue after nextLane=" << nextLane->getID() << "\n";
@@ -2485,7 +2514,7 @@ MSLane::getCriticalLeader(double dist, double seen, double speed, const MSVehicl
         // get the next link used
         std::vector<MSLink*>::const_iterator link = succLinkSec(veh, view, *nextLane, bestLaneConts);
         if (nextLane->isLinkEnd(link) || !(*link)->opened(arrivalTime, speed, speed, veh.getVehicleType().getLength(),
-                veh.getImpatience(), veh.getCarFollowModel().getMaxDecel(), 0, veh.getLateralPositionOnLane()) || (*link)->haveRed()) {
+                veh.getImpatience(), veh.getCarFollowModel().getMaxDecel(), 0, veh.getLateralPositionOnLane(), nullptr, false, &veh) || (*link)->haveRed()) {
             return result;
         }
         // check for link leaders
@@ -3106,6 +3135,9 @@ MSLane::saveState(OutputDevice& out) {
                         out.writeAttr(SUMO_ATTR_ARRIVALSPEEDBRAKING, item.second.arrivalSpeedBraking);
                         out.writeAttr(SUMO_ATTR_WAITINGTIME, item.second.waitingTime);
                         out.writeAttr(SUMO_ATTR_DISTANCE, item.second.dist);
+                        if (item.second.latOffset != 0) {
+                            out.writeAttr(SUMO_ATTR_POSITION_LAT, item.second.latOffset);
+                        }
                         out.closeTag();
                     }
                     out.closeTag();
@@ -3373,7 +3405,7 @@ MSLane::getLeadersOnConsecutive(double dist, double seen, double speed, const MS
         // get the next link used
         std::vector<MSLink*>::const_iterator link = succLinkSec(*ego, view, *nextLane, bestLaneConts);
         if (nextLane->isLinkEnd(link) || !(*link)->opened(arrivalTime, speed, speed, ego->getVehicleType().getLength(),
-                ego->getImpatience(), ego->getCarFollowModel().getMaxDecel(), 0, ego->getLateralPositionOnLane()) || (*link)->haveRed()) {
+                ego->getImpatience(), ego->getCarFollowModel().getMaxDecel(), 0, ego->getLateralPositionOnLane(), nullptr, false, ego) || (*link)->haveRed()) {
             break;
         }
         // check for link leaders

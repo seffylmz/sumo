@@ -324,8 +324,10 @@ Determines the speed at which the vehicle should end its route;
 - "`current`": the vehicle will not change
 it's lane when nearing arrival. It will use whatever lane is more
 convenient to reach its arrival position. *(default behavior)*
-- `≥0`: the vehicle changes lanes to end
-it's route on the specified lane
+- `≥0`: the vehicle changes lanes to end it's route on the specified lane
+- "`random`": the vehicle will chose a random permitted lane on it's arrival edge and if necessary change it's lane to end there.
+- "`first`": the vehicle will arrive on the rightmost permitted lane.
+
 
 ### arrivalPos
 
@@ -715,7 +717,7 @@ lists which parameter are used by which model(s). [Details on car-following mode
 | accel                        | [vClass-specific](Vehicle_Type_Parameter_Defaults.md) | >= 0     | The acceleration ability of vehicles of this type (in m/s^2)                                    | Krauss, SKOrig, PW2009, Kerner, IDM, ACC, CACC |
 | decel                        | [vClass-specific](Vehicle_Type_Parameter_Defaults.md) | >= 0     | The deceleration ability of vehicles of this type (in m/s^2)                                    | Krauss, SKOrig, PW2009, Kerner, IDM, ACC, CACC |
 | emergencyDecel               | [vClass-specific](Vehicle_Type_Parameter_Defaults.md) | >= decel | The maximum deceleration ability of vehicles of this type in case of emergency (in m/s^2)       | Krauss, SKOrig, PW2009, Kerner, IDM, ACC, CACC |
-| sigma                        | 0.5                                                   | [0,1]    | The driver imperfection (0 denotes perfect driving                                              | Krauss, SKOrig, PW2009, Kerner, IDM, ACC, CACC |
+| sigma                        | 0.5                                                   | [0,1]    | The driver imperfection (0 denotes perfect driving                                              | Krauss, SKOrig, PW2009 |
 | tau                          | 1                                                     | >= 0     | The driver's desired (minimum) time headway. Exact interpretation varies by model. For the default model *Krauss* this is based on the net space between leader back and follower front). For limitations, see [Car-Following-Models\#tau](Car-Following-Models.md#tau)). | all Models                                        |
 | k                            |                                                       |          |                                                                                                           | Kerner    |
 | phi                          |                                                       |          |                                                                                                           | Kerner    |
@@ -989,6 +991,7 @@ Stops can be childs of vehicles, routes, persons or containers.
 | triggered          | bool              | true,false                                                                                   | false              | whether a person may end the stop                                                                                      |
 | expected           | string            | list of person IDs                                                                           |                    | list of persons that must board the vehicle before it may continue (only takes effect for triggered stops)             |
 | expectedContainers | string            | list of container IDs                                                                        |                    | list of containers that must be loaded onto the vehicle before it may continue (only takes effect for triggered stops) |
+| permitted | string            | list of person and contaier IDs                                                                        |                    | list of transportables that are permitted to enter the vehicle at this stop |
 | parking            | bool              | true,false                                                                                   | value of triggered | whether the vehicle stops on the road or beside                                                                        |
 | actType            | string            | arbitrary                                                                                    | 'waiting'          | activity displayed for stopped person in GUI and output files (only applies to person simulation)                      |
 | tripId             | string            | arbitrary                                                                                    |                    | parameter to be applied to the vehicle to track the trip id within a cyclical public transport route                   |

@@ -136,6 +136,9 @@ protected:
     /// @brief Ends the processing of a container
     void closeContainer();
 
+	/// @brief Ends the processing of a containerFlow
+	void closeContainerFlow();
+
     /// @brief Ends the processing of a flow
     void closeFlow();
 
@@ -154,11 +157,8 @@ protected:
     /// @brief Processing of a container
     void addContainer(const SUMOSAXAttributes& attrs);
 
-    /// @brief Processing of a ride
-    void addRide(const SUMOSAXAttributes& attrs);
-
-    /// @brief Processing of a transport
-    void addTransport(const SUMOSAXAttributes& attrs);
+	/// @brief Processing of a ride or transport
+	void addRideOrTransport(const SUMOSAXAttributes& attrs, bool isRide);
 
     /// @brief Processing of a tranship
     void addTranship(const SUMOSAXAttributes& attrs);

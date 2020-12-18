@@ -40,6 +40,7 @@
 #include <microsim/traffic_lights/MSRailSignalControl.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSLink.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicleTransfer.h>
@@ -256,8 +257,9 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             const double arrivalSpeedBraking = attrs.get<double>(SUMO_ATTR_ARRIVALSPEEDBRAKING, nullptr, ok);
             const SUMOTime waitingTime = attrs.get<SUMOTime>(SUMO_ATTR_WAITINGTIME, nullptr, ok);
             const double dist = attrs.get<double>(SUMO_ATTR_DISTANCE, nullptr, ok);
+            const double latOffset = attrs.getOpt<double>(SUMO_ATTR_POSITION_LAT, nullptr, ok, 0);
             SUMOVehicle* veh = vc.getVehicle(vehID);
-            myCurrentLink->setApproaching(veh, arrivalTime, arrivalSpeed, leaveSpeed, setRequest, arrivalTimeBraking, arrivalSpeedBraking, waitingTime, dist);
+            myCurrentLink->setApproaching(veh, arrivalTime, arrivalSpeed, leaveSpeed, setRequest, arrivalTimeBraking, arrivalSpeedBraking, waitingTime, dist, latOffset);
             if (!MSGlobals::gUseMesoSim) {
                 MSVehicle* microVeh = dynamic_cast<MSVehicle*>(veh);
                 microVeh->loadPreviousApproaching(myCurrentLink, setRequest, arrivalTime, arrivalSpeed, arrivalTimeBraking, arrivalSpeedBraking, dist, leaveSpeed);

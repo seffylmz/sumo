@@ -80,7 +80,7 @@ if(SWIG_FOUND)
             include_directories(${JNI_INCLUDE_DIRS})
             set(CMAKE_SWIG_FLAGS -package org.eclipse.sumo.libsumo)
             set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/java)
-            set(SWIG_MODULE_libsumojni_EXTRA_DEPS ${LIBSUMO_HEADERS})
+            set(SWIG_MODULE_libsumojni_EXTRA_DEPS ${LIBSUMO_HEADERS} libsumo_typemap.i)
             if (${CMAKE_VERSION} VERSION_GREATER 3.8.0)
                 SWIG_ADD_LIBRARY(libsumojni LANGUAGE java SOURCES libsumo.i)
             else()
@@ -92,8 +92,13 @@ if(SWIG_FOUND)
                 set_source_files_properties(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-Wno-strict-aliasing")
                 swig_link_libraries(libsumojni -Wl,--whole-archive libsumostatic ${sumolibs} -Wl,--no-whole-archive)
             endif()
-            FILE(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/classes")
             ADD_CUSTOM_COMMAND(TARGET libsumojni POST_BUILD
+				COMMAND ${CMAKE_COMMAND} -E make_directory java/META-INF
+				COMMAND ${CMAKE_COMMAND} -E make_directory classes/META-INF
+				COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/NOTICE.md java/META-INF
+				COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE java/META-INF
+				COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/NOTICE.md classes/META-INF
+				COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE classes/META-INF
                 COMMAND "${Java_JAVAC_EXECUTABLE}" -d classes java/*.java
                 COMMAND "${Java_JAR_EXECUTABLE}" -cfM ${CMAKE_SOURCE_DIR}/bin/libsumojni.jar -C classes .
                 COMMAND "${Java_JAR_EXECUTABLE}" -cfM ${CMAKE_SOURCE_DIR}/bin/libsumojni_src.jar -C java .
@@ -132,7 +137,7 @@ if(SWIG_FOUND)
                 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/libsumo)
                 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/tools/libsumo)
                 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/tools/libsumo)
-                set(SWIG_MODULE_libsumo_EXTRA_DEPS ${LIBSUMO_HEADERS})
+                set(SWIG_MODULE_libsumo_EXTRA_DEPS ${LIBSUMO_HEADERS} libsumo_typemap.i)
                 if (${CMAKE_VERSION} VERSION_GREATER 3.8.0)
                     SWIG_ADD_LIBRARY(libsumo LANGUAGE python SOURCES libsumo.i)
                 else()

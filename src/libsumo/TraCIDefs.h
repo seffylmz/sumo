@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <memory>
+#include <cstring>
 
 
 // ===========================================================================
@@ -90,7 +91,6 @@ CLASS::getContextSubscriptionResults(const std::string& objectID) { \
 void \
 CLASS::subscribeParameterWithKey(const std::string& objectID, const std::string& key, double beginTime, double endTime) { \
     libsumo::Helper::subscribe(libsumo::CMD_SUBSCRIBE_##DOMAIN##_VARIABLE, objectID, std::vector<int>({libsumo::VAR_PARAMETER_WITH_KEY}), beginTime, endTime, libsumo::TraCIResults {{libsumo::VAR_PARAMETER_WITH_KEY, std::make_shared<libsumo::TraCIString>(key)}}); \
-    libsumo::Helper::addSubscriptionParam(key); \
 }
 
 
@@ -113,12 +113,24 @@ CLASS::getParameterWithKey(const std::string& objectID, const std::string& key) 
 // ===========================================================================
 namespace libsumo {
 /**
-* @class TraCIException
-*/
+ * @class TraCIException
+ * @brief An error which allows to continue
+ */
 class TraCIException : public std::runtime_error {
 public:
     /** constructor */
     TraCIException(std::string what)
+        : std::runtime_error(what) {}
+};
+
+/**
+ * @class FatalTraCIError
+ * @brief An error which is not recoverable
+ */
+class FatalTraCIError : public std::runtime_error {
+public:
+    /** constructor */
+    FatalTraCIError(std::string what)
         : std::runtime_error(what) {}
 };
 
@@ -136,8 +148,8 @@ struct TraCIResult {
 };
 
 /** @struct TraCIPosition
-    * @brief A 3D-position
-    */
+ * @brief A 3D-position
+ */
 struct TraCIPosition : TraCIResult {
     std::string getString() {
         std::ostringstream os;
@@ -148,8 +160,8 @@ struct TraCIPosition : TraCIResult {
 };
 
 /** @struct TraCIRoadPosition
-    * @brief An edgeId, position and laneIndex
-    */
+ * @brief An edgeId, position and laneIndex
+ */
 struct TraCIRoadPosition : TraCIResult {
     std::string getString() {
         std::ostringstream os;
@@ -162,8 +174,8 @@ struct TraCIRoadPosition : TraCIResult {
 };
 
 /** @struct TraCIColor
-    * @brief A color
-    */
+ * @brief A color
+ */
 struct TraCIColor : TraCIResult {
     TraCIColor() : r(0), g(0), b(0), a(255) {}
     TraCIColor(int r, int g, int b, int a = 255) : r(r), g(g), b(b), a(a) {}
@@ -191,8 +203,8 @@ struct TraCILeaderDistance : TraCIResult {
 
 
 /** @struct TraCIPositionVector
-    * @brief A list of positions
-    */
+ * @brief A list of positions
+ */
 typedef std::vector<TraCIPosition> TraCIPositionVector;
 
 
@@ -216,6 +228,12 @@ struct TraCIDouble : TraCIResult {
         os << value;
         return os.str();
     }
+/*    const std::vector<unsigned char> toPacket() const {
+        std::vector<unsigned char> dest(sizeof(value) + 1);
+        dest[0] = (unsigned char)libsumo::TYPE_DOUBLE;
+        std::memcpy(dest.data() + 1, &value, sizeof(value));
+        return dest;
+    }*/
     double value;
 };
 
@@ -226,6 +244,14 @@ struct TraCIString : TraCIResult {
     std::string getString() {
         return value;
     }
+/*    const std::vector<unsigned char> toPacket() const {
+        std::vector<unsigned char> dest(sizeof(value) + 5);
+        dest[0] = (unsigned char)libsumo::TYPE_STRING;
+        const int size = (int)value.size();
+        std::memcpy(dest.data() + 1, &size, sizeof(size));
+        std::memcpy(dest.data() + 5, &value, sizeof(value));
+        return dest;
+    }*/
     std::string value;
 };
 
@@ -537,4 +563,21 @@ public:
     /// @brief time when the reservation was made
     double reservationTime;
 };
+
+struct TraCICollision {
+    /// @brief The ids of the participating vehicles and persons
+    std::string collider;
+    std::string victim;
+    std::string colliderType;
+    std::string victimType;
+    double colliderSpeed;
+    double victimSpeed;
+    /// @brief The type of collision
+    std::string type;
+    /// @brief The lane where the collision happended
+    std::string lane;
+    /// @brief The position of the collision along the lane
+    double pos;
+};
+
 }

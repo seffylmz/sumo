@@ -818,6 +818,7 @@ GNEApplicationWindow::onCmdReload(FXObject*, FXSelector, void*) {
             mySupermodeCommands.hideSupermodeCommands();
             myEditMenuCommands.networkMenuCommands.hideNetworkMenuCommands();
             myEditMenuCommands.demandMenuCommands.hideDemandMenuCommands();
+            myEditMenuCommands.dataMenuCommands.hideDataMenuCommands();
         } else {
             // abort reloading (because "cancel button" was pressed)
             return 1;
@@ -840,6 +841,7 @@ GNEApplicationWindow::onCmdClose(FXObject*, FXSelector, void*) {
         mySupermodeCommands.hideSupermodeCommands();
         myEditMenuCommands.networkMenuCommands.hideNetworkMenuCommands();
         myEditMenuCommands.demandMenuCommands.hideDemandMenuCommands();
+        myEditMenuCommands.dataMenuCommands.hideDataMenuCommands();
     }
     return 1;
 }
@@ -969,7 +971,7 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
         // set settings in view
         if (viewParent->getView() && ec->mySettingsFile != "") {
             GUISettingsHandler settings(ec->mySettingsFile, true, true);
-            std::string settingsName = settings.addSettings(viewParent->getView());
+            settings.addSettings(viewParent->getView());
             viewParent->getView()->addDecals(settings.getDecals());
             settings.applyViewport(viewParent->getView());
             settings.setSnapshots(viewParent->getView());
@@ -2285,6 +2287,7 @@ GNEApplicationWindow::onCmdSaveTLSPrograms(FXObject*, FXSelector, void*) {
         // Start saving TLS Programs
         getApp()->beginWaitCursor();
         try {
+            myNet->computeNetwork(this, true); // GNEChange_TLS does not triggere GNENet:requireRecompute
             myNet->saveTLSPrograms(oc.getString("TLSPrograms-output"));
             myMessageWindow->appendMsg(EVENT_MESSAGE_OCCURRED, "TLS Programs saved in " + oc.getString("TLSPrograms-output") + ".\n");
             myFileMenuCommands.saveTLSPrograms->disable();
@@ -2364,6 +2367,7 @@ GNEApplicationWindow::onCmdSaveTLSProgramsAs(FXObject*, FXSelector, void*) {
     // check tat file is valid
     if (fileWithExtension != "") {
         // change value of "TLSPrograms-files"
+        OptionsCont::getOptions().resetWritable();
         OptionsCont::getOptions().set("TLSPrograms-output", fileWithExtension);
         // save TLS Programs
         return onCmdSaveTLSPrograms(nullptr, 0, nullptr);

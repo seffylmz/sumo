@@ -333,7 +333,7 @@ ODMatrix::writeFlows(const SUMOTime begin, const SUMOTime end,
             //Person flows
             if (pedestrians) {
                 dev.openTag(SUMO_TAG_PERSONFLOW).writeAttr(SUMO_ATTR_ID, prefix + toString(flowName++));
-                dev.writeAttr(SUMO_ATTR_BEGIN, c->begin).writeAttr(SUMO_ATTR_END, c->end);
+                dev.writeAttr(SUMO_ATTR_BEGIN, time2string(c->begin)).writeAttr(SUMO_ATTR_END, time2string(c->end));
                 if (!asProbability) {
                     dev.writeAttr(SUMO_ATTR_NUMBER, int(c->vehicleNumber));
                 } else {
@@ -347,13 +347,13 @@ ODMatrix::writeFlows(const SUMOTime begin, const SUMOTime end,
                     }
                 }
                 dev.openTag(SUMO_TAG_WALK);
-                dev.writeAttr(SUMO_ATTR_FROM, c->origin).writeAttr(SUMO_ATTR_TO, c->destination);
+                dev.writeAttr(SUMO_ATTR_FROM_TAZ, c->origin).writeAttr(SUMO_ATTR_TO_TAZ, c->destination);
                 dev.writeAttr(SUMO_ATTR_ARRIVALPOS, "random");
                 dev.closeTag();
                 dev.closeTag();
             } else if (persontrips) {
                 dev.openTag(SUMO_TAG_PERSONFLOW).writeAttr(SUMO_ATTR_ID, prefix + toString(flowName++));
-                dev.writeAttr(SUMO_ATTR_BEGIN, c->begin).writeAttr(SUMO_ATTR_END, c->end);
+                dev.writeAttr(SUMO_ATTR_BEGIN, time2string(c->begin)).writeAttr(SUMO_ATTR_END, time2string(c->end));
                 if (!asProbability) {
                     dev.writeAttr(SUMO_ATTR_NUMBER, int(c->vehicleNumber));
                 } else {
@@ -367,7 +367,7 @@ ODMatrix::writeFlows(const SUMOTime begin, const SUMOTime end,
                     }
                 }
                 dev.openTag(SUMO_TAG_PERSONTRIP);
-                dev.writeAttr(SUMO_ATTR_FROM, c->origin).writeAttr(SUMO_ATTR_TO, c->destination);
+                dev.writeAttr(SUMO_ATTR_FROM_TAZ, c->origin).writeAttr(SUMO_ATTR_TO_TAZ, c->destination);
                 dev.writeAttr(SUMO_ATTR_ARRIVALPOS, "random");
                 if (modes != "") {
                     dev.writeAttr(SUMO_ATTR_MODES, modes);

@@ -27,13 +27,12 @@
 #include <set>
 #include <fx.h>
 #include <utils/gui/globjects/GUIGlObject.h>
+#include "GUIAppEnum.h"
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
-class GUISUMOViewParent;
-class GNEViewParent;
 class GUIGlChildWindow;
 class GUIGlObjectStorage;
 class GUIGlObject;
@@ -60,7 +59,7 @@ public:
      * @param[in] title The title to use
      * @param[in] glStorage The storage to retrieve ids from
      */
-    GUIDialog_ChooserAbstract(GUIGlChildWindow* windowsParent,
+    GUIDialog_ChooserAbstract(GUIGlChildWindow* windowsParent, int messageId,
                               FXIcon* icon, const FXString& title, const std::vector<GUIGlID>& ids,
                               GUIGlObjectStorage& glStorage);
 
@@ -104,10 +103,17 @@ public:
 
     /// @brief Callback: Toggle locator by name
     long onCmdLocateByName(FXObject*, FXSelector, void*);
+
+    /// @brief Callback: Update list
+    long onCmdUpdate(FXObject*, FXSelector, void*);
     /// @}
 
     /// @brief sets the focus after the window is created to work-around bug in libfox
     void show();
+
+    int getMessageId() const {
+        return myMessageId;
+    }
 
 protected:
     /// @brief fox need this
@@ -128,6 +134,9 @@ protected:
 private:
     /// @brief window parent
     GUIGlChildWindow* myWindowsParent;
+
+    /// @brief the object type being chosen
+    int myMessageId;
 
     /// @brief The list that holds the ids
     FXList* myList;

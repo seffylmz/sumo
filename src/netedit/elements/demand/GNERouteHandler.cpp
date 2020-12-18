@@ -472,6 +472,7 @@ GNERouteHandler::buildStop(GNENet* net, bool undoDemandElements, const SUMOVehic
     // declare pointers to parent elements
     GNEAdditional* stoppingPlace = nullptr;
     GNELane* lane = nullptr;
+    GNEEdge* edge = nullptr;
     // GNEEdge* edge = nullptr;
     SumoXMLTag stopTagType = SUMO_TAG_NOTHING;
     bool validParentDemandElement = true;
@@ -514,15 +515,15 @@ GNERouteHandler::buildStop(GNENet* net, bool undoDemandElements, const SUMOVehic
         lane = net->retrieveLane(stopParameters.lane, false);
         stopTagType = SUMO_TAG_STOP_LANE;
     } else if (stopParameters.edge.size() > 0) {
-        // edge = net->retrieveEdge(stopParameters.lane, false);
+        edge = net->retrieveEdge(stopParameters.edge, false);
         stopTagType = GNE_TAG_PERSONSTOP_EDGE;
     }
     // first check that parent is valid
     if (validParentDemandElement) {
         // check if values are correct
-        if (stoppingPlace && lane) {
-            WRITE_ERROR("A stop must be defined either over a stoppingPlace or over a lane");
-        } else if (!stoppingPlace && !lane) {
+        if (stoppingPlace && lane && edge) {
+            WRITE_ERROR("A stop must be defined either over a stoppingPlace or over a lane or over a edge");
+        } else if (!stoppingPlace && !lane && !edge) {
             WRITE_ERROR("A stop requires a stoppingPlace or a lane");
         } else if (stoppingPlace) {
             // create stop using stopParameters and stoppingPlace
@@ -537,6 +538,20 @@ GNERouteHandler::buildStop(GNENet* net, bool undoDemandElements, const SUMOVehic
                 stoppingPlace->addChildElement(stop);
                 stopParent->addChildElement(stop);
                 stop->incRef("buildStoppingPlaceStop");
+            }
+        } else if (edge) {
+            // create stop using stopParameters and edge
+            GNEDemandElement* stop = new GNEPersonStop(net, stopParent, edge, stopParameters);
+            // add it depending of undoDemandElements
+            if (undoDemandElements) {
+                net->getViewNet()->getUndoList()->p_begin("add " + stop->getTagStr());
+                net->getViewNet()->getUndoList()->add(new GNEChange_DemandElement(stop, true), true);
+                net->getViewNet()->getUndoList()->p_end();
+            } else {
+                net->getAttributeCarriers()->insertDemandElement(stop);
+                edge->addChildElement(stop);
+                stopParent->addChildElement(stop);
+                stop->incRef("buildEdgeStop");
             }
         } else {
             // create stop using stopParameters and lane
@@ -786,6 +801,7 @@ GNERouteHandler::buildPersonPlan(SumoXMLTag tag, GNEDemandElement* personParent,
         case GNE_TAG_PERSONSTOP_EDGE: {
             // check if ride busStop->busStop can be created
             if (fromEdge) {
+                stopParameters.edge = fromEdge->getID();
                 buildPersonStop(viewNet->getNet(), true, personParent, fromEdge, nullptr, stopParameters);
                 return true;
             } else {
@@ -796,6 +812,7 @@ GNERouteHandler::buildPersonPlan(SumoXMLTag tag, GNEDemandElement* personParent,
         case GNE_TAG_PERSONSTOP_BUSSTOP: {
             // check if ride busStop->busStop can be created
             if (fromBusStop) {
+                stopParameters.busstop = fromBusStop->getID();
                 buildPersonStop(viewNet->getNet(), true, personParent, nullptr, fromBusStop, stopParameters);
                 return true;
             } else {
@@ -1794,18 +1811,128 @@ GNERouteHandler::closePerson() {
     myPersonValues.myPersonPlanValues.clear();
 }
 
+
 void
 GNERouteHandler::closePersonFlow() {
     // first check if myVehicleParameter was sucesfully created
     if (myVehicleParameter) {
-        // build person flow
-        buildPersonFlow(myNet, myUndoDemandElements, *myVehicleParameter);
+        // first check if ID is duplicated
+        if (!isPersonIdDuplicated(myNet, myVehicleParameter->id)) {
+            // obtain ptype
+            GNEDemandElement* pType = myNet->retrieveDemandElement(SUMO_TAG_PTYPE, myVehicleParameter->vtypeid, false);
+            if (pType == nullptr) {
+                WRITE_ERROR("Invalid person type '" + myVehicleParameter->vtypeid + "' used in " + toString(myVehicleParameter->tag) + " '" + myVehicleParameter->vtypeid + "'.");
+            } else if (myPersonValues.checkPersonPlanValues()) {
+                // create personFlow using personParameters
+                GNEPerson* person = new GNEPerson(SUMO_TAG_PERSONFLOW, myNet, pType, *myVehicleParameter);
+                // begin undo-list creation
+                myNet->getViewNet()->getUndoList()->p_begin("add " + person->getTagStr());
+                // add person
+                myNet->getViewNet()->getUndoList()->add(new GNEChange_DemandElement(person, true), true);
+                // iterate over all personplan children and add it
+                for (const auto& personPlanValue : myPersonValues.myPersonPlanValues) {
+                    switch (personPlanValue.tag) {
+                    // Person Trips
+                    case GNE_TAG_PERSONTRIP_EDGE_EDGE: {
+                        buildPersonTrip(myNet, true, person, personPlanValue.fromEdge, personPlanValue.toEdge, nullptr, nullptr,
+                            personPlanValue.arrivalPos, personPlanValue.vTypes, personPlanValue.modes);
+                        break;
+                    }
+                    case GNE_TAG_PERSONTRIP_EDGE_BUSSTOP: {
+                        buildPersonTrip(myNet, true, person, personPlanValue.fromEdge, nullptr, nullptr, personPlanValue.toBusStop,
+                            personPlanValue.arrivalPos, personPlanValue.vTypes, personPlanValue.modes);
+                        break;
+                    }
+                    case GNE_TAG_PERSONTRIP_BUSSTOP_EDGE: {
+                        buildPersonTrip(myNet, true, person, nullptr, personPlanValue.toEdge, personPlanValue.fromBusStop, nullptr,
+                            personPlanValue.arrivalPos, personPlanValue.vTypes, personPlanValue.modes);
+                        break;
+                    }
+                    case GNE_TAG_PERSONTRIP_BUSSTOP_BUSSTOP: {
+                        buildPersonTrip(myNet, true, person, nullptr, nullptr, personPlanValue.fromBusStop, personPlanValue.toBusStop,
+                            personPlanValue.arrivalPos, personPlanValue.vTypes, personPlanValue.modes);
+                        break;
+                    }
+                    // Walks
+                    case GNE_TAG_WALK_EDGE_EDGE: {
+                        buildWalk(myNet, true, person, personPlanValue.fromEdge, personPlanValue.toEdge, nullptr, nullptr, {}, nullptr,
+                            personPlanValue.arrivalPos);
+                        break;
+                    }
+                    case GNE_TAG_WALK_EDGE_BUSSTOP: {
+                        buildWalk(myNet, true, person, personPlanValue.fromEdge, nullptr, nullptr, personPlanValue.toBusStop, {}, nullptr,
+                            personPlanValue.arrivalPos);
+                        break;
+                    }
+                    case GNE_TAG_WALK_BUSSTOP_EDGE: {
+                        buildWalk(myNet, true, person, nullptr, personPlanValue.toEdge, personPlanValue.fromBusStop, nullptr, {}, nullptr,
+                            personPlanValue.arrivalPos);
+                        break;
+                    }
+                    case GNE_TAG_WALK_BUSSTOP_BUSSTOP: {
+                        buildWalk(myNet, true, person, nullptr, nullptr, personPlanValue.fromBusStop, personPlanValue.toBusStop, {}, nullptr,
+                            personPlanValue.arrivalPos);
+                        break;
+                    }
+                    case GNE_TAG_WALK_EDGES: {
+                        buildWalk(myNet, true, person, nullptr, nullptr, nullptr, nullptr, personPlanValue.edges, nullptr,
+                            personPlanValue.arrivalPos);
+                        break;
+                    }
+                    case GNE_TAG_WALK_ROUTE: {
+                        buildWalk(myNet, true, person, nullptr, nullptr, nullptr, nullptr, {}, personPlanValue.route,
+                            personPlanValue.arrivalPos);
+                        break;
+                    }
+                    // Rides
+                    case GNE_TAG_RIDE_EDGE_EDGE: {
+                        buildRide(myNet, true, person, personPlanValue.fromEdge, personPlanValue.toEdge, nullptr, nullptr,
+                            personPlanValue.arrivalPos, personPlanValue.lines);
+                        break;
+                    }
+                    case GNE_TAG_RIDE_EDGE_BUSSTOP: {
+                        buildRide(myNet, true, person, personPlanValue.fromEdge, nullptr, nullptr, personPlanValue.toBusStop,
+                            personPlanValue.arrivalPos, personPlanValue.lines);
+                        break;
+                    }
+                    case GNE_TAG_RIDE_BUSSTOP_EDGE: {
+                        buildRide(myNet, true, person, nullptr, personPlanValue.toEdge, personPlanValue.fromBusStop, nullptr,
+                            personPlanValue.arrivalPos, personPlanValue.lines);
+                        break;
+                    }
+                    case GNE_TAG_RIDE_BUSSTOP_BUSSTOP: {
+                        buildRide(myNet, true, person, nullptr, nullptr, personPlanValue.fromBusStop, personPlanValue.toBusStop,
+                            personPlanValue.arrivalPos, personPlanValue.lines);
+                        break;
+                    }
+                    case GNE_TAG_PERSONSTOP_BUSSTOP:
+                    case GNE_TAG_PERSONSTOP_EDGE: {
+                        buildStop(myNet, true, personPlanValue.stopParameters, person);
+                        break;
+                    }
+                    default:
+                        throw InvalidArgument("Invalid person plan tag");
+                    }
+                }
+                // finish creation
+                myNet->getViewNet()->getUndoList()->p_end();
+            }
+        }
     }
+    // clear person plan values
+    myPersonValues.myPersonPlanValues.clear();
 }
+
 
 void
 GNERouteHandler::closeContainer() {
     // currently unused
+}
+
+
+void
+GNERouteHandler::closeContainerFlow() {
+	// currently unused
 }
 
 
@@ -1943,9 +2070,27 @@ GNERouteHandler::addStop(const SUMOSAXAttributes& attrs) {
         stop.parkingArea = pa;
         // set tag
         stop.tag = SUMO_TAG_STOP_PARKINGAREA;
+    } else if (!attrs.getOpt<std::string>(SUMO_ATTR_EDGE, nullptr, myAbort, "").empty()) {
+        // special case for persons
+        if ((myVehicleParameter != nullptr) && !((myVehicleParameter->tag == SUMO_TAG_PERSON) || (myVehicleParameter->tag == SUMO_TAG_PERSONFLOW))) {
+            WRITE_ERROR("Only persons support stops over edges");
+            return;
+        }
+        // check if edge is valid
+        if (myAbort && stop.stopParameters.edge != "") {
+            if (stop.lane == nullptr) {
+                WRITE_ERROR("The edge '" + stop.stopParameters.edge + "' for a stop is not known" + errorSuffix);
+                return;
+            }
+        }
+        // save edge
+        stop.stopParameters.edge = attrs.getOpt<std::string>(SUMO_ATTR_EDGE, nullptr, myAbort, "");
+        stop.edgeStop = myNet->retrieveEdge(stop.stopParameters.edge, false);
+        // set tag
+        stop.tag = GNE_TAG_PERSONSTOP_BUSSTOP;
     } else {
         // no, the lane and the position should be given
-        // get the lane
+        // get the lane and edge
         stop.stopParameters.lane = attrs.getOpt<std::string>(SUMO_ATTR_LANE, nullptr, myAbort, "");
         stop.lane = myNet->retrieveLane(stop.stopParameters.lane, false);
         // check if lane is valid
@@ -2007,10 +2152,10 @@ GNERouteHandler::addWalk(const SUMOSAXAttributes& attrs) {
 }
 
 
-void
-GNERouteHandler::addRide(const SUMOSAXAttributes& attrs) {
-    // add person ride
-    myPersonValues.addPersonValue(myNet, SUMO_TAG_RIDE, attrs);
+void GNERouteHandler::addRideOrTransport(const SUMOSAXAttributes& attrs, bool isRide) {
+	if (isRide) {
+		myPersonValues.addPersonValue(myNet, SUMO_TAG_RIDE, attrs);
+	}
 }
 
 
@@ -2022,12 +2167,6 @@ GNERouteHandler::addPerson(const SUMOSAXAttributes& /*attrs*/) {
 
 void
 GNERouteHandler::addContainer(const SUMOSAXAttributes& /*attrs*/) {
-    // currently unused
-}
-
-
-void
-GNERouteHandler::addTransport(const SUMOSAXAttributes& /*attrs*/) {
     // currently unused
 }
 

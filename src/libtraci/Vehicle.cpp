@@ -23,15 +23,7 @@
 
 #define LIBTRACI 1
 #include <libsumo/Vehicle.h>
-#include "Connection.h"
 #include "Domain.h"
-
-// TODO remove the following line once the implementation is mature
-#ifdef _MSC_VER
-#pragma warning(disable: 4100)
-#else
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif
 
 namespace libtraci {
 
@@ -211,36 +203,28 @@ Vehicle::getPersonIDList(const std::string& vehicleID) {
 std::pair<std::string, double>
 Vehicle::getLeader(const std::string& vehicleID, double dist) {
     tcpip::Storage content;
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(dist);
-    tcpip::Storage& ret = Connection::getActive().doCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::VAR_LEADER, vehicleID, &content);
-    if (Connection::getActive().processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
-        ret.readInt(); // components
-        ret.readUnsignedByte();
-        const std::string leaderID = ret.readString();
-        ret.readUnsignedByte();
-        const double gap = ret.readDouble();
-        return std::make_pair(leaderID, gap);
-    }
-    return std::make_pair("", libsumo::INVALID_DOUBLE_VALUE);
+    Dom::writeTypedDouble(content, dist);
+    tcpip::Storage& ret = Dom::get(libsumo::VAR_LEADER, vehicleID, &content);
+    ret.readInt(); // components
+    ret.readUnsignedByte();
+    const std::string leaderID = ret.readString();
+    ret.readUnsignedByte();
+    const double gap = ret.readDouble();
+    return std::make_pair(leaderID, gap);
 }
 
 
 std::pair<std::string, double>
 Vehicle::getFollower(const std::string& vehicleID, double dist) {
     tcpip::Storage content;
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(dist);
-    tcpip::Storage& ret = Connection::getActive().doCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::VAR_FOLLOWER, vehicleID, &content);
-    if (Connection::getActive().processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
-        ret.readInt(); // components
-        ret.readUnsignedByte();
-        const std::string leaderID = ret.readString();
-        ret.readUnsignedByte();
-        const double gap = ret.readDouble();
-        return std::make_pair(leaderID, gap);
-    }
-    return std::make_pair("", libsumo::INVALID_DOUBLE_VALUE);
+    Dom::writeTypedDouble(content, dist);
+    tcpip::Storage& ret = Dom::get(libsumo::VAR_FOLLOWER, vehicleID, &content);
+    ret.readInt(); // components
+    ret.readUnsignedByte();
+    const std::string leaderID = ret.readString();
+    ret.readUnsignedByte();
+    const double gap = ret.readDouble();
+    return std::make_pair(leaderID, gap);
 }
 
 
@@ -259,12 +243,9 @@ Vehicle::getAccumulatedWaitingTime(const std::string& vehicleID) {
 double
 Vehicle::getAdaptedTraveltime(const std::string& vehicleID, double time, const std::string& edgeID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(2);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(time);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(edgeID);
+    Dom::writeCompound(content, 2);
+    Dom::writeTypedDouble(content, time);
+    Dom::writeTypedString(content, edgeID);
     return Dom::getDouble(libsumo::VAR_EDGE_TRAVELTIME, vehicleID, &content);
 }
 
@@ -272,13 +253,10 @@ Vehicle::getAdaptedTraveltime(const std::string& vehicleID, double time, const s
 double
 Vehicle::getEffort(const std::string& vehicleID, double time, const std::string& edgeID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(2);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(time);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(edgeID);
-    return Dom::getDouble(libsumo::VAR_EDGE_EFFORT, edgeID, &content);
+    Dom::writeCompound(content, 2);
+    Dom::writeTypedDouble(content, time);
+    Dom::writeTypedString(content, edgeID);
+    return Dom::getDouble(libsumo::VAR_EDGE_EFFORT, vehicleID, &content);
 }
 
 
@@ -290,49 +268,47 @@ Vehicle::isRouteValid(const std::string& vehicleID) {
 
 std::vector<std::string>
 Vehicle::getRoute(const std::string& vehicleID) {
-    return Dom::getStringVector(libsumo::VAR_ROUTE, vehicleID);
+    return Dom::getStringVector(libsumo::VAR_EDGES, vehicleID);
 }
 
 
 int
 Vehicle::getSignals(const std::string& vehicleID) {
-    return Dom::getInt(libsumo::VAR_SIGNALS, vehicleID) != 0;
+    return Dom::getInt(libsumo::VAR_SIGNALS, vehicleID);
 }
 
 
 std::vector<libsumo::TraCIBestLanesData>
 Vehicle::getBestLanes(const std::string& vehicleID) {
     std::vector<libsumo::TraCIBestLanesData> result;
-    tcpip::Storage& ret = Connection::getActive().doCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::VAR_BEST_LANES, vehicleID);
-    if (Connection::getActive().processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
-        ret.readInt();
+    tcpip::Storage& ret = Dom::get(libsumo::VAR_BEST_LANES, vehicleID);
+    ret.readInt();
+    ret.readUnsignedByte();
+
+    const int n = ret.readInt(); // number of following edge information
+    for (int i = 0; i < n; ++i) {
+        libsumo::TraCIBestLanesData info;
         ret.readUnsignedByte();
+        info.laneID = ret.readString();
 
-        const int n = ret.readInt(); // number of following edge information
-        for (int i = 0; i < n; ++i) {
-            libsumo::TraCIBestLanesData info;
-            ret.readUnsignedByte();
-            info.laneID = ret.readString();
+        ret.readUnsignedByte();
+        info.length = ret.readDouble();
 
-            ret.readUnsignedByte();
-            info.length = ret.readDouble();
+        ret.readUnsignedByte();
+        info.occupation = ret.readDouble();
 
-            ret.readUnsignedByte();
-            info.occupation = ret.readDouble();
+        ret.readUnsignedByte();
+        info.bestLaneOffset = ret.readByte();
 
-            ret.readUnsignedByte();
-            info.bestLaneOffset = ret.readByte();
+        ret.readUnsignedByte();
+        info.allowsContinuation = (ret.readUnsignedByte() == 1);
 
-            ret.readUnsignedByte();
-            info.allowsContinuation = (ret.readUnsignedByte() == 1);
-
-            ret.readUnsignedByte();
-            const int m = ret.readInt();
-            for (int i = 0; i < m; ++i) {
-                info.continuationLanes.push_back(ret.readString());
-            }
-            result.push_back(info);
+        ret.readUnsignedByte();
+        const int m = ret.readInt();
+        for (int i = 0; i < m; ++i) {
+            info.continuationLanes.push_back(ret.readString());
         }
+        result.push_back(info);
     }
     return result;
 }
@@ -341,28 +317,26 @@ Vehicle::getBestLanes(const std::string& vehicleID) {
 std::vector<libsumo::TraCINextTLSData>
 Vehicle::getNextTLS(const std::string& vehicleID) {
     std::vector<libsumo::TraCINextTLSData> result;
-    tcpip::Storage& ret = Connection::getActive().doCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::VAR_NEXT_TLS, vehicleID);
-    if (Connection::getActive().processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
-        ret.readInt(); // components
-        // number of items
+    tcpip::Storage& ret = Dom::get(libsumo::VAR_NEXT_TLS, vehicleID);
+    ret.readInt(); // components
+    // number of items
+    ret.readUnsignedByte();
+    const int n = ret.readInt();
+    for (int i = 0; i < n; ++i) {
+        libsumo::TraCINextTLSData d;
         ret.readUnsignedByte();
-        const int n = ret.readInt();
-        for (int i = 0; i < n; ++i) {
-            libsumo::TraCINextTLSData d;
-            ret.readUnsignedByte();
-            d.id = ret.readString();
+        d.id = ret.readString();
 
-            ret.readUnsignedByte();
-            d.tlIndex = ret.readInt();
+        ret.readUnsignedByte();
+        d.tlIndex = ret.readInt();
 
-            ret.readUnsignedByte();
-            d.dist = ret.readDouble();
+        ret.readUnsignedByte();
+        d.dist = ret.readDouble();
 
-            ret.readUnsignedByte();
-            d.state = (char)ret.readByte();
+        ret.readUnsignedByte();
+        d.state = (char)ret.readByte();
 
-            result.push_back(d);
-        }
+        result.push_back(d);
     }
     return result;
 }
@@ -375,64 +349,31 @@ Vehicle::getNextStops(const std::string& vehicleID) {
 std::vector<libsumo::TraCINextStopData>
 Vehicle::getStops(const std::string& vehicleID, int limit) {
     std::vector<libsumo::TraCINextStopData> result;
-    tcpip::Storage& ret = Connection::getActive().doCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::VAR_NEXT_STOPS2, vehicleID);
-    if (Connection::getActive().processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
-        ret.readInt(); // components
-        // number of items
-        ret.readUnsignedByte();
-        const int n = ret.readInt();
-        for (int i = 0; i < n; ++i) {
-            libsumo::TraCINextStopData s;
-            ret.readUnsignedByte();
-            s.lane = ret.readString();
-
-            ret.readUnsignedByte();
-            s.endPos = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.stoppingPlaceID = ret.readString();
-
-            ret.readUnsignedByte();
-            s.stopFlags = ret.readInt();
-
-            ret.readUnsignedByte();
-            s.duration = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.until = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.startPos = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.intendedArrival = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.arrival = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.depart = ret.readDouble();
-
-            ret.readUnsignedByte();
-            s.split = ret.readString();
-
-            ret.readUnsignedByte();
-            s.join = ret.readString();
-
-            ret.readUnsignedByte();
-            s.actType = ret.readString();
-
-            ret.readUnsignedByte();
-            s.tripId = ret.readString();
-
-            ret.readUnsignedByte();
-            s.line = ret.readString();
-
-            ret.readUnsignedByte();
-            s.speed = ret.readDouble();
-
-            result.push_back(s);
-        }
+    tcpip::Storage content;
+    Dom::writeTypedInt(content, limit);
+    tcpip::Storage& ret = Dom::get(libsumo::VAR_NEXT_STOPS2, vehicleID, &content);
+    ret.readInt(); // components
+    // number of items
+    const int n = Dom::readCompound(ret);
+    for (int i = 0; i < n; ++i) {
+        libsumo::TraCINextStopData s;
+        s.lane = Dom::readTypedString(ret);
+        s.endPos = Dom::readTypedDouble(ret);
+        s.stoppingPlaceID = Dom::readTypedString(ret);
+        s.stopFlags = Dom::readTypedInt(ret);
+        s.duration = Dom::readTypedDouble(ret);
+        s.until = Dom::readTypedDouble(ret);
+        s.startPos = Dom::readTypedDouble(ret);
+        s.intendedArrival = Dom::readTypedDouble(ret);
+        s.arrival = Dom::readTypedDouble(ret);
+        s.depart = Dom::readTypedDouble(ret);
+        s.split = Dom::readTypedString(ret);
+        s.join = Dom::readTypedString(ret);
+        s.actType = Dom::readTypedString(ret);
+        s.tripId = Dom::readTypedString(ret);
+        s.line = Dom::readTypedString(ret);
+        s.speed = Dom::readTypedDouble(ret);
+        result.emplace_back(s);
     }
     return result;
 }
@@ -451,16 +392,27 @@ Vehicle::getDistance(const std::string& vehicleID) {
 
 
 double
-Vehicle::getDrivingDistance(const std::string& vehicleID, const std::string& edgeID, double position, int /* laneIndex */) {
-    /// XXX
-    return libsumo::INVALID_DOUBLE_VALUE;
+Vehicle::getDrivingDistance(const std::string& vehicleID, const std::string& edgeID, double position, int laneIndex) {
+    tcpip::Storage content;
+    Dom::writeCompound(content, 2);
+    content.writeUnsignedByte(libsumo::POSITION_ROADMAP);
+    content.writeString(edgeID);
+    content.writeDouble(position);
+    content.writeUnsignedByte(laneIndex);
+    content.writeUnsignedByte(libsumo::REQUEST_DRIVINGDIST);
+    return Dom::getDouble(libsumo::DISTANCE_REQUEST, vehicleID, &content);
 }
 
 
 double
 Vehicle::getDrivingDistance2D(const std::string& vehicleID, double x, double y) {
-    /// XXX
-    return libsumo::INVALID_DOUBLE_VALUE;
+    tcpip::Storage content;
+    Dom::writeCompound(content, 2);
+    content.writeUnsignedByte(libsumo::POSITION_2D);
+    content.writeDouble(x);
+    content.writeDouble(y);
+    content.writeUnsignedByte(libsumo::REQUEST_DRIVINGDIST);
+    return Dom::getDouble(libsumo::DISTANCE_REQUEST, vehicleID, &content);
 }
 
 
@@ -509,27 +461,30 @@ Vehicle::getVia(const std::string& vehicleID) {
 
 std::pair<int, int>
 Vehicle::getLaneChangeState(const std::string& vehicleID, int direction) {
-    // XXX
-    //tcpip::Storage content;
-    //content.writeByte(libsumo::TYPE_INTEGER);
-    //content.writeInt(direction);
-    //Connection::getActive().doCommand(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::CMD_CHANGELANE, vehicleID, &content);
-    //if (Connection::getActive().processGet(libsumo::CMD_GET_VEHICLE_VARIABLE, libsumo::TYPE_COMPOUND)) {
-    //    ret.readInt(); // components
-    //    ret.readUnsignedByte();
-    //    const int stateWithoutTraCI = ret.readInt();
-    //    ret.readUnsignedByte();
-    //    const int state = ret.readInt();
-    //    return std::make_pair(stateWithoutTraCI, state);
-    //}
-    return std::make_pair(libsumo::INVALID_INT_VALUE, libsumo::INVALID_INT_VALUE);
+    tcpip::Storage content;
+    Dom::writeTypedInt(content, direction);
+    tcpip::Storage& ret = Dom::get(libsumo::CMD_CHANGELANE, vehicleID, &content);
+    ret.readInt(); // components
+    ret.readUnsignedByte();
+    const int stateWithoutTraCI = ret.readInt();
+    ret.readUnsignedByte();
+    const int state = ret.readInt();
+    return std::make_pair(stateWithoutTraCI, state);
 }
 
 
 std::vector<std::pair<std::string, double> >
 Vehicle::getNeighbors(const std::string& vehicleID, const int mode) {
     std::vector<std::pair<std::string, double> > neighs;
-    // XXX
+    tcpip::Storage content;
+    content.writeUnsignedByte(libsumo::TYPE_UBYTE);
+    content.writeUnsignedByte(mode);
+    tcpip::Storage& ret = Dom::get(libsumo::VAR_NEIGHBORS, vehicleID, &content);
+    const int items = ret.readInt(); // components
+    for (int i = 0; i < items; i++) {
+        const std::string neighID = ret.readString();
+        neighs.emplace_back(neighID, ret.readDouble());
+    }
     return neighs;
 }
 
@@ -537,18 +492,12 @@ Vehicle::getNeighbors(const std::string& vehicleID, const int mode) {
 double
 Vehicle::getFollowSpeed(const std::string& vehicleID, double speed, double gap, double leaderSpeed, double leaderMaxDecel, const std::string& leaderID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(5);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(speed);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(gap);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(leaderSpeed);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(leaderMaxDecel);
-    content.writeByte(libsumo::TYPE_STRING);
-    content.writeString(leaderID);
+    Dom::writeCompound(content, 5);
+    Dom::writeTypedDouble(content, speed);
+    Dom::writeTypedDouble(content, gap);
+    Dom::writeTypedDouble(content, leaderSpeed);
+    Dom::writeTypedDouble(content, leaderMaxDecel);
+    Dom::writeTypedString(content, leaderID);
     return Dom::getDouble(libsumo::VAR_FOLLOW_SPEED, vehicleID, &content);
 }
 
@@ -556,16 +505,11 @@ Vehicle::getFollowSpeed(const std::string& vehicleID, double speed, double gap, 
 double
 Vehicle::getSecureGap(const std::string& vehicleID, double speed, double leaderSpeed, double leaderMaxDecel, const std::string& leaderID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(4);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(speed);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(leaderSpeed);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(leaderMaxDecel);
-    content.writeByte(libsumo::TYPE_STRING);
-    content.writeString(leaderID);
+    Dom::writeCompound(content, 4);
+    Dom::writeTypedDouble(content, speed);
+    Dom::writeTypedDouble(content, leaderSpeed);
+    Dom::writeTypedDouble(content, leaderMaxDecel);
+    Dom::writeTypedString(content, leaderID);
     return Dom::getDouble(libsumo::VAR_SECURE_GAP, vehicleID, &content);
 }
 
@@ -573,12 +517,9 @@ Vehicle::getSecureGap(const std::string& vehicleID, double speed, double leaderS
 double
 Vehicle::getStopSpeed(const std::string& vehicleID, const double speed, double gap) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(2);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(speed);
-    content.writeByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(gap);
+    Dom::writeCompound(content, 2);
+    Dom::writeTypedDouble(content, speed);
+    Dom::writeTypedDouble(content, gap);
     return Dom::getDouble(libsumo::VAR_STOP_SPEED, vehicleID, &content);
 }
 
@@ -595,10 +536,7 @@ Vehicle::getStopArrivalDelay(const std::string& vehicleID) {
 std::vector<std::string>
 Vehicle::getTaxiFleet(int taxiState) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(1);
-    content.writeByte(libsumo::TYPE_INTEGER);
-    content.writeInt(taxiState);
+    Dom::writeTypedInt(content, taxiState);
     return Dom::getStringVector(libsumo::VAR_TAXI_FLEET, "", &content);
 }
 
@@ -727,23 +665,15 @@ Vehicle::setStop(const std::string& vehicleID,
                  double startPos,
                  double until) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(7);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(edgeID);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(pos);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeByte(laneIndex);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(duration);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeByte(flags);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(startPos);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(until);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_STOP, vehicleID, &content);
+    Dom::writeCompound(content, 7);
+    Dom::writeTypedString(content, edgeID);
+    Dom::writeTypedDouble(content, pos);
+    Dom::writeTypedByte(content, laneIndex);
+    Dom::writeTypedDouble(content, duration);
+    Dom::writeTypedByte(content, flags);
+    Dom::writeTypedDouble(content, startPos);
+    Dom::writeTypedDouble(content, until);
+    Dom::set(libsumo::CMD_STOP, vehicleID, &content);
 }
 
 
@@ -758,25 +688,16 @@ Vehicle::replaceStop(const std::string& vehicleID,
                      double startPos,
                      double until) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(8);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(edgeID);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(pos);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeByte(laneIndex);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(duration);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeByte(flags);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(startPos);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(until);
-    content.writeUnsignedByte(libsumo::TYPE_INTEGER);
-    content.writeDouble(nextStopIndex);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_REPLACE_STOP, vehicleID, &content);
+    Dom::writeCompound(content, 8);
+    Dom::writeTypedString(content, edgeID);
+    Dom::writeTypedDouble(content, pos);
+    Dom::writeTypedByte(content, laneIndex);
+    Dom::writeTypedDouble(content, duration);
+    Dom::writeTypedInt(content, flags);
+    Dom::writeTypedDouble(content, startPos);
+    Dom::writeTypedDouble(content, until);
+    Dom::writeTypedInt(content, nextStopIndex);
+    Dom::set(libsumo::CMD_REPLACE_STOP, vehicleID, &content);
 }
 
 
@@ -788,9 +709,8 @@ Vehicle::rerouteParkingArea(const std::string& vehicleID, const std::string& par
 void
 Vehicle::resume(const std::string& vehicleID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(0);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_RESUME, vehicleID, &content);
+    Dom::writeCompound(content, 0);
+    Dom::set(libsumo::CMD_RESUME, vehicleID, &content);
 }
 
 
@@ -803,27 +723,20 @@ Vehicle::changeTarget(const std::string& vehicleID, const std::string& edgeID) {
 void
 Vehicle::changeLane(const std::string& vehicleID, int laneIndex, double duration) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(2);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeInt(laneIndex);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(duration);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_CHANGELANE, vehicleID, &content);
+    Dom::writeCompound(content, 2);
+    Dom::writeTypedByte(content, laneIndex);
+    Dom::writeTypedDouble(content, duration);
+    Dom::set(libsumo::CMD_CHANGELANE, vehicleID, &content);
 }
 
 void
 Vehicle::changeLaneRelative(const std::string& vehicleID, int indexOffset, double duration) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(3);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeInt(indexOffset);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(duration);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeDouble(1);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_CHANGELANE, vehicleID, &content);
+    Dom::writeCompound(content, 3);
+    Dom::writeTypedByte(content, indexOffset);
+    Dom::writeTypedDouble(content, duration);
+    Dom::writeTypedByte(content, 1);
+    Dom::set(libsumo::CMD_CHANGELANE, vehicleID, &content);
 }
 
 
@@ -850,41 +763,26 @@ Vehicle::add(const std::string& vehicleID,
              int personCapacity,
              int personNumber) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(14);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(routeID);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(typeID);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(depart);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(departLane);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(departPos);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(departSpeed);
+    Dom::writeCompound(content, 14);
+    Dom::writeTypedString(content, routeID);
+    Dom::writeTypedString(content, typeID);
+    Dom::writeTypedString(content, depart);
+    Dom::writeTypedString(content, departLane);
+    Dom::writeTypedString(content, departPos);
+    Dom::writeTypedString(content, departSpeed);
 
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(arrivalLane);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(arrivalPos);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(arrivalSpeed);
+    Dom::writeTypedString(content, arrivalLane);
+    Dom::writeTypedString(content, arrivalPos);
+    Dom::writeTypedString(content, arrivalSpeed);
 
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(fromTaz);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(toTaz);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(line);
+    Dom::writeTypedString(content, fromTaz);
+    Dom::writeTypedString(content, toTaz);
+    Dom::writeTypedString(content, line);
 
-    content.writeUnsignedByte(libsumo::TYPE_INTEGER);
-    content.writeInt(personCapacity);
-    content.writeUnsignedByte(libsumo::TYPE_INTEGER);
-    content.writeInt(personNumber);
+    Dom::writeTypedInt(content, personCapacity);
+    Dom::writeTypedInt(content, personNumber);
 
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::ADD_FULL, vehicleID, &content);
+    Dom::set(libsumo::ADD_FULL, vehicleID, &content);
 }
 
 
@@ -892,53 +790,36 @@ void
 Vehicle::moveToXY(const std::string& vehicleID, const std::string& edgeID, const int laneIndex,
                   const double x, const double y, double angle, const int keepRoute) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(6);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(edgeID);
-    content.writeUnsignedByte(libsumo::TYPE_INTEGER);
-    content.writeInt(laneIndex);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(x);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(y);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(angle);
-    content.writeUnsignedByte(libsumo::TYPE_BYTE);
-    content.writeByte(keepRoute);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::MOVE_TO_XY, vehicleID, &content);
+    Dom::writeCompound(content, 6);
+    Dom::writeTypedString(content, edgeID);
+    Dom::writeTypedInt(content, laneIndex);
+    Dom::writeTypedDouble(content, x);
+    Dom::writeTypedDouble(content, y);
+    Dom::writeTypedDouble(content, angle);
+    Dom::writeTypedByte(content, keepRoute);
+    Dom::set(libsumo::MOVE_TO_XY, vehicleID, &content);
 }
 
 void
 Vehicle::slowDown(const std::string& vehicleID, double speed, double duration) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(2);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(speed);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(duration);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_SLOWDOWN, vehicleID, &content);
+    Dom::writeCompound(content, 2);
+    Dom::writeTypedDouble(content, speed);
+    Dom::writeTypedDouble(content, duration);
+    Dom::set(libsumo::CMD_SLOWDOWN, vehicleID, &content);
 }
 
 void
 Vehicle::openGap(const std::string& vehicleID, double newTimeHeadway, double newSpaceHeadway, double duration, double changeRate, double maxDecel, const std::string& referenceVehID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(6);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(newTimeHeadway);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(newSpaceHeadway);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(duration);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(changeRate);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(maxDecel);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(referenceVehID);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_OPENGAP, vehicleID, &content);
+    Dom::writeCompound(content, 6);
+    Dom::writeTypedDouble(content, newTimeHeadway);
+    Dom::writeTypedDouble(content, newSpaceHeadway);
+    Dom::writeTypedDouble(content, duration);
+    Dom::writeTypedDouble(content, changeRate);
+    Dom::writeTypedDouble(content, maxDecel);
+    Dom::writeTypedString(content, referenceVehID);
+    Dom::set(libsumo::CMD_OPENGAP, vehicleID, &content);
 }
 
 void
@@ -1002,7 +883,8 @@ Vehicle::setRoute(const std::string& vehicleID, const std::vector<std::string>& 
 
 void
 Vehicle::updateBestLanes(const std::string& vehicleID) {
-    // XXX
+    tcpip::Storage content;
+    Dom::set(libsumo::VAR_UPDATE_BESTLANES, vehicleID, &content);
 }
 
 
@@ -1012,31 +894,21 @@ Vehicle::setAdaptedTraveltime(const std::string& vehicleID, const std::string& e
     tcpip::Storage content;
     if (time == libsumo::INVALID_DOUBLE_VALUE) {
         // reset
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(1);
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(edgeID);
+        Dom::writeCompound(content, 1);
+        Dom::writeTypedString(content, edgeID);
     } else if (begSeconds == libsumo::INVALID_DOUBLE_VALUE) {
         // set value for the whole simulation
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(2);
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(edgeID);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(time);
+        Dom::writeCompound(content, 2);
+        Dom::writeTypedString(content, edgeID);
+        Dom::writeTypedDouble(content, time);
     } else {
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(4);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(begSeconds);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(endSeconds);
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(edgeID);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(time);
+        Dom::writeCompound(content, 4);
+        Dom::writeTypedDouble(content, begSeconds);
+        Dom::writeTypedDouble(content, endSeconds);
+        Dom::writeTypedString(content, edgeID);
+        Dom::writeTypedDouble(content, time);
     }
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_EDGE_TRAVELTIME, vehicleID, &content);
+    Dom::set(libsumo::VAR_EDGE_TRAVELTIME, vehicleID, &content);
 }
 
 
@@ -1046,31 +918,21 @@ Vehicle::setEffort(const std::string& vehicleID, const std::string& edgeID,
     tcpip::Storage content;
     if (effort == libsumo::INVALID_DOUBLE_VALUE) {
         // reset
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(1);
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(edgeID);
+        Dom::writeCompound(content, 1);
+        Dom::writeTypedString(content, edgeID);
     } else if (begSeconds == libsumo::INVALID_DOUBLE_VALUE) {
         // set value for the whole simulation
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(2);
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(edgeID);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(effort);
+        Dom::writeCompound(content, 2);
+        Dom::writeTypedString(content, edgeID);
+        Dom::writeTypedDouble(content, effort);
     } else {
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(4);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(begSeconds);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(endSeconds);
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(edgeID);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(effort);
+        Dom::writeCompound(content, 4);
+        Dom::writeTypedDouble(content, begSeconds);
+        Dom::writeTypedDouble(content, endSeconds);
+        Dom::writeTypedString(content, edgeID);
+        Dom::writeTypedDouble(content, effort);
     }
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_EDGE_EFFORT, vehicleID, &content);
+    Dom::set(libsumo::VAR_EDGE_EFFORT, vehicleID, &content);
 }
 
 
@@ -1078,18 +940,16 @@ void
 Vehicle::rerouteTraveltime(const std::string& vehicleID, const bool currentTravelTimes) {
     // UNUSED_PARAMETER(currentTravelTimes); // !!! see #5943
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(0);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_REROUTE_TRAVELTIME, vehicleID, &content);
+    Dom::writeCompound(content, 0);
+    Dom::set(libsumo::CMD_REROUTE_TRAVELTIME, vehicleID, &content);
 }
 
 
 void
 Vehicle::rerouteEffort(const std::string& vehicleID) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(0);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::CMD_REROUTE_EFFORT, vehicleID, &content);
+    Dom::writeCompound(content, 0);
+    Dom::set(libsumo::CMD_REROUTE_EFFORT, vehicleID, &content);
 }
 
 
@@ -1102,15 +962,11 @@ Vehicle::setSignals(const std::string& vehicleID, int signals) {
 void
 Vehicle::moveTo(const std::string& vehicleID, const std::string& laneID, double position, int reason) {
     tcpip::Storage content;
-    content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-    content.writeInt(3);
-    content.writeUnsignedByte(libsumo::TYPE_STRING);
-    content.writeString(laneID);
-    content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-    content.writeDouble(position);
-    content.writeUnsignedByte(libsumo::TYPE_INTEGER);
-    content.writeInt(reason);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_MOVE_TO, vehicleID, &content);
+    Dom::writeCompound(content, 3);
+    Dom::writeTypedString(content, laneID);
+    Dom::writeTypedDouble(content, position);
+    Dom::writeTypedInt(content, reason);
+    Dom::set(libsumo::VAR_MOVE_TO, vehicleID, &content);
 }
 
 
@@ -1132,7 +988,7 @@ Vehicle::remove(const std::string& vehicleID, char reason) {
     tcpip::Storage content;
     content.writeUnsignedByte(libsumo::TYPE_BYTE);
     content.writeUnsignedByte(reason);
-    Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::REMOVE, vehicleID, &content);
+    Dom::set(libsumo::REMOVE, vehicleID, &content);
 }
 
 
@@ -1265,37 +1121,21 @@ Vehicle::setLateralAlignment(const std::string& vehicleID, const std::string& la
 void
 Vehicle::highlight(const std::string& vehicleID, const libsumo::TraCIColor& col, double size, const int alphaMax, const double duration, const int type) {
     tcpip::Storage content;
+    Dom::writeCompound(content, alphaMax > 0 ? 5 : 2);
+    content.writeUnsignedByte(libsumo::TYPE_COLOR);
+    content.writeUnsignedByte(col.r);
+    content.writeUnsignedByte(col.g);
+    content.writeUnsignedByte(col.b);
+    content.writeUnsignedByte(col.a);
+    Dom::writeTypedDouble(content, size);
     if (alphaMax > 0) {
-        //self._setCmd(tc.VAR_HIGHLIGHT, vehID, "tcdBdB", 5, color, size, alphaMax, duration, type)
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(5);
-        content.writeUnsignedByte(libsumo::TYPE_COLOR);
-        content.writeUnsignedByte(col.r);
-        content.writeUnsignedByte(col.g);
-        content.writeUnsignedByte(col.b);
-        content.writeUnsignedByte(col.a);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(size);
-        content.writeUnsignedByte(libsumo::TYPE_BYTE);
-        content.writeByte(alphaMax);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(size);
-        content.writeUnsignedByte(libsumo::TYPE_BYTE);
-        content.writeByte(type);
-        Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_HIGHLIGHT, vehicleID, &content);
-    } else {
-        //self._setCmd(tc.VAR_HIGHLIGHT, vehID, "tcd", 2, color, size)
-        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
-        content.writeInt(2);
-        content.writeUnsignedByte(libsumo::TYPE_COLOR);
-        content.writeUnsignedByte(col.r);
-        content.writeUnsignedByte(col.g);
-        content.writeUnsignedByte(col.b);
-        content.writeUnsignedByte(col.a);
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(size);
-        Connection::getActive().doCommand(libsumo::CMD_SET_VEHICLE_VARIABLE, libsumo::VAR_HIGHLIGHT, vehicleID, &content);
+        content.writeUnsignedByte(libsumo::TYPE_UBYTE);
+        content.writeUnsignedByte(alphaMax);
+        Dom::writeTypedDouble(content, duration);
+        content.writeUnsignedByte(libsumo::TYPE_UBYTE);
+        content.writeUnsignedByte(type);
     }
+    Dom::set(libsumo::VAR_HIGHLIGHT, vehicleID, &content);
 }
 
 void
@@ -1305,12 +1145,15 @@ Vehicle::dispatchTaxi(const std::string& vehicleID,  const std::vector<std::stri
 
 
 void
-Vehicle::subscribeLeader(const std::string& vehicleID, double dist, double beginTime, double endTime) {
+Vehicle::subscribeLeader(const std::string& vehicleID, double dist, double begin, double end) {
+    subscribe(vehicleID, std::vector<int>({ libsumo::VAR_LEADER }), begin, end,
+              libsumo::TraCIResults({ {libsumo::VAR_LEADER, std::make_shared<libsumo::TraCIDouble>(dist)} }));
 }
 
 
 void
 Vehicle::addSubscriptionFilterLanes(const std::vector<int>& lanes, bool noOpposite, double downstreamDist, double upstreamDist) {
+    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_LANES);
 }
 
 

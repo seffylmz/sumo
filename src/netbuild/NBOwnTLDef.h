@@ -266,6 +266,11 @@ protected:
                                    std::vector<bool>& rightTurnConflicts,
                                    std::vector<bool>& mergeConflicts);
 
+    /// @brief prevent green and red from the same lane
+    std::string correctMixed(std::string state, const EdgeVector& fromEdges,
+                             const std::vector<int>& fromLanes,
+                             bool& buildMixedGreenPhase, std::vector<bool>& mixedGreen);
+
     /// @brief fix states in regard to custom crossing indices
     void checkCustomCrossingIndices(NBTrafficLightLogic* logic) const;
 
@@ -280,6 +285,9 @@ protected:
 
     /// @brief compute time to clear all vehicles from within an alternateOneWay layout
     SUMOTime computeEscapeTime(const std::string& state, const EdgeVector& fromEdges, const EdgeVector& toEdges) const;
+
+    /// @brief check whether there is a straight connection from this edge
+    bool hasStraightConnection(const NBEdge* fromEdge);
 
     /** @class edge_by_incoming_priority_sorter
      * @brief Sorts edges by their priority within the node they end at

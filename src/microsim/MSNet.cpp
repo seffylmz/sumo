@@ -464,11 +464,41 @@ MSNet::generateStatistics(SUMOTime start) {
                 msg << " Jammed: " << myPersonControl->getJammedNumber() << "\n";
             }
         }
+		if (myContainerControl != nullptr && myContainerControl->getLoadedNumber() > 0) {
+			msg << "Containers: " << "\n"
+				<< " Inserted: " << myContainerControl->getLoadedNumber() << "\n"
+				<< " Running: " << myContainerControl->getRunningNumber() << "\n";
+			if (myContainerControl->getJammedNumber() > 0) {
+				msg << " Jammed: " << myContainerControl->getJammedNumber() << "\n";
+			}
+		}
     }
     if (OptionsCont::getOptions().getBool("duration-log.statistics")) {
         msg << MSDevice_Tripinfo::printStatistics();
     }
     return msg.str();
+}
+
+void
+MSNet::writeCollisions() const {
+    OutputDevice& od = OutputDevice::getDeviceByOption("collision-output");
+    for (const auto& item : myCollisions) {
+        for (const auto& c : item.second) {
+            od.openTag("collision");
+            od.writeAttr("time", time2string(getCurrentTimeStep()));
+            od.writeAttr("type", c.type);
+            od.writeAttr("lane", c.lane->getID());
+            od.writeAttr("pos", c.pos);
+            od.writeAttr("collider", item.first);
+            od.writeAttr("victim", c.victim);
+            od.writeAttr("colliderType", c.colliderType);
+            od.writeAttr("victimType", c.victimType);
+            od.writeAttr("colliderSpeed", c.colliderSpeed);
+            od.writeAttr("victimSpeed", c.victimSpeed);
+            od.closeTag();
+        }
+    }
+    
 }
 
 void
@@ -584,6 +614,7 @@ MSNet::simulationStep() {
     MSRoutingEngine::waitForAll();
 #endif
     if (MSGlobals::gCheck4Accidents) {
+        myCollisions.clear();
         myEdges->detectCollisions(myStep, STAGE_EVENTS);
     }
     // check whether the tls programs need to be switched
@@ -973,6 +1004,10 @@ MSNet::writeOutput() {
             dev->writeOutput();
         }
     }
+
+    if (OptionsCont::getOptions().isSet("collision-output")) {
+        writeCollisions();
+    }
 }
 
 
@@ -1077,6 +1112,28 @@ MSNet::informVehicleStateListener(const SUMOVehicle* const vehicle, VehicleState
     }
 }
 
+bool
+MSNet::registerCollision(const SUMOTrafficObject* collider, const SUMOTrafficObject* victim, const std::string& collisionType, const MSLane* lane, double pos) {
+    auto it = myCollisions.find(collider->getID());
+    if (it != myCollisions.end()) {
+        for (const Collision& old : it->second) {
+            if (old.victim == victim->getID()) {
+                return false;
+            }
+        }
+    }
+    Collision c;
+    c.victim = victim->getID();
+    c.colliderType = collider->getVehicleType().getID();
+    c.victimType = victim->getVehicleType().getID();
+    c.colliderSpeed = collider->getSpeed();
+    c.victimSpeed = victim->getSpeed();
+    c.type = collisionType;
+    c.lane = lane;
+    c.pos = pos;
+    myCollisions[collider->getID()].push_back(c);
+    return true;
+}
 
 bool
 MSNet::addStoppingPlace(const SumoXMLTag category, MSStoppingPlace* stop) {

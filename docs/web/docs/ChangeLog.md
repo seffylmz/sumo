@@ -3,6 +3,74 @@ title: ChangeLog
 permalink: /ChangeLog/
 ---
 
+## Git Master
+
+### Bugfixes
+- Simulation
+  - Fixed disappearing vehicle when transporting containers with taxi. Issue #7893
+  - Fixed collisions between pedestrians and vehicles on shared space #7960
+  - Vehicles with low (desired) decel value will no longer perform an emergency stop on after being when caught in the "Yellow Light Dilemma Zone". Instead they will brake with decel **--tls.yellow.min-decel** (default: 3) as long as they have a sufficiently high emergencyDecel value. Issue #7956
+  - Sublane model fixes
+    - Fixed deadlock in roundabout. Issue #7935
+    - Fixed invalid deceleration at intersection due to misinterpreting lateral position of approaching foes #7925
+    - Fixed collision in sublane model after parallel internal edges (requries rebuilding the network) #3619
+  
+- sumo-gui
+  - Fixed long pause on right-click in large networks. Issue #7927 (Regression in 1.4.0)
+  - Routes for vehicles with dark color are no longer colored black #7934
+  
+- netedit
+  - Fixed invalid E2 detector shape #7895 (Regression in 1.7.0)
+  - Access elements can only be placed on lane that permit pedestrian traffic. Issue #5893
+  - Fixed issues when adding stops in person plan. #7829
+  - Fixed issue where written network (with only invalid crossings) is modified upon reloading #7765
+  - In Traffic Light mode, cycle time is now updated, when new phase is inserted #7961
+
+- netconvert
+  - Fixed invalid signal plans in network with unusual geometry. Issue #7915
+
+- od2trips
+  - Fixed invalid begin and end times when writting personFlows. Issue #7885
+  
+- TraCI
+  - Function 'vehicle.getSpeedWithoutTraCI' now returns original model speeds after calling moveToXY. Issue #7190
+  - Fixed issues with mapping location and speed for funnction 'person.moveToXY' . Issue #7907, #7908
+  - Fixed crash when switching to carFollowModel that requries vehicle variables. Issue #7949
+  
+- Tools
+  - Fixed error in xml2csv.py when loading files names consists only of numbers. Issue #7910
+  - Fixed invalid routes when [importing MATSim plans](Tools/Import/MATSim.md) #7948
+  
+  
+### Enhancements
+- Simulation
+  - Added stop atttribute 'permitted' to restrict persons and containers that can enter vehicle at stop #7869
+  - In tripinfo-output, the access stage of a person plan now includes attributes depart and arrival. Issue #7822
+  - Detectors for actuated traffic lights can now be selectively disabled by setting the special id 'NO_DETECTOR' for a lane. #7919
+  - Setting vehicle attribute `arrivalLane="random"` and `"first"` is now supported. Issue #7932
+  - Added new option **--collision-output** to write information on collisions to an XML file. Issue #7990.
+  
+- sumo-gui
+  - Random color for containers is now supported. Issue #7941
+  - Added 'Update' button to object selection dialogs to refresh the object list. Issue #7942
+  
+- Netconvert
+  - Added option **--tls.no-mixed** which prevents building phases where different connections from the same lane have green and red signals. Issue #7821
+  - Element `<laneType>` is now supported in an edge `<type>` to pre-configure speed, width and permissions for individual lanes. Issue #7791
+  
+- TraCI
+  - Added function 'traci.simulation.getCollisions' to retrieve a list of collision objects for the current time step. This also includes collisions between vehicles and pedestrians. Issue #7728
+
+- Tools
+  - The tool [gridDistricts.py](Tools/District.md#griddistrictspy) can be used to generated a grid of districts (TAZs) for a given network. #7946
+
+### Other
+
+- Netconvert
+  - Parallel turn lanes are no longer written as distinct edges but are instead written as multi-lane edge with different lane lenghts. As before, lane-changing on an intersection is not permitted on a turn lane.
+  - Written network version is now 1.9.0
+  
+
 ## Version 1.8.0 (02.12.2020)
 
 ### Bugfixes
@@ -39,6 +107,7 @@ permalink: /ChangeLog/
     - Fixed invalid odometer value after loading state. Issue #7827
     - Fixed invalid reroute count after loading state. Issue #7811
     - Fixed accumulated waitingtime after loading state. Issue #7657
+    - Fixed invalid randomness when loading state saved with option **--save-state.rng**. Issue #7731
   - railway fixes
     - Fixed unwanted influence by stopped trains on insertion and rail signal operation. Issue #7527, #7529 (regression in 1.7.0)
     - Fixed train collision due to unsafe rail signal state. Issue #7534
@@ -82,7 +151,7 @@ permalink: /ChangeLog/
   - Fixed dotted contour of inspected edges in left-hand networks. Issue #7675 (regression in 1.7.0)
   - Fixed dotted contour of bidi rail edges in spread mode. Issue #7569
   - Fixed text angle of name attribute for additional network objects. Issue #6516
-  - Flow and stack labels no scale with vehicle exaggeration. Issue #6541
+  - Flow and stack labels now scale with vehicle exaggeration. Issue #6541
   - Inspecting tls-controlled crossings now always shows the corresponding tls link index. Issue #7747
   - Link indices of connections and crossings can now be reset to default using value '-1'. Issue #4540
   - Fixed invalid warning about unsaved data. Issue #5971
@@ -110,8 +179,7 @@ permalink: /ChangeLog/
   
 - Tools
   - osmWebWizard search now works for IE users. Issue #6119
-  - batch files generated by osmWebWizard on linux can now be used on windows. Issue #7667
-  - added osmWebWizard option 
+  - batch files generated by osmWebWizard on linux can now be used on windows. Issue #7667  
   - Tools that support option **-C** for saving their configuration now use proper xml-escaping for their option values. Issue #7633
   - [routeSampler.py](Tools/Turns.md#routesaSimulation/Meso.html#configuration_by_edge_typempler.py) no longer includes routes which do not pass any counting location when using option **--optimize**. This also speeds up execution.Issue #6723
 
@@ -124,13 +192,14 @@ permalink: /ChangeLog/
   - Pedestrian simulation will no longer deadlock on narrow sidewalks (< 1.28m) Issue #7746
   - Person journey can now include transfer from walking-only edge to car-only edge at junction #7779
   - Option **--ride.stop-tolerance** now applies to all kinds of stops. #6204
-  - Add **--fcd-output.max-leader-distance** which will add attributes `leaderGap, leaderSpeed, leaderID` to fcd-output whenever a vehicle has a leader within the given distance #7788
+  - Added option **--fcd-output.max-leader-distance** which will add attributes `leaderGap, leaderSpeed, leaderID` to fcd-output whenever a vehicle has a leader within the given distance #7788
   - Stop for vehicles and persons can now be specified using attribute 'edge' instead of 'lane'. Vehicles will stop on the rightmost lane that allows their vehicle class (whereas persons ignored the lane index anyway). Issue #5443
   - Taxi device can now be used to simulate on-demand container transport. Issue #7815
-  - Option **--fcd-output.params** now supports optional output of device parameters and model parameters with the same [prefix codes as TraCI](TraCI/Vehicle_Value_Retrieval.md#device_and_lanechangemodel_parameter_retrieval_0x7e). Issue #7851  
+  - Option **--fcd-output.params** now supports optional output of device parameters and model parameters with the same [prefix codes as TraCI](TraCI/Vehicle_Value_Retrieval.md#device_and_lanechangemodel_parameter_retrieval_0x7e). Issue #7851
+  - Option **--fcd-output.params caccVehicleMode** now outputs the vehicle mode of CACC vehicles, which can be one of `CC`, `ACC`, `CACC`, `CACC_GAP_CL` (gap-closing), `CACC_GAP`, `CACC_CA` (collision avoidance). Issue #6700
   
 - meso
-  - Model parameters can now be [customized](Simulation/Meso.md#configuration_by_edge_type) for each edge type vial additional file input. Issue #7243
+  - Model parameters can now be [customized](Simulation/Meso.md#configuration_by_edge_type) for each edge type via additional file input. Issue #7243
   - Stop handling is now similar to microsimulation, pedestrians walk to the correct location and are picked up there, stopinfo is written
   
 - netedit
@@ -172,9 +241,10 @@ permalink: /ChangeLog/
   - [routeSampler.py](Tools/Turns.md#routesampler.py) now supports option **--minimize-vehicles FLOAT** which allows configuring a preference for fewer generated vehicles (where each vehicle passes multiple counting locations). Issue #7635
   - Added new tool [osmTaxiStop.py]() to import taxi stands from OSM data. Issue #7729
   - Added new tool [checkStopOrder.py](Tools/Routes.md#checkstoporderpy) to detect inconsistent times in a public transport schedule. Issue #7458
+  - added osmWebWizard option **--output** to set a custom output directory. Issue #7672
 
 ### Other
-- Changed osmWebWizardd default for **--device.rerouting.adaptation-interval** from 1 to 10 to increase performance. The value of **--adaptation-steps** was reduced from 180 to 18 so that the time over which speeds are averaged remains at 180s (with fewer samples). Issue #7640
+- Changed osmWebWizard default for **--device.rerouting.adaptation-interval** from 1 to 10 to increase performance. The value of **--adaptation-steps** was reduced from 180 to 18 so that the time over which speeds are averaged remains at 180s (with fewer samples). Issue #7640
 - [macOS launchers](Downloads.md#application_launchers) added for **sumo-gui**, **netedit** and the **osmWebWizard**. This allows to set **sumo-gui** as the default application to open `.sumocfg` files (to open a simulation by just double clicking a file) on macOS.
 - extractTest.py now extracts tests for all variants (sumo, meso) which have specific outputs and got a lot better picking up all options
 

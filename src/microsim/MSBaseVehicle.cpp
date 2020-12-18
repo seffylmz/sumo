@@ -529,7 +529,13 @@ MSBaseVehicle::getOdometer() const {
 
 bool
 MSBaseVehicle::allowsBoarding(MSTransportable* t) const {
-    if (getPersonNumber() >= getVehicleType().getPersonCapacity()) {
+    if (t->isPerson() && getPersonNumber() >= getVehicleType().getPersonCapacity()) {
+        return false;
+    } else if (!t->isPerson() && getContainerNumber() >= getVehicleType().getContainerCapacity()) {
+        return false;
+    }
+    if (isStopped() && myStops.begin()->pars.permitted.size() > 0
+            && myStops.begin()->pars.permitted.count(t->getID()) == 0) {
         return false;
     }
     MSDevice_Taxi* taxiDevice = static_cast<MSDevice_Taxi*>(getDevice(typeid(MSDevice_Taxi)));
@@ -715,6 +721,32 @@ MSBaseVehicle::calculateArrivalParams() {
             WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given lane '" + myRoute->getLastEdge()->getID() + "_" + toString(myParameter->arrivalLane) + "'!");
         }
         myArrivalLane = MIN2(myParameter->arrivalLane, (int)(lanes.size() - 1));
+    } else if (myParameter->arrivalLaneProcedure == ArrivalLaneDefinition::FIRST_ALLOWED) {
+        myArrivalLane = -1;
+        for (MSLane* lane : lanes) {
+            if (lane->allowsVehicleClass(myType->getVehicleClass())) {
+                myArrivalLane = lane->getIndex();
+                break;
+            }
+        }
+        if (myArrivalLane == -1) {
+            WRITE_WARNING("Vehicle '" + getID() + "' has no usable arrivalLane on edge '" + myRoute->getLastEdge()->getID() + "'.");
+            myArrivalLane = 0;
+        }
+    } else if (myParameter->arrivalLaneProcedure == ArrivalLaneDefinition::RANDOM) {
+        // pick random lane among all usable lanes
+        std::vector<MSLane*> usable;
+        for (MSLane* lane : lanes) {
+            if (lane->allowsVehicleClass(myType->getVehicleClass())) {
+                usable.push_back(lane);
+            }
+        }
+        if (usable.empty()) {
+            WRITE_WARNING("Vehicle '" + getID() + "' has no usable arrivalLane on edge '" + myRoute->getLastEdge()->getID() + "'.");
+            myArrivalLane = 0;
+        } else {
+            myArrivalLane = usable[RandHelper::rand(0, (int)usable.size())]->getIndex();;
+        }
     }
     if (myParameter->arrivalSpeedProcedure == ArrivalSpeedDefinition::GIVEN) {
         for (std::vector<MSLane*>::const_iterator l = lanes.begin(); l != lanes.end(); ++l) {

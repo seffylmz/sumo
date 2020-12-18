@@ -311,6 +311,8 @@ To use custom detectors (i.e. for custom placement or output) additional paramet
    <param key="gneE42_2" value="customDetector1"/>
 ```
 
+By assigning the special value `NO_DETECTOR`, the detector for a given lane key can be completely disabled.
+
 !!! caution
     Custom detectors only work when the 'tlLogic' is loaded from an additional file.
 
@@ -699,10 +701,10 @@ transitions.
 
 ## Setting the complete Program
 
-Using the method **setCompleteRedYellowGreenDefinition**, a static
+Using the method **setProgramLogic**, a static
 signal plan can be loaded. Since this method requires a complex data
 structure as argument, it is recommend to first obtain a data structure
-using **getCompleteRedYellowGreenDefinition** and then modify it
+using **getAllProgramLogics** and then modify it.
 
 ## Switching between pre-defined Programs
 

@@ -27,7 +27,7 @@
 #include <microsim/MSJunction.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
-#include <microsim/MSVehicle.h>
+#include <microsim/MSLink.h>
 #include <microsim/MSMoveReminder.h>
 #include <microsim/output/MSXMLRawOut.h>
 #include <microsim/output/MSDetectorFileOutput.h>
@@ -507,7 +507,7 @@ MESegment::send(MEVehicle* veh, MESegment* const next, const int nextQIdx, SUMOT
         const bool nextFree = next->myQueues[nextQIdx].getOccupancy() <= next->myJamThreshold;
         const SUMOTime tau = (q.getOccupancy() <= myJamThreshold
                               ? (nextFree ? myTau_ff : myTau_fj)
-                              : (nextFree ? myTau_jf : TIME2STEPS(myA * q.size() + myB)));
+                              : (nextFree ? myTau_jf : TIME2STEPS(myA * next->myQueues[nextQIdx].size() + myB)));
         myLastHeadway = tauWithVehLength(tau, veh->getVehicleType().getLengthWithGap());
         if (myTLSPenalty) {
             const MSLink* const tllink = getLink(veh, true);

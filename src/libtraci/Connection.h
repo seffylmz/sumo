@@ -26,6 +26,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <thread>
 #include <foreign/tcpip/socket.h>
 #include <libsumo/Subscription.h>
 
@@ -139,192 +140,9 @@ public:
      * @return The command Id
      */
     int check_commandGetResult(tcpip::Storage& inMsg, int command, int expectedType = -1, bool ignoreCommandId = false) const;
-
-    bool processGet(int command, int expectedType, bool ignoreCommandId = false);
     /// @}
 
-    int getUnsignedByte(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_UBYTE)) {
-            return myInput.readUnsignedByte();
-        }
-        return libsumo::INVALID_INT_VALUE;
-    }
-    int getByte(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_BYTE)) {
-            return myInput.readByte();
-        }
-        return libsumo::INVALID_INT_VALUE;
-    }
-    int getInt(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_INTEGER)) {
-            return myInput.readInt();
-        }
-        return libsumo::INVALID_INT_VALUE;
-    }
-    double getDouble(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_DOUBLE)) {
-            return myInput.readDouble();
-        }
-        return libsumo::INVALID_DOUBLE_VALUE;
-    }
-    libsumo::TraCIPositionVector getPolygon(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        libsumo::TraCIPositionVector ret;
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_POLYGON)) {
-            int size = myInput.readUnsignedByte();
-            if (size == 0) {
-                size = myInput.readInt();
-            }
-            for (int i = 0; i < size; ++i) {
-                libsumo::TraCIPosition p;
-                p.x = myInput.readDouble();
-                p.y = myInput.readDouble();
-                p.z = 0.;
-                ret.push_back(p);
-            }
-        }
-        return ret;
-    }
-    libsumo::TraCIPosition getPos(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        libsumo::TraCIPosition p;
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::POSITION_2D)) {
-            p.x = myInput.readDouble();
-            p.y = myInput.readDouble();
-        }
-        return p;
-    }
-
-    libsumo::TraCIPosition getPos3D(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        libsumo::TraCIPosition p;
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::POSITION_3D)) {
-            p.x = myInput.readDouble();
-            p.y = myInput.readDouble();
-            p.z = myInput.readDouble();
-        }
-        return p;
-    }
-    std::string getString(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_STRING)) {
-            return myInput.readString();
-        }
-        return "";
-    }
-    std::vector<std::string> getStringVector(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        std::vector<std::string> r;
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_STRINGLIST)) {
-            const int size = myInput.readInt();
-            for (int i = 0; i < size; ++i) {
-                r.push_back(myInput.readString());
-            }
-        }
-        return r;
-    }
-
-    libsumo::TraCIColor getCol(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        libsumo::TraCIColor c;
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_COLOR)) {
-            c.r = (unsigned char)myInput.readUnsignedByte();
-            c.g = (unsigned char)myInput.readUnsignedByte();
-            c.b = (unsigned char)myInput.readUnsignedByte();
-            c.a = (unsigned char)myInput.readUnsignedByte();
-        }
-        return c;
-    }
-
-    libsumo::TraCIStage getTraCIStage(int command, int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        libsumo::TraCIStage s;
-        createCommand(command, var, id, add);
-        if (processGet(command, libsumo::TYPE_COMPOUND)) {
-            myInput.readInt(); // components
-            myInput.readUnsignedByte();
-            s.type = myInput.readInt();
-
-            myInput.readUnsignedByte();
-            s.vType = myInput.readString();
-
-            myInput.readUnsignedByte();
-            s.line = myInput.readString();
-
-            myInput.readUnsignedByte();
-            s.destStop = myInput.readString();
-
-            myInput.readUnsignedByte();
-            s.edges = myInput.readStringList();
-
-            myInput.readUnsignedByte();
-            s.travelTime = myInput.readDouble();
-
-            myInput.readUnsignedByte();
-            s.cost = myInput.readDouble();
-
-            myInput.readUnsignedByte();
-            s.length = myInput.readDouble();
-
-            myInput.readUnsignedByte();
-            s.intended = myInput.readString();
-
-            myInput.readUnsignedByte();
-            s.depart = myInput.readDouble();
-
-            myInput.readUnsignedByte();
-            s.departPos = myInput.readDouble();
-
-            myInput.readUnsignedByte();
-            s.arrivalPos = myInput.readDouble();
-
-            myInput.readUnsignedByte();
-            s.description = myInput.readString();
-        }
-        return s;
-    }
-
     tcpip::Storage& doCommand(int command, int var, const std::string& id, tcpip::Storage* add = nullptr);
-
-    void setInt(int command, int var, const std::string& id, int value) {
-        tcpip::Storage content;
-        content.writeUnsignedByte(libsumo::TYPE_INTEGER);
-        content.writeInt(value);
-        doCommand(command, var, id, &content);
-    }
-    void setDouble(int command, int var, const std::string& id, double value) {
-        tcpip::Storage content;
-        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
-        content.writeDouble(value);
-        doCommand(command, var, id, &content);
-    }
-
-    void setString(int command, int var, const std::string& id, const std::string& value) {
-        tcpip::Storage content;
-        content.writeUnsignedByte(libsumo::TYPE_STRING);
-        content.writeString(value);
-        doCommand(command, var, id, &content);
-    }
-
-    void setStringVector(int command, int var, const std::string& id, const std::vector<std::string>& value) {
-        tcpip::Storage content;
-        content.writeUnsignedByte(libsumo::TYPE_STRINGLIST);
-        content.writeStringList(value);
-        doCommand(command, var, id, &content);
-    }
-
-    void setCol(int command, int var, const std::string& id, const libsumo::TraCIColor c) {
-        tcpip::Storage content;
-        content.writeUnsignedByte(libsumo::TYPE_COLOR);
-        content.writeUnsignedByte(c.r);
-        content.writeUnsignedByte(c.g);
-        content.writeUnsignedByte(c.b);
-        content.writeUnsignedByte(c.a);
-        doCommand(command, var, id, &content);
-    }
 
     void readVariableSubscription(int responseID, tcpip::Storage& inMsg);
     void readContextSubscription(int responseID, tcpip::Storage& inMsg);
@@ -340,6 +158,8 @@ private:
         return oss.str();
     }
 
+    void readOutput();
+
     /** @brief Constructor, connects to the specified SUMO server
      * @param[in] host The name of the host to connect to
      * @param[in] port The port to connect to
@@ -350,6 +170,7 @@ private:
 private:
     const std::string myLabel;
     FILE* const myProcessPipe;
+    std::thread* myProcessReader;
     /// @brief The socket
     tcpip::Socket mySocket;
     /// @brief The reusable output storage

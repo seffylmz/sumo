@@ -82,7 +82,7 @@ SUMORouteHandler::registerLastDepart() {
 
 void
 SUMORouteHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
-    switch (element) {
+	switch (element) {
         case SUMO_TAG_VEHICLE:
             // delete if myVehicleParameter isn't null
             if (myVehicleParameter) {
@@ -134,8 +134,16 @@ SUMORouteHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
                 delete myVehicleParameter;
             }
             // create a new flow
-            myVehicleParameter = SUMOVehicleParserHelper::parseFlowAttributes(SUMO_TAG_PERSONFLOW, attrs, myHardFail, myBeginDefault, myEndDefault, true);
+            myVehicleParameter = SUMOVehicleParserHelper::parseFlowAttributes(SUMO_TAG_PERSONFLOW, attrs, myHardFail, myBeginDefault, myEndDefault);
             break;
+		case SUMO_TAG_CONTAINERFLOW:
+			// delete if myVehicleParameter isn't null
+			if (myVehicleParameter) {
+				delete myVehicleParameter;
+			}
+			// create a new flow
+			myVehicleParameter = SUMOVehicleParserHelper::parseFlowAttributes(SUMO_TAG_CONTAINERFLOW, attrs, myHardFail, myBeginDefault, myEndDefault);
+			break;
         case SUMO_TAG_VTYPE:
             // delete if myCurrentVType isn't null
             if (myCurrentVType != nullptr) {
@@ -185,12 +193,12 @@ SUMORouteHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             myEndDefault = attrs.getSUMOTimeReporting(SUMO_ATTR_END, nullptr, ok);
             break;
         }
-        case SUMO_TAG_RIDE:
-            addRide(attrs);
-            break;
-        case SUMO_TAG_TRANSPORT:
-            addTransport(attrs);
-            break;
+		case SUMO_TAG_RIDE:
+			addRideOrTransport(attrs, true);
+			break;
+		case SUMO_TAG_TRANSPORT:
+			addRideOrTransport(attrs, false);
+			break;
         case SUMO_TAG_TRANSHIP:
             addTranship(attrs);
             break;
@@ -240,6 +248,11 @@ SUMORouteHandler::myEndElement(int element) {
             delete myVehicleParameter;
             myVehicleParameter = nullptr;
             break;
+		case SUMO_TAG_CONTAINERFLOW:
+			closeContainerFlow();
+			delete myVehicleParameter;
+			myVehicleParameter = nullptr;
+			break;
         case SUMO_TAG_VEHICLE:
             if (myVehicleParameter == nullptr) {
                 break;
@@ -395,6 +408,9 @@ SUMORouteHandler::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOSAXAttri
     if (attrs.hasAttribute(SUMO_ATTR_EXPECTED)) {
         stop.parametersSet |= STOP_EXPECTED_SET;
     }
+    if (attrs.hasAttribute(SUMO_ATTR_PERMITTED)) {
+        stop.parametersSet |= STOP_PERMITTED_SET;
+    }
     if (attrs.hasAttribute(SUMO_ATTR_EXPECTED_CONTAINERS)) {
         stop.parametersSet |= STOP_EXPECTED_CONTAINERS_SET;
     }
@@ -474,6 +490,10 @@ SUMORouteHandler::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOSAXAttri
             stop.parking = true;
         }
     }
+
+    // permitted transportables
+    const std::vector<std::string>& permitted = attrs.getOptStringVector(SUMO_ATTR_PERMITTED, nullptr, ok);
+    stop.permitted.insert(permitted.begin(), permitted.end());
 
     // expected containers
     const std::vector<std::string>& expectedContainers = attrs.getOptStringVector(SUMO_ATTR_EXPECTED_CONTAINERS, nullptr, ok);

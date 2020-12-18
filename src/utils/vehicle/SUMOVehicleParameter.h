@@ -86,6 +86,7 @@ const int STOP_SPEED_SET = 2 << 11;
 const int STOP_SPLIT_SET = 2 << 12;
 const int STOP_JOIN_SET = 2 << 13;
 const int STOP_ARRIVAL_SET = 2 << 14;
+const int STOP_PERMITTED_SET = 2 << 15;
 
 const double MIN_STOP_LENGTH = 2 * POSITION_EPS;
 
@@ -223,11 +224,15 @@ enum class DepartEdgeDefinition {
  */
 enum class ArrivalLaneDefinition {
     /// @brief No information given; use default
-    DEFAULT,
-    /// @brief The arrival lane is given
-    GIVEN,
+    DEFAULT = 0,
     /// @brief The current lane shall be used
-    CURRENT
+    CURRENT = 1,
+    /// @brief The arrival lane is given
+    GIVEN = 2,
+    /// @brief The lane is chosen randomly
+    RANDOM = 3,
+    /// @brief The rightmost lane the vehicle may use
+    FIRST_ALLOWED = 4
 };
 
 
@@ -378,6 +383,9 @@ public:
 
         /// @brief IDs of persons the vehicle has to wait for until departing
         std::set<std::string> awaitedPersons;
+
+        /// @brief IDs of persons or containers that may board/load at this stop
+        std::set<std::string> permitted;
 
         /// @brief IDs of containers the vehicle has to wait for until departing
         std::set<std::string> awaitedContainers;

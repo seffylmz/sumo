@@ -1,4 +1,4 @@
-Eclipse SUMO netconvert Version v1_7_0+0461-873c47b3cc
+Eclipse SUMO netconvert Version v1_8_0+0261-fc7be816ae
  Copyright (C) 2001-2020 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 Network importer / builder for the microscopic, multi-modal traffic simulation
  SUMO.
@@ -294,6 +294,9 @@ TLS Building Options:
                                         directions or grouping all movements for
                                         one incoming edge ['opposites',
                                         'incoming']
+  --tls.no-mixed                       Avoid phases with green and red signals
+                                        for different connections from the same
+                                        lane
   --tls.min-dur INT                    Default minimum phase duration for
                                         traffic lights with variable phase
                                         length
@@ -347,7 +350,7 @@ Edge Removal Options:
                                         <lon-min,lat-min,lon-max,lat-max> or as
                                         polygon <lon0,lat0,lon1,lat1,...>)
   --keep-edges.by-vclass STR[]         Only keep edges which allow one of the
-                                        vclasss in STR[]
+                                        vclasses in STR[]
   --remove-edges.by-vclass STR[]       Remove edges which allow only vclasses
                                         from STR[]
   --keep-edges.by-type STR[]           Only keep edges where type is in STR[]

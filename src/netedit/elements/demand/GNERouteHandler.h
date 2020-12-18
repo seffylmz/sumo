@@ -129,6 +129,7 @@ public:
 
     /// @brief build stop
     static void buildStop(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter::Stop& stopParameters, GNEDemandElement* stopParent);
+
     /// @}
 
     /// @name build person
@@ -138,6 +139,7 @@ public:
 
     /// @brief build person flow
     static void buildPersonFlow(GNENet* net, bool undoDemandElements, const SUMOVehicleParameter& personFlowParameters);
+
     /// @}
 
     /// @name build personPlan
@@ -241,7 +243,10 @@ protected:
     /// @brief Ends the processing of a container
     void closeContainer();
 
-    /// @brief Ends the processing of a routeFlow
+	/// @brief Ends the processing of a containerFlow
+	void closeContainerFlow();
+	
+	/// @brief Ends the processing of a routeFlow
     void closeFlow();
 
     /// @brief Ends the processing of a trip
@@ -259,14 +264,11 @@ protected:
     /// @brief Processing of a person
     void addPerson(const SUMOSAXAttributes& attrs);
 
-    /// @brief Processing of a ride
-    void addRide(const SUMOSAXAttributes& attrs);
+	/// @brief Processing of a ride or transport
+	void addRideOrTransport(const SUMOSAXAttributes& attrs, bool isRide);
 
-    /// @brief Processing of a container
+	/// @brief Processing of a container
     void addContainer(const SUMOSAXAttributes& attrs);
-
-    /// @brief Processing of a transport
-    void addTransport(const SUMOSAXAttributes& attrs);
 
     /// @brief Processing of a tranship
     void addTranship(const SUMOSAXAttributes& attrs);

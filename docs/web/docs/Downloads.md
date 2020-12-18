@@ -115,6 +115,10 @@ These launchers allow you to select **sumo-gui** as the default application to o
 !!! caution "Important notice"
     In order to use the launchers, make sure you have installed SUMO beforehand (any version) and have set the [SUMO_HOME](Basics/Basic_Computer_Skills.md#sumo_home) environment variable.
 
+## Python packages
+
+Starting with SUMO 1.8.0 the installation is also possible from the [Python packaging index](https://pypi.org/project/eclipse-sumo/). You can install either the applications: `pip install eclipse-sumo` or only traci, libsumo or sumolib, e.g. `pip install libsumo`. This should work for Windows and all Linux versions which are more recent than 2014 but currently not for macOS. The applications are available for Python 2 and Python 3, libsumo only for Python 3.5 and above.
+
 ## SUMO - Alternative download and older releases
 
 All releases can also be obtained via the [sourceforge download
@@ -192,6 +196,11 @@ For the Windows platform you can retrieve all dependencies by cloning
 this repository <https://github.com/DLR-TS/SUMOLibraries>, if you want
 to develop with Visual Studio. If you just want to run SUMO, use the
 binary downloads above which already contain the runtime dependencies.
+
+## Scenarios and other Data
+- [complete scenarios](Data/Scenarios.md)
+- [networks](Data/Networks.md)
+- [traffic data](Data/Traffic_Data.md)
 
 ## Note on Licensing
 

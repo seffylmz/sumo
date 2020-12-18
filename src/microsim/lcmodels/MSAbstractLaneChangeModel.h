@@ -26,13 +26,15 @@
 #include <config.h>
 
 #include <microsim/MSGlobals.h>
+#include <microsim/MSLeaderInfo.h>
 #include <microsim/MSVehicle.h>
 
-class MSLane;
 
 // ===========================================================================
-// used enumeration
+// class declarations
 // ===========================================================================
+class MSLane;
+
 
 // ===========================================================================
 // class definitions
@@ -135,11 +137,6 @@ public:
      * @param[in] vehicle The vehicle for which this model shall be built
      */
     static MSAbstractLaneChangeModel* build(LaneChangeModel lcm, MSVehicle& vehicle);
-
-    /// @brief whether any kind of lateral dynamics is active
-    inline static bool haveLateralDynamics() {
-        return MSGlobals::gLateralResolution > 0 || MSGlobals::gLaneChangeDuration > 0;
-    }
 
     /** @brief Returns the model's ID;
      * @return The model's ID

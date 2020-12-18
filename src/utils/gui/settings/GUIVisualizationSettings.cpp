@@ -958,6 +958,7 @@ GUIVisualizationSettings::initSumoGuiDefaults() {
     scheme.addColor(RGBColor(0, 102, 204, 255), 1, "selected");
     containerColorer.addScheme(scheme);
     containerColorer.addScheme(GUIColorScheme("by angle", RGBColor::YELLOW, "", true));
+    containerColorer.addScheme(GUIColorScheme("random", RGBColor::YELLOW, "", true));
 
     /// add junction coloring schemes
     scheme = GUIColorScheme("uniform", RGBColor::BLACK, "", true);
@@ -1137,7 +1138,8 @@ GUIVisualizationSettings::initSumoGuiDefaults() {
     scheme.addColor(RGBColor::RED, 1, "even");
     edgeColorer.addScheme(scheme);
     scheme = GUIColorScheme("by jammed state (segmentwise)", RGBColor::GREEN, "free", true, 0, COL_SCHEME_DYNAMIC);
-    scheme.addColor(RGBColor::RED, 1, "jammed");
+    scheme.addColor(RGBColor::YELLOW, 1, "limitedControl");
+    scheme.addColor(RGBColor::RED, 2, "jammed");
     edgeColorer.addScheme(scheme);
     scheme = GUIColorScheme("by current occupancy (segmentwise, brutto)", RGBColor::BLUE, "", false, 0, COL_SCHEME_DYNAMIC);
     scheme.addColor(RGBColor::RED, 0.95);

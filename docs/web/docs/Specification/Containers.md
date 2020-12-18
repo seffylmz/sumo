@@ -17,7 +17,7 @@ sequence of [transport](../Specification/Containers.md#transports),
 [stop](../Specification/Containers.md#stops) elements as described
 below. Each container must have at least one stage in its plan.
 
-```
+```xml
 <container id="foo" depart="0">
     <tranship edges="a b"/>
     <transport ../>
@@ -48,13 +48,21 @@ Transports define the start and end point of a movement with a single
 mode of transport (e.g. a truck, train or a ship). They are child
 elements of plan definitions.
 
-| Attribute | Type   | Range                     | Default | Remark                                                 |
-| --------- | ------ | ------------------------- | ------- | ------------------------------------------------------ |
-| from      | string | valid edge ids            | \-      | id of the start edge                                   |
-| to        | string | valid edge ids            | \-      | id of the destination edge                             |
-| lines     | list   | valid line or vehicle ids | \-      | list of vehicle alternatives to take for the transport |
+| Attribute     | Type   | Range                     | Default | Remark                                                 |
+| ------------- | ------ | ------------------------- | ------- | ------------------------------------------------------ |
+| from          | string | valid edge ids            | \-      | id of the start edge                                   |
+| to            | string | valid edge ids            | \-      | id of the destination edge                             |
+| containerStop | string | valid container stop ids  | \-      | id of the destination stop                             |
+| lines         | list   | valid line or vehicle ids | \-      | list of vehicle alternatives to take for the transport |
+| arrivalPos    |float(m)|                           | \-1     | arrival position on the destination edge               |
 
-the route to take is defined by the vehicle.
+The route to take is defined by the vehicle.
+
+A given container stop may serve as a replacement for a destination edge and
+arrival position. If an arrival position is given nevertheless it has to
+be inside the range of the stop.
+
+A transport of a container works similar to a [ride](../Specification/Persons.md#rides) of a person.
 
 ## Tranships
 
@@ -68,15 +76,18 @@ are child elements of plan definitions.
 | edges      | list       | valid edge ids | \-      | id of the edges to tranship             |
 | from       | string     | valid edge ids | \-      | id of the start edge                    |
 | to         | string     | valid edge ids | \-      | id of the destination edge              |
-| speed      | float(m/s) | \>0            | \-      |                                         |
+| containerStop | string  | valid containerStop ids | \- | id of the destination container stop|
+| speed      | float(m/s) | \>0            | 5km/h   | speed of the container for this tranship in m/s |
 | departPos  | float(m)   |                | 0       | initial position on the starting edge   |
-| arrivalPos | float(m)   |                | \-1     | arrival position o the destination edge |
+| arrivalPos | float(m)   | [0,toEdge.length] | toEdge.length  | arrival position on the destination edge|
 
 You can define either a list of "edges" to travel or a "from" and a "to"
 edge. In the former case, only the first and the last edge will be
-considered. The container will move straight from the first edge to last
+considered. Instead of a "to" edge a container stop can be defined.
+If there is a move entry bevore, the "from" edge can be left.
+The container will move straight from the first edge to last
 edge. In the latter case, the container will from straight from the edge
-"from" to the edge "to".
+"from" to the edge "to" or the container stop "containerStop".
 
 ## Stops
 
@@ -133,7 +144,7 @@ train station, gets transported by a train, gets unloaded and transhiped
 to a place, where it's stored (stopped) for some time and finally gets
 transported again.
 
-```
+```xml
 <routes>
     <container id="container0" depart="0">
         <tranship from="2/3to1/3" to="1/3to0/3" departPos="80" arrivalPos="55"/>
@@ -157,6 +168,46 @@ transported again.
 </routes>
 ```
 
+# Repeated containers (containerFlows)
+
+To define multiple containers with the same plan, the element `<containerFlow>` can be used.
+It uses the same parameters and child elements as [`<container>`](#containers) except for the
+departure time. The ids of the created containers are
+"containerFlowId.runningNumber" and they are distributed either equally or
+randomly in the given interval. The following additional parameters are
+known:
+
+| Attribute Name  | Value Type     | Description                                                                                          |
+| --------------- | -------------- | ---------------------------------------------------------------------------------------------------- |
+| begin           | float (sec)    | first container departure time                                                                       |
+| end             | float (sec)    | end of departure interval (if undefined, defaults to 24 hours)                                       |
+| containersPerHour\* _or_ perHour\* | float (\#/h) | number of containers per hour, equally spaced                                         |
+| period*         | float (sec)    | insert equally spaced containers at that period                                                      |
+| probability*    | float (\[0,1\])| probability for emitting a container each second, see also [Simulation/Randomness](../Simulation/Randomness.md#flows_with_a_random_number_of_vehicles) |
+| number*         | int (\#)       | total number of containers, equally spaced                                                           |
+
+\*: Only one of these attributes is allowed.
+
+See also [personFlows](../Specification/Persons.md#repeated_persons_personflows)
+
+## Examples
+
+```xml
+   <containerFlow id="c" begin="0" end="10" period="2">
+       <tranship from="beg" to="end"/>
+   </containerFlow>
+```
+
+```xml
+   <containerFlow id="container" begin="0" end="1" number="4" departPos="80">
+       <tranship from="2/3to1/3" to="1/3to0/3" arrivalPos="55"/>
+       <transport containerStop="cs_train0" lines="train0"/>
+       <tranship to="1/4to2/4" arrivalPos="45"/>
+       <stop lane="1/4to2/4_0" duration="20" startPos="40" actType="waiting"/>
+       <transport to="3/4to4/4" lines="truck0"/>
+   </containerFlow>
+```
+
 # Planned features
 
 The following features are not yet implemented.
@@ -173,12 +224,6 @@ of stages (transports, tranships and
 | Attribute   | Type  | Range | Default | Remark                                                                                                                                                             |
 | ----------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | probability | float | ≥0    | 1       | this is only evaluated if a container has multiple plans, the probability values of all plans do not have to add to 1, they are scaled accordingly before choosing |
-
-## ContainerFlow
-
-A containerFlow has the same role as a flow. It allows to specify a
-sequence of containers with the same plan (or distribution of plans)
-with a single input element.
 
 ## Intermodal Routing
 

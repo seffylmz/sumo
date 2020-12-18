@@ -470,15 +470,17 @@ most) of these objects:
   - *Draw with constant size when zoomed out*: Automatically
     increase the drawing size when zooming out to keep the visual
     size constant.
-- Name options
-  - *Show name*: Disable drawing of object IDs
-  - *Size*: Size of the drawn ID (visual size will stay constant
-    when zooming)
+- id options
+  - *Show id*: Enable drawing of object IDs
+  - *constant text size*: toggle whether the visual text size will stay constant when zooming
+  - *Size*: Size of the drawn ID  
   - *Color*: Color of drawn ID
+  - *Background*: Background color of drawn ID
+  - *Show name*: Show optional name (either using the 'name' attribute or 'name' `<param>`)  
 - Coloring options: Color by some attribute and change the color
 value/range
   - Show color value: show the numerical value that is used for
-    coloring
+    coloring (text configuration obtions as for the id)
 
 ## Vehicle Visualisation Settings
 
@@ -853,6 +855,27 @@ When defining a color scheme, a dedicated color for missing data ('No Data') can
 
 see [Using additional Polygons and POIs within the
 Simulation](Simulation/Shapes.md)
+
+## Display Arbitrary Text in the Simulation View
+To display arbitrary text in the simulation view, the easiest way is to place a poi element with alpha channel 0 (invisible),
+set it's type attribute to the text you wish to show and load gui settings that show poi types in the desired color and size.
+```
+<poi id="textPlacement0" type="my custom text" x="myX" y="myY" color="0,0,0,0"/>
+```
+
+To use another text size or color, you can use a poi parameter and pick that parameter next to the "show poi text param" checkbox:
+```
+<poi id="textPlacement2" x="myX2" y="myY2" color="0,0,0,0">
+   <param key="anykey" value="my custom text in another size or color"/>
+<poi>
+```
+
+The same trick can be repeated for Polygons.
+
+You can also use `traci.simulation.writeMessage` to put custom messages into the bottom message window.
+
+## Display a custom Logo in the simulation View
+The [background images (decals)](#showing_background_images) support attribute `screenRelative` to place an object relative to the screen rather than the network. This allows to place a logo in a fixed position.
 
 ## Showing routes and route-related information
 

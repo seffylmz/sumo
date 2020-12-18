@@ -22,6 +22,7 @@
 #include <limits>
 #include <microsim/MSNet.h>
 #include <microsim/MSEdge.h>
+#include <microsim/MSLane.h>
 #include <microsim/MSStop.h>
 #include <microsim/transportables/MSTransportable.h>
 #include "MSRoutingEngine.h"
@@ -54,7 +55,11 @@ MSIdling_Stop::idle(MSDevice_Taxi* taxi) {
             stop.lane = stopPos.first->getID();
             stop.startPos = stopPos.second;
             stop.endPos = stopPos.second + POSITION_EPS;
-            stop.triggered = true;
+            if (veh.getVehicleType().getContainerCapacity() > 0) {
+                stop.containerTriggered = true;
+            } else {
+                stop.triggered = true;
+            }
             stop.actType = "idling";
             stop.parking = true;
             veh.addTraciStop(stop, errorOut);
@@ -67,7 +72,11 @@ MSIdling_Stop::idle(MSDevice_Taxi* taxi) {
     } else {
         //std::cout << SIMTIME << " MSIdling_Stop reuse stop\n";
         MSStop& stop = veh.getNextStop();
-        stop.triggered = true;
+        if (veh.getVehicleType().getContainerCapacity() > 0) {
+            stop.containerTriggered = true;
+        } else {
+            stop.triggered = true;
+        }
     }
 }
 

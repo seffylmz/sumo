@@ -28,7 +28,7 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif ()
 
 project(SUMO CXX C)
-set(PACKAGE_VERSION "1.8.0")
+set(PACKAGE_VERSION "git")
 cmake_minimum_required(VERSION 3.1)
 
 find_program(CCACHE_FOUND "ccache")
@@ -276,7 +276,8 @@ if (SUMO_LIBRARIES AND WIN32)
     set(Protobuf_LIBRARY_DEBUG "${CMAKE_LIBRARY_PATH};${SUMO_LIBRARIES}/protobuf-3.9.1/lib/libprotobufd.lib")
     set(Protobuf_LIBRARY "${CMAKE_LIBRARY_PATH};${SUMO_LIBRARIES}/protobuf-3.9.1/lib/libprotobuf.lib")
     # set apache maven
-    set(MVN_EXECUTABLE "${SUMO_LIBRARIES}/apache-maven-3.6.1/bin/mvn.cmd")
+	file(GLOB MVN_EXECUTABLE "${SUMO_LIBRARIES}/apache-maven-*/bin/mvn.cmd")
+	file(GLOB TEXTTEST_EXECUTABLE "${SUMO_LIBRARIES}/TextTest-*/texttest.exe")
 else ()
     # for Linux and Mac only
     find_package(GTest)
@@ -577,9 +578,13 @@ add_subdirectory(src)
 if (GTEST_FOUND)
     add_subdirectory(unittest)
 endif ()
-find_program(TEXTTEST_FOUND "texttest")
-if (TEXTTEST_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/tests/runTests.sh)
-    add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runTests.sh -b ci -v ci)
+if (TEXTTEST_EXECUTABLE AND EXISTS ${CMAKE_SOURCE_DIR}/tests/runCiTests.bat)
+	add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runCiTests.bat ${TEXTTEST_EXECUTABLE})
+else ()
+	find_program(TEXTTEST_FOUND "texttest")
+	if (TEXTTEST_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/tests/runTests.sh)
+		add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runTests.sh -b ci -v ci)
+	endif()
 endif()
 
 # example and dist targets
@@ -612,7 +617,7 @@ if (GIT_FOUND)
         COMMAND zip -rq sumo-src-${PACKAGE_VERSION}.zip sumo-${PACKAGE_VERSION}
         COMMAND tar -czf sumo-src-${PACKAGE_VERSION}.tar.gz sumo-${PACKAGE_VERSION}
         COMMAND cp -a docs/userdoc docs/pydoc docs/javadoc docs/man sumo-${PACKAGE_VERSION}/docs
-        COMMAND tar -czf sumo-debian-src-${PACKAGE_VERSION}.tar.gz --exclude "*.jar" sumo-${PACKAGE_VERSION}
+        COMMAND tar -czf sumo_${PACKAGE_VERSION}+dfsg1.orig.tar.gz --exclude "*.jar" sumo-${PACKAGE_VERSION}
         COMMAND cp bin/*.jar sumo-${PACKAGE_VERSION}/bin
         COMMAND cp -a tests sumo-${PACKAGE_VERSION}
         COMMAND zip -rq sumo-all-${PACKAGE_VERSION}.zip sumo-${PACKAGE_VERSION}

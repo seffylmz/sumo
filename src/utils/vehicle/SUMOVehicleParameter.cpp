@@ -208,6 +208,9 @@ SUMOVehicleParameter::Stop::write(OutputDevice& dev, bool close) const {
     if ((parametersSet & STOP_EXPECTED_SET) != 0) {
         dev.writeAttr(SUMO_ATTR_EXPECTED, awaitedPersons);
     }
+    if ((parametersSet & STOP_PERMITTED_SET) != 0) {
+        dev.writeAttr(SUMO_ATTR_PERMITTED, permitted);
+    }
     if ((parametersSet & STOP_EXPECTED_CONTAINERS_SET) != 0) {
         dev.writeAttr(SUMO_ATTR_EXPECTED_CONTAINERS, awaitedContainers);
     }
@@ -454,6 +457,10 @@ SUMOVehicleParameter::parseArrivalLane(const std::string& val, const std::string
     ald = ArrivalLaneDefinition::GIVEN;
     if (val == "current") {
         ald = ArrivalLaneDefinition::CURRENT;
+    } else if (val == "random") {
+        ald = ArrivalLaneDefinition::RANDOM;
+    } else if (val == "first") {
+        ald = ArrivalLaneDefinition::FIRST_ALLOWED;
     } else {
         try {
             lane = StringUtils::toInt(val);
@@ -810,6 +817,12 @@ SUMOVehicleParameter::getArrivalLane() const {
             break;
         case ArrivalLaneDefinition::CURRENT:
             val = "current";
+            break;
+        case ArrivalLaneDefinition::RANDOM:
+            val = "random";
+            break;
+        case ArrivalLaneDefinition::FIRST_ALLOWED:
+            val = "first";
             break;
         case ArrivalLaneDefinition::DEFAULT:
         default:

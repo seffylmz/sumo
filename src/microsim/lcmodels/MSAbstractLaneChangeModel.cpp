@@ -38,6 +38,7 @@
 #include <microsim/MSNet.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSLink.h>
 #include <microsim/MSDriverState.h>
 #include <microsim/MSGlobals.h>
 #include "MSLCM_DK2008.h"
@@ -524,7 +525,7 @@ MSAbstractLaneChangeModel::initLastLaneChangeOffset(int dir) {
 
 void
 MSAbstractLaneChangeModel::updateShadowLane() {
-    if (!haveLateralDynamics()) {
+    if (!MSGlobals::gSublane) {
         // assume each vehicle drives at the center of its lane and act as if it fits
         return;
     }

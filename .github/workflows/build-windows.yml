@@ -26,11 +26,12 @@ jobs:
       uses: actions/checkout@v2
       with:
         path: sumo
+        fetch-depth: 0
 
     - name: Fetching SUMO tags
       run: |
         cd sumo
-        git fetch --prune --unshallow
+        git fetch --tags --force
 
     - name: Cloning SUMO Libraries
       uses: actions/checkout@v2
@@ -126,11 +127,16 @@ jobs:
         cmake --build build_msvc --config Release
         python tools\build\setup-libsumo.py bdist_wheel --plat-name win_amd64
 
-    - name: Building TraaS, examples and tests
+    - name: Building TraaS
       if: matrix.build-type != 'wheel'
       run: |
         cd sumo/build_msvc
         cmake --build . --config Release --target traas
+
+    - name: Examples and tests
+      if: matrix.build-type != 'wheel'
+      run: |
+        cd sumo/build_msvc
         cmake --build . --config Release --target examples
         ctest --verbose
 
@@ -164,7 +170,7 @@ jobs:
         cd build
         cmake -G "Visual Studio 16 2019" ..
         cmake --build . --config MinSizeRel --target install
- 
+
     - name: Checking sumo-fmi2.fmu
       if: matrix.build-type == 'extra'
       run: |
@@ -172,7 +178,7 @@ jobs:
         echo $env:Path
         cd sumo
         ../fmuChecker/install/fmuCheck.win64 bin/sumo-fmi2-win64.fmu 
-      
+
     - name: Uploading FMI 2.0 FMU artifacts
       if: matrix.build-type == 'extra'
       uses: actions/upload-artifact@v1
@@ -195,7 +201,7 @@ jobs:
         ls -lR
         mkdir dist
         mv ./*-wheels/* dist
-        mv dist/sumo-*cp38* `echo dist/sumo-*cp38* | sed 's/cp38-cp38/py2.py3-none/'`
+        mv dist/eclipse_sumo-*cp38* `echo dist/eclipse_sumo-*cp38* | sed 's/cp38-cp38/py2.py3-none/'`
 
     - name: Publish to Test PyPI
       if: github.event_name == 'schedule'

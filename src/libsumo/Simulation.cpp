@@ -119,8 +119,8 @@ Simulation::close(const std::string& reason) {
 
 
 void
-Simulation::subscribe(const std::vector<int>& varIDs, double begin, double end) {
-    libsumo::Helper::subscribe(CMD_SUBSCRIBE_SIM_VARIABLE, "", varIDs, begin, end, libsumo::TraCIResults());
+Simulation::subscribe(const std::vector<int>& varIDs, double begin, double end, const libsumo::TraCIResults& params) {
+    libsumo::Helper::subscribe(CMD_SUBSCRIBE_SIM_VARIABLE, "", varIDs, begin, end, params);
 }
 
 
@@ -323,6 +323,26 @@ Simulation::getBusStopWaitingIDList(const std::string& stopID) {
     return result;
 }
 
+std::vector<libsumo::TraCICollision>
+Simulation::getCollisions() {
+    std::vector<libsumo::TraCICollision> result;
+    for (auto item : MSNet::getInstance()->getCollisions()) {
+        for (const MSNet::Collision& c : item.second) {
+            libsumo::TraCICollision c2;
+            c2.collider = item.first;
+            c2.victim = c.victim;
+            c2.colliderType = c.colliderType;
+            c2.victimType = c.victimType;
+            c2.colliderSpeed = c.colliderSpeed;
+            c2.victimSpeed = c.victimSpeed;
+            c2.type = c.type;
+            c2.lane = c.lane->getID();
+            c2.pos = c.pos;
+            result.push_back(c2);
+        }
+    }
+    return result;
+}
 
 double
 Simulation::getDeltaT() {

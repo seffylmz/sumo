@@ -37,10 +37,7 @@
 #include <vector>
 #include <memory>
 #include "MSGlobals.h"
-#include "MSVehicleType.h"
 #include "MSBaseVehicle.h"
-#include "MSLink.h"
-#include "MSLane.h"
 #include "MSNet.h"
 
 #define INVALID_SPEED 299792458 + 1 // nothing can go faster than the speed of light! Refs. #2577
@@ -471,9 +468,7 @@ public:
     /** @brief Sets the influenced previous speed
      * @param[in] A double value with the speed that overwrites the previous speed
      */
-    void setPreviousSpeed(double prevspeed) {
-        myState.mySpeed = MAX2(0., prevspeed);
-    }
+    void setPreviousSpeed(double prevspeed);
 
 
     /** @brief Returns the vehicle's acceleration in m/s
@@ -564,15 +559,7 @@ public:
      *         i.e., not necessarily the allowed speed limit)
      * @return The vehicle's max speed
      */
-    double
-    getMaxSpeedOnLane() const {
-        if (myLane != 0) {
-            return myLane->getVehicleMaxSpeed(this);
-        } else {
-            return myType->getMaxSpeed();
-        }
-    }
-
+    double getMaxSpeedOnLane() const;
 
     /** @brief Returns the information whether the vehicle is on a road (is simulated)
      * @return Whether the vehicle is simulated
@@ -734,9 +721,7 @@ public:
 
     /** Returns true if vehicle's speed is below 60km/h. This is only relevant
         on highways. Overtaking on the right is allowed then. */
-    bool congested() const {
-        return myState.mySpeed < double(60.0) / double(3.6) || myLane->getSpeedLimit() < (60.1 / 3.6);
-    }
+    bool congested() const;
 
 
     /** @brief "Activates" all current move reminder
@@ -1534,6 +1519,9 @@ public:
          */
         double getOriginalSpeed() const;
 
+        /** @brief Stores the originally longitudinal speed **/
+        void  setOriginalSpeed(double speed);
+
         void setRemoteControlled(Position xyPos, MSLane* l, double pos, double posLat, double angle, int edgeOffset, const ConstMSEdgeVector& route, SUMOTime t);
 
         SUMOTime getLastAccessTimeStep() const {
@@ -1676,6 +1664,12 @@ public:
 
     /// @brief update state while parking
     void updateParkingState();
+
+    /** @brief Replaces the current vehicle type by the one given
+     * @param[in] type The new vehicle type
+     * @see MSBaseVehicle::replaceVehicleType
+     */
+    void replaceVehicleType(MSVehicleType* type);
 
     /// @name state io
     //@{
@@ -1979,17 +1973,6 @@ protected:
 
     /// @brief unregister approach from all upcoming links
     void removeApproachingInformation(const DriveItemVector& lfLinks) const;
-
-
-    /// @brief estimate leaving speed when accelerating across a link
-    inline double estimateLeaveSpeed(const MSLink* const link, const double vLinkPass) const {
-        // estimate leave speed for passing time computation
-        // l=linkLength, a=accel, t=continuousTime, v=vLeave
-        // l=v*t + 0.5*a*t^2, solve for t and multiply with a, then add v
-        return MIN2(link->getViaLaneOrLane()->getVehicleMaxSpeed(this),
-                    getCarFollowModel().estimateSpeedAfterDistance(link->getLength(), vLinkPass, getVehicleType().getCarFollowModel().getMaxAccel()));
-    }
-
 
     /* @brief adapt safe velocity in accordance to a moving obstacle:
      * - a leader vehicle

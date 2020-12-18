@@ -22,6 +22,7 @@
 /****************************************************************************/
 #pragma once
 // we do not include config.h here, since we should be independent of a special sumo build
+#include <cassert>
 #include <vector>
 #include <limits>
 #include <map>
@@ -105,69 +106,220 @@ namespace libtraci {
 template<int GET, int SET>
 class Domain {
 public:
+    static int readTypedInt(tcpip::Storage& ret) {
+        const int type = ret.readUnsignedByte();
+        assert(type == libsumo::TYPE_INTEGER);
+        return ret.readInt();
+    }
+
+    static double readTypedDouble(tcpip::Storage& ret) {
+        const int type = ret.readUnsignedByte();
+        assert(type == libsumo::TYPE_DOUBLE);
+        return ret.readDouble();
+    }
+
+    static std::string readTypedString(tcpip::Storage& ret) {
+        const int type = ret.readUnsignedByte();
+        assert(type == libsumo::TYPE_STRING);
+        return ret.readString();
+    }
+
+    static std::vector<std::string> readTypedStringList(tcpip::Storage& ret) {
+        const int type = ret.readUnsignedByte();
+        assert(type == libsumo::TYPE_STRINGLIST);
+        return ret.readStringList();
+    }
+
+    static int readCompound(tcpip::Storage& ret, int expectedSize = -1) {
+        const int type = ret.readUnsignedByte();
+        assert(type == libsumo::TYPE_COMPOUND);
+        const int size = ret.readInt();
+        assert(expectedSize == -1 || size == expectedSize);
+        return size;
+    }
+
+
+    static void writeTypedByte(tcpip::Storage& content, int value) {
+        content.writeUnsignedByte(libsumo::TYPE_BYTE);
+        content.writeByte(value);
+    }
+
+    static void writeTypedInt(tcpip::Storage& content, int value) {
+        content.writeUnsignedByte(libsumo::TYPE_INTEGER);
+        content.writeInt(value);
+    }
+
+    static void writeTypedDouble(tcpip::Storage& content, double value) {
+        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
+        content.writeDouble(value);
+    }
+
+    static void writeTypedString(tcpip::Storage& content, const std::string& value) {
+        content.writeUnsignedByte(libsumo::TYPE_STRING);
+        content.writeString(value);
+    }
+
+    static void writeTypedStringList(tcpip::Storage& content, const std::vector<std::string>& value) {
+        content.writeUnsignedByte(libsumo::TYPE_STRINGLIST);
+        content.writeStringList(value);
+    }
+
+    static void writeCompound(tcpip::Storage& content, int size) {
+        content.writeUnsignedByte(libsumo::TYPE_COMPOUND);
+        content.writeInt(size);
+    }
+
+    static void writePolygon(tcpip::Storage& content, const libsumo::TraCIPositionVector& shape) {
+        content.writeUnsignedByte(libsumo::TYPE_POLYGON);
+        if (shape.size() <= 255) {
+            content.writeUnsignedByte((int)shape.size());
+        } else {
+            content.writeUnsignedByte(0);
+            content.writeInt((int)shape.size());
+        }
+        for (const libsumo::TraCIPosition& pos : shape) {
+            content.writeDouble(pos.x);
+            content.writeDouble(pos.y);
+        }
+    }
+
+
+    static tcpip::Storage& get(int var, const std::string& id, tcpip::Storage* add = nullptr, int expectedType = libsumo::TYPE_COMPOUND) {
+        tcpip::Storage& result = libtraci::Connection::getActive().doCommand(GET, var, id, add);
+        libtraci::Connection::getActive().check_commandGetResult(result, GET, expectedType);
+        return result;
+    }
+
     static int getUnsignedByte(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getUnsignedByte(GET, var, id, add);
+        return get(var, id, add, libsumo::TYPE_UBYTE).readUnsignedByte();
     }
 
     static int getByte(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getByte(GET, var, id, add);
+        return get(var, id, add, libsumo::TYPE_BYTE).readByte();
     }
 
     static int getInt(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getInt(GET, var, id, add);
+        return get(var, id, add, libsumo::TYPE_INTEGER).readInt();
     }
 
     static double getDouble(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getDouble(GET, var, id, add);
+        return get(var, id, add, libsumo::TYPE_DOUBLE).readDouble();
     }
 
     static libsumo::TraCIPositionVector getPolygon(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getPolygon(GET, var, id, add);
+        tcpip::Storage& result = get(var, id, add, libsumo::TYPE_POLYGON);
+        libsumo::TraCIPositionVector ret;
+        int size = result.readUnsignedByte();
+        if (size == 0) {
+            size = result.readInt();
+        }
+        for (int i = 0; i < size; ++i) {
+            libsumo::TraCIPosition p;
+            p.x = result.readDouble();
+            p.y = result.readDouble();
+            p.z = 0.;
+            ret.push_back(p);
+        }
+        return ret;
     }
 
-    static libsumo::TraCIPosition getPos(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getPos(GET, var, id, add);
+    static libsumo::TraCIPosition getPos(int var, const std::string& id, tcpip::Storage* add = nullptr, const bool isGeo=false) {
+        tcpip::Storage& result = get(var, id, add, isGeo ? libsumo::POSITION_LON_LAT : libsumo::POSITION_2D);
+        libsumo::TraCIPosition p;
+        p.x = result.readDouble();
+        p.y = result.readDouble();
+        return p;
     }
 
-    static libsumo::TraCIPosition getPos3D(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getPos3D(GET, var, id, add);
+    static libsumo::TraCIPosition getPos3D(int var, const std::string& id, tcpip::Storage* add = nullptr, const bool isGeo = false) {
+        tcpip::Storage& result = get(var, id, add, isGeo ? libsumo::POSITION_LON_LAT_ALT : libsumo::POSITION_3D);
+        libsumo::TraCIPosition p;
+        p.x = result.readDouble();
+        p.y = result.readDouble();
+        p.z = result.readDouble();
+        return p;
     }
 
     static std::string getString(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getString(GET, var, id, add);
+        return get(var, id, add, libsumo::TYPE_STRING).readString();
     }
 
     static std::vector<std::string> getStringVector(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getStringVector(GET, var, id, add);
+        return get(var, id, add, libsumo::TYPE_STRINGLIST).readStringList();
     }
 
     static libsumo::TraCIColor getCol(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getCol(GET, var, id, add);
+        tcpip::Storage& result = get(var, id, add, libsumo::TYPE_COLOR);
+        libsumo::TraCIColor c;
+        c.r = (unsigned char)result.readUnsignedByte();
+        c.g = (unsigned char)result.readUnsignedByte();
+        c.b = (unsigned char)result.readUnsignedByte();
+        c.a = (unsigned char)result.readUnsignedByte();
+        return c;
     }
 
     static libsumo::TraCIStage getTraCIStage(int var, const std::string& id, tcpip::Storage* add = nullptr) {
-        return libtraci::Connection::getActive().getTraCIStage(GET, var, id, add);
+        tcpip::Storage& result = get(var, id, add);
+        libsumo::TraCIStage s;
+        result.readInt(); // components
+        s.type = readTypedInt(result);
+        s.vType = readTypedString(result);
+        s.line = readTypedString(result);
+        s.destStop = readTypedString(result);
+        s.edges = readTypedStringList(result);
+        s.travelTime = readTypedDouble(result);
+        s.cost = readTypedDouble(result);
+        s.length = readTypedDouble(result);
+        s.intended = readTypedString(result);
+        s.depart = readTypedDouble(result);
+        s.departPos = readTypedDouble(result);
+        s.arrivalPos = readTypedDouble(result);
+        s.description = readTypedString(result);
+        return s;
+    }
+
+    static void set(int var, const std::string& id, tcpip::Storage* add) {
+        libtraci::Connection::getActive().doCommand(SET, var, id, add);
     }
 
     static void setInt(int var, const std::string& id, int value) {
-        libtraci::Connection::getActive().setInt(SET, var, id, value);
+        tcpip::Storage content;
+        content.writeUnsignedByte(libsumo::TYPE_INTEGER);
+        content.writeInt(value);
+        set(var, id, &content);
     }
 
     static void setDouble(int var, const std::string& id, double value) {
-        libtraci::Connection::getActive().setDouble(SET, var, id, value);
+        tcpip::Storage content;
+        content.writeUnsignedByte(libsumo::TYPE_DOUBLE);
+        content.writeDouble(value);
+        set(var, id, &content);
     }
 
     static void setString(int var, const std::string& id, const std::string& value) {
-        libtraci::Connection::getActive().setString(SET, var, id, value);
+        tcpip::Storage content;
+        content.writeUnsignedByte(libsumo::TYPE_STRING);
+        content.writeString(value);
+        set(var, id, &content);
     }
 
     static void setStringVector(int var, const std::string& id, const std::vector<std::string>& value) {
-        libtraci::Connection::getActive().setStringVector(SET, var, id, value);
+        tcpip::Storage content;
+        content.writeUnsignedByte(libsumo::TYPE_STRINGLIST);
+        content.writeStringList(value);
+        set(var, id, &content);
     }
 
     static void setCol(int var, const std::string& id, const libsumo::TraCIColor value) {
-        libtraci::Connection::getActive().setCol(SET, var, id, value);
+        tcpip::Storage content;
+        content.writeUnsignedByte(libsumo::TYPE_COLOR);
+        content.writeUnsignedByte(value.r);
+        content.writeUnsignedByte(value.g);
+        content.writeUnsignedByte(value.b);
+        content.writeUnsignedByte(value.a);
+        set(var, id, &content);
     }
+
 };
 
 }
