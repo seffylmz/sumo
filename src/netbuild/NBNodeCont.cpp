@@ -187,7 +187,7 @@ NBNodeCont::removeSelfLoops(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLo
 
 
 void
-NBNodeCont::joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc) {
+NBNodeCont::joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc, bool removeDuplicates) {
     // magic values
     const double distanceThreshold = 7.; // don't merge edges further apart
     const double lengthThreshold = 0.10; // don't merge edges with higher relative length-difference
@@ -224,7 +224,13 @@ NBNodeCont::joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightL
             // @bug If there are 3 edges of which 2 can be joined, no joining will
             //   take place with the current implementation
             if (jci == ev.end()) {
-                ec.joinSameNodeConnectingEdges(dc, tlc, ev);
+                if (removeDuplicates) {
+                    for (int i = 1; i < (int)ev.size(); i++) {
+                        ec.extract(dc, ev[i], true);
+                    }
+                } else {
+                    ec.joinSameNodeConnectingEdges(dc, tlc, ev);
+                }
             }
         }
     }
@@ -320,7 +326,8 @@ NBNodeCont::removeIsolatedRoads(NBDistrictCont& dc, NBEdgeCont& ec) {
 
 
 void
-NBNodeCont::removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKeep) {
+NBNodeCont::removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKeep, bool hasPTStops) {
+    myRailComponents.clear();
     std::vector<std::set<NBEdge*> > components;
     // need to use ids here to have the same ordering on all platforms
     std::set<std::string> edgesLeft;
@@ -329,6 +336,8 @@ NBNodeCont::removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKe
     }
     EdgeVector queue;
     std::set<NBEdge*> toRemove;
+    int foundComponents = 0;
+    int numRemoved = 0;
     while (!edgesLeft.empty()) {
         queue.push_back(ec.getByID(*edgesLeft.begin()));
         std::set<NBEdge*> component;
@@ -351,6 +360,7 @@ NBNodeCont::removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKe
                 }
             }
         }
+        foundComponents++;
         std::vector<std::set<NBEdge*> >::iterator cIt;
         for (cIt = components.begin(); cIt != components.end(); ++cIt) {
             if (cIt->size() < component.size()) {
@@ -359,20 +369,84 @@ NBNodeCont::removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKe
         }
         components.insert(cIt, component);
         if ((int)components.size() > numKeep) {
-            toRemove.insert(components.back().begin(), components.back().end());
+            bool recheck = false;
+            if (hasPTStops) {
+                for (NBEdge* e : components.back()) {
+                    SVCPermissions permissions = e->getPermissions();
+                    if (isRailway(permissions) || isWaterway(permissions)) {
+                        // recheck for connection to other components via access definitions
+                        recheck = true;
+                        break;
+                    }
+                }
+            }
+            if (!recheck) {
+                toRemove.insert(components.back().begin(), components.back().end());
+                numRemoved++;
+            } else {
+                std::vector<std::string> edgeIDs;
+                for (NBEdge* e : components.back()) {
+                    edgeIDs.push_back(e->getID());
+                }
+                myRailComponents.push_back(edgeIDs);
+            }
             components.pop_back();
         }
     }
-    for (std::set<NBEdge*>::iterator edgeIt = toRemove.begin(); edgeIt != toRemove.end(); ++edgeIt) {
-        NBNode* const fromNode = (*edgeIt)->getFromNode();
-        NBNode* const toNode = (*edgeIt)->getToNode();
-        ec.erase(dc, *edgeIt);
+    for (NBEdge* e : toRemove) {
+        NBNode* const fromNode = e->getFromNode();
+        NBNode* const toNode = e->getToNode();
+        ec.erase(dc, e);
         if (fromNode->getIncomingEdges().size() == 0 && fromNode->getOutgoingEdges().size() == 0) {
             erase(fromNode);
         }
         if (toNode->getIncomingEdges().size() == 0 && toNode->getOutgoingEdges().size() == 0) {
             erase(toNode);
         }
+    }
+    if (foundComponents > 1) {
+        WRITE_MESSAGE("Found " + toString(foundComponents) + " components and removed " + toString(numRemoved) + " (" + toString(toRemove.size()) + " edges).");
+    }
+}
+
+
+void
+NBNodeCont::removeRailComponents(NBDistrictCont& dc, NBEdgeCont& ec, NBPTStopCont& sc) {
+    std::set<std::string> stopEdges;
+    for (const auto& item : sc.getStops()) {
+        stopEdges.insert(item.second->getEdgeId());
+    }
+    int numRemoved = 0;
+    int numRemovedEdges = 0;
+    for (auto& component : myRailComponents) {
+        bool keep = false;
+        for (std::string edgeID: component) {
+            if (stopEdges.count(edgeID) != 0) {
+                keep = true;
+                break;
+            }
+        }
+        if (!keep) {
+            numRemoved++;
+            numRemovedEdges += component.size();
+            for (std::string edgeID : component) {
+                NBEdge* e = ec.retrieve(edgeID);
+                if (e != nullptr) {
+                    NBNode* const fromNode = e->getFromNode();
+                    NBNode* const toNode = e->getToNode();
+                    ec.erase(dc, e);
+                    if (fromNode->getIncomingEdges().size() == 0 && fromNode->getOutgoingEdges().size() == 0) {
+                        erase(fromNode);
+                    }
+                    if (toNode->getIncomingEdges().size() == 0 && toNode->getOutgoingEdges().size() == 0) {
+                        erase(toNode);
+                    }
+                }
+            }
+        }
+    }
+    if (numRemoved > 0) {
+        WRITE_MESSAGE("Removed " + toString(numRemoved) + " railway components (" + toString(numRemovedEdges) + " edges).");
     }
 }
 
@@ -772,9 +846,13 @@ NBNodeCont::joinSameJunctions(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLight
 #ifdef DEBUG_JOINJUNCTIONS
     std::cout << "joinSameJunctions...\n";
 #endif
-    std::map<Position, NodeSet> positions;
+    std::map<std::string, NodeSet> positions;
     for (auto& item : myNodes) {
-        positions[item.second->getPosition()].insert(item.second);
+        Position pos = item.second->getPosition();
+        std::string rounded = (OutputDevice::realString(pos.x(), gPrecision)
+                + "_" + OutputDevice::realString(pos.y(), gPrecision)
+                + "_" + OutputDevice::realString(pos.z(), gPrecision));
+        positions[rounded].insert(item.second);
     }
     NodeClusters clusters;
     for (auto& item : positions) {

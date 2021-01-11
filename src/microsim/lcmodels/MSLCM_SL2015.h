@@ -273,10 +273,11 @@ protected:
     /// TODO: Better documentation, refs #2
     int checkStrategicChange(int ret,
                              int laneOffset,
-                             const std::vector<MSVehicle::LaneQ>& preb,
                              const MSLeaderDistanceInfo& leaders,
                              const MSLeaderDistanceInfo& neighLeaders,
-                             int currIdx,
+                             const MSVehicle::LaneQ& curr,
+                             const MSVehicle::LaneQ& neigh,
+                             const MSVehicle::LaneQ& best,
                              int bestLaneOffset,
                              bool changeToBest,
                              double currentDist,
@@ -284,6 +285,7 @@ protected:
                              double laDist,
                              double roundaboutBonus,
                              double latLaneDist,
+                             bool checkOpposite,
                              double& latDist
                             );
 
@@ -341,6 +343,12 @@ protected:
 
     /// @brief get lateral drift for the current step
     double getLateralDrift();
+
+    /// @brief return current edge width optionally extended by opposite direction lane width
+    double getLeftBorder() const;
+
+    /// @brief return vehicle position relative to the current edge (extend by another virtual lane for opposite-direction driving)
+    double getVehicleCenter() const;
 
 protected:
     /// @brief a value for tracking the probability that a change to the right is beneficial

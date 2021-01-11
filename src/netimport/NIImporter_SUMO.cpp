@@ -193,7 +193,10 @@ NIImporter_SUMO::_loadNetwork(OptionsCont& oc) {
                     continue;
                 }
                 if (nbe->hasConnectionTo(toEdge, c.toLaneIdx)) {
-                    WRITE_WARNINGF("Target lane '%' has multiple connections from '%'.", toEdge->getLaneID(c.toLaneIdx), nbe->getID());
+                    // do not warn if this is a duplicate connection when merging networks
+                    if (!nbe->hasConnectionTo(toEdge, c.toLaneIdx, fromLaneIndex)) {
+                        WRITE_WARNINGF("Target lane '%' has multiple connections from '%'.", toEdge->getLaneID(c.toLaneIdx), nbe->getID());
+                    }
                 }
                 // patch attribute uncontrolled for legacy networks where it is not set explicitly
                 bool uncontrolled = c.uncontrolled;
@@ -231,6 +234,7 @@ NIImporter_SUMO::_loadNetwork(OptionsCont& oc) {
             if (!dismissVclasses) {
                 nbe->setPermissions(parseVehicleClasses(lane->allow, lane->disallow, myNetworkVersion), fromLaneIndex);
             }
+            nbe->setPermittedChanging(fromLaneIndex, parseVehicleClasses(lane->changeLeft, ""), parseVehicleClasses(lane->changeRight, ""));
             // width, offset
             nbe->setLaneWidth(fromLaneIndex, lane->width);
             nbe->setEndOffset(fromLaneIndex, lane->endOffset);
@@ -500,7 +504,7 @@ NIImporter_SUMO::myEndElement(int element) {
         case SUMO_TAG_EDGE:
             if (myCurrentEdge != nullptr) {
                 if (myEdges.find(myCurrentEdge->id) != myEdges.end()) {
-                    WRITE_ERROR("Edge '" + myCurrentEdge->id + "' occurred at least twice in the input.");
+                    WRITE_WARNINGF("Edge '%' occurred at least twice in the input.", myCurrentEdge->id);
                 } else {
                     myEdges[myCurrentEdge->id] = myCurrentEdge;
                 }
@@ -652,6 +656,9 @@ NIImporter_SUMO::addLane(const SUMOSAXAttributes& attrs) {
     myCurrentLane->width = attrs.getOpt<double>(SUMO_ATTR_WIDTH, id.c_str(), ok, (double) NBEdge::UNSPECIFIED_WIDTH);
     myCurrentLane->endOffset = attrs.getOpt<double>(SUMO_ATTR_ENDOFFSET, id.c_str(), ok, (double) NBEdge::UNSPECIFIED_OFFSET);
     myCurrentLane->accelRamp = attrs.getOpt<bool>(SUMO_ATTR_ACCELERATION, id.c_str(), ok, false);
+    myCurrentLane->changeLeft = attrs.getOpt<std::string>(SUMO_ATTR_CHANGE_LEFT, id.c_str(), ok, "");
+    myCurrentLane->changeRight = attrs.getOpt<std::string>(SUMO_ATTR_CHANGE_RIGHT, id.c_str(), ok, "");
+
     // lane coordinates are derived (via lane spread) do not include them in convex boundary
     NBNetBuilder::transformCoordinates(myCurrentLane->shape, false, myLocation);
 }
@@ -716,7 +723,7 @@ NIImporter_SUMO::addJunction(const SUMOSAXAttributes& attrs) {
     NBNode* node = new NBNode(id, pos, type);
     myLastParameterised.push_back(node);
     if (!myNodeCont.insert(node)) {
-        WRITE_ERROR("Problems on adding junction '" + id + "'.");
+        WRITE_WARNINGF("Junction '%' occurred at least twice in the input.", id);
         delete node;
         return;
     }

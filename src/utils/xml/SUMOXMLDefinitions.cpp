@@ -462,6 +462,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "alphaCircuitSolver",     SUMO_ATTR_ALPHACIRCUITSOLVER },
     // MSBatteryExport
     { "energyConsumed",         SUMO_ATTR_ENERGYCONSUMED },
+    { "totalEnergyConsumed",    SUMO_ATTR_TOTALENERGYCONSUMED },
+    { "totalEnergyRegenerated", SUMO_ATTR_TOTALENERGYREGENERATED },
     { "chargingStationId",      SUMO_ATTR_CHARGINGSTATIONID },
     { "energyCharged",          SUMO_ATTR_ENERGYCHARGED },
     { "energyChargedInTransit", SUMO_ATTR_ENERGYCHARGEDINTRANSIT },
@@ -667,6 +669,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "allow",                  SUMO_ATTR_ALLOW },
     { "disallow",               SUMO_ATTR_DISALLOW },
     { "prefer",                 SUMO_ATTR_PREFER },
+    { "changeLeft",             SUMO_ATTR_CHANGE_LEFT },
+    { "changeRight",            SUMO_ATTR_CHANGE_RIGHT },
     { "controlledInner",        SUMO_ATTR_CONTROLLED_INNER },
     { "vehsPerHour",            SUMO_ATTR_VEHSPERHOUR },
     { "personsPerHour",         SUMO_ATTR_PERSONSPERHOUR },

@@ -179,13 +179,17 @@ MSLane::AnyVehicleIterator::nextIsMyVehicles() const {
 // ===========================================================================
 MSLane::MSLane(const std::string& id, double maxSpeed, double length, MSEdge* const edge,
                int numericalID, const PositionVector& shape, double width,
-               SVCPermissions permissions, int index, bool isRampAccel,
+               SVCPermissions permissions,
+               SVCPermissions changeLeft, SVCPermissions changeRight,
+               int index, bool isRampAccel,
                const std::string& type) :
     Named(id),
     myNumericalID(numericalID), myShape(shape), myIndex(index),
     myVehicles(), myLength(length), myWidth(width), myStopOffsets(),
     myEdge(edge), myMaxSpeed(maxSpeed),
     myPermissions(permissions),
+    myChangeLeft(changeLeft),
+    myChangeRight(changeRight),
     myOriginalPermissions(permissions),
     myLogicalPredecessorLane(nullptr),
     myCanonicalPredecessorLane(nullptr),
@@ -1470,19 +1474,6 @@ MSLane::detectCollisions(SUMOTime timestep, const std::string& stage) {
                     break;
                 }
             }
-            if (follow->getLaneChangeModel().getShadowLane() != nullptr && follow->getLane() == this) {
-                // check whether follow collides on the shadow lane
-                const MSLane* shadowLane = follow->getLaneChangeModel().getShadowLane();
-                const MSLeaderInfo& ahead = shadowLane->getLastVehicleInformation(follow,
-                                            getRightSideOnEdge() - shadowLane->getRightSideOnEdge(),
-                                            follow->getPositionOnLane());
-                for (int i = 0; i < ahead.numSublanes(); ++i) {
-                    MSVehicle* lead = const_cast<MSVehicle*>(ahead[i]);
-                    if (lead != nullptr && lead != follow && shadowLane->detectCollisionBetween(timestep, stage, follow, lead, toRemove, toTeleport)) {
-                        break;
-                    }
-                }
-            }
         }
     }
 
@@ -1706,6 +1697,7 @@ MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
             // @todo: push victim forward?
             stop.startPos = victimStopPos;
             stop.endPos = stop.startPos;
+            stop.parametersSet |= STOP_START_SET | STOP_END_SET;
             victim->addStop(stop, dummyError, 0, true);
         }
         if (collider->collisionStopTime() < 0) {
@@ -1713,6 +1705,7 @@ MSLane::handleCollisionBetween(SUMOTime timestep, const std::string& stage, MSVe
             stop.startPos = MIN2(collider->getPositionOnLane() + collider->getCarFollowModel().brakeGap(colliderSpeed, collider->getCarFollowModel().getEmergencyDecel(), 0),
                                  MAX2(0.0, victimStopPos - 0.75 * victim->getVehicleType().getLength()));
             stop.endPos = stop.startPos;
+            stop.parametersSet |= STOP_START_SET | STOP_END_SET;
             collider->addStop(stop, dummyError, 0, true);
         }
         //std::cout << " collisionAngle=" << collisionAngle

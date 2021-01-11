@@ -92,6 +92,8 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_R_RELOAD,                           GNEApplicationWindow::onCmdReload),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_R_RELOAD,                           GNEApplicationWindow::onUpdReload),
     // network
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_SAVEALLELEMENTS,                            GNEApplicationWindow::onCmdSaveAllElements),
+    FXMAPFUNC(SEL_UPDATE,   MID_GNE_SAVEALLELEMENTS,                            GNEApplicationWindow::onUpdSaveNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK,       GNEApplicationWindow::onCmdSaveNetwork),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_S_STOPSIMULATION_SAVENETWORK,       GNEApplicationWindow::onUpdSaveNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_S_SAVENETWORK_AS,             GNEApplicationWindow::onCmdSaveAsNetwork),
@@ -115,6 +117,8 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     // additionals
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_A_STARTSIMULATION_OPENADDITIONALS,  GNEApplicationWindow::onCmdOpenAdditionals),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_A_STARTSIMULATION_OPENADDITIONALS,  GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_RELOAD_ADDITIONALS,             GNEApplicationWindow::onCmdReloadAdditionals),
+    FXMAPFUNC(SEL_UPDATE,   MID_GNE_TOOLBARFILE_RELOAD_ADDITIONALS,             GNEApplicationWindow::onUpdReloadAdditionals),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_A_SAVEADDITIONALS,            GNEApplicationWindow::onCmdSaveAdditionals),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_SHIFT_A_SAVEADDITIONALS,            GNEApplicationWindow::onUpdSaveAdditionals),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_SAVEADDITIONALS_AS,             GNEApplicationWindow::onCmdSaveAdditionalsAs),
@@ -122,6 +126,8 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     // demand elements
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_D_SINGLESIMULATIONSTEP_OPENDEMANDELEMENTS,  GNEApplicationWindow::onCmdOpenDemandElements),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_D_SINGLESIMULATIONSTEP_OPENDEMANDELEMENTS,  GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_RELOAD_DEMANDELEMENTS,                  GNEApplicationWindow::onCmdReloadDemandElements),
+    FXMAPFUNC(SEL_UPDATE,   MID_GNE_TOOLBARFILE_RELOAD_DEMANDELEMENTS,                  GNEApplicationWindow::onUpdReloadDemandElements),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_D_SAVEDEMANDELEMENTS,                 GNEApplicationWindow::onCmdSaveDemandElements),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_SHIFT_D_SAVEDEMANDELEMENTS,                 GNEApplicationWindow::onUpdSaveDemandElements),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_SAVEDEMAND_AS,                          GNEApplicationWindow::onCmdSaveDemandElementsAs),
@@ -129,6 +135,8 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     // data elements
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_B_EDITBREAKPOINT_OPENDATAELEMENTS,  GNEApplicationWindow::onCmdOpenDataElements),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_B_EDITBREAKPOINT_OPENDATAELEMENTS,  GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_RELOAD_DATAELEMENTS,            GNEApplicationWindow::onCmdReloadDataElements),
+    FXMAPFUNC(SEL_UPDATE,   MID_GNE_TOOLBARFILE_RELOAD_DATAELEMENTS,            GNEApplicationWindow::onUpdReloadDataElements),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_SHIFT_B_SAVEDATAELEMENTS,           GNEApplicationWindow::onCmdSaveDataElements),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_SHIFT_B_SAVEDATAELEMENTS,           GNEApplicationWindow::onUpdSaveDataElements),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBARFILE_SAVEDATA_AS,                    GNEApplicationWindow::onCmdSaveDataElementsAs),
@@ -577,47 +585,6 @@ GNEApplicationWindow::onCmdOpenForeign(FXObject*, FXSelector, void*) {
 
 
 long
-GNEApplicationWindow::onCmdOpenAdditionals(FXObject*, FXSelector, void*) {
-    // write debug information
-    WRITE_DEBUG("Open additional dialog");
-    // get the Additional file name
-    FXFileDialog opendialog(this, "Open Additionals file");
-    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::MODEADDITIONAL));
-    opendialog.setSelectMode(SELECTFILE_EXISTING);
-    opendialog.setPatternList("Additional files (*.add.xml)\nAll files (*)");
-    if (gCurrentFolder.length() != 0) {
-        opendialog.setDirectory(gCurrentFolder);
-    }
-    if (opendialog.execute()) {
-        // close additional dialog
-        WRITE_DEBUG("Close additional dialog");
-        // udpate current folder
-        gCurrentFolder = opendialog.getDirectory();
-        std::string file = opendialog.getFilename().text();
-        // disable validation for additionals
-        XMLSubSys::setValidation("never", "auto", "auto");
-        // Create additional handler
-        GNEAdditionalHandler additionalHandler(file, myNet);
-        // begin undoList operation
-        myUndoList->p_begin("Loading additionals from '" + file + "'");
-        // Run parser for additionals
-        if (!XMLSubSys::runParser(additionalHandler, file, false)) {
-            WRITE_ERROR("Loading of " + file + " failed.");
-        }
-        // end undoList operation and update view
-        myUndoList->p_end();
-        update();
-        // restore validation for additionals
-        XMLSubSys::setValidation("auto", "auto", "auto");
-    } else {
-        // write debug information
-        WRITE_DEBUG("Cancel additional dialog");
-    }
-    return 1;
-}
-
-
-long
 GNEApplicationWindow::onCmdOpenTLSPrograms(FXObject*, FXSelector, void*) {
     // write debug information
     WRITE_DEBUG("Open TLSProgram dialog");
@@ -694,97 +661,6 @@ GNEApplicationWindow::onCmdOpenEdgeTypes(FXObject*, FXSelector, void*) {
         myViewNet->getViewParent()->getCreateEdgeFrame()->getEdgeTypeSelector()->refreshEdgeTypeSelector();
     }
     return 0;
-}
-
-
-long
-GNEApplicationWindow::onCmdOpenDemandElements(FXObject*, FXSelector, void*) {
-    // write debug information
-    WRITE_DEBUG("Open demand element dialog");
-    // get the demand element file name
-    FXFileDialog opendialog(this, "Open demand element file");
-    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::SUPERMODEDEMAND));
-    opendialog.setSelectMode(SELECTFILE_EXISTING);
-    opendialog.setPatternList("Demand element files (*.rou.xml)\nAll files (*)");
-    if (gCurrentFolder.length() != 0) {
-        opendialog.setDirectory(gCurrentFolder);
-    }
-    if (opendialog.execute()) {
-        // close additional dialog
-        WRITE_DEBUG("Close demand element dialog");
-        // udpate current folder
-        gCurrentFolder = opendialog.getDirectory();
-        std::string file = opendialog.getFilename().text();
-        // disable validation for additionals
-        XMLSubSys::setValidation("never", "auto", "auto");
-        // Create additional handler
-        GNERouteHandler demandHandler(file, myNet);
-        // begin undoList operation
-        myUndoList->p_begin("Loading demand elements from '" + file + "'");
-        // Run parser for additionals
-        if (!XMLSubSys::runParser(demandHandler, file, false)) {
-            WRITE_ERROR("Loading of " + file + " failed.");
-        }
-        // end undoList operation and update view
-        myUndoList->p_end();
-        update();
-        // restore validation for demand
-        XMLSubSys::setValidation("auto", "auto", "auto");
-    } else {
-        // write debug information
-        WRITE_DEBUG("Cancel demand element dialog");
-    }
-    return 1;
-}
-
-
-long
-GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
-    // write debug information
-    WRITE_DEBUG("Open data element dialog");
-    // get the data element file name
-    FXFileDialog opendialog(this, "Open data element file");
-    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::SUPERMODEDATA));
-    opendialog.setSelectMode(SELECTFILE_EXISTING);
-    opendialog.setPatternList("Data element files (*.xml)\nAll files (*)");
-    if (gCurrentFolder.length() != 0) {
-        opendialog.setDirectory(gCurrentFolder);
-    }
-    if (opendialog.execute()) {
-        // close additional dialog
-        WRITE_DEBUG("Close data element dialog");
-        // udpate current folder
-        gCurrentFolder = opendialog.getDirectory();
-        std::string file = opendialog.getFilename().text();
-        // disable interval bar update
-        myViewNet->getIntervalBar().disableIntervalBarUpdate();
-        // disable update data
-        myViewNet->getNet()->disableUpdateData();
-        // disable validation for additionals
-        XMLSubSys::setValidation("never", "auto", "auto");
-        // Create additional handler
-        GNEDataHandler dataHandler(file, myNet);
-        // begin undoList operation
-        myUndoList->p_begin("Loading data elements from '" + file + "'");
-        // Run parser for additionals
-        if (!XMLSubSys::runParser(dataHandler, file, false)) {
-            WRITE_ERROR("Loading of " + file + " failed.");
-        }
-        // restore validation for data
-        XMLSubSys::setValidation("auto", "auto", "auto");
-        // end undoList operation and update view
-        myUndoList->p_end();
-        // enable update data
-        myViewNet->getNet()->enableUpdateData();
-        // enable interval bar update
-        myViewNet->getIntervalBar().enableIntervalBarUpdate();
-        // update
-        update();
-    } else {
-        // write debug information
-        WRITE_DEBUG("Cancel data element dialog");
-    }
-    return 1;
 }
 
 
@@ -2190,6 +2066,28 @@ GNEApplicationWindow::onUpdReload(FXObject* sender, FXSelector, void*) {
 }
 
 
+long 
+GNEApplicationWindow::onUpdSaveAllElements(FXObject* sender, FXSelector, void*) {
+    bool enable = false;
+    if (myNet) {
+        if (!myNet->isNetSaved()) {
+            enable = true;
+        }
+        if (!myNet->isAdditionalsSaved()) {
+            enable = true;
+        }
+        if (!myNet->isDemandElementsSaved()) {
+            enable = true;
+        }
+        if (!myNet->isDataElementsSaved()) {
+            enable = true;
+        }
+    }
+    sender->handle(this, enable ? FXSEL(SEL_COMMAND, ID_ENABLE) : FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    return 1;
+}
+
+
 long
 GNEApplicationWindow::onUpdSaveNetwork(FXObject* sender, FXSelector, void*) {
     sender->handle(this, ((myNet == nullptr) || myNet->isNetSaved()) ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
@@ -2227,6 +2125,25 @@ GNEApplicationWindow::onUpdUndo(FXObject* obj, FXSelector sel, void* ptr) {
 long
 GNEApplicationWindow::onUpdRedo(FXObject* obj, FXSelector sel, void* ptr) {
     return myUndoList->p_onUpdRedo(obj, sel, ptr);
+}
+
+
+long 
+GNEApplicationWindow::onCmdSaveAllElements(FXObject*, FXSelector, void*) {
+    // save all elements
+    if (!myNet->isNetSaved()) {
+        onCmdSaveNetwork(nullptr, 0, nullptr);
+    }
+    if (!myNet->isAdditionalsSaved()) {
+        onCmdSaveAdditionals(nullptr, 0, nullptr);
+    }
+    if (!myNet->isDemandElementsSaved()) {
+        onCmdSaveDemandElements(nullptr, 0, nullptr);
+    }
+    if (!myNet->isDataElementsSaved()) {
+        onCmdSaveDataElements(nullptr, 0, nullptr);
+    }
+    return 1;
 }
 
 
@@ -2399,6 +2316,86 @@ GNEApplicationWindow::onCmdSaveEdgeTypesAs(FXObject*, FXSelector, void*) {
 
 
 long
+GNEApplicationWindow::onCmdOpenAdditionals(FXObject*, FXSelector, void*) {
+    // write debug information
+    WRITE_DEBUG("Open additional dialog");
+    // get the Additional file name
+    FXFileDialog opendialog(this, "Open Additionals file");
+    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::MODEADDITIONAL));
+    opendialog.setSelectMode(SELECTFILE_EXISTING);
+    opendialog.setPatternList("XML files (*.xml)\nAdditional files (*.add.xml)\nAll files (*)");
+    if (gCurrentFolder.length() != 0) {
+        opendialog.setDirectory(gCurrentFolder);
+    }
+    if (opendialog.execute()) {
+        // close additional dialog
+        WRITE_DEBUG("Close additional dialog");
+        // udpate current folder
+        gCurrentFolder = opendialog.getDirectory();
+        std::string file = opendialog.getFilename().text();
+        // disable validation for additionals
+        XMLSubSys::setValidation("never", "auto", "auto");
+        // Create additional handler
+        GNEAdditionalHandler additionalHandler(file, myNet);
+        // begin undoList operation
+        myUndoList->p_begin("Loading additionals from '" + file + "'");
+        // Run parser for additionals
+        if (!XMLSubSys::runParser(additionalHandler, file, false)) {
+            WRITE_ERROR("Loading of " + file + " failed.");
+        }
+        // end undoList operation and update view
+        myUndoList->p_end();
+        update();
+        // restore validation for additionals
+        XMLSubSys::setValidation("auto", "auto", "auto");
+    }
+    else {
+        // write debug information
+        WRITE_DEBUG("Cancel additional dialog");
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onCmdReloadAdditionals(FXObject*, FXSelector, void*) {
+    // get file
+    const std::string file = OptionsCont::getOptions().getString("additional-files");
+    // disable validation for additionals
+    XMLSubSys::setValidation("never", "auto", "auto");
+    // Create additional handler
+    GNEAdditionalHandler additionalHandler(file, myNet);
+    // begin undoList operation
+    myUndoList->p_begin("Reloading additionals from '" + file + "'");
+    // clear additionals
+    myNet->clearAdditionalElements(myUndoList);
+    // Run parser for additionals
+    if (!XMLSubSys::runParser(additionalHandler, file, false)) {
+        WRITE_ERROR("Reloading of " + file + " failed.");
+    }
+    // end undoList operation and update view
+    myUndoList->p_end();
+    update();
+    // restore validation for additionals
+    XMLSubSys::setValidation("auto", "auto", "auto");
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onUpdReloadAdditionals(FXObject*, FXSelector, void*) {
+    // check if file exist
+    if (OptionsCont::getOptions().getString("additional-files").empty()) {
+        myFileMenuCommands.reloadAdditionals->handle(this, FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    }
+    else {
+        myFileMenuCommands.reloadAdditionals->handle(this, FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    }
+    return 1;
+}
+
+
+long
 GNEApplicationWindow::onCmdSaveAdditionals(FXObject*, FXSelector, void*) {
     // obtain option container
     OptionsCont& oc = OptionsCont::getOptions();
@@ -2471,6 +2468,86 @@ GNEApplicationWindow::onCmdSaveAdditionalsAs(FXObject*, FXSelector, void*) {
 
 
 long
+GNEApplicationWindow::onCmdOpenDemandElements(FXObject*, FXSelector, void*) {
+    // write debug information
+    WRITE_DEBUG("Open demand element dialog");
+    // get the demand element file name
+    FXFileDialog opendialog(this, "Open demand element file");
+    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::SUPERMODEDEMAND));
+    opendialog.setSelectMode(SELECTFILE_EXISTING);
+    opendialog.setPatternList("XML files (*.xml)\nDemand files (*rou.xml)\nAll files (*)");
+    if (gCurrentFolder.length() != 0) {
+        opendialog.setDirectory(gCurrentFolder);
+    }
+    if (opendialog.execute()) {
+        // close additional dialog
+        WRITE_DEBUG("Close demand element dialog");
+        // udpate current folder
+        gCurrentFolder = opendialog.getDirectory();
+        std::string file = opendialog.getFilename().text();
+        // disable validation for additionals
+        XMLSubSys::setValidation("never", "auto", "auto");
+        // Create additional handler
+        GNERouteHandler demandHandler(file, myNet);
+        // begin undoList operation
+        myUndoList->p_begin("Loading demand elements from '" + file + "'");
+        // Run parser for additionals
+        if (!XMLSubSys::runParser(demandHandler, file, false)) {
+            WRITE_ERROR("Loading of " + file + " failed.");
+        }
+        // end undoList operation and update view
+        myUndoList->p_end();
+        update();
+        // restore validation for demand
+        XMLSubSys::setValidation("auto", "auto", "auto");
+    }
+    else {
+        // write debug information
+        WRITE_DEBUG("Cancel demand element dialog");
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onCmdReloadDemandElements(FXObject*, FXSelector, void*) {
+    // get file
+    const std::string file = OptionsCont::getOptions().getString("route-files");
+    // disable validation for additionals
+    XMLSubSys::setValidation("never", "auto", "auto");
+    // Create additional handler
+    GNERouteHandler demandHandler(file, myNet);
+    // begin undoList operation
+    myUndoList->p_begin("Reloading demand elements from '" + file + "'");
+    // clear demand elements
+    myNet->clearDemandElements(myUndoList);
+    // Run parser for additionals
+    if (!XMLSubSys::runParser(demandHandler, file, false)) {
+        WRITE_ERROR("Reloading of " + file + " failed.");
+    }
+    // end undoList operation and update view
+    myUndoList->p_end();
+    update();
+    // restore validation for demand
+    XMLSubSys::setValidation("auto", "auto", "auto");
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onUpdReloadDemandElements(FXObject*, FXSelector, void*) {
+    // check if file exist
+    if (OptionsCont::getOptions().getString("route-files").empty()) {
+        myFileMenuCommands.reloadDemandElements->handle(this, FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    }
+    else {
+        myFileMenuCommands.reloadDemandElements->handle(this, FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    }
+    return 1;
+}
+
+
+long
 GNEApplicationWindow::onCmdSaveDemandElements(FXObject*, FXSelector, void*) {
     // obtain option container
     OptionsCont& oc = OptionsCont::getOptions();
@@ -2539,6 +2616,104 @@ GNEApplicationWindow::onCmdSaveDemandElementsAs(FXObject*, FXSelector, void*) {
     } else {
         return 1;
     }
+}
+
+
+long
+GNEApplicationWindow::onCmdOpenDataElements(FXObject*, FXSelector, void*) {
+    // write debug information
+    WRITE_DEBUG("Open data element dialog");
+    // get the data element file name
+    FXFileDialog opendialog(this, "Open data element file");
+    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::SUPERMODEDATA));
+    opendialog.setSelectMode(SELECTFILE_EXISTING);
+    opendialog.setPatternList("XML files (*.xml)\nData files (*dat.xml)\nAll files (*)");
+    if (gCurrentFolder.length() != 0) {
+        opendialog.setDirectory(gCurrentFolder);
+    }
+    if (opendialog.execute()) {
+        // close additional dialog
+        WRITE_DEBUG("Close data element dialog");
+        // udpate current folder
+        gCurrentFolder = opendialog.getDirectory();
+        std::string file = opendialog.getFilename().text();
+        // disable interval bar update
+        myViewNet->getIntervalBar().disableIntervalBarUpdate();
+        // disable update data
+        myViewNet->getNet()->disableUpdateData();
+        // disable validation for additionals
+        XMLSubSys::setValidation("never", "auto", "auto");
+        // Create additional handler
+        GNEDataHandler dataHandler(file, myNet);
+        // begin undoList operation
+        myUndoList->p_begin("Loading data elements from '" + file + "'");
+        // Run parser for additionals
+        if (!XMLSubSys::runParser(dataHandler, file, false)) {
+            WRITE_ERROR("Loading of " + file + " failed.");
+        }
+        // restore validation for data
+        XMLSubSys::setValidation("auto", "auto", "auto");
+        // end undoList operation and update view
+        myUndoList->p_end();
+        // enable update data
+        myViewNet->getNet()->enableUpdateData();
+        // enable interval bar update
+        myViewNet->getIntervalBar().enableIntervalBarUpdate();
+        // update
+        update();
+    }
+    else {
+        // write debug information
+        WRITE_DEBUG("Cancel data element dialog");
+    }
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onCmdReloadDataElements(FXObject*, FXSelector, void*) {
+    // get file
+    const std::string file = OptionsCont::getOptions().getString("data-files");
+    // disable interval bar update
+    myViewNet->getIntervalBar().disableIntervalBarUpdate();
+    // disable update data
+    myViewNet->getNet()->disableUpdateData();
+    // disable validation for additionals
+    XMLSubSys::setValidation("never", "auto", "auto");
+    // Create additional handler
+    GNEDataHandler dataHandler(file, myNet);
+    // begin undoList operation
+    myUndoList->p_begin("Reloading data elements from '" + file + "'");
+    // clear data elements
+    myNet->clearDemandElements(myUndoList);
+    // Run parser for additionals
+    if (!XMLSubSys::runParser(dataHandler, file, false)) {
+        WRITE_ERROR("Reloading of " + file + " failed.");
+    }
+    // restore validation for data
+    XMLSubSys::setValidation("auto", "auto", "auto");
+    // end undoList operation and update view
+    myUndoList->p_end();
+    // enable update data
+    myViewNet->getNet()->enableUpdateData();
+    // enable interval bar update
+    myViewNet->getIntervalBar().enableIntervalBarUpdate();
+    // update
+    update();
+    return 1;
+}
+
+
+long
+GNEApplicationWindow::onUpdReloadDataElements(FXObject*, FXSelector, void*) {
+    // check if file exist
+    if (OptionsCont::getOptions().getString("data-files").empty()) {
+        myFileMenuCommands.reloadDataElements->handle(this, FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    }
+    else {
+        myFileMenuCommands.reloadDataElements->handle(this, FXSEL(SEL_COMMAND, ID_ENABLE), nullptr);
+    }
+    return 1;
 }
 
 

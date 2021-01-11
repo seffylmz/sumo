@@ -162,6 +162,23 @@ TraCIServer::wrapPosition(const std::string& /* objID */, const int variable, co
 
 
 bool
+TraCIServer::wrapPositionVector(const std::string& /* objID */, const int /* variable */, const libsumo::TraCIPositionVector& shape) {
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_POLYGON);
+    if (shape.value.size() < 256) {
+        myWrapperStorage.writeUnsignedByte((int)shape.value.size());
+    } else {
+        myWrapperStorage.writeUnsignedByte(0);
+        myWrapperStorage.writeInt((int)shape.value.size());
+    }
+    for (const libsumo::TraCIPosition& pos : shape.value) {
+        myWrapperStorage.writeDouble(pos.x);
+        myWrapperStorage.writeDouble(pos.y);
+    }
+    return true;
+}
+
+
+bool
 TraCIServer::wrapColor(const std::string& /* objID */, const int /* variable */, const libsumo::TraCIColor& value) {
     myWrapperStorage.writeUnsignedByte(libsumo::TYPE_COLOR);
     myWrapperStorage.writeUnsignedByte(value.r);
@@ -173,9 +190,26 @@ TraCIServer::wrapColor(const std::string& /* objID */, const int /* variable */,
 
 
 bool
-TraCIServer::wrapRoadPosition(const std::string& /* objID */, const int /* variable */, const libsumo::TraCIRoadPosition& /* value */) {
-    // this is currently only a placeholder to allow vehicle.subscribeLeader to work with libsumo
-    return false;
+TraCIServer::wrapStringDoublePair(const std::string& /* objID */, const int /* variable */, const std::pair<std::string, double>& value) {
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_COMPOUND);
+    myWrapperStorage.writeInt(2);
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_STRING);
+    myWrapperStorage.writeString(value.first);
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_DOUBLE);
+    myWrapperStorage.writeDouble(value.second);
+    return true;
+}
+
+
+bool
+TraCIServer::wrapStringPair(const std::string& /* objID */, const int /* variable */, const std::pair<std::string, std::string>& value) {
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_COMPOUND);
+    myWrapperStorage.writeInt(2);
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_STRING);
+    myWrapperStorage.writeString(value.first);
+    myWrapperStorage.writeUnsignedByte(libsumo::TYPE_STRING);
+    myWrapperStorage.writeString(value.second);
+    return true;
 }
 
 
@@ -249,7 +283,10 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port, const int numClie
     myExecutors[libsumo::CMD_GET_OVERHEADWIRE_VARIABLE] = &TraCIServerAPI_OverheadWire::processGet;
     myExecutors[libsumo::CMD_SET_OVERHEADWIRE_VARIABLE] = &TraCIServerAPI_OverheadWire::processSet;
 
-    myParameterSizes[libsumo::VAR_LEADER] = 9;
+    myParameterized.insert(libsumo::VAR_LEADER);
+    myParameterized.insert(libsumo::VAR_FOLLOWER);
+    myParameterized.insert(libsumo::VAR_PARAMETER);
+    myParameterized.insert(libsumo::VAR_PARAMETER_WITH_KEY);
 
     myDoCloseConnection = false;
 
@@ -1105,12 +1142,15 @@ TraCIServer::processSingleSubscription(const libsumo::Subscription& s, tcpip::St
             outputStorage.writeString(*j);
         }
         if (numVars > 0) {
-            std::vector<std::vector<unsigned char> >::const_iterator k = s.parameters.begin();
+            std::vector<std::shared_ptr<tcpip::Storage> >::const_iterator k = s.parameters.begin();
             for (std::vector<int>::const_iterator i = s.variables.begin(); i != s.variables.end(); ++i, ++k) {
                 tcpip::Storage message;
                 message.writeUnsignedByte(*i);
                 message.writeString(*j);
-                message.writePacket(*k);
+                // TODO check why writeStorage fails here (probably some kind of invalid iterator)
+                for (const auto& v : **k) {
+                    message.writeChar(v);
+                }
                 tcpip::Storage tmpOutput;
                 if (myExecutors.find(getCommandId) != myExecutors.end()) {
                     ok &= myExecutors[getCommandId](*this, message, tmpOutput);
@@ -1190,25 +1230,20 @@ TraCIServer::addObjectVariableSubscription(const int commandId, const bool hasCo
     const double range = hasContext ? myInputStorage.readDouble() : 0.;
     const int num = myInputStorage.readUnsignedByte();
     std::vector<int> variables;
-    std::vector<std::vector<unsigned char> > parameters;
+    std::vector<std::shared_ptr<tcpip::Storage> > parameters;
     for (int i = 0; i < num; ++i) {
         const int varID = myInputStorage.readUnsignedByte();
         variables.push_back(varID);
-        parameters.push_back(std::vector<unsigned char>());
-        for (int j = 0; j < myParameterSizes[varID]; j++) {
-            parameters.back().push_back(myInputStorage.readChar());
-        }
-        if (varID == libsumo::VAR_PARAMETER_WITH_KEY) {
-            parameters.back().push_back(myInputStorage.readChar());
-            // the byte order of the int is unknown here, so we create a temp. storage
-            int length = myInputStorage.readInt();
-            tcpip::Storage tmp;
-            tmp.writeInt(length);
-            for (int j = 0; j < 4; j++) {  // write int (length of string) char by char
-                parameters.back().push_back(tmp.readChar());
-            }
-            for (int j = 0; j < length; j++) {  // write string char by char
-                parameters.back().push_back(myInputStorage.readChar());
+        parameters.push_back(std::make_shared<tcpip::Storage>());
+        if (myParameterized.count(varID) > 0) {
+            const int parType = myInputStorage.readUnsignedByte();
+            parameters.back()->writeUnsignedByte(parType);
+            if (parType == libsumo::TYPE_DOUBLE) {
+                parameters.back()->writeDouble(myInputStorage.readDouble());
+            } else if (parType == libsumo::TYPE_STRING) {
+                parameters.back()->writeString(myInputStorage.readString());
+            } else {
+                // Error!
             }
         }
     }
@@ -1425,13 +1460,13 @@ TraCIServer::writeResponseWithLength(tcpip::Storage& outputStorage, tcpip::Stora
 void
 TraCIServer::writePositionVector(tcpip::Storage& outputStorage, const libsumo::TraCIPositionVector& shape) {
     outputStorage.writeUnsignedByte(libsumo::TYPE_POLYGON);
-    if (shape.size() < 256) {
-        outputStorage.writeUnsignedByte((int)shape.size());
+    if (shape.value.size() < 256) {
+        outputStorage.writeUnsignedByte((int)shape.value.size());
     } else {
         outputStorage.writeUnsignedByte(0);
-        outputStorage.writeInt((int)shape.size());
+        outputStorage.writeInt((int)shape.value.size());
     }
-    for (const libsumo::TraCIPosition& pos : shape) {
+    for (const libsumo::TraCIPosition& pos : shape.value) {
         outputStorage.writeDouble(pos.x);
         outputStorage.writeDouble(pos.y);
     }

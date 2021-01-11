@@ -25,6 +25,7 @@
 #include <utils/common/StringUtils.h>
 #include <utils/common/MsgHandler.h>
 #include "NBEdgeCont.h"
+#include "NBPTStopCont.h"
 #include "NBPTLine.h"
 #include "NBPTStop.h"
 
@@ -223,43 +224,44 @@ NBPTLine::replaceStop(NBPTStop* oldStop, NBPTStop* newStop) {
 void
 NBPTLine::replaceEdge(const std::string& edgeID, const EdgeVector& replacement) {
     EdgeVector oldRoute = myRoute;
-    int stopIndex = 0;
     myRoute.clear();
-    std::vector<NBPTStop*> unassigned;
     for (NBEdge* e : oldRoute) {
         if (e->getID() == edgeID) {
             myRoute.insert(myRoute.end(), replacement.begin(), replacement.end());
         } else {
             myRoute.push_back(e);
         }
-        while (stopIndex < (int)myPTStops.size() && myPTStops[stopIndex]->getEdgeId() == e->getID()) {
-            if (e->getID() == edgeID) {
-                NBPTStop* stop = myPTStops[stopIndex];
-                // find best edge among replacement edges
-                double bestDist = std::numeric_limits<double>::max();
-                NBEdge* bestEdge = nullptr;
-                for (NBEdge* cand : replacement) {
-                    double dist = cand->getGeometry().distance2D(stop->getPosition());
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        bestEdge = cand;
-                    }
-                }
-                if (bestDist != std::numeric_limits<double>::max()) {
-                    stop->findLaneAndComputeBusStopExtent(bestEdge);
-                    if ((bestEdge->getPermissions() & SVC_PEDESTRIAN) != 0) {
-                        // no need for access
-                        stop->clearAccess();
-                    }
-                } else {
-                    WRITE_WARNING("Could not re-assign ptstop '" + stop->getID() + "' after replacing edge '" + edgeID + "'");
-                    unassigned.push_back(stop);
-                }
-            }
-            stopIndex++;
-        }
     }
-    for (NBPTStop* stop : unassigned) {
-        myPTStops.erase(std::find(myPTStops.begin(), myPTStops.end(), stop));
+}
+
+void
+NBPTLine::deleteInvalidStops(const NBEdgeCont& ec, const NBPTStopCont& sc) {
+    // delete stops that are missing or have no edge
+    for (auto it = myPTStops.begin(); it != myPTStops.end();) {
+        NBPTStop* stop = *it;
+        if (sc.get(stop->getID()) == nullptr || 
+                ec.getByID(stop->getEdgeId()) == nullptr) {
+            WRITE_WARNING("Removed invalid stop '" + stop->getID() + "' from line '" + getLineID() + "'.");
+            it = myPTStops.erase(it);
+        } else {
+            it++;
+        }
+
+    }
+}
+
+void
+NBPTLine::deleteDuplicateStops() {
+    // delete subsequent stops that belong to the same stopArea
+    long long int lastAreaID = -1;
+    for (auto it = myPTStops.begin(); it != myPTStops.end();) {
+        NBPTStop* stop = *it;
+        if (lastAreaID != -1 && stop->getAreaID() == lastAreaID) {
+            WRITE_WARNINGF("Removed duplicate stop '%' at area '%' from line '%'.", stop->getID(), toString(lastAreaID), getLineID());
+            it = myPTStops.erase(it);
+        } else {
+            it++;
+        }
+        lastAreaID = stop->getAreaID();
     }
 }

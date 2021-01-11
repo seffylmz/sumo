@@ -2067,9 +2067,26 @@ MSVehicle::planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVecto
         // XXX efficiently adapt to shadow leaders using neighAhead by iteration over the whole edge in parallel (lanechanger-style)
         if (myLaneChangeModel->getShadowLane() != nullptr) {
             // also slow down for leaders on the shadowLane relative to the current lane
-            const MSLane* shadowLane = myLaneChangeModel->getShadowLane(lane);
-            if (shadowLane != nullptr) {
-                const double latOffset = getLane()->getRightSideOnEdge() - myLaneChangeModel->getShadowLane()->getRightSideOnEdge();
+            const MSLane* shadowLane = myLaneChangeModel->getShadowLane(leaderLane);
+            if (shadowLane != nullptr &&
+                    (MSGlobals::gLateralResolution > 0 || getLateralOverlap() > POSITION_EPS)) {
+                double latOffset = getLane()->getRightSideOnEdge() - myLaneChangeModel->getShadowLane()->getRightSideOnEdge();
+                if (myLaneChangeModel->isOpposite()) {
+                    // ego posLat is added when retrieving sublanes but it
+                    // should be negated (subtract twice to compensate)
+                    latOffset = ((myLane->getWidth() + shadowLane->getWidth()) * 0.5
+                            - 2 * getLateralPositionOnLane());
+
+
+
+#ifdef DEBUG_PLAN_MOVE
+                    if (DEBUG_COND) {
+                        std::cout << SIMTIME << " opposite veh=" << getID() << " shadowLane=" << shadowLane->getID() << " latOffset=" << latOffset
+                            << " shadowLeaders=" << shadowLane->getLastVehicleInformation(this, latOffset, lane->getLength() - seen).toString()
+                            << "\n";
+                    }
+#endif
+                }
                 adaptToLeaders(shadowLane->getLastVehicleInformation(this, latOffset, lane->getLength() - seen),
                                latOffset,
                                seen, lastLink, shadowLane, v, vLinkPass);
@@ -2250,8 +2267,8 @@ MSVehicle::planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVecto
         double laneStopOffset;
         const double majorStopOffset = MAX2(getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_STOPLINE_GAP, DIST_TO_STOPLINE_EXPECT_PRIORITY), lane->getStopOffset(this));
         const double minorStopOffset = lane->getStopOffset(this);
-        // override low desired decel at yellow
-        const double stopDecel = (*link)->haveYellow() ? MAX2(MIN2(MSGlobals::gTLSYellowMinDecel, cfModel.getEmergencyDecel()), cfModel.getMaxDecel()) : cfModel.getMaxDecel();
+        // override low desired decel at yellow and red
+        const double stopDecel = yellowOrRed && !isRailway(getVClass()) ? MAX2(MIN2(MSGlobals::gTLSYellowMinDecel, cfModel.getEmergencyDecel()), cfModel.getMaxDecel()) : cfModel.getMaxDecel();
         const double brakeDist = cfModel.brakeGap(myState.mySpeed, stopDecel, 0);
         const bool canBrakeBeforeLaneEnd = seen >= brakeDist;
         const bool canBrakeBeforeStopLine = seen - lane->getStopOffset(this) >= brakeDist;
@@ -2332,16 +2349,13 @@ MSVehicle::planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVecto
         // - even if red, if we cannot break we should issue a request
         bool setRequest = (v > NUMERICAL_EPS_SPEED && !abortRequestAfterMinor) || (leavingCurrentIntersection);
 
-        double stopSpeed = cfModel.stopSpeed(this, getSpeed(), stopDist);
-        if ((*link)->haveYellow() && canBrakeBeforeLaneEnd) {
-            // prevent overshooting deceleration after overriding with MSGlobals::gTLSYellowMinDecel
-            stopSpeed = MAX2(stopSpeed, getSpeed() - ACCEL2SPEED(stopDecel));
-        }
+        double stopSpeed = cfModel.stopSpeed(this, getSpeed(), stopDist, stopDecel);
         double vLinkWait = MIN2(v, stopSpeed);
 #ifdef DEBUG_PLAN_MOVE
         if (DEBUG_COND) {
             std::cout
                     << " stopDist=" << stopDist
+                    << " stopDecel=" << stopDecel
                     << " vLinkWait=" << vLinkWait
                     << " brakeDist=" << brakeDist
                     << " seen=" << seen
@@ -2413,7 +2427,7 @@ MSVehicle::planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVecto
         const bool couldBrakeForMinor = !(*link)->havePriority() && brakeDist < seen && !(*link)->lastWasContMajor();
         if (couldBrakeForMinor && !determinedFoePresence) {
             // vehicle decelerates just enough to be able to stop if necessary and then accelerates
-            double maxSpeedAtVisibilityDist = cfModel.maximumSafeStopSpeed(visibilityDistance, myState.mySpeed, false, 0.);
+            double maxSpeedAtVisibilityDist = cfModel.maximumSafeStopSpeed(visibilityDistance, cfModel.getMaxDecel(), myState.mySpeed, false, 0.);
             // XXX: estimateSpeedAfterDistance does not use euler-logic (thus returns a lower value than possible here...)
             double maxArrivalSpeed = cfModel.estimateSpeedAfterDistance(visibilityDistance, maxSpeedAtVisibilityDist, cfModel.getMaxAccel());
             arrivalSpeed = MIN2(vLinkPass, maxArrivalSpeed);
@@ -2587,7 +2601,11 @@ MSVehicle::adaptToLeaders(const MSLeaderInfo& ahead, double latOffset,
                           ? predBack - myState.myPos - getVehicleType().getMinGap()
                           : predBack + seen - lane->getLength() - getVehicleType().getMinGap());
             if (myLaneChangeModel->isOpposite()) {
-                gap *= -1;
+                if (pred->getLaneChangeModel().isOpposite()) {
+                    gap *= -1;
+                } else if (lastLink == nullptr) {
+                    gap = predBack - (myLane->getLength() - myState.myPos) - getVehicleType().getMinGap();
+                }
             }
 #ifdef DEBUG_PLAN_MOVE
             if (DEBUG_COND) {
@@ -4102,6 +4120,8 @@ MSVehicle::getBackPositionOnLane(const MSLane* lane) const {
             || lane == myLaneChangeModel->getTargetLane()) {
         if (myLaneChangeModel->isOpposite()) {
             return myState.myPos + myType->getLength();
+        } else if (&lane->getEdge() != &myLane->getEdge()) {
+            return lane->getLength() - myState.myPos;
         } else {
             return myState.myPos - myType->getLength();
         }
@@ -5650,7 +5670,7 @@ MSVehicle::lateralDistanceToLane(const int offset) const {
     // (ensure we do not lap into the line behind neighLane since there might be unseen blockers)
     assert(offset == 0 || offset == 1 || offset == -1);
     assert(myLane != nullptr);
-    assert(myLane->getParallelLane(offset) != nullptr);
+    assert(myLane->getParallelLane(offset) != nullptr || myLane->getOpposite() != nullptr);
     const double halfCurrentLaneWidth = 0.5 * myLane->getWidth();
     const double halfVehWidth = 0.5 * (getWidth() + NUMERICAL_EPS);
     const double latPos = getLateralPositionOnLane();
@@ -6016,7 +6036,7 @@ MSVehicle::handleCollisionStop(MSStop& stop, const bool collision, const double 
     if (myCurrEdge == stop.edge && distToStop + POSITION_EPS < getCarFollowModel().brakeGap(myState.mySpeed)) {
         if (collision) {
             if (distToStop < getCarFollowModel().brakeGap(myState.mySpeed, getCarFollowModel().getEmergencyDecel(), 0)) {
-                double vNew = getCarFollowModel().maximumSafeStopSpeed(distToStop, getSpeed(), false, 0);
+                double vNew = getCarFollowModel().maximumSafeStopSpeed(distToStop, getCarFollowModel().getMaxDecel(), getSpeed(), false, 0);
                 //std::cout << SIMTIME << " veh=" << getID() << " v=" << myState.mySpeed << " distToStop=" << distToStop
                 //    << " vMinNex=" << getCarFollowModel().minNextSpeed(getSpeed(), this)
                 //    << " bg1=" << getCarFollowModel().brakeGap(myState.mySpeed)

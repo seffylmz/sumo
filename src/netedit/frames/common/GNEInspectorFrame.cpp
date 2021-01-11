@@ -452,12 +452,8 @@ GNEInspectorFrame::inspectClickedElement(const GNEViewNetHelper::ObjectsUnderCur
     if (objectsUnderCursor.getAttributeCarrierFront()) {
         // inspect front element
         inspectSingleElement(objectsUnderCursor.getAttributeCarrierFront());
-        // if element has overlapped elements, show Overlapped Inspection modul
-        if (objectsUnderCursor.getClickedAttributeCarriers().size() > 1) {
-            myOverlappedInspection->showOverlappedInspection(objectsUnderCursor, clickedPosition);
-        } else {
-            myOverlappedInspection->hideOverlappedInspection();
-        }
+        // show Overlapped Inspection modul
+        myOverlappedInspection->showOverlappedInspection(objectsUnderCursor, clickedPosition);
     }
 }
 
@@ -1017,7 +1013,7 @@ GNEInspectorFrame::TemplateEditor::EdgeTemplate::EdgeTemplate() {
 }
 
 
-GNEInspectorFrame::TemplateEditor::EdgeTemplate::EdgeTemplate(GNEEdge* edge) {
+GNEInspectorFrame::TemplateEditor::EdgeTemplate::EdgeTemplate(const GNEEdge* edge) {
     // copy ID
     edgeParameters[SUMO_ATTR_ID] = edge->getAttribute(SUMO_ATTR_ID);
     // copy edge-specific attributes
@@ -1100,6 +1096,13 @@ GNEInspectorFrame::TemplateEditor::hasTemplate() const {
 const GNEInspectorFrame::TemplateEditor::EdgeTemplate&
 GNEInspectorFrame::TemplateEditor::getEdgeTemplate() const {
     return myEdgeTemplate;
+}
+
+
+void
+GNEInspectorFrame::TemplateEditor::updateEdgeTemplate(const GNEEdge* edge) {
+    // update edge template
+    myEdgeTemplate = TemplateEditor::EdgeTemplate(edge);
 }
 
 

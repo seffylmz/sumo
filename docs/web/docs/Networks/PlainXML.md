@@ -487,6 +487,7 @@ example for using types is described in the chapter [Type Descriptions](#type_de
 ## SpreadType
 Each edge has a geometry definition (which defaults to the straight-line between from-junction and to-junction position).
 The spreadType defines how to compute the lane geometry from the edge geometry:
+
 - **right** (default): The edge geometry is interpreted as the left side of the edge and lanes flare out to the right. This works well if edges in opposite directions have the same (or rather reversed) geometry.
 - **center**: The edge geometry is interpreted as the middle of the directional edge and lanes flare out symmetrically to both sides. This is appropriate for one-way edges
 - **roadCenter**: The edge geometry is interpreted as the middle of a bi-directional road. This works well when both directional edges have a different lane number.
@@ -542,6 +543,8 @@ The definition of a lane contains the following optional attributes:
 | **index**      | int                                                                                                                 | The enumeration index of the lane (0 is the rightmost lane, <NUMBER_LANES\>-1 is the leftmost one)                                          |
 | allow          | list of vehicle classes                                                                                             | List of permitted vehicle classes (see [access permissions](#road_access_permissions_allow_disallow))                  |
 | disallow       | list of vehicle classes                                                                                             | List of forbidden vehicle classes (see [access permissions](#road_access_permissions_allow_disallow))                  |
+| changeLeft        | list of vehicle classes | List of vehicle classes that may change left from this lane |
+| changeRight       | list of vehicle classes | List of vehicle classes that may change right from this lane |
 | speed          | float                                                                                                               | speed in meters per second                                                                                                                 |
 | width          | float                                                                                                               | width in meters (used for visualization)                                                                                                   |
 | endOffset      | float \>= 0                                                                                                         | Move the stop line back from the intersection by the given amount (effectively shortening the lane and locally enlarging the intersection) |
@@ -549,6 +552,11 @@ The definition of a lane contains the following optional attributes:
 
 See "Vehicle Classes" for further information about [allowed vehicle classes](../Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md#abstract_vehicle_class)
 and their usage.
+
+### lane change restrictions
+When definining lane change restrictions with `changeLeft` and `changeRight`, the vehicle class "emergency" should typically be allowed since emergency vehicles can ignore non-phyiscal restrictions in most cases. 
+
+To strongest restriction is the value "ignoring". Note, that vehicles of class "ignoring" cannot be restricted from lane changing with `changeLeft` and `changeRight`. (only creating separate parallel edges will work).
 
 ## Road Segment Refining
 

@@ -72,6 +72,18 @@ protected:
         double& latDist,
         double& maneuverDist) const;
 
+    /* @brief call lanechange model to check the merits of an opposite-direction
+     * change and update state accordingly */
+    bool checkChangeOpposite(
+        MSVehicle* vehicle,
+        int laneOffset,
+        MSLane* targetLane,
+        const std::pair<MSVehicle* const, double>& leader,
+        const std::pair<MSVehicle* const, double>& neighLead,
+        const std::pair<MSVehicle* const, double>& neighFollow,
+        const std::vector<MSVehicle::LaneQ>& preb);
+
+
     ///  @brief Continue a sublane-lane change maneuver and return whether the midpoint was passed in this step
     //          (used to continue sublane changing in non-action steps).
     bool continueChangeSublane(MSVehicle* vehicle, ChangerIt& from);
@@ -85,6 +97,9 @@ protected:
     /// @brief get leaders for ego on the given lane
     MSLeaderDistanceInfo getLeaders(const ChangerIt& target, const MSVehicle* ego) const;
 
+    /// @brief get leaders for ego on the given lane
+    void addLeaders(const MSLane* targetLane, const MSVehicle* vehicle, double vehPos, MSLeaderDistanceInfo& result) const;
+
     /// @brief immediately stop lane-changing and register vehicle as unchanged
     void abortLCManeuver(MSVehicle* vehicle);
 
@@ -92,10 +107,16 @@ protected:
     /// @brief helper function that calls checkChangeSublane and sets blocker information
     StateAndDist checkChangeHelper(MSVehicle* vehicle, int laneOffset, LaneChangeAction alternatives);
 
+    /// @brief  find the closest leader that prevents ego vehicle from passing on the current lane
+    static std::pair<MSVehicle*, double> findClosestLeader(const MSLeaderDistanceInfo& leaders, const MSVehicle* vehicle);
+
     /// @brief optional output for start of lane-change maneuvre
     void outputLCStarted(MSVehicle* vehicle, ChangerIt& from, ChangerIt& to, int direction, double maneuverDist);
     /// @brief optional output for end of lane-change maneuvre
     void outputLCEnded(MSVehicle* vehicle, ChangerIt& from, ChangerIt& to, int direction);
+
+    /// @brief whether checkChangeOpposite was called for the current vehicle
+    bool myCheckedChangeOpposite;
 
 private:
     /// Default constructor.

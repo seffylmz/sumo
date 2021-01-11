@@ -88,10 +88,10 @@ public:
 
         /// @name Members which are used only by MSLaneChangerSublane
         /// @{
-        // the vehicles in from of the current vehicle (only on the current edge, continously updated during change() )
+        // the vehicles in front of the current vehicle (only on the current edge, continously updated during change() )
         MSLeaderInfo ahead;
 
-        // the vehicles in from of the current vehicle (including those on the next edge, contiously update during change() ))
+        // the vehicles in front of the current vehicle (including those on the next edge, contiously update during change() ))
         MSLeaderDistanceInfo aheadNext;
         ///@}
 
@@ -107,6 +107,12 @@ public:
 
     /// the iterator moving over the ChangeElems
     typedef Changer::const_iterator ConstChangerIt;
+
+    /// @brief return changer (only to be used by MSLaneChangerSublane from another instance)
+    Changer& getChanger() {
+        return myChanger;
+    }
+
 
 protected:
     /// Initialize the changer before looping over all vehicles.
@@ -184,6 +190,18 @@ protected:
         const std::pair<MSVehicle* const, double>& neighLead,
         const std::pair<MSVehicle* const, double>& neighFollow,
         const std::vector<MSVehicle::LaneQ>& preb) const;
+
+    /* @brief call lanechange model to check the merits of an opposite-direction
+     * change and update state accordingly */
+    virtual bool checkChangeOpposite(
+        MSVehicle* vehicle,
+        int laneOffset,
+        MSLane* targetLane,
+        const std::pair<MSVehicle* const, double>& leader,
+        const std::pair<MSVehicle* const, double>& neighLead,
+        const std::pair<MSVehicle* const, double>& neighFollow,
+        const std::vector<MSVehicle::LaneQ>& preb);
+
 
     /*  @brief start the lane change maneuver (and finish it instantly if gLaneChangeDuration == 0)
      *  @return False when aborting the change due to being remote controlled*/

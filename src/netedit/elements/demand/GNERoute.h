@@ -257,6 +257,12 @@ protected:
     /// @brief route color
     RGBColor myColor;
 
+    /// @brief repeat
+    int myRepeat;
+
+    /// @brief cycleTime
+    SUMOTime myCycleTime;
+
     /// @brief SUMOVehicleClass (Only used for drawing)
     SUMOVehicleClass myVClass;
 

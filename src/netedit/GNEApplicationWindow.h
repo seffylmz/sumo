@@ -112,20 +112,11 @@ public:
     /// @brief called when the command/FXCall open foreign is executed
     long onCmdOpenForeign(FXObject*, FXSelector, void*);
 
-    /// @brief called when the command/FXCall open additionals is executed
-    long onCmdOpenAdditionals(FXObject*, FXSelector, void*);
-
     /// @brief called when the command/FXCall open TLS programs is executed
     long onCmdOpenTLSPrograms(FXObject*, FXSelector, void*);
 
     /// @brief called when the command/FXCall open edgeType is executed
     long onCmdOpenEdgeTypes(FXObject*, FXSelector, void*);
-
-    /// @brief called when the command/FXCall open demand is executed
-    long onCmdOpenDemandElements(FXObject*, FXSelector, void*);
-
-    /// @brief called when the command/FXCall open data is executed
-    long onCmdOpenDataElements(FXObject*, FXSelector, void*);
 
     /// @brief called when the command/FXCall reload is executed
     long onCmdReload(FXObject*, FXSelector, void*);
@@ -145,6 +136,9 @@ public:
     /// @brief called when the command/FXCall locate is executed
     long onCmdLocate(FXObject*, FXSelector, void*);
 
+    /// @brief called when the command/FXCall save all elements is executed
+    long onCmdSaveAllElements(FXObject*, FXSelector, void*);
+
     /// @brief called when the command/FXCall save network is executed
     long onCmdSaveNetwork(FXObject*, FXSelector, void*);
 
@@ -160,14 +154,41 @@ public:
     /// @brief called when the command/FXCall save edgeTypes as is executed
     long onCmdSaveEdgeTypesAs(FXObject*, FXSelector, void*);
 
+    /// @brief called when the command/FXCall open additionals is executed
+    long onCmdOpenAdditionals(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall reload additionals is executed
+    long onCmdReloadAdditionals(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall reload additionals is updated
+    long onUpdReloadAdditionals(FXObject*, FXSelector, void*);
+
     /// @brief called when the command/FXCall save additionals is executed
     long onCmdSaveAdditionals(FXObject*, FXSelector, void*);
 
     /// @brief called when the command/FXCall save additionals as is executed
     long onCmdSaveAdditionalsAs(FXObject*, FXSelector, void*);
 
+    /// @brief called when the command/FXCall open demand is executed
+    long onCmdOpenDemandElements(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall reload demand elements is executed
+    long onCmdReloadDemandElements(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall reload demand elements is updated
+    long onUpdReloadDemandElements(FXObject*, FXSelector, void*);
+
     /// @brief called when the command/FXCall save demand elements is executed
     long onCmdSaveDemandElements(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall open data is executed
+    long onCmdOpenDataElements(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall reload data elements is executed
+    long onCmdReloadDataElements(FXObject*, FXSelector, void*);
+
+    /// @brief called when the command/FXCall reload data elements is updated
+    long onUpdReloadDataElements(FXObject*, FXSelector, void*);
 
     /// @brief called when the command/FXCall save demand elements as is executed
     long onCmdSaveDemandElementsAs(FXObject*, FXSelector, void*);
@@ -189,6 +210,9 @@ public:
 
     /// @brief called when the update/FXCall reload is executed
     long onUpdReload(FXObject*, FXSelector, void*);
+
+    /// @brief called when the update/FXCall save all elements is executed
+    long onUpdSaveAllElements(FXObject*, FXSelector, void*);
 
     /// @brief called when the update/FXCall save network is executed
     long onUpdSaveNetwork(FXObject*, FXSelector, void*);

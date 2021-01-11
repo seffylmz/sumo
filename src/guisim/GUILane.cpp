@@ -81,9 +81,11 @@ const RGBColor GUILane::MESO_USE_LANE_COLOR(0, 0, 0, 0);
 GUILane::GUILane(const std::string& id, double maxSpeed, double length,
                  MSEdge* const edge, int numericalID,
                  const PositionVector& shape, double width,
-                 SVCPermissions permissions, int index, bool isRampAccel,
+                 SVCPermissions permissions,
+                 SVCPermissions changeLeft, SVCPermissions changeRight,
+                 int index, bool isRampAccel,
                  const std::string& type) :
-    MSLane(id, maxSpeed, length, edge, numericalID, shape, width, permissions, index, isRampAccel, type),
+    MSLane(id, maxSpeed, length, edge, numericalID, shape, width, permissions, changeLeft, changeRight, index, isRampAccel, type),
     GUIGlObject(GLO_LANE, id),
 #ifdef HAVE_OSG
     myGeom(0),
@@ -717,27 +719,41 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s, double scale) const {
     setColor(s);
     // optionally draw inverse markings
     if (myIndex > 0 && (myEdge->getLanes()[myIndex - 1]->getPermissions() & myPermissions) != 0) {
-        double mw = (myHalfLaneWidth + SUMO_const_laneMarkWidth) * scale;
-        double mw2 = (myHalfLaneWidth - SUMO_const_laneMarkWidth) * scale;
-        if (MSGlobals::gLefthand) {
-            mw *= -1;
-            mw2 *= -1;
-        }
-        int e = (int) getShape().size() - 1;
-        for (int i = 0; i < e; ++i) {
-            glPushMatrix();
-            glTranslated(getShape()[i].x(), getShape()[i].y(), 2.1);
-            glRotated(myShapeRotations[i], 0, 0, 1);
-            for (double t = 0; t < myShapeLengths[i]; t += 6) {
-                const double length = MIN2((double)3, myShapeLengths[i] - t);
-                glBegin(GL_QUADS);
-                glVertex2d(-mw, -t);
-                glVertex2d(-mw, -t - length);
-                glVertex2d(-mw2, -t - length);
-                glVertex2d(-mw2, -t);
-                glEnd();
+        const bool cl = myEdge->getLanes()[myIndex - 1]->allowsChangingLeft(SVC_PASSENGER);
+        const bool cr = allowsChangingRight(SVC_PASSENGER);
+        double mw = (myHalfLaneWidth + SUMO_const_laneMarkWidth * (cl ? 0.6 : 0.2)) * scale;
+        double mw2 = (myHalfLaneWidth - SUMO_const_laneMarkWidth * (cr ? 0.6 : 0.2)) * scale;
+        if (cl || cr) {
+            if (MSGlobals::gLefthand) {
+                mw *= -1;
+                mw2 *= -1;
             }
-            glPopMatrix();
+            int e = (int) getShape().size() - 1;
+            for (int i = 0; i < e; ++i) {
+                glPushMatrix();
+                glTranslated(getShape()[i].x(), getShape()[i].y(), 2.1);
+                glRotated(myShapeRotations[i], 0, 0, 1);
+                for (double t = 0; t < myShapeLengths[i]; t += 6) {
+                    const double length = MIN2((double)3, myShapeLengths[i] - t);
+                    glBegin(GL_QUADS);
+                    glVertex2d(-mw, -t);
+                    glVertex2d(-mw, -t - length);
+                    glVertex2d(-mw2, -t - length);
+                    glVertex2d(-mw2, -t);
+                    glEnd();
+                    if (!cl || !cr) {
+                        // draw inverse marking between asymmetrical lane markings
+                        const double length2 = MIN2((double)6, myShapeLengths[i] - t);
+                        glBegin(GL_QUADS);
+                        glVertex2d(-myHalfLaneWidth + 0.02, -t - length2);
+                        glVertex2d(-myHalfLaneWidth + 0.02, -t - length);
+                        glVertex2d(-myHalfLaneWidth - 0.02, -t - length);
+                        glVertex2d(-myHalfLaneWidth - 0.02, -t - length2);
+                        glEnd();
+                    }
+                }
+                glPopMatrix();
+            }
         }
     }
     // draw white boundings and white markings

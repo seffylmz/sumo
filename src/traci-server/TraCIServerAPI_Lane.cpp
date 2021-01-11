@@ -46,7 +46,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
     const std::string id = inputStorage.readString();
     server.initWrapper(libsumo::RESPONSE_GET_LANE_VARIABLE, variable, id);
     try {
-        if (!libsumo::Lane::handleVariable(id, variable, &server)) {
+        if (!libsumo::Lane::handleVariable(id, variable, &server, &inputStorage)) {
             switch (variable) {
                 case libsumo::LANE_LINKS: {
                     server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_COMPOUND);
@@ -105,31 +105,6 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                     } else {
                         server.getWrapperStorage().writeStringList(libsumo::Lane::getFoes(id, toLane));
                     }
-                    break;
-                }
-                case libsumo::VAR_SHAPE:
-                    server.writePositionVector(server.getWrapperStorage(), libsumo::Lane::getShape(id));
-                    break;
-                case libsumo::VAR_PARAMETER: {
-                    std::string paramName = "";
-                    if (!server.readTypeCheckingString(inputStorage, paramName)) {
-                        return server.writeErrorStatusCmd(libsumo::CMD_GET_LANE_VARIABLE, "Retrieval of a parameter requires its name.", outputStorage);
-                    }
-                    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
-                    server.getWrapperStorage().writeString(libsumo::Lane::getParameter(id, paramName));
-                    break;
-                }
-                case libsumo::VAR_PARAMETER_WITH_KEY: {
-                    std::string paramName = "";
-                    if (!server.readTypeCheckingString(inputStorage, paramName)) {
-                        return server.writeErrorStatusCmd(libsumo::CMD_GET_LANE_VARIABLE, "Retrieval of a parameter requires its name.", outputStorage);
-                    }
-                    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_COMPOUND);
-                    server.getWrapperStorage().writeInt(2);  /// length
-                    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
-                    server.getWrapperStorage().writeString(paramName);
-                    server.getWrapperStorage().writeUnsignedByte(libsumo::TYPE_STRING);
-                    server.getWrapperStorage().writeString(libsumo::Lane::getParameter(id, paramName));
                     break;
                 }
                 default:

@@ -43,7 +43,8 @@ NBPTStop::NBPTStop(std::string ptStopId, Position position, std::string edgeId, 
     myEndPos(0),
     myBidiStop(nullptr),
     myIsLoose(origEdgeId == ""),
-    myIsMultipleStopPositions(false) {
+    myIsMultipleStopPositions(false),
+    myAreaID(-1) {
 }
 
 std::string
@@ -161,8 +162,9 @@ NBPTStop::getIsMultipleStopPositions() const {
 
 
 void
-NBPTStop::setIsMultipleStopPositions(bool multipleStopPositions) {
+NBPTStop::setIsMultipleStopPositions(bool multipleStopPositions, long long int areaID) {
     myIsMultipleStopPositions = multipleStopPositions;
+    myAreaID = areaID;
 }
 
 
@@ -257,5 +259,31 @@ NBPTStop::addAccess(std::string laneID, double offset, double length) {
     myAccesses.push_back(std::make_tuple(laneID, offset, length));
 }
 
+
+bool
+NBPTStop::replaceEdge(const std::string& edgeID, const EdgeVector& replacement) {
+    if (myEdgeId == edgeID) {
+        // find best edge among replacement edges
+        double bestDist = std::numeric_limits<double>::max();
+        NBEdge* bestEdge = nullptr;
+        for (NBEdge* cand : replacement) {
+            double dist = cand->getGeometry().distance2D(myPosition);
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestEdge = cand;
+            }
+        }
+        if (bestDist != std::numeric_limits<double>::max()) {
+            if ((bestEdge->getPermissions() & SVC_PEDESTRIAN) != 0) {
+                // no need for access
+                clearAccess();
+            }
+            return findLaneAndComputeBusStopExtent(bestEdge);
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
 
 /****************************************************************************/

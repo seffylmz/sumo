@@ -186,7 +186,7 @@ public:
      * @param[in, opt. changed] tc The traffic lights container to update
      * @post No two edges with same geometry connecting same nodes exist
      */
-    void joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc);
+    void joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc, bool removeDuplicates);
 
     /// @brief fix overlap
     void avoidOverlap();
@@ -207,7 +207,10 @@ public:
      * @param[in, opt. changed] ec The container with the edge to be tested
      * @param[in] numKeep The number of components to keep
      */
-    void removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKeep);
+    void removeComponents(NBDistrictCont& dc, NBEdgeCont& ec, const int numKeep, bool hasPTStops);
+
+    /// @brief remove rail components after ptstops are built
+    void removeRailComponents(NBDistrictCont& dc, NBEdgeCont& ec, NBPTStopCont& sc); 
 
     /** @brief Removes "unwished" nodes
      *
@@ -417,6 +420,8 @@ private:
     /// @brief node positions for faster lookup
     NamedRTree myRTree;
 
+    /// @brief network components that must be removed if not connected to the road network via stop access
+    std::vector<std::vector<std::string> > myRailComponents;
 
 private:
     /// @brief invalidated copy constructor

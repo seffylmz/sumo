@@ -1147,7 +1147,7 @@ MSLCM_LC2013::_wantsChange(
         currentDist = MAX2(currentDist, stopPos);
         neighDist = MAX2(neighDist, stopPos);
     }
-    const double posOnLane = isOpposite() ? myVehicle.getLane()->getOppositePos(myVehicle.getPositionOnLane()) : myVehicle.getPositionOnLane();
+    const double posOnLane = getForwardPos();
     const int lca = (right ? LCA_RIGHT : LCA_LEFT);
     const int myLca = (right ? LCA_MRIGHT : LCA_MLEFT);
     const int lcaCounter = (right ? LCA_LEFT : LCA_RIGHT);
@@ -1772,7 +1772,7 @@ MSLCM_LC2013::anticipateFollowSpeed(const std::pair<MSVehicle*, double>& leaderD
     } else {
         // onInsertion = true because the vehicle has already moved
         if (leader == nullptr) {
-            futureSpeed = myCarFollowModel.maximumSafeStopSpeed(dist, myVehicle.getSpeed(), true);
+            futureSpeed = myCarFollowModel.maximumSafeStopSpeed(dist, myCarFollowModel.getMaxDecel(), myVehicle.getSpeed(), true);
         } else {
             futureSpeed = myCarFollowModel.maximumSafeFollowSpeed(gap, myVehicle.getSpeed(), leader->getSpeed(), leader->getCarFollowModel().getMaxDecel(), true);
         }
@@ -1787,7 +1787,7 @@ MSLCM_LC2013::anticipateFollowSpeed(const std::pair<MSVehicle*, double>& leaderD
             if (fullSpeedGap / deltaV < mySpeedGainLookahead) {
                 // anticipate future braking by computing the average
                 // speed over the next few seconds
-                const double gapClosingTime = fullSpeedGap / deltaV;
+                const double gapClosingTime = MAX2(0.0, fullSpeedGap / deltaV);
                 const double foreCastTime = mySpeedGainLookahead * 2;
                 //if (DEBUG_COND) std::cout << SIMTIME << " veh=" << myVehicle.getID() << " leader=" << leader->getID() << " gap=" << gap << " deltaV=" << deltaV << " futureSpeed=" << futureSpeed << " futureLeaderSpeed=" << futureLeaderSpeed;
                 futureSpeed = MIN2(futureSpeed, (gapClosingTime * futureSpeed + (foreCastTime - gapClosingTime) * futureLeaderSpeed) / foreCastTime);

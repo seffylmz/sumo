@@ -353,13 +353,17 @@ Simulation::getDeltaT() {
 TraCIPositionVector
 Simulation::getNetBoundary() {
     Boundary b = GeoConvHelper::getFinal().getConvBoundary();
-    TraCIPositionVector tb({ TraCIPosition(), TraCIPosition() });
-    tb[0].x = b.xmin();
-    tb[1].x = b.xmax();
-    tb[0].y = b.ymin();
-    tb[1].y = b.ymax();
-    tb[0].z = b.zmin();
-    tb[1].z = b.zmax();
+    TraCIPositionVector tb;
+    TraCIPosition minV;
+    TraCIPosition maxV;
+    minV.x = b.xmin();
+    maxV.x = b.xmax();
+    minV.y = b.ymin();
+    maxV.y = b.ymax();
+    minV.z = b.zmin();
+    maxV.z = b.zmax();
+    tb.value.push_back(minV);
+    tb.value.push_back(maxV);
     return tb;
 }
 
@@ -711,6 +715,12 @@ Simulation::getParameter(const std::string& objectID, const std::string& key) {
     }
 }
 
+LIBSUMO_GET_PARAMETER_WITH_KEY_IMPLEMENTATION(Simulation)
+
+void
+Simulation::setParameter(const std::string& /* objectID */, const std::string& param, const std::string& /* value */) {
+    throw TraCIException("Setting parameter '" + param + "' is not supported.");
+}
 
 void
 Simulation::clearPending(const std::string& routeID) {
@@ -757,7 +767,7 @@ Simulation::makeWrapper() {
 
 
 bool
-Simulation::handleVariable(const std::string& objID, const int variable, VariableWrapper* wrapper) {
+Simulation::handleVariable(const std::string& objID, const int variable, VariableWrapper* wrapper, tcpip::Storage* paramData) {
     switch (variable) {
         case VAR_TIME:
             return wrapper->wrapDouble(objID, variable, getTime());
@@ -811,8 +821,18 @@ Simulation::handleVariable(const std::string& objID, const int variable, Variabl
             return wrapper->wrapDouble(objID, variable, getDeltaT());
         case VAR_MIN_EXPECTED_VEHICLES:
             return wrapper->wrapInt(objID, variable, getMinExpectedNumber());
+        case VAR_BUS_STOP_ID_LIST:
+            return wrapper->wrapStringList(objID, variable, getBusStopIDList());
         case VAR_BUS_STOP_WAITING:
             return wrapper->wrapInt(objID, variable, getBusStopWaiting(objID));
+        case VAR_BUS_STOP_WAITING_IDS:
+            return wrapper->wrapStringList(objID, variable, getBusStopWaitingIDList(objID));
+        case libsumo::VAR_PARAMETER:
+            paramData->readUnsignedByte();
+            return wrapper->wrapString(objID, variable, getParameter(objID, paramData->readString()));
+        case libsumo::VAR_PARAMETER_WITH_KEY:
+            paramData->readUnsignedByte();
+            return wrapper->wrapStringPair(objID, variable, getParameterWithKey(objID, paramData->readString()));
         default:
             return false;
     }

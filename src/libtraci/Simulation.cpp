@@ -45,7 +45,8 @@ Simulation::init(int port, int numRetries, const std::string& host, const std::s
 
 
 std::pair<int, std::string>
-Simulation::start(const std::vector<std::string>& cmd, int port, int numRetries, const std::string& label, const bool verbose) {
+Simulation::start(const std::vector<std::string>& cmd, int port, int numRetries, const std::string& label, const bool verbose,
+                  const std::string& /* traceFile */, bool /* traceGetters */, void* /* _stdout */) {
     if (port == -1) {
         port = tcpip::Socket::getFreeSocketPort();
     }
@@ -470,14 +471,7 @@ Simulation::findIntermodalRoute(const std::string& fromEdge, const std::string& 
     return ret;
 }
 
-
-std::string
-Simulation::getParameter(const std::string& objectID, const std::string& key) {
-    tcpip::Storage content;
-    Dom::writeTypedString(content, key);
-    return Dom::getString(libsumo::VAR_PARAMETER, objectID, &content);
-}
-
+LIBTRACI_PARAMETER_IMPLEMENTATION(Simulation, SIM)
 
 void
 Simulation::clearPending(const std::string& routeID) {

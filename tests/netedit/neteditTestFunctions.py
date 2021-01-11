@@ -332,9 +332,9 @@ def Popen(extraParameters, debugInformation):
                         os.path.join(_TEXTTEST_SANDBOX, "input_routes.rou.xml")]
 
     # Check if datas must be loaded
-    if os.path.exists(os.path.join(_TEXTTEST_SANDBOX, "input_datas.rou.xml")):
+    if os.path.exists(os.path.join(_TEXTTEST_SANDBOX, "input_datas.dat.xml")):
         neteditCall += ['-d',
-                        os.path.join(_TEXTTEST_SANDBOX, "input_datas.rou.xml")]
+                        os.path.join(_TEXTTEST_SANDBOX, "input_datas.dat.xml")]
 
     # check if a gui settings file has to be load
     if os.path.exists(os.path.join(_TEXTTEST_SANDBOX, "gui-settings.xml")):
@@ -492,7 +492,7 @@ def focusOnFrame():
     time.sleep(1)
 
 
-def undo(referencePosition, number):
+def undo(referencePosition, number, posX=0, posY=0):
     """
     @brief undo last operation
     """
@@ -501,13 +501,13 @@ def undo(referencePosition, number):
     # needed to avoid errors with undo/redo (Provisionally)
     typeKey('i')
     # click over referencePosition
-    leftClick(referencePosition, 0, 0)
+    leftClick(referencePosition, posX, posY)
     for _ in range(number):
         typeTwoKeys('ctrl', 'z')
         time.sleep(DELAY_UNDOREDO)
 
 
-def redo(referencePosition, number):
+def redo(referencePosition, number, posX=0, posY=0):
     """
     @brief undo last operation
     """
@@ -516,7 +516,7 @@ def redo(referencePosition, number):
     # needed to avoid errors with undo/redo (Provisionally)
     typeKey('i')
     # click over referencePosition
-    leftClick(referencePosition, 0, 0)
+    leftClick(referencePosition, posX, posY)
     for _ in range(number):
         typeTwoKeys('ctrl', 'y')
         time.sleep(DELAY_UNDOREDO)
@@ -557,7 +557,8 @@ def waitQuestion(answer):
 
 def reload(NeteditProcess, openNetNonSavedDialog=False, saveNet=False,
            openAdditionalsNonSavedDialog=False, saveAdditionals=False,
-           openDemandNonSavedDialog=False, saveDemandElements=False):
+           openDemandNonSavedDialog=False, saveDemandElements=False,
+           openDataNonSavedDialog=False, saveDataElements=False):
     """
     @brief reload Netedit
     """
@@ -591,6 +592,14 @@ def reload(NeteditProcess, openNetNonSavedDialog=False, saveNet=False,
             waitQuestion('s')
         else:
             waitQuestion('q')
+    # Check if data elements must be saved
+    if openDataNonSavedDialog:
+        # Wait some seconds
+        time.sleep(DELAY_QUESTION)
+        if saveDataElements:
+            waitQuestion('s')
+        else:
+            waitQuestion('q')
     # Wait some seconds
     time.sleep(DELAY_RELOAD)
     # check if Netedit was crashed during reloading
@@ -600,7 +609,8 @@ def reload(NeteditProcess, openNetNonSavedDialog=False, saveNet=False,
 
 def quit(NeteditProcess, openNetNonSavedDialog=False, saveNet=False,
          openAdditionalsNonSavedDialog=False, saveAdditionals=False,
-         openDemandNonSavedDialog=False, saveDemandElements=False):
+         openDemandNonSavedDialog=False, saveDemandElements=False,
+         openDataNonSavedDialog=False, saveDataElements=False):
     """
     @brief quit Netedit
     """
@@ -638,6 +648,14 @@ def quit(NeteditProcess, openNetNonSavedDialog=False, saveNet=False,
             if saveDemandElements:
                 waitQuestion('s')
             else:
+                waitQuestion('q')  
+        # Check if data elements must be saved
+        if openDataNonSavedDialog:
+            # Wait some seconds
+            time.sleep(DELAY_QUESTION)
+            if saveDataElements:
+                waitQuestion('s')
+            else:
                 waitQuestion('q')
         # wait some seconds for netedit to quit
         if hasattr(subprocess, "TimeoutExpired"):
@@ -672,14 +690,14 @@ def openNetworkAs(waitTime=2):
     time.sleep(waitTime)
 
 
-def saveNetwork(referencePosition, clickOverReference=False):
+def saveNetwork(referencePosition, clickOverReference=False, posX=0, posY=0):
     """
     @brief save network
     """
     # check if clickOverReference is enabled
     if clickOverReference:
         # click over reference (to avoid problem with undo-redo)
-        leftClick(referencePosition, 0, 0)
+        leftClick(referencePosition, posX, posY)
     # save network using hotkey
     typeTwoKeys('ctrl', 's')
     # wait for debug (due recomputing)
@@ -760,16 +778,14 @@ def saveRoutes(referencePosition, clickOverReference=True):
     typeThreeKeys('ctrl', 'shift', 'd')
 
 
-def saveDatas(referencePosition, clickOverReference=True):
+def saveDatas(referencePosition, clickOverReference=True, posX=0, posY=0):
     """
     @brief save datas
     """
     # check if clickOverReference is enabled
     if clickOverReference:
         # click over reference (to avoid problem with undo-redo)
-        leftClick(referencePosition, 0, 0)
-    # force flag for demand elements saving using hotkey
-    typeTwoKeys('ctrl', 'F4')
+        leftClick(referencePosition, posX, posY)
     # save datas using hotkey
     typeThreeKeys('ctrl', 'shift', 'b')
 
@@ -955,6 +971,36 @@ def checkParameters(referencePosition, attributeNumber, overlapped):
     modifyAttribute(attributeNumber, "key1=valueInvalid%;%$<>$$%|key2=value2|key3=value3", overlapped)
     # Change generic parameters with a valid value
     modifyAttribute(attributeNumber, "keyFinal1=value1|keyFinal2=value2|keyFinal3=value3", overlapped)
+    # Check undo (including load/creation)
+    undo(referencePosition, 8)
+    # Check redo
+    redo(referencePosition, 8)
+
+
+def checkDoubleParameters(referencePosition, attributeNumber, overlapped, posX=0, posY=0):
+    """
+    @brief Check generic parameters
+    """
+    # Change generic parameters with an invalid value (dummy)
+    modifyAttribute(attributeNumber, "dummyGenericParameters", overlapped)
+    # Change generic parameters with an invalid value (invalid format)
+    modifyAttribute(attributeNumber, "key1|key2|key3", overlapped)
+    # Change generic parameters with a valid value
+    modifyAttribute(attributeNumber, "key1=1|key2=2|key3=3", overlapped)
+    # Change generic parameters with a valid value (empty values)
+    modifyAttribute(attributeNumber, "key1=|key2=|key3=", overlapped)
+    # Change generic parameters with a valid value (clear parameters)
+    modifyAttribute(attributeNumber, "", overlapped)
+    # Change generic parameters with an valid value (duplicated keys)
+    modifyAttribute(attributeNumber, "key1duplicated=1|key1duplicated=2|key3=3", overlapped)
+    # Change generic parameters with a valid value (duplicated values)
+    modifyAttribute(attributeNumber, "key1=valueDuplicated|key2=valueDuplicated|key3=valueDuplicated", overlapped)
+    # Change generic parameters with an invalid value (invalid key characters)
+    modifyAttribute(attributeNumber, "keyInvalid.;%>%$$=1|key2=2|key3=3", overlapped)
+    # Change generic parameters with a invalid value (invalid value characters)
+    modifyAttribute(attributeNumber, "key1=valueInvalid%;%$<>$$%|key2=2|key3=3", overlapped)
+    # Change generic parameters with a valid value
+    modifyAttribute(attributeNumber, "keyFinal1=1|keyFinal2=2|keyFinal3=3", overlapped)
     # Check undo (including load/creation)
     undo(referencePosition, 8)
     # Check redo
@@ -1813,6 +1859,34 @@ def selectionInvertDemand():
     typeSpace()
     # wait for gl debug
     time.sleep(DELAY_SELECT)
+    
+    
+def selectionClearData():
+    """
+    @brief clear selection
+    """
+    # focus current frame
+    focusOnFrame()
+    for _ in range(19):
+        typeTab()
+    # type space to select clear option
+    typeSpace()
+    # wait for gl debug
+    time.sleep(DELAY_SELECT)
+
+
+def selectionInvertData():
+    """
+    @brief invert selection (demand mode)
+    """
+    # focus current frame
+    focusOnFrame()
+    for _ in range(20):
+        typeTab()
+    # type space to select invert operation
+    typeSpace()
+    # wait for gl debug
+    time.sleep(DELAY_SELECT)
 
 #################################################
 # traffic light
@@ -2043,6 +2117,69 @@ def createLineTAZ(referencePosition, positionx, positiony, sizex, sizey, close):
     # finish draw
     typeEnter()
 
+#################################################
+# datas
+#################################################
+
+def edgeData():
+    """
+    @brief change to edgeData mode
+    """
+    typeKey('e')
+    # wait for gl debug
+    time.sleep(DELAY_CHANGEMODE)
+
+def edgeRelData():
+    """
+    @brief change to edgeRelData mode
+    """
+    typeKey('r')
+    # wait for gl debug
+    time.sleep(DELAY_CHANGEMODE)
+
+def createDataSet(dataSetID="newDataSet"):
+    """
+    @brief create dataSet
+    """
+    # focus current frame
+    focusOnFrame()
+    # go to create new dataSet
+    typeTab()
+    # enable create dataSet
+    typeSpace()
+    # go to create new dataSet
+    typeTab()
+    # create new ID
+    pasteIntoTextField(dataSetID)
+    # go to create new dataSet button
+    typeTab()
+    # create dataSet
+    typeSpace()
+    
+def createDataInterval(begin="0", end="3600"):
+    """
+    @brief create dataInterval
+    """
+    # focus current frame
+    focusOnFrame()
+    # go to create new dataInterval
+    for _ in range(3):
+        typeTab()
+    typeTab()
+    # enable create dataInterval
+    typeSpace()
+    # go to create new dataInterval begin
+    typeTab()
+    # set begin
+    pasteIntoTextField(begin)
+    # go to end
+    typeTab()
+    # set end
+    pasteIntoTextField(end)
+    # go to create new dataSet button
+    typeTab()
+    # create dataSet
+    typeSpace()
 
 #################################################
 # Contextual menu

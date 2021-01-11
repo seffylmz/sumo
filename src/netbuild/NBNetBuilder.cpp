@@ -94,7 +94,8 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     }
     if (mayAddOrRemove && oc.exists("keep-edges.components") && oc.getInt("keep-edges.components") > 0) {
         before = PROGRESS_BEGIN_TIME_MESSAGE("Finding largest components");
-        myNodeCont.removeComponents(myDistrictCont, myEdgeCont, oc.getInt("keep-edges.components"));
+        const bool hasStops = myPTStopCont.size() > 0 && oc.exists("ptstop-output") && oc.isSet("ptstop-output");
+        myNodeCont.removeComponents(myDistrictCont, myEdgeCont, oc.getInt("keep-edges.components"), hasStops);
         PROGRESS_TIME_MESSAGE(before);
     }
     if (mayAddOrRemove && oc.exists("keep-edges.postload") && oc.getBool("keep-edges.postload")) {
@@ -113,6 +114,10 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
         }
         myPTStopCont.assignLanes(myEdgeCont);
         PROGRESS_TIME_MESSAGE(before);
+        if (mayAddOrRemove && oc.exists("keep-edges.components") && oc.getInt("keep-edges.components") > 0) {
+            // post process rail components unless they have stops
+            myNodeCont.removeRailComponents(myDistrictCont, myEdgeCont, myPTStopCont);
+        }
     }
 
     if (oc.exists("ptline-output") && oc.isSet("ptline-output")) {
@@ -141,16 +146,21 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     }
 
     // analyze and fix railway topology
+    int numAddedBidi = 0;
     if (oc.exists("railway.topology.all-bidi") && oc.getBool("railway.topology.all-bidi")) {
         NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
-        NBRailwayTopologyAnalyzer::makeAllBidi(*this);
+        numAddedBidi = NBRailwayTopologyAnalyzer::makeAllBidi(*this);
     } else if (oc.exists("railway.topology.repair") && oc.getBool("railway.topology.repair")) {
         // correct railway angles for angle-based connectivity heuristic
         myEdgeCont.checkGeometries(0,
                                    oc.getFloat("geometry.min-radius"), false,
                                    oc.getBool("geometry.min-radius.fix.railways"), true);
         NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
-        NBRailwayTopologyAnalyzer::repairTopology(*this);
+        numAddedBidi = NBRailwayTopologyAnalyzer::repairTopology(*this);
+    }
+    if (numAddedBidi > 0) {
+        // update routes
+        myPTLineCont.process(myEdgeCont, myPTStopCont, true);
     }
     if (oc.exists("railway.topology.direction-priority") && oc.getBool("railway.topology.direction-priority")) {
         NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false); // recompute after new edges were added
@@ -165,7 +175,7 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     if (mayAddOrRemove && oc.exists("edges.join-tram-dist") && oc.getFloat("edges.join-tram-dist") >= 0) {
         // should come before joining junctions
         before = PROGRESS_BEGIN_TIME_MESSAGE("Joining tram edges");
-        int numJoinedTramEdges = myEdgeCont.joinTramEdges(myDistrictCont, myPTLineCont, oc.getFloat("edges.join-tram-dist"));
+        int numJoinedTramEdges = myEdgeCont.joinTramEdges(myDistrictCont, myPTStopCont, myPTLineCont, oc.getFloat("edges.join-tram-dist"));
         PROGRESS_TIME_MESSAGE(before);
         if (numJoinedTramEdges > 0) {
             WRITE_MESSAGE(" Joined " + toString(numJoinedTramEdges) + " tram edges into roads.");
@@ -263,7 +273,8 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     // @note: likewise splitting can destroy similarities so joinSimilarEdges must come before
     if (mayAddOrRemove && oc.getBool("edges.join")) {
         before = PROGRESS_BEGIN_TIME_MESSAGE("Joining similar edges");
-        myNodeCont.joinSimilarEdges(myDistrictCont, myEdgeCont, myTLLCont);
+        const bool removeDuplicates = oc.exists("junctions.join-same") && oc.getBool("junctions.join-same");
+        myNodeCont.joinSimilarEdges(myDistrictCont, myEdgeCont, myTLLCont, removeDuplicates);
         PROGRESS_TIME_MESSAGE(before);
     }
     if (oc.getBool("opposites.guess")) {
