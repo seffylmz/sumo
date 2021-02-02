@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2014-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2014-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -32,6 +32,7 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSLink.h>
 #include <microsim/MSJunction.h>
+#include <microsim/MSStoppingPlace.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/transportables/MSStage.h>
 #include <microsim/transportables/MSTransportableControl.h>
@@ -1167,7 +1168,12 @@ MSPModel_Striping::moveInDirectionOnLane(Pedestrians& pedestrians, const MSLane*
             gDebugFlag1 = false;
         }
         if (&lane->getEdge() == p.myStage->getDestination() && p.myStage->getDestinationStop() != nullptr) {
-            Obstacles arrival(stripes, Obstacle(p.myStage->getArrivalPos() + dir * p.getMinGap(), 0, OBSTACLE_ARRIVALPOS, "arrival", 0));
+            Obstacles arrival;
+            if (p.myStage->getDestinationStop()->getWaitingCapacity() > p.myStage->getDestinationStop()->getNumWaitingPersons()) {
+                arrival = Obstacles(stripes, Obstacle(p.myStage->getArrivalPos() + dir * p.getMinGap(), 0, OBSTACLE_ARRIVALPOS, "arrival", 0));
+            } else {
+                arrival = Obstacles(stripes, Obstacle(p.myStage->getArrivalPos() - dir * p.getMinGap(), 0, OBSTACLE_ARRIVALPOS, "arrival_blocked", 0));
+            }
             p.mergeObstacles(currentObs, arrival);
         }
 

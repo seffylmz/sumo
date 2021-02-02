@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -286,7 +286,7 @@ GUIPerson::drawGL(const GUIVisualizationSettings& s) const {
             GUIBasePersonHelper::drawAction_drawAsTriangle(angle, getVehicleType().getLength(), getVehicleType().getWidth());
             break;
         case 1:
-            GUIBasePersonHelper::drawAction_drawAsCircle(getVehicleType().getLength(), getVehicleType().getWidth());
+            GUIBasePersonHelper::drawAction_drawAsCircle(getVehicleType().getLength(), getVehicleType().getWidth(), s.scale * exaggeration);
             break;
         case 2:
             GUIBasePersonHelper::drawAction_drawAsPoly(angle, getVehicleType().getLength(), getVehicleType().getWidth());

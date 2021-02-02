@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -93,12 +93,28 @@ public:
                     std::cout << "  RailEdge " << prevRailEdge->getID() << " virtual turnaround " << prevRailEdge->myTurnaround->getID() << "\n";
 #endif
                 }
-                prevRailEdge->myTurnaround->update(prev->getLength() + maxTrainLength, replacementEdges);
-                std::vector<const E*> replacementEdges2;
-                replacementEdges2.push_back(prev);
-                replacementEdges2.insert(replacementEdges2.end(), replacementEdges.begin(), replacementEdges.end());
-                addVirtualTurns(prev, bidi, railEdges, numericalID, dist - prev->getLength(),
-                                maxTrainLength + prev->getLength(), replacementEdges2);
+                /*
+                // doesn't compile though I don't know why
+                auto itFound = std::find(replacementEdges.begin(), replacementEdges.end(), prev);
+                bool notFound = itFound == replacementEdges.end();
+                */
+                bool notFound = true;
+                for (const E* r : replacementEdges) {
+                    if (r == prev) {
+                        notFound = false;
+                        break;
+                    }
+                }
+
+                if (notFound) {
+                    // prevent loops in replacementEdges
+                    prevRailEdge->myTurnaround->update(prev->getLength() + maxTrainLength, replacementEdges);
+                    std::vector<const E*> replacementEdges2;
+                    replacementEdges2.push_back(prev);
+                    replacementEdges2.insert(replacementEdges2.end(), replacementEdges.begin(), replacementEdges.end());
+                    addVirtualTurns(prev, bidi, railEdges, numericalID, dist - prev->getLength(),
+                            maxTrainLength + prev->getLength(), replacementEdges2);
+                }
             }
         }
     }
@@ -113,9 +129,12 @@ public:
                     myViaSuccessors.push_back(std::make_pair(myTurnaround, nullptr));
                     railEdges.push_back(myTurnaround);
 #ifdef RailEdge_DEBUG_INIT
-                    std::cout << "RailEdge " << getID() << " actual turnaround " << myTurnaround->getID() << "\n";
+                    std::cout << "   added new turnaround " << myTurnaround->getID() << "\n";
 #endif
                 }
+#ifdef RailEdge_DEBUG_INIT
+                std::cout << "RailEdge " << getID() << " actual turnaround " << myTurnaround->getID() << "\n";
+#endif
                 myTurnaround->myIsVirtual = false;
                 addVirtualTurns(myOriginal, viaPair.first, railEdges, numericalID,
                                 maxTrainLength - getLength(), getLength(), std::vector<const E*> {myOriginal});

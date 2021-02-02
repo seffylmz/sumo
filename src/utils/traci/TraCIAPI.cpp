@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -2386,7 +2386,7 @@ TraCIAPI::VehicleScope::getBestLanes(const std::string& vehicleID) const {
 
             myParent.myInput.readUnsignedByte();
             const int m = myParent.myInput.readInt();
-            for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < m; ++j) {
                 info.continuationLanes.push_back(myParent.myInput.readString());
             }
 

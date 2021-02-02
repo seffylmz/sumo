@@ -16,6 +16,10 @@ overtaking_noconflict_subsecond
 # a stopped vehicle is overtake as soon as there is a safe gap in the oncoming traffic
 overtaking_stopped
 
+# a stopped vehicle is overtake as soon as there is a safe gap in the oncoming traffic.
+# Testing negative maxSpeedLatFactor for increased overtaking after stopping
+overtaking_stopped_maxSpeedLatFactor
+
 # two stopped vehicles are overtake as soon as there is a safe gap in the oncoming traffic
 overtaking_2stopped
 
@@ -75,5 +79,5 @@ emergency_redlight
 # emergency vehicle may overtake even when there is an overtaking lane
 2lanes_emergency
 
-## bugs specific to opposite-direction driving
-#bugs
+# bugs specific to opposite-direction driving
+bugs

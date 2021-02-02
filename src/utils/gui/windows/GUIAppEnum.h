@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -573,6 +573,8 @@ enum {
     MID_SIMPLE_VIEW_LOAD_DECALS,
     /// @brief For the save-decals - button
     MID_SIMPLE_VIEW_SAVE_DECALS,
+    /// @brief For the clear-decals - button
+    MID_SIMPLE_VIEW_CLEAR_DECALS,
 
     /// @}
 
@@ -664,6 +666,10 @@ enum {
     MID_GNE_NETWORKVIEWOPTIONS_CHAINEDGES,
     /// @brief automatically create opposite edge
     MID_GNE_NETWORKVIEWOPTIONS_AUTOOPPOSITEEDGES,
+    /// @brief Add edge to selected items - menu entry
+    MID_GNE_ADDSELECT_EDGE,
+    /// @brief Remove edge from selected items - Menu Etry
+    MID_GNE_REMOVESELECT_EDGE,
 
     /// @}
 
@@ -801,6 +807,11 @@ enum {
     MID_GNE_OVERLAPPED_ITEMSELECTED,
     /// @brief mark item as front element
     MID_GNE_MARKFRONTELEMENT,
+    /// @brief set custom geometry point
+    MID_GNE_CUSTOM_GEOMETRYPOINT,
+    /// @brief reset geometry point
+    MID_GNE_RESET_GEOMETRYPOINT,
+
     /// @}
 
     /// @name GNESelectorFrame messages

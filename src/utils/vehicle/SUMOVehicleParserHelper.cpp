@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2008-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -73,11 +73,10 @@ SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttrib
         const bool hasNumber = attrs.hasAttribute(SUMO_ATTR_NUMBER);
         const bool hasBegin = attrs.hasAttribute(SUMO_ATTR_BEGIN);
         const bool hasEnd = attrs.hasAttribute(SUMO_ATTR_END);
-		SumoXMLAttr PERHOUR;
+		SumoXMLAttr PERHOUR = SUMO_ATTR_PERHOUR;
 		if (hasVPH) PERHOUR = SUMO_ATTR_VEHSPERHOUR;
 		if (hasPPH) PERHOUR = SUMO_ATTR_PERSONSPERHOUR;
 		if (hasCPH) PERHOUR = SUMO_ATTR_CONTAINERSPERHOUR;
-		if (hasPH) PERHOUR = SUMO_ATTR_PERHOUR;
 		if (hasXPH && !(hasVPH ^ hasPPH ^ hasCPH ^ hasPH)) {
 			return handleError(hardFail, abortCreation,
 							   "At most one of '" + attrs.getName(SUMO_ATTR_PERHOUR) + 
@@ -1339,7 +1338,6 @@ SUMOVehicleParserHelper::parseLCParams(SUMOVTypeParameter& into, LaneChangeModel
                 // check attributes of type "positiveFloatType" (> 0)
                 switch (it) {
                     case SUMO_ATTR_LCA_ACCEL_LAT:
-                    case SUMO_ATTR_LCA_MAXSPEEDLATFACTOR:
                         if (LCMAttribute <= 0) {
                             ok = false;
                             if (hardFail) {

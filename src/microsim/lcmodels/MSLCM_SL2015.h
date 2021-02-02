@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2013-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2013-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -108,6 +108,8 @@ public:
     void changed();
 
     double getSafetyFactor() const;
+
+    double getOppositeSafetyFactor() const;
 
     void prepareStep();
 
@@ -345,10 +347,13 @@ protected:
     double getLateralDrift();
 
     /// @brief return current edge width optionally extended by opposite direction lane width
-    double getLeftBorder() const;
+    double getLeftBorder(bool checkOpposite = true) const;
 
     /// @brief return vehicle position relative to the current edge (extend by another virtual lane for opposite-direction driving)
     double getVehicleCenter() const;
+
+    /// @brief return the right offset of the neighboring lane relative to the current edge
+    double getNeighRight(const MSLane& neighLane) const;
 
 protected:
     /// @brief a value for tracking the probability that a change to the right is beneficial
@@ -398,6 +403,7 @@ protected:
     double myCooperativeParam;
     double mySpeedGainParam;
     double myKeepRightParam;
+    double myOppositeParam;
     double mySublaneParam;
     // @brief willingness to encroach on other vehicles laterally (pushing them around)
     double myPushy;

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -248,12 +248,12 @@ GNENet::createEdge(GNEJunction* src, GNEJunction* dest, GNEEdge* edgeTemplate, G
         const int defaultPriority = oc.getInt("default.priority");
         const double defaultWidth = NBEdge::UNSPECIFIED_WIDTH;
         const double defaultOffset = NBEdge::UNSPECIFIED_OFFSET;
+        const LaneSpreadFunction spread = LaneSpreadFunction::RIGHT;
         // build NBEdge
         NBEdge* nbe = new NBEdge(id, src->getNBNode(), dest->getNBNode(),
                                  defaultType, defaultSpeed,
                                  defaultNrLanes, defaultPriority,
-                                 defaultWidth,
-                                 defaultOffset);
+                                 defaultWidth, defaultOffset, spread);
         // create edge
         edge = new GNEEdge(this, nbe, wasSplit);
     }

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -343,15 +343,11 @@ NBEdgeCont::retrievePossiblySplit(const std::string& id, const std::string& hint
         hints.push_back(hintedge);
     }
     EdgeVector candidates = getGeneratedFrom(id);
-    for (EdgeVector::iterator i = hints.begin(); i != hints.end(); i++) {
-        NBEdge* hintedge = (*i);
-        for (EdgeVector::iterator j = candidates.begin(); j != candidates.end(); j++) {
-            NBEdge* poss_searched = (*j);
-            NBNode* node = incoming
-                           ? poss_searched->myTo : poss_searched->myFrom;
-            const EdgeVector& cont = incoming
-                                     ? node->getOutgoingEdges() : node->getIncomingEdges();
-            if (find(cont.begin(), cont.end(), hintedge) != cont.end()) {
+    for (const NBEdge* const currHint : hints) {
+        for (NBEdge* const poss_searched : candidates) {
+            const NBNode* const node = incoming ? poss_searched->myTo : poss_searched->myFrom;
+            const EdgeVector& cont = incoming ? node->getOutgoingEdges() : node->getIncomingEdges();
+            if (find(cont.begin(), cont.end(), currHint) != cont.end()) {
                 return poss_searched;
             }
         }
@@ -826,12 +822,12 @@ NBEdgeCont::computeLanes2Edges() {
 void
 NBEdgeCont::recheckLanes() {
     const bool fixOppositeLengths = OptionsCont::getOptions().getBool("opposites.guess.fix-lengths");
-    for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
-        NBEdge* edge = i->second;
+    for (const auto& edgeIt : myEdges) {
+        NBEdge* const edge = edgeIt.second;
         edge->recheckLanes();
         // check opposites
         if (edge->getNumLanes() > 0) {
-            int leftmostLane = edge->getNumLanes() - 1;
+            const int leftmostLane = edge->getNumLanes() - 1;
             // check oppositeID stored in other lanes
             for (int i = 0; i < leftmostLane; i++) {
                 const std::string& oppositeID = edge->getLanes()[i].oppositeID;
@@ -1001,7 +997,7 @@ NBEdgeCont::joinSameNodeConnectingEdges(NBDistrictCont& dc,
         // build the new edge
         NBEdge* newEdge = new NBEdge(id, from, to, "", speed, nolanes, priority,
                                      NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET,
-                                     tpledge->getStreetName(), tpledge->myLaneSpreadFunction);
+                                     tpledge->myLaneSpreadFunction, tpledge->getStreetName());
         // copy lane attributes
         int laneIndex = 0;
         for (i = edges.begin(); i != edges.end(); ++i) {
@@ -1856,7 +1852,9 @@ NBEdgeCont::joinTramEdges(NBDistrictCont& dc, NBPTStopCont& sc, NBPTLineCont& lc
             }
             NBEdge* lastRoad = roads.back().second.first;
             if (erasedLast) {
-                for (NBEdge* out : tramEdge->getToNode()->getOutgoingEdges()) {
+                // copy to avoid concurrent modification
+                auto outEdges = tramEdge->getToNode()->getOutgoingEdges();
+                for (NBEdge* out : outEdges) {
                     if (out->getPermissions() == SVC_TRAM && !lastRoad->isConnectedTo(out)) {
                         if (lastRoad->getToNode() != out->getToNode()) {
                             out->reinitNodes(lastRoad->getToNode(), out->getToNode());

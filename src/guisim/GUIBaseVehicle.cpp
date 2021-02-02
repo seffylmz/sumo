@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -441,8 +441,10 @@ GUIBaseVehicle::drawOnPos(const GUIVisualizationSettings& s, const Position& pos
             }
             break;
         case 3:
-        default:
             drawCarriages = drawAction_drawVehicleAsPolyWithCarriagges(s, true);
+        case 4:
+            GUIBaseVehicleHelper::drawAction_drawVehicleAsCircle(getVType().getWidth(), getVType().getLength(), s.scale * upscale);
+        default:
             break;
     }
     if (s.drawMinGap) {

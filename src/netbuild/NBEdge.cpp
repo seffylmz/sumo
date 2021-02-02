@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -275,8 +275,7 @@ NBEdge::connections_relative_edgelane_sorter::operator()(const Connection& c1, c
 NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
                std::string type, double speed, int nolanes,
                int priority, double laneWidth, double endOffset,
-               const std::string& streetName,
-               LaneSpreadFunction spread) :
+               LaneSpreadFunction spread, const std::string& streetName) :
     Named(StringUtils::convertUmlaute(id)),
     myStep(EdgeBuildingStep::INIT),
     myType(StringUtils::convertUmlaute(type)),
@@ -305,9 +304,10 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
                std::string type, double speed, int nolanes,
                int priority, double laneWidth, double endOffset,
                PositionVector geom,
+               LaneSpreadFunction spread,
                const std::string& streetName,
                const std::string& origID,
-               LaneSpreadFunction spread, bool tryIgnoreNodePositions) :
+               bool tryIgnoreNodePositions) :
     Named(StringUtils::convertUmlaute(id)),
     myStep(EdgeBuildingStep::INIT),
     myType(StringUtils::convertUmlaute(type)),
@@ -908,6 +908,12 @@ NBEdge::getLaneShape(int i) const {
 void
 NBEdge::setLaneSpreadFunction(LaneSpreadFunction spread) {
     myLaneSpreadFunction = spread;
+}
+
+
+LaneSpreadFunction 
+NBEdge::getLaneSpreadFunction() const {
+    return myLaneSpreadFunction;
 }
 
 
@@ -1596,8 +1602,8 @@ NBEdge::buildInnerEdges(const NBNode& n, int noInternalNoSplits, int& linkIndex,
         }
         averageLength = !isTurn || joinTurns; // legacy behavior
         SVCPermissions conPermissions = getPermissions(con.fromLane) & con.toEdge->getPermissions(con.toLane);
-        int shapeFlag = (conPermissions & ~SVC_PEDESTRIAN) != 0 ? 0 : NBNode::SCURVE_IGNORE;
-        PositionVector shape = n.computeInternalLaneShape(this, con, numPoints, myTo, shapeFlag);
+        const int conShapeFlag = (conPermissions & ~SVC_PEDESTRIAN) != 0 ? 0 : NBNode::SCURVE_IGNORE;
+        PositionVector shape = n.computeInternalLaneShape(this, con, numPoints, myTo, conShapeFlag);
         std::vector<int> foeInternalLinks;
 
         if (dir != LinkDirection::STRAIGHT && shape.length() < POSITION_EPS && !(isBidiRail() && getTurnDestination(true) == con.toEdge)) {
@@ -2484,7 +2490,7 @@ NBEdge::recheckLanes() {
                     ++i;
                 } else {
                     // try to find a suitable target lane to the left
-                    int toLane = origToLane;
+                    toLane = origToLane;
                     while (toLane < (int)c.toEdge->getNumLanes() - 1
                             && (getPermissions(c.fromLane) & c.toEdge->getPermissions(toLane)) == 0
                             && !hasConnectionTo(c.toEdge, toLane)

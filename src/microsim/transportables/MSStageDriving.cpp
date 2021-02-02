@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -194,6 +194,9 @@ MSStageDriving::proceed(MSNet* net, MSTransportable* transportable, SUMOTime now
         if (myOriginStop != nullptr) {
             myOriginStop->removeTransportable(transportable);
         }
+        myWaitingEdge = previous->getEdge();
+        myStopWaitPos = Position::INVALID;
+        myWaitingPos = previous->getEdgePos(now);
         myVehicle->addTransportable(transportable);
         return;
     }

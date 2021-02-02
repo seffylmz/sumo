@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -18,6 +18,7 @@
 // A view on the network being edited (adapted from GUIViewTraffic)
 /****************************************************************************/
 #pragma once
+#include <config.h>
 #include "GNEViewNetHelper.h"
 
 #include <utils/common/SUMOVehicleClass.h>
@@ -205,8 +206,14 @@ public:
     /// @brief set as first geometry point the closes geometry point
     long onCmdSetFirstGeometryPoint(FXObject*, FXSelector, void*);
 
-    /// @brief Transform POI to POILane, and viceversa
+    /// @brief transform POI to POILane, and viceversa
     long onCmdTransformPOI(FXObject*, FXSelector, void*);
+
+    /// @brief set custom geometry point
+    long onCmdSetCustomGeometryPoint(FXObject*, FXSelector, void*);
+
+    /// @brief reset edge end points
+    long onCmdResetEndPoints(FXObject*, FXSelector, void*);
 
     /// @brief duplicate selected lane
     long onCmdDuplicateLane(FXObject*, FXSelector, void*);
@@ -313,8 +320,11 @@ public:
     /// @brief toogle show shapes in super mode data
     long onCmdToogleShowShapes(FXObject*, FXSelector, void*);
 
-    /// @brief toogle show demand elements
-    long onCmdToogleShowDemandElements(FXObject*, FXSelector, void*);
+    /// @brief toogle show demand elements (network)
+    long onCmdToogleShowDemandElementsNetwork(FXObject*, FXSelector, void*);
+
+    /// @brief toogle show demand elements (data)
+    long onCmdToogleShowDemandElementsData(FXObject*, FXSelector, void*);
 
     /// @}
 
@@ -346,6 +356,12 @@ public:
 
     /// @brief unselect AC under cursor
     long onCmdRemoveSelected(FXObject*, FXSelector, void*);
+
+    /// @brief select Edge under cursor
+    long onCmdAddEdgeSelected(FXObject*, FXSelector, void*);
+
+    /// @brief unselect Edge under cursor
+    long onCmdRemoveEdgeSelected(FXObject*, FXSelector, void*);
 
     /// @brief abort current edition operation
     void abortOperation(bool clearSelection = true);
@@ -593,6 +609,9 @@ private:
 
     /// @brief try to retrieve a POILane at popup position
     GNEPOI* getPOIAtPopupPosition();
+
+    /// @brief try to retrieve a TAZ at popup position
+    GNETAZ* getTAZAtPopupPosition();
 
     /// @brief restrict lane
     bool restrictLane(SUMOVehicleClass vclass);

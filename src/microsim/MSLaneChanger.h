@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2002-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -148,7 +148,8 @@ protected:
 
 
     /** try changing to the opposite direction edge. */
-    virtual bool changeOpposite(std::pair<MSVehicle*, double> leader);
+    bool changeOpposite(MSVehicle* vehicle, std::pair<MSVehicle*, double> leader);
+    std::pair<MSVehicle* const, double> getOncomingVehicle(const MSLane* opposite, std::pair<MSVehicle*, double> neighOncoming, double searchDist, double& vMax);
 
     /** Update changer for vehicles that did not change */
     void registerUnchanged(MSVehicle* vehicle);
@@ -227,7 +228,7 @@ protected:
      * @param[out] timeToOvertake The time for overtaking
      * @param[out] spaceToOvertake The space for overtaking
      */
-    static void computeOvertakingTime(const MSVehicle* vehicle, const MSVehicle* leader, double gap, double& timeToOvertake, double& spaceToOvertake);
+    static void computeOvertakingTime(const MSVehicle* vehicle, double vMax, const MSVehicle* leader, double gap, double& timeToOvertake, double& spaceToOvertake);
 
     // @brief return leader vehicle that is to be overtaken
     static std::pair<MSVehicle*, double> getColumnleader(MSVehicle* vehicle, std::pair<MSVehicle*, double> leader, double maxLookAhead = std::numeric_limits<double>::max());

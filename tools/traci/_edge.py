@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2011-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -179,6 +179,12 @@ class EdgeDomain(Domain):
         Returns the ids of the persons on the given edge during the last time step.
         """
         return self._getUniversal(tc.LAST_STEP_PERSON_ID_LIST, edgeID)
+
+    def getPendingVehicles(self, edgeID):
+        """getPendingVehicles(string) -> list(string)
+        Returns a list of all vehicle ids waiting for insertion on this edge (with depart delay)
+        """
+        return self._getUniversal(tc.VAR_PENDING_VEHICLES, edgeID)
 
     def adaptTraveltime(self, edgeID, time, begin=None, end=None):
         """adaptTraveltime(string, double, double, double) -> None

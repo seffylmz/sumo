@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2008-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -61,7 +61,8 @@ def runTests(options, env, gitrev, debugSuffix=""):
     taskID = os.path.basename(tasks[today.toordinal() % len(tasks)])[10:]
     cmd = [ttBin, "-b", prefix, "-a", taskID, "-name", "%sr%s" % (today.strftime("%d%b%y"), gitrev)]
     for call in (cmd, [ttBin, "-b", env["FILEPREFIX"], "-coll"]):
-        status.log_subprocess_output(subprocess.Popen(call, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True))
+        status.log_subprocess_output(subprocess.Popen(
+            call, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True))
     status.killall(debugSuffix, BINARIES)
 
 

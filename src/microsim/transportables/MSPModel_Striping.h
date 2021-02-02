@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2014-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2014-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -368,6 +368,9 @@ protected:
     protected:
         /// @brief constructor for PStateVehicle
         PState();
+    private:
+        /// @brief Invalidated assignment operator.
+        PState& operator=(const PState&) = delete;
     };
 
     class PStateVehicle : public PState {
@@ -392,7 +395,7 @@ protected:
         MSPModel_Striping* const myModel;
     private:
         /// @brief Invalidated assignment operator.
-        MovePedestrians& operator=(const MovePedestrians&);
+        MovePedestrians& operator=(const MovePedestrians&) = delete;
     };
 
     /// @brief sorts the persons by position on the lane. If dir is forward, higher x positions come first.
@@ -415,7 +418,7 @@ protected:
 
     private:
         /// @brief Invalidated assignment operator.
-        by_xpos_sorter& operator=(const by_xpos_sorter&);
+        by_xpos_sorter& operator=(const by_xpos_sorter&) = delete;
     };
 
 

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -431,7 +431,7 @@ GNEPerson::drawGL(const GUIVisualizationSettings& s) const {
             if (s.drawDetail(s.detailSettings.personShapes, exaggeration)) {
                 GUIBasePersonHelper::drawAction_drawAsImage(0, length, width, file, SVS_PEDESTRIAN, exaggeration);
             } else if (s.drawDetail(s.detailSettings.personCircles, exaggeration)) {
-                GUIBasePersonHelper::drawAction_drawAsCircle(length, width);
+                GUIBasePersonHelper::drawAction_drawAsCircle(length, width, s.scale * exaggeration);
             } else if (s.drawDetail(s.detailSettings.personTriangles, exaggeration)) {
                 GUIBasePersonHelper::drawAction_drawAsTriangle(0, length, width);
             }

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -473,6 +473,8 @@ private:
         return tau + (SUMOTime)(lengthWithGap * myTau_length);
     }
 
+    SUMOTime getTauJJ(int nextQueueSize, double nextQueueCapacity, double nextJamThreshold) const;
+
 private:
     /// @brief The microsim edge this segment belongs to
     const MSEdge& myEdge;
@@ -492,9 +494,6 @@ private:
     /// @brief The time headway parameters, see the Eissfeldt thesis
     SUMOTime myTau_ff, myTau_fj, myTau_jf, myTau_jj;
 
-    /// @brief slope and axis offset for the jam-jam headway function
-    double myA, myB;
-
     /// @brief Whether tls penalty is enabled
     bool myTLSPenalty;
 
@@ -511,10 +510,6 @@ private:
 
     /// @brief Headway parameter for computing gross time headyway from net time headway, length and edge speed
     double myTau_length;
-
-    /// @brief The capacity of the segment in number of cars, used only in time headway calculation
-    /// This parameter has only an effect if tau_jf != tau_jj, which is not(!) the case per default
-    const double myHeadwayCapacity;
 
     /// @brief The number of lanes represented by the queue * the length of the lane
     const double myCapacity;

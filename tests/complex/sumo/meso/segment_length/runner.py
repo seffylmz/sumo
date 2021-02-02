@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2008-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -56,5 +56,5 @@ for net in ("int.net.xml", "noint.net.xml"):
                                 "--meso-edgelength", str(segLength)]), label=segLength)
     print(stats)
     print(statsJC)
-    print("Deviation %s meso vs. micro:" % net, (duration - stats.mean()) / duration)
-    print("Deviation %s meso jc vs. micro:" % net, (duration - statsJC.mean()) / duration)
+    print("Deviation %s meso vs. micro:" % net, (duration - stats.avg()) / duration)
+    print("Deviation %s meso jc vs. micro:" % net, (duration - statsJC.avg()) / duration)

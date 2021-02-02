@@ -46,10 +46,24 @@ if (COMPILE_DEFINITIONS)
     add_compile_definitions(${COMPILE_DEFINITIONS})
 endif ()
 
+# declare flags for compilers
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set (GNU_COMPILER True)
+endif ()
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set (CLANG_COMPILER True)
+endif ()
+
 # compiler specific flags
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -Wall -pedantic -Wextra")
+if (GNU_COMPILER OR CLANG_COMPILER)
+    # set flags for clang in windows
+    if (CLANG_COMPILER AND WIN32)
+        # flags for clang in windows
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+    else ()
+        #flags for clang and gcc in linux
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -Wall -pedantic -Wextra")
+    endif ()
     if (PROFILING)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
         set(ENABLED_FEATURES "${ENABLED_FEATURES} Profiling")
@@ -85,8 +99,12 @@ endif ()
 
 # special debug flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address,integer,unsigned-integer-overflow -fno-omit-frame-pointer -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/clang_sanitize_blacklist.txt")
+if (CLANG_COMPILER)
+    if (WIN32) 
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,integer,unsigned-integer-overflow -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/clang_sanitize_blacklist.txt")
+    else ()
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address,integer,unsigned-integer-overflow -fno-omit-frame-pointer -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/clang_sanitize_blacklist.txt")
+    endif ()
 endif ()
 
 # we need to build position independent code when generating a shared library
@@ -153,7 +171,7 @@ if (APPLE)
 endif (APPLE)
 
 #  Specifically define variable WIN32 for compilations under windows (due an error in Shawn)
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND WIN32)
+if (GNU_COMPILER AND WIN32)
     option(USE_MINGW_64BITS "Use 64 bits libraries for the compilation with MinGW" true)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWIN32 -D_WIN32_WINNT=0x0501")
     set(MINGW32 1)
@@ -172,7 +190,7 @@ if (SUMO_LIBRARIES AND WIN32)
     # set option for install debug and release runtime dlls
     option(INSTALL_DLL_RUNTIMES "Copy debug and release runtimes for MSVC" true)
     # Special option for MinGW32
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND WIN32)
+    if (GNU_COMPILER AND WIN32)
         if (USE_MINGW_64BITS)
             message(STATUS "Using 64 bit libraries from SUMO_LIBRARIES placed in " ${SUMO_LIBRARIES} " for MinGW compilation")
         else()
@@ -216,7 +234,7 @@ if (SUMO_LIBRARIES AND WIN32)
         file(GLOB PROJ_PATH "${SUMO_LIBRARIES}${LIB_VERSION}/proj-6.1.1")
         file(GLOB GDAL_PATH "${SUMO_LIBRARIES}${LIB_VERSION}/gdal-?.?.?")
         set(PROJ_6 1)
-	else()
+    else()
         # use proj 7 and gdal 3
         file(GLOB PROJ_PATH "${SUMO_LIBRARIES}${LIB_VERSION}/proj-?.?.?")
         file(GLOB GDAL_PATH "${SUMO_LIBRARIES}${LIB_VERSION}/gdal-?.?.?")
@@ -226,8 +244,8 @@ if (SUMO_LIBRARIES AND WIN32)
     file(GLOB FOX_PATH "${SUMO_LIBRARIES}${LIB_VERSION}/fox-?.?.??")
     # set freetype
     file(GLOB FREETYPE_PATH "${SUMO_LIBRARIES}${LIB_VERSION}/freetype-2.??.?")
-    # set eigen (no version in directory name as it is a submodule)
-    file(GLOB EIGEN3_PATH "${SUMO_LIBRARIES}/eigen")
+    # set eigen3
+    file(GLOB EIGEN3_PATH "${SUMO_LIBRARIES}/eigen-3.?.?")
     # set all paths in prefix
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${EIGEN3_PATH};${XERCES_PATH};${ZLIB_PATH};${ZLIB_PATH}/Release;${ZLIB_PATH}/Debug;${ZLIB_PATH}/bin;${ZLIB_PATH}/lib;${PROJ_PATH};${GDAL_PATH};${FOX_PATH};${FREETYPE_PATH}")
     # save in variable SUMO_LIBRARIES_DLL all paths to dll files
@@ -236,10 +254,14 @@ if (SUMO_LIBRARIES AND WIN32)
                                  "${FOX_PATH}/lib/*.dll" # used by old SUMOLibraries versions
                                  "${FOX_PATH}/bin/*.dll"
                                  "${ZLIB_PATH}/bin/*.dll"
+                                 "${FREETYPE_PATH}/bin/*.dll"
                                  "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/bzip2-?.?.?/*.dll" # used by old versions of SUMOLibraries
                                  "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/bzip2-?.?.?/bin/*.dll"
                                  "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/libpng-?.?.??/bin/*.dll"
-                                 "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/tiff-?.?.?/bin/*.dll")
+                                 "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/tiff-?.?.?/bin/*.dll"
+                                 "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/curl-?.??.?/bin/*.dll"
+                                 "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/libssh2-?.?.?/bin/*.dll"
+                                 "${SUMO_LIBRARIES}${LIB_VERSION}/3rdPartyLibs/openssl-?.?.?/*.dll")
     # set MSVC dlls
     if ("${MSVC_VERSION}" STREQUAL "1800")
         file(GLOB MSVC_DLLS "${SUMO_LIBRARIES}${LIB_VERSION}/runtimes/*.dll" "${SUMO_LIBRARIES}/msvc12${LIB_VERSION}/runtimes/*.dll")
@@ -251,10 +273,22 @@ if (SUMO_LIBRARIES AND WIN32)
     endif ()
     # set google test root
     file(GLOB GTEST_ROOT "${SUMO_LIBRARIES}/googletest-?.?.?/googletest")
+    # declare flag for use google test
+    set(USE_GOOGLETEST true)
+    # check if use google test
+    if (WIN32)
+        if (GNU_COMPILER AND NOT USE_MINGW_64BITS)
+            # disable GoogleTest only if compiler isn't mingw32
+            message(STATUS "Disabled Google Test in Mingw32")
+            set(USE_GOOGLETEST false)
+        elseif(CLANG_COMPILER)
+            # disable google test in clang for windows
+            message(STATUS "Disabled Google Test in Clang (Windows)")
+            set(USE_GOOGLETEST false)
+        endif ()
+    endif()
     # set GoogleTest only if compiler isn't mingw32
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND WIN32 AND NOT USE_MINGW_64BITS)
-        message(STATUS "Disabled Google Test in Mingw32")
-    else()
+    if (USE_GOOGLETEST)
         # Prevent GoogleTest from overriding our compiler/linker options
         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
         add_subdirectory("${GTEST_ROOT}" "${CMAKE_BINARY_DIR}/googletest-build")
@@ -275,14 +309,14 @@ if (SUMO_LIBRARIES AND WIN32)
     # set SWIG
     set(SWIG_EXECUTABLE "${SUMO_LIBRARIES}/swigwin-3.0.12/swig.exe")
     # set protobuf
-    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${SUMO_LIBRARIES}/3rdPartyLibs/protobuf-3.9.1")
-    set(Protobuf_PROTOC_EXECUTABLE "${SUMO_LIBRARIES}/3rdPartyLibs/protobuf-3.9.1/bin/protoc.exe")
-    set(Protobuf_INCLUDE_DIR "${SUMO_LIBRARIES}/3rdPartyLibs/protobuf-3.9.1/include")
-    set(Protobuf_LIBRARY_DEBUG "${CMAKE_LIBRARY_PATH};${SUMO_LIBRARIES}/protobuf-3.9.1/lib/libprotobufd.lib")
-    set(Protobuf_LIBRARY "${CMAKE_LIBRARY_PATH};${SUMO_LIBRARIES}/protobuf-3.9.1/lib/libprotobuf.lib")
+    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${SUMO_LIBRARIES}/3rdPartyLibs/protobuf-3.?.?")
+    set(Protobuf_PROTOC_EXECUTABLE "${SUMO_LIBRARIES}/3rdPartyLibs/protobuf-3.?.?/bin/protoc.exe")
+    set(Protobuf_INCLUDE_DIR "${SUMO_LIBRARIES}/3rdPartyLibs/protobuf-3.?.?/include")
+    set(Protobuf_LIBRARY_DEBUG "${CMAKE_LIBRARY_PATH};${SUMO_LIBRARIES}/protobuf-3.?.?/lib/libprotobufd.lib")
+    set(Protobuf_LIBRARY "${CMAKE_LIBRARY_PATH};${SUMO_LIBRARIES}/protobuf-3.?.?/lib/libprotobuf.lib")
     # set apache maven
-	file(GLOB MVN_EXECUTABLE "${SUMO_LIBRARIES}/apache-maven-*/bin/mvn.cmd")
-	file(GLOB TEXTTEST_EXECUTABLE "${SUMO_LIBRARIES}/TextTest-*/texttest.exe")
+    file(GLOB MVN_EXECUTABLE "${SUMO_LIBRARIES}/apache-maven-*/bin/mvn.cmd")
+    file(GLOB TEXTTEST_EXECUTABLE "${SUMO_LIBRARIES}/TextTest-*/texttest.exe")
 else ()
     # for Linux and Mac only
     find_package(GTest)
@@ -343,6 +377,7 @@ if (TCMALLOC)
 endif ()
 
 if (CHECK_OPTIONAL_LIBS)
+    # GDAL (for geopositioning)
     find_package(GDAL)
     if (GDAL_FOUND)
         include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
@@ -352,6 +387,7 @@ if (CHECK_OPTIONAL_LIBS)
         set(GDAL_LIBRARY "")
     endif (GDAL_FOUND)
 
+    # FFMPEG (for recording videos)
     find_package(FFMPEG)
     if (FFMPEG_FOUND)
         include_directories(SYSTEM ${FFMPEG_INCLUDE_DIR})
@@ -359,6 +395,7 @@ if (CHECK_OPTIONAL_LIBS)
         set(ENABLED_FEATURES "${ENABLED_FEATURES} FFmpeg")
     endif ()
 
+    # OSG (For 3D view)
     find_package(OpenSceneGraph 3.4.0 COMPONENTS osgGA osgViewer osgUtil osgDB osgText)
     if (OPENSCENEGRAPH_FOUND)
         include_directories(SYSTEM ${OPENSCENEGRAPH_INCLUDE_DIRS})
@@ -366,6 +403,7 @@ if (CHECK_OPTIONAL_LIBS)
         set(ENABLED_FEATURES "${ENABLED_FEATURES} OSG")
     endif ()
 
+    # GL2PS (deprecated, will be changed by FreeType
     find_package(GL2PS)
     if (GL2PS_FOUND)
         include_directories(SYSTEM ${GL2PS_INCLUDE_DIR})
@@ -374,15 +412,14 @@ if (CHECK_OPTIONAL_LIBS)
     endif (GL2PS_FOUND)
 
     # Eigen (for overhead wire / electric circuit simulation)
-    # TODO: Probably may be used in 32bit build as well.
-    find_package(Eigen3 3.2 MODULE)
+    find_package(Eigen3 3.2)
     if (EIGEN3_FOUND)
         include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
         set(HAVE_EIGEN 1)  # see config.h.cmake for #cmakedefine
         set(ENABLED_FEATURES "${ENABLED_FEATURES} Eigen")
     endif (EIGEN3_FOUND)
 
-#    set(JPS_FOUND 1)
+    # set(JPS_FOUND 1)
     if (JPS_FOUND)
         add_library(jps SHARED IMPORTED) # or STATIC instead of SHARED
         set_target_properties(jps PROPERTIES IMPORTED_LOCATION "/tmp/libjps.so")
@@ -390,6 +427,7 @@ if (CHECK_OPTIONAL_LIBS)
         set(HAVE_JPS 1)
     endif (JPS_FOUND)
 
+    # add optional libraries
     list(APPEND SUMO_LIBRARIES_DLL ${SUMO_OPTIONAL_LIBRARIES_DLL})
 endif (CHECK_OPTIONAL_LIBS)
 
@@ -415,7 +453,10 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake")
 
 # installation
 include(GNUInstallDirs)
-install(DIRECTORY bin/ DESTINATION bin FILES_MATCHING PATTERN "*.dll")
+install(DIRECTORY bin/ DESTINATION bin
+        FILES_MATCHING PATTERN "*.dll"
+        PATTERN "*d.dll" EXCLUDE
+        PATTERN "FOXDLLD-1.6.dll" EXCLUDE)
 install(DIRECTORY data/ DESTINATION share/sumo/data)
 install(DIRECTORY tools/ DESTINATION share/sumo/tools
         USE_SOURCE_PERMISSIONS
@@ -491,7 +532,7 @@ if (MVN_EXECUTABLE AND Java_FOUND)
     endif ()
     add_custom_target(traas
         COMMAND ${MVN_COMMAND_PREFIX} ${MVN_EXECUTABLE} --batch-mode -f tools/contributed/traas/pom.xml clean install
-        COMMAND ${CMAKE_COMMAND} -E copy tools/contributed/traas/target/traas-1.0-jar-with-dependencies.jar bin/TraaS.jar
+        COMMAND ${CMAKE_COMMAND} -E copy tools/contributed/traas/target/traas-1.1.jar bin/TraaS.jar
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     add_custom_target(lisum
         COMMAND ${MVN_COMMAND_PREFIX} ${MVN_EXECUTABLE} --batch-mode -f tools/contributed/lisum/pom.xml clean install
@@ -591,12 +632,12 @@ if (GTEST_FOUND)
     add_subdirectory(unittest)
 endif ()
 if (TEXTTEST_EXECUTABLE AND EXISTS ${CMAKE_SOURCE_DIR}/tests/runCiTests.bat)
-	add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runCiTests.bat ${TEXTTEST_EXECUTABLE})
+    add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runCiTests.bat ${TEXTTEST_EXECUTABLE})
 else ()
-	find_program(TEXTTEST_FOUND "texttest")
-	if (TEXTTEST_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/tests/runTests.sh)
-		add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runTests.sh -b ci -v ci)
-	endif()
+    find_program(TEXTTEST_FOUND "texttest")
+    if (TEXTTEST_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/tests/runTests.sh)
+        add_test(texttest ${CMAKE_SOURCE_DIR}/tests/runTests.sh -b ci -v ci)
+    endif()
 endif()
 
 # example and dist targets

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2005-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2005-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -21,6 +21,7 @@
 //
 /****************************************************************************/
 #pragma once
+#include <config.h>
 #include <string>
 #include <cmath>
 #include <limits>
@@ -130,6 +131,7 @@ extern bool gDebugFlag1;
 extern bool gDebugFlag2;
 extern bool gDebugFlag3;
 extern bool gDebugFlag4;
+extern bool gDebugFlag5;
 
 // synchronized output to stdout with << (i.e. DEBUGOUT(SIMTIME << " var=" << var << "\n")
 #define DEBUGOUT(msg) {std::ostringstream oss; oss << msg; std::cout << oss.str();}

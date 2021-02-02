@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -30,6 +30,7 @@
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
+#include <microsim/transportables/MSStageDriving.h>
 #include "GUINet.h"
 #include "GUIEdge.h"
 #include "GUIPerson.h"
@@ -125,6 +126,25 @@ GUIBusStop::getParameterWindow(GUIMainWindow& app,
     ret->mkItem("person number [#]", true, new FunctionBinding<GUIBusStop, int>(this, &MSStoppingPlace::getTransportableNumber));
     ret->mkItem("stopped vehicles[#]", true, new FunctionBinding<GUIBusStop, int>(this, &MSStoppingPlace::getStoppedVehicleNumber));
     ret->mkItem("last free pos[m]", true, new FunctionBinding<GUIBusStop, double>(this, &MSStoppingPlace::getLastFreePos));
+    // rides-being-waited-on statistic
+    std::map<std::string, int> stats;
+    for (const MSTransportable* t : getTransportables()) {
+        MSStageDriving* s = dynamic_cast<MSStageDriving*>(t->getCurrentStage());
+        if (s != nullptr) {
+            if (s->getIntendedVehicleID() != "") {
+                stats[s->getIntendedVehicleID()] += 1;
+            } else {
+                stats[joinToString(s->getLines(), " ")] += 1;
+            }
+        }
+    }
+    if (stats.size() > 0) {
+        ret->mkItem("waiting for:", false, "[#]");
+        for (auto item : stats) {
+            ret->mkItem(item.first.c_str(), false, toString(item.second));
+        }
+    }
+
     // close building
     ret->closeBuilding();
     return ret;

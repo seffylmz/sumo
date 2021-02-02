@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2002-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -1191,8 +1191,6 @@ enum SumoXMLAttr {
     GNE_ATTR_BIDIR,
     /// @brief block movement of a graphic element
     GNE_ATTR_BLOCK_MOVEMENT,
-    /// @brief block shape of a graphic element (Used mainly in GNEShapes)
-    GNE_ATTR_BLOCK_SHAPE,
     /// @brief Close shape of a polygon (Used by GNEPolys)
     GNE_ATTR_CLOSE_SHAPE,
     /// @brief parent of an additional element

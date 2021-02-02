@@ -1,5 +1,5 @@
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2018-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2018-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -14,13 +14,40 @@
 # @author  Michael Behrisch
 # @date    2020-10-08
 
-from functools import wraps
+import sys
+
 from traci import connection, constants, exceptions, _vehicle, _person, _trafficlight, _simulation  # noqa
 from traci.connection import StepListener  # noqa
 from .libtraci import vehicle, simulation, person, trafficlight
 from .libtraci import *  # noqa
 from .libtraci import TraCIStage, TraCINextStopData, TraCIReservation, TraCILogic, TraCIPhase, TraCIException
-import sys
+
+_DOMAINS = [
+    busstop,  # noqa
+    calibrator,  # noqa
+    chargingstation,  # noqa
+    edge,  # noqa
+    # gui,  # noqa
+    inductionloop,  # noqa
+    junction,  # noqa
+    lanearea,  # noqa
+    lane,  # noqa
+    meandata,  # noqa
+    multientryexit,  # noqa
+    overheadwire,  # noqa
+    parkingarea,  # noqa
+    person,
+    poi,  # noqa
+    polygon,  # noqa
+    rerouter,  # noqa
+    route,  # noqa
+    routeprobe,  # noqa
+    simulation,
+    trafficlight,
+    variablespeedsign,  # noqa
+    vehicle,
+    vehicletype,  # noqa
+]
 
 hasGUI = simulation.hasGUI
 init = simulation.init
@@ -33,10 +60,12 @@ setOrder = simulation.setOrder
 _stepListeners = {}
 _nextStepListenerID = 0
 
+
 def wrapAsClassMethod(func, module):
     def wrapper(*args, **kwargs):
         return func(module, *args, **kwargs)
     return wrapper
+
 
 TraCIStage.__attr_repr__ = _simulation.Stage.__attr_repr__
 TraCIStage.__repr__ = _simulation.Stage.__repr__
@@ -85,11 +114,25 @@ def isLibsumo():
 def isLibtraci():
     return True
 
+
 vehicle._legacyGetLeader = True
+
+
 def setLegacyGetLeader(enabled):
     _vehicle._legacyGetLeader = enabled
 
+
+_libtraci_step = simulation.step
+
+
 def simulationStep(step=0):
-    result = simulation.step(step)
+    _libtraci_step(step)
+    result = []
+    for domain in _DOMAINS:
+        result += [(k, v) for k, v in domain.getAllSubscriptionResults().items()]
+        result += [(k, v) for k, v in domain.getAllContextSubscriptionResults().items()]
     _manageStepListeners(step)
     return result
+
+
+simulation.step = simulationStep

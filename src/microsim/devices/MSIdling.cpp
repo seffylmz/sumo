@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2007-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2007-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -107,6 +107,13 @@ MSIdling_RandomCircling::idle(MSDevice_Taxi* taxi) {
         remainingDist += lastEdge->getLength();
         remainingEdges++;
         MSEdgeVector successors = lastEdge->getSuccessors(veh.getVClass());
+        for (auto it = successors.begin(); it != successors.end();) {
+            if ((*it)->getFunction() == SumoXMLEdgeFunc::CONNECTOR) {
+                it = successors.erase(it);
+            } else {
+                it++;
+            }
+        }
         if (successors.size() == 0) {
             WRITE_WARNING("Vehicle '" + veh.getID() + "' ends idling in a cul-de-sac");
             break;

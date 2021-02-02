@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -330,14 +330,18 @@ public:
         /// @}
 
     protected:
+        /// @brief default constructor
         AttributesEditorRow();
 
         /// @brief removed invalid spaces of Positions and shapes
         std::string stripWhitespaceAfterComma(const std::string& stringValue);
 
+        /// @brief check junction merging
+        bool mergeJunction(SumoXMLAttr attr, const std::vector<GNEAttributeCarrier*>& inspectedACs, const std::string & newVal) const;
+
     private:
         /// @brief pointer to AttributesEditor parent
-        AttributesEditor* myAttributesEditorParent = nullptr;
+        AttributesEditor* myAttributesEditorParent;
 
         /// @brief current AC Attribute
         const GNEAttributeProperties myACAttr;
@@ -398,11 +402,12 @@ public:
         /// @}
 
     protected:
+        /// @brief fox need this
         FOX_CONSTRUCTOR(AttributesEditor)
 
     private:
         /// @brief pointer to GNEFrame parent
-        GNEFrame* myFrameParent = nullptr;
+        GNEFrame* myFrameParent;
 
         /// @brief pointer to attributesEditorFlow
         AttributesEditorFlow* myAttributesEditorFlow = nullptr;
@@ -763,12 +768,6 @@ public:
 
         /// @brief checkBox for block movement
         FXCheckButton* myBlockMovementCheckButton;
-
-        /// @brief horizontal frame for block shape
-        FXHorizontalFrame* myBlockShapeFrame;
-
-        /// @brief checkBox for block shape
-        FXCheckButton* myBlockShapeCheckButton;
 
         /// @brief horizontal frame for close polygon
         FXHorizontalFrame* myCloseShapeFrame;

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -225,8 +225,8 @@ NBNodeCont::joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightL
             //   take place with the current implementation
             if (jci == ev.end()) {
                 if (removeDuplicates) {
-                    for (int i = 1; i < (int)ev.size(); i++) {
-                        ec.extract(dc, ev[i], true);
+                    for (int ei = 1; ei < (int)ev.size(); ei++) {
+                        ec.extract(dc, ev[ei], true);
                     }
                 } else {
                     ec.joinSameNodeConnectingEdges(dc, tlc, ev);
@@ -428,7 +428,7 @@ NBNodeCont::removeRailComponents(NBDistrictCont& dc, NBEdgeCont& ec, NBPTStopCon
         }
         if (!keep) {
             numRemoved++;
-            numRemovedEdges += component.size();
+            numRemovedEdges += (int)component.size();
             for (std::string edgeID : component) {
                 NBEdge* e = ec.retrieve(edgeID);
                 if (e != nullptr) {
@@ -453,7 +453,7 @@ NBNodeCont::removeRailComponents(NBDistrictCont& dc, NBEdgeCont& ec, NBPTStopCon
 
 int
 NBNodeCont::removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec,
-                                NBTrafficLightLogicCont& tlc, NBPTStopCont& sc, NBPTLineCont& lc,
+                                NBTrafficLightLogicCont& tlc, NBPTStopCont& sc,
                                 NBParkingCont& pc,
                                 bool removeGeometryNodes) {
     // load edges that shall not be modified
@@ -467,38 +467,22 @@ NBNodeCont::removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec,
             const std::vector<std::string> edges = oc.getStringVector("geometry.remove.keep-edges.explicit");
             edges2keep.insert(edges.begin(), edges.end());
         }
-        sc.addEdges2Keep(oc, edges2keep);
-        UNUSED_PARAMETER(lc); // no need to keep all route edges. They are validated again before writing
+        // no need to keep pt stop edges, they are remapped later
+        // no need to keep all pt route edges. They are validated again before writing
         pc.addEdges2Keep(oc, edges2keep);
     }
-    int no = 0;
     std::vector<NBNode*> toRemove;
-    for (NodeCont::iterator i = myNodes.begin(); i != myNodes.end(); i++) {
-        NBNode* current = (*i).second;
+    for (const auto& i : myNodes) {
+        NBNode* const current = i.second;
         bool remove = false;
-        std::vector<std::pair<NBEdge*, NBEdge*> > toJoin;
-        // check for completely empty nodes
-        if (current->getOutgoingEdges().size() == 0 && current->getIncomingEdges().size() == 0) {
-            // remove if empty
+        // check for completely empty nodes and check for nodes which are only geometry nodes and ask the node whether to join
+        if (current->getEdges().empty() || (removeGeometryNodes && mySplit.count(current) == 0 && current->checkIsRemovable())) {
             remove = true;
-        }
-        // check for nodes which are only geometry nodes
-        if (removeGeometryNodes && mySplit.count(current) == 0) {
-            if ((current->getOutgoingEdges().size() == 1 && current->getIncomingEdges().size() == 1)
-                    ||
-                    (current->getOutgoingEdges().size() == 2 && current->getIncomingEdges().size() == 2)) {
-                // ok, one in, one out or two in, two out
-                //  -> ask the node whether to join
-                remove = current->checkIsRemovable();
-                // check whether any of the edges must be kept
-                for (EdgeVector::const_iterator it_edge = current->getEdges().begin(); it_edge != current->getEdges().end(); ++it_edge) {
-                    if (edges2keep.find((*it_edge)->getID()) != edges2keep.end()) {
-                        remove = false;
-                        break;
-                    }
-                }
-                if (remove) {
-                    toJoin = current->getEdgesToJoin();
+            // check whether any of the edges must be kept
+            for (NBEdge* const it_edge : current->getEdges()) {
+                if (edges2keep.find(it_edge->getID()) != edges2keep.end()) {
+                    remove = false;
+                    break;
                 }
             }
         }
@@ -506,22 +490,22 @@ NBNodeCont::removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec,
         if (!remove) {
             continue;
         }
-        for (std::vector<std::pair<NBEdge*, NBEdge*> >::iterator j = toJoin.begin(); j != toJoin.end(); j++) {
-            NBEdge* begin = (*j).first;
-            NBEdge* continuation = (*j).second;
+        for (const std::pair<NBEdge*, NBEdge*>& j : current->getEdgesToJoin()) {
+            NBEdge* const begin = j.first;
+            NBEdge* const continuation = j.second;
             begin->append(continuation);
             continuation->getToNode()->replaceIncoming(continuation, begin, 0);
             tlc.replaceRemoved(continuation, -1, begin, -1, true);
+            sc.replaceEdge(continuation->getID(), { begin });
             ec.extract(dc, continuation, true);
         }
         toRemove.push_back(current);
-        no++;
     }
     // erase all
-    for (std::vector<NBNode*>::iterator j = toRemove.begin(); j != toRemove.end(); ++j) {
-        extract(*j, true);
+    for (NBNode* n : toRemove) {
+        extract(n, true);
     }
-    return no;
+    return (int)toRemove.size();
 }
 
 
@@ -580,8 +564,8 @@ NBNodeCont::generateNodeClusters(double maxDist, NodeClusters& into) const {
 #endif
                 if (railAndPeds && n->getType() != SumoXMLNodeType::RAIL_CROSSING) {
                     bool railAndPeds2 = true;
-                    for (NBEdge* e : n->getEdges()) {
-                        if ((e->getPermissions() & ~(SVC_RAIL_CLASSES | SVC_PEDESTRIAN)) != 0) {
+                    for (NBEdge* e2 : n->getEdges()) {
+                        if ((e2->getPermissions() & ~(SVC_RAIL_CLASSES | SVC_PEDESTRIAN)) != 0) {
                             railAndPeds2 = false;
                             break;
                         }
@@ -674,8 +658,7 @@ NBNodeCont::addCluster2Join(std::set<std::string> cluster, NBNode* node) {
             WRITE_WARNINGF("Ignoring join-cluster because junction '%' already occurred in another join-cluster.", nodeID);
             return;
         } else {
-            NBNode* const node = retrieve(nodeID);
-            if (node != nullptr) {
+            if (retrieve(nodeID) != nullptr) {
                 validCluster.insert(nodeID);
             } else {
                 if (StringUtils::startsWith(nodeID, "cluster_")) {
@@ -1089,14 +1072,11 @@ NBNodeCont::pruneSlipLaneNodes(NodeSet& cluster) const {
                         // slip lanes are for turning so there needs to be a sufficient angle
                         abs(NBHelpers::relAngle(inAngle, cont->getOutgoingEdges().front()->getAngleAtNode(cont))) > 45) {
                     // check whether the other continuation at n is also connected to the sliplane end
-                    NBEdge* otherEdge = (contEdge == outgoing.front() ? outgoing.back() : outgoing.front());
-                    double otherLength = otherEdge->getLength();
-                    NBNode* cont2 = otherEdge->getToNode();
-
+                    const NBEdge* const otherEdge = (contEdge == outgoing.front() ? outgoing.back() : outgoing.front());
                     NodeSet visited;
                     visited.insert(n);
                     std::vector<NodeAndDist> toProc;
-                    toProc.push_back(std::make_pair(cont2, otherLength));
+                    toProc.push_back(std::make_pair(otherEdge->getToNode(), otherEdge->getLength()));
                     bool found = false;
                     while (!toProc.empty()) {
                         NodeAndDist nodeAndDist = toProc.back();
@@ -1178,14 +1158,11 @@ NBNodeCont::pruneSlipLaneNodes(NodeSet& cluster) const {
                         // slip lanes are for turning so there needs to be a sufficient angle
                         abs(NBHelpers::relAngle(outAngle, cont->getIncomingEdges().front()->getAngleAtNode(cont))) > 45) {
                     // check whether the other continuation at n is also connected to the sliplane end
-                    NBEdge* otherEdge = (contEdge == incoming.front() ? incoming.back() : incoming.front());
-                    double otherLength = otherEdge->getLength();
-                    NBNode* cont2 = otherEdge->getFromNode();
-
+                    const NBEdge* const otherEdge = (contEdge == incoming.front() ? incoming.back() : incoming.front());
                     NodeSet visited;
                     visited.insert(n);
                     std::vector<NodeAndDist> toProc;
-                    toProc.push_back(std::make_pair(cont2, otherLength));
+                    toProc.push_back(std::make_pair(otherEdge->getFromNode(), otherEdge->getLength()));
                     bool found = false;
                     while (!toProc.empty()) {
                         NodeAndDist nodeAndDist = toProc.back();

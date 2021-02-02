@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -176,14 +176,15 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
         myPermissions = SVC_UNSPECIFIED;
         myCurrentWidth = NBEdge::UNSPECIFIED_WIDTH;
         myCurrentType = myCurrentEdge->getTypeID();
+        myLanesSpread = SUMOXMLDefinitions::LaneSpreadFunctions.get(myOptions.getString("default.spreadtype"));
     } else {
         // this is a completely new edge. get the type specific defaults
         myCurrentSpeed = myTypeCont.getEdgeTypeSpeed(myCurrentType);
         myPermissions = myTypeCont.getEdgeTypePermissions(myCurrentType);
         myCurrentWidth = myTypeCont.getEdgeTypeWidth(myCurrentType);
+        myLanesSpread = myTypeCont.getEdgeTypeSpreadType(myCurrentType);
     }
     myShape = PositionVector();
-    myLanesSpread = SUMOXMLDefinitions::LaneSpreadFunctions.get(myOptions.getString("default.spreadtype"));
     myLength = NBEdge::UNSPECIFIED_LOADED_LENGTH;
     myCurrentStreetName = "";
     myReinitKeepEdgeShape = false;
@@ -204,6 +205,7 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
         myCurrentLaneNo = myTypeCont.getEdgeTypeNumLanes(myCurrentType);
         myPermissions = myTypeCont.getEdgeTypePermissions(myCurrentType);
         myCurrentWidth = myTypeCont.getEdgeTypeWidth(myCurrentType);
+        myLanesSpread = myTypeCont.getEdgeTypeSpreadType(myCurrentType);
         mySidewalkWidth = myTypeCont.getEdgeTypeSidewalkWidth(myCurrentType);
         myBikeLaneWidth = myTypeCont.getEdgeTypeBikeLaneWidth(myCurrentType);
     }
@@ -309,11 +311,11 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
         if (myShape.size() == 0) {
             myCurrentEdge = new NBEdge(myCurrentID, myFromNode, myToNode, myCurrentType, myCurrentSpeed,
                                        myCurrentLaneNo, myCurrentPriority, myCurrentWidth, myCurrentEndOffset,
-                                       myCurrentStreetName, myLanesSpread);
+                                       myLanesSpread, myCurrentStreetName);
         } else {
             myCurrentEdge = new NBEdge(myCurrentID, myFromNode, myToNode, myCurrentType, myCurrentSpeed,
                                        myCurrentLaneNo, myCurrentPriority, myCurrentWidth, myCurrentEndOffset,
-                                       myShape, myCurrentStreetName, "", myLanesSpread,
+                                       myShape, myLanesSpread, myCurrentStreetName, "",
                                        myKeepEdgeShape);
         }
     }

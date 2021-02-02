@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2002-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -181,11 +181,20 @@ MSLeaderInfo::hasStoppedVehicle() const {
         return false;
     }
     for (int i = 0; i < (int)myVehicles.size(); ++i) {
-        if (myVehicles[0] != 0 && myVehicles[0]->isStopped()) {
+        if (myVehicles[i] != 0 && myVehicles[i]->isStopped()) {
             return true;
         }
     }
     return false;
+}
+
+void
+MSLeaderInfo::removeOpposite() {
+    for (int i = 0; i < (int)myVehicles.size(); ++i) {
+        if (myVehicles[i] != 0 && myVehicles[i]->getLaneChangeModel().isOpposite()) {
+            myVehicles[i] = nullptr;
+        }
+    }
 }
 
 // ===========================================================================
@@ -286,6 +295,36 @@ MSLeaderDistanceInfo::toString() const {
     return oss.str();
 }
 
+void
+MSLeaderDistanceInfo::fixOppositeGaps(bool isFollower) {
+    for (int i = 0; i < (int)myVehicles.size(); ++i) {
+        if (myVehicles[i] != nullptr) {
+            if (myVehicles[i]->getLaneChangeModel().isOpposite()) {
+                myDistances[i] -= myVehicles[i]->getVehicleType().getLength();
+            } else if (isFollower && myDistances[i] > POSITION_EPS) {
+                // can ignore oncoming followers once they are past
+                myVehicles[i] = nullptr;
+                myDistances[i] = -1;
+            }
+        }
+    }
+}
+
+CLeaderDist
+MSLeaderDistanceInfo::getClosest() const {
+    double minGap = -1;
+    const MSVehicle* veh = nullptr;
+    if (hasVehicles()) {
+        minGap = std::numeric_limits<double>::max();
+        for (int i = 0; i < (int)myVehicles.size(); ++i) {
+            if (myVehicles[i] != nullptr && myDistances[i] < minGap) {
+                minGap = myDistances[i];
+                veh = myVehicles[i];
+            }
+        }
+    }
+    return std::make_pair(veh, minGap);
+}
 
 // ===========================================================================
 // MSCriticalFollowerDistanceInfo member method definitions

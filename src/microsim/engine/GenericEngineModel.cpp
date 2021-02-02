@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -55,15 +55,9 @@ void GenericEngineModel::parseParameter(const ParMap& parameters, std::string pa
         value = par->second;
     }
 }
-void GenericEngineModel::setMaximumAcceleration(double maxAcceleration_mpsps) {
-    this->maxAcceleration_mpsps = maxAcceleration_mpsps;
+void GenericEngineModel::setMaximumAcceleration(double maxAcc) {
+    maxAcceleration_mpsps = maxAcc;
 }
-void GenericEngineModel::setMaximumDeceleration(double maxDeceleration_mpsps) {
-    this->maxDeceleration_mpsps = maxDeceleration_mpsps;
-}
-double GenericEngineModel::setMaximumAcceleration() {
-    return maxAcceleration_mpsps;
-}
-double GenericEngineModel::setMaximumDeceleration() {
-    return maxDeceleration_mpsps;
+void GenericEngineModel::setMaximumDeceleration(double maxDec) {
+    maxDeceleration_mpsps = maxDec;
 }

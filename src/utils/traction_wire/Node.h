@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -20,6 +20,7 @@
 /// @note    based on work 2017 Ahmad Khaled, Ahmad Essam, Omnia Zakaria, Mary Nader
 /****************************************************************************/
 #pragma once
+#include <config.h>
 
 #include <vector>
 #include <string>
@@ -51,7 +52,7 @@ public:
     void eraseElement(Element* element);
     // getters and setters
     double getVoltage();
-    void setVoltage(double voltage);
+    void setVoltage(double volt);
     int getNumOfElements();
     // iterates through the vector of the node's elements and returns the first, which is not equal to "element" in the argument of the function
     Element* getAnOtherElement(Element* element);

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -1382,40 +1382,45 @@ GNEFrameAttributesModuls::AttributesEditorRow::onCmdSetAttribute(FXObject*, FXSe
     if ((myACAttr.getAttr() == SUMO_ATTR_POSITION) || (myACAttr.getAttr() == SUMO_ATTR_SHAPE)) {
         newVal = stripWhitespaceAfterComma(newVal);
     }
+    // get inspected ACs (for code cleaning)
+    const auto & inspectedACs = myAttributesEditorParent->getFrameParent()->getViewNet()->getInspectedAttributeCarriers();
     // Check if attribute must be changed
-    if ((myAttributesEditorParent->getFrameParent()->getViewNet()->getInspectedAttributeCarriers().size() > 0) && myAttributesEditorParent->getFrameParent()->getViewNet()->getInspectedAttributeCarriers().front()->isValid(myACAttr.getAttr(), newVal)) {
-        // if its valid for the first AC than its valid for all (of the same type)
-        if (myAttributesEditorParent->getFrameParent()->getViewNet()->getInspectedAttributeCarriers().size() > 1) {
-            myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_begin("Change multiple attributes");
-        } else if (myACAttr.getAttr() == SUMO_ATTR_ID) {
-            // IDs attribute has to be encapsulated
-            myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_begin("change " + myACAttr.getTagPropertyParent().getTagStr() + " attribute");
+    if ((inspectedACs.size() > 0) && inspectedACs.front()->isValid(myACAttr.getAttr(), newVal)) {
+        // check if we're merging junction
+        if (!mergeJunction(myACAttr.getAttr(), inspectedACs, newVal)) {
+            // if its valid for the first AC than its valid for all (of the same type)
+            if (inspectedACs.size() > 1) {
+                myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_begin("Change multiple attributes");
+            } else if (myACAttr.getAttr() == SUMO_ATTR_ID) {
+                // IDs attribute has to be encapsulated
+                myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_begin("change " + myACAttr.getTagPropertyParent().getTagStr() + " attribute");
+            }
+            // Set new value of attribute in all selected ACs
+            for (const auto& it_ac : inspectedACs) {
+                it_ac->setAttribute(myACAttr.getAttr(), newVal, myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList());
+            }
+            // finish change multiple attributes or ID Attributes
+            if (inspectedACs.size() > 1) {
+                myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_end();
+            } else if (myACAttr.getAttr() == SUMO_ATTR_ID) {
+                myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_end();
+            }
+            // If previously value was incorrect, change font color to black
+            if (myACAttr.isVClasses()) {
+                myValueTextField->setTextColor(FXRGB(0, 0, 0));
+                myValueTextField->killFocus();
+                // in this case, we need to refresh the other values (For example, allow/Disallow objects)
+                myAttributesEditorParent->refreshAttributeEditor(false, false);
+            } else if (myACAttr.isDiscrete()) {
+                myValueComboBoxChoices->setTextColor(FXRGB(0, 0, 0));
+                myValueComboBoxChoices->killFocus();
+            } else if (myValueTextField != nullptr) {
+                myValueTextField->setTextColor(FXRGB(0, 0, 0));
+                myValueTextField->killFocus();
+            }
+            // update frame parent after attribute sucesfully set
+            myAttributesEditorParent->getFrameParent()->attributeUpdated();
         }
-        // Set new value of attribute in all selected ACs
-        for (const auto& it_ac : myAttributesEditorParent->getFrameParent()->getViewNet()->getInspectedAttributeCarriers()) {
-            it_ac->setAttribute(myACAttr.getAttr(), newVal, myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList());
-        }
-        // finish change multiple attributes or ID Attributes
-        if (myAttributesEditorParent->getFrameParent()->getViewNet()->getInspectedAttributeCarriers().size() > 1) {
-            myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_end();
-        } else if (myACAttr.getAttr() == SUMO_ATTR_ID) {
-            myAttributesEditorParent->getFrameParent()->myViewNet->getUndoList()->p_end();
-        }
-        // If previously value was incorrect, change font color to black
-        if (myACAttr.isVClasses()) {
-            myValueTextField->setTextColor(FXRGB(0, 0, 0));
-            myValueTextField->killFocus();
-            // in this case, we need to refresh the other values (For example, allow/Disallow objects)
-            myAttributesEditorParent->refreshAttributeEditor(false, false);
-        } else if (myACAttr.isDiscrete()) {
-            myValueComboBoxChoices->setTextColor(FXRGB(0, 0, 0));
-            myValueComboBoxChoices->killFocus();
-        } else if (myValueTextField != nullptr) {
-            myValueTextField->setTextColor(FXRGB(0, 0, 0));
-            myValueTextField->killFocus();
-        }
-        // update frame parent after attribute sucesfully set
-        myAttributesEditorParent->getFrameParent()->attributeUpdated();
     } else {
         // If value of TextField isn't valid, change color to Red depending of type
         if (myACAttr.isVClasses()) {
@@ -1472,6 +1477,28 @@ GNEFrameAttributesModuls::AttributesEditorRow::stripWhitespaceAfterComma(const s
         result = StringUtils::replace(result, ", ", ",");
     }
     return result;
+}
+
+
+bool
+GNEFrameAttributesModuls::AttributesEditorRow::mergeJunction(SumoXMLAttr attr, const std::vector<GNEAttributeCarrier*>& inspectedACs, const std::string& newVal) const {
+    // check if we're editing junction position
+    if ((inspectedACs.size() == 1) && (inspectedACs.front()->getTagProperty().getTag() == SUMO_TAG_JUNCTION) && (attr == SUMO_ATTR_POSITION)) {
+        // retrieve original junction
+        GNEJunction *movedJunction = myAttributesEditorParent->getFrameParent()->getViewNet()->getNet()->retrieveJunction(inspectedACs.front()->getID());
+        // parse position
+        const Position newPosition = GNEAttributeCarrier::parse<Position>(newVal);
+        // iterate over network junction
+        for (const auto &junction : myAttributesEditorParent->getFrameParent()->getViewNet()->getNet()->getAttributeCarriers()->getJunctions()) {
+            // check distance position
+            if ((junction.second->getPositionInView().distanceTo2D(newPosition) < POSITION_EPS) &&
+                myAttributesEditorParent->getFrameParent()->getViewNet()->mergeJunctions(movedJunction, junction.second)) {
+                    return true;
+            }
+        }
+    }
+    // nothing to merge
+    return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -2412,15 +2439,10 @@ GNEFrameAttributesModuls::NeteditAttributes::NeteditAttributes(GNEFrame* framePa
     new FXLabel(myBlockMovementFrame, "block move", 0, GUIDesignLabelAttribute);
     myBlockMovementCheckButton = new FXCheckButton(myBlockMovementFrame, "false", this, MID_GNE_SET_ATTRIBUTE, GUIDesignCheckButton);
     myBlockMovementCheckButton->setCheck(false);
-    // Create Frame for block shape label and checkBox (By default disabled)
-    myBlockShapeFrame = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
-    new FXLabel(myBlockShapeFrame, "block shape", 0, GUIDesignLabelAttribute);
-    myBlockShapeCheckButton = new FXCheckButton(myBlockShapeFrame, "false", this, MID_GNE_SET_ATTRIBUTE, GUIDesignCheckButton);
     // Create Frame for block close polygon and checkBox (By default disabled)
     myCloseShapeFrame = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
     new FXLabel(myCloseShapeFrame, "Close shape", 0, GUIDesignLabelAttribute);
     myCloseShapeCheckButton = new FXCheckButton(myCloseShapeFrame, "false", this, MID_GNE_SET_ATTRIBUTE, GUIDesignCheckButton);
-    myBlockShapeCheckButton->setCheck(false);
     // Create Frame for center element after creation (By default enabled)
     myCenterViewAfterCreationFrame = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
     new FXLabel(myCenterViewAfterCreationFrame, "Center view", 0, GUIDesignLabelAttribute);
@@ -2455,13 +2477,6 @@ GNEFrameAttributesModuls::NeteditAttributes::showNeteditAttributesModul(const GN
         showFrame = true;
     } else {
         myBlockMovementFrame->hide();
-    }
-    // check if block shape check button has to be show
-    if (tagProperty.canBlockShape()) {
-        myBlockShapeFrame->show();
-        showFrame = true;
-    } else {
-        myBlockShapeFrame->hide();
     }
     // check if close shape check button has to be show
     if (tagProperty.canCloseShape()) {
@@ -2529,14 +2544,6 @@ GNEFrameAttributesModuls::NeteditAttributes::getNeteditAttributesAndValues(std::
             valuesMap[GNE_ATTR_BLOCK_MOVEMENT] = "0";
         }
     }
-    // Save block shape value if shape's element can be blocked
-    if (myBlockShapeCheckButton->shown()) {
-        if (myBlockShapeCheckButton->getCheck() == 1) {
-            valuesMap[GNE_ATTR_BLOCK_SHAPE] = "1";
-        } else {
-            valuesMap[GNE_ATTR_BLOCK_SHAPE] = "0";
-        }
-    }
     // Save close shape value if shape's element can be closed
     if (myCloseShapeCheckButton->shown()) {
         if (myCloseShapeCheckButton->getCheck() == 1) {
@@ -2561,12 +2568,6 @@ GNEFrameAttributesModuls::NeteditAttributes::onCmdSetNeteditAttribute(FXObject* 
             myBlockMovementCheckButton->setText("true");
         } else {
             myBlockMovementCheckButton->setText("false");
-        }
-    } else if (obj == myBlockShapeCheckButton) {
-        if (myBlockShapeCheckButton->getCheck()) {
-            myBlockShapeCheckButton->setText("true");
-        } else {
-            myBlockShapeCheckButton->setText("false");
         }
     } else if (obj == myCloseShapeCheckButton) {
         if (myCloseShapeCheckButton->getCheck()) {

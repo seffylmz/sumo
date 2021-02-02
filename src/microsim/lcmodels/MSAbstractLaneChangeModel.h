@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -383,11 +383,6 @@ public:
     /// @brief return the shadow lane for the given lane and lateral offset
     MSLane* getShadowLane(const MSLane* lane, double posLat) const;
 
-    /// @brief set the shadow lane
-    void setShadowLane(MSLane* lane) {
-        myShadowLane = lane;
-    }
-
     const std::vector<MSLane*>& getShadowFurtherLanes() const {
         return myShadowFurtherLanes;
     }
@@ -586,6 +581,8 @@ protected:
     /// @brief whether the influencer cancels the given request
     bool cancelRequest(int state, int laneOffset);
 
+    /// @brief return the max of maxSpeedLat and lcMaxSpeedLatStanding
+    double getMaxSpeedLat2() const;
 
 protected:
     /// @brief The vehicle this lane-changer belongs to

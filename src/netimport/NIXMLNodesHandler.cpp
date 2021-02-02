@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -267,18 +267,18 @@ NIXMLNodesHandler::addJoinCluster(const SUMOSAXAttributes& attrs) {
 
     myID = attrs.getOpt<std::string>(SUMO_ATTR_ID, nullptr, ok, "cluster_" + joinToString(ids, "_"));
 
-    Position myPosition = Position::INVALID;
+    Position pos = Position::INVALID;
     if (attrs.hasAttribute(SUMO_ATTR_X)) {
-        myPosition.setx(attrs.get<double>(SUMO_ATTR_X, myID.c_str(), ok));
+        pos.setx(attrs.get<double>(SUMO_ATTR_X, myID.c_str(), ok));
     }
     if (attrs.hasAttribute(SUMO_ATTR_Y)) {
-        myPosition.sety(attrs.get<double>(SUMO_ATTR_Y, myID.c_str(), ok));
+        pos.sety(attrs.get<double>(SUMO_ATTR_Y, myID.c_str(), ok));
     }
     if (attrs.hasAttribute(SUMO_ATTR_Z)) {
-        myPosition.setz(attrs.get<double>(SUMO_ATTR_Z, myID.c_str(), ok));
+        pos.setz(attrs.get<double>(SUMO_ATTR_Z, myID.c_str(), ok));
     }
 
-    NBNode* node = processNodeType(attrs, nullptr, myID, myPosition, false, myNodeCont, myEdgeCont, myTLLogicCont);
+    NBNode* node = processNodeType(attrs, nullptr, myID, pos, false, myNodeCont, myEdgeCont, myTLLogicCont);
     if (ok) {
         myNodeCont.addCluster2Join(std::set<std::string>(ids.begin(), ids.end()), node);
     }

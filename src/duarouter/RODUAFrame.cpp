@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -184,7 +184,7 @@ RODUAFrame::addDUAOptions() {
     oc.doRegister("persontrip.taxi.waiting-time", new Option_String("300", "TIME"));
     oc.addDescription("persontrip.taxi.waiting-time", "Processing", "Estimated time for taxi pickup");
 
-    oc.doRegister("railway.max-train-length", new Option_Float(5000.0));
+    oc.doRegister("railway.max-train-length", new Option_Float(1000.0));
     oc.addDescription("railway.max-train-length", "Processing", "Use FLOAT as a maximum train length when initializing the railway router");
 }
 

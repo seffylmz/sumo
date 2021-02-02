@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -61,6 +61,7 @@ class OutputDevice;
 class Position;
 class MSJunction;
 class MSLeaderInfo;
+class MSLeaderDistanceInfo;
 class MSDevice_DriverState;
 class MSSimpleDriverState;
 
@@ -392,7 +393,9 @@ public:
      *       lanes surface (regular or partial vehicle for the lane), or (for the sublane
      *       model) it issued a maneuver reservation for a lane change.
      */
-    double getBackPositionOnLane(const MSLane* lane) const;
+    inline double getBackPositionOnLane(const MSLane* lane) const {
+        return getBackPositionOnLane(lane, false);
+    }
 
     /** @brief Get the vehicle's position relative to its current lane
      * @return The back position of the vehicle (in m from the current lane's begin)
@@ -1780,6 +1783,9 @@ protected:
      */
     void setEmergencyBlueLight(SUMOTime currentTime);
 
+    /// updates myFurtherLanes on lane insertion or after collision
+    void computeFurtherLanes(MSLane* enteredLane, double pos);
+        
     /// updates LaneQ::nextOccupation and myCurrentLaneInBestLanes
     void updateOccupancyAndCurrentBestLane(const MSLane* startLane);
 
@@ -2004,6 +2010,10 @@ protected:
                         const double seen, DriveProcessItem* const lastLink,
                         const MSLane* const lane, double& v, double& vLinkPass) const;
 
+    void adaptToLeaderDistance(const MSLeaderDistanceInfo& ahead, double latOffset,
+                          const double seen, DriveProcessItem* const lastLink,
+                          const MSLane* const lane, double& v, double& vLinkPass) const;
+
     /// @brief checks for link leaders on the given link
     void checkLinkLeader(const MSLink* link, const MSLane* lane, double seen,
                          DriveProcessItem* const lastLink, double& v, double& vLinkPass, double& vLinkWait, bool& setRequest,
@@ -2034,6 +2044,11 @@ protected:
     bool ignoreRed(const MSLink* link, bool canBrake) const;
 
     double estimateTimeToNextStop() const;
+
+    /* @brief special considerations for opposite direction driving so that the
+     * result can be used directly by getPositionOnLane(...) */
+    double getBackPositionOnLane(const MSLane* lane, bool calledByGetPosition) const;
+
 
 private:
     /// @brief The per vehicle variables of the car following model

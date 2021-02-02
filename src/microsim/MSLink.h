@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2002-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -303,6 +303,14 @@ public:
         return myOffState;
     }
 
+    /** @brief Returns the last green state of the link
+     *
+     * @return The last green state of this link
+     */
+    LinkState getLastGreenState() const {
+        return myLastGreenState;
+    }
+
 
     //@brief Returns the time of the last state change
     inline SUMOTime getLastStateChange() const {
@@ -503,6 +511,9 @@ public:
     /// @brief return the link that is parallel to this lane or 0
     MSLink* getParallelLink(int direction) const;
 
+    /// @brief return the link that is the opposite entry link to this one
+    MSLink* getOppositeDirectionLink() const;
+
     /// @brief return whether the fromLane of this link is an internal lane
     inline bool fromInternalLane() const {
         return myInternalLaneBefore != nullptr;
@@ -630,6 +641,8 @@ private:
 
     /// @brief The state of the link
     LinkState myState;
+    /// @brief The last green state of the link (minor or major)
+    LinkState myLastGreenState;
     /// @brief The state of the link when switching of traffic light control
     const LinkState myOffState;
 

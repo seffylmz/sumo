@@ -1,5 +1,5 @@
-Eclipse SUMO sumo Version v1_8_0+0332-d62ab2d821
- Copyright (C) 2001-2020 German Aerospace Center (DLR) and others; https://sumo.dlr.de
+Eclipse SUMO sumo Version v1_8_0+0661-870f796b06
+ Copyright (C) 2001-2021 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 A microscopic, multi-modal traffic simulation.
 
 Usage: sumo [OPTION]*
@@ -137,6 +137,8 @@ Output Options:
   --save-state.rng                     Save random number generator states
   --save-state.transportables          Save person and container states
                                         (experimental)
+  --save-state.precision INT           Write internal state values with the
+                                        given precision (default 2)
 
 Time Options:
   -b, --begin TIME                     Defines the begin time in seconds;
@@ -694,6 +696,8 @@ GUI Only Options:
                                         position
   --tracker-interval FLOAT             The aggregation period for value tracker
                                         windows
+  --osg-view                           Start with an OpenSceneGraph view
+                                        instead of the regular 2D view
   --gui-testing                        Enable overlay for screen recognition
   --gui-testing-debug                  Enable output messages during
                                         GUI-Testing

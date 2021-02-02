@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2008-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -68,7 +68,7 @@ def evaluate(forTest=False):
     waitArray = numpy.array(waitTimes)
     if forTest:
         print("waiting time (max, mean, dev):", waitArray.max() < 1000,
-              waitArray.mean() < 1000, math.sqrt(waitArray.var()) < 100)
+              waitArray.mean() < 1000, math.sqrt(waitArray.var()) < 200)
     else:
         print("waiting time (max, mean, dev):", waitArray.max(),
               waitArray.mean(), math.sqrt(waitArray.var()))
@@ -76,7 +76,7 @@ def evaluate(forTest=False):
     for route, times in sorted(routeTimes.items()):
         timeArray = numpy.array(times)
         if forTest:
-            print(route, timeArray.max() < 1000, timeArray.mean() < 1000, math.sqrt(timeArray.var()) < 100)
+            print(route, timeArray.max() < 1000, timeArray.mean() < 1000, math.sqrt(timeArray.var()) < 200)
         else:
             print(route, timeArray.max(), timeArray.mean(), math.sqrt(timeArray.var()))
 

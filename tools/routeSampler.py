@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -748,7 +748,7 @@ def solveInterval(options, routes, begin, end, intervalPrefix, outf, mismatchf, 
             ' '.join(cd.edgeTuple), int(origHourly), int(localHourly)))
 
     outputIntervalPrefix = "" if intervalPrefix == "" else "%s: " % int(begin)
-    countPercentage = gehOK = "%.2f%%" % (100 * totalCount / float(totalOrigCount)) if totalOrigCount else "-"
+    countPercentage = "%.2f%%" % (100 * totalCount / float(totalOrigCount)) if totalOrigCount else "-"
     gehOKNum = 100 * numGehOK / float(len(countData)) if countData else 100
     gehOK = "%.2f%%" % gehOKNum if countData else "-"
     print("%sWrote %s routes (%s distinct) achieving total count %s (%s) at %s locations. GEH<%s for %s" % (

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -25,7 +25,9 @@
 #include <netedit/GNENet.h>
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
+#include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Attribute.h>
+#include <netedit/frames/common/GNEMoveFrame.h>
 #include <utils/gui/globjects/GUIPolygon.h>
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <utils/gui/div/GUIDesigns.h>
@@ -37,11 +39,10 @@
 // method definitions
 // ===========================================================================
 GNEPoly::GNEPoly(GNENet* net, const std::string& id, const std::string& type, const PositionVector& shape, bool geo, bool fill, double lineWidth,
-                 const RGBColor& color, double layer, double angle, const std::string& imgFile, bool relativePath, bool movementBlocked, bool shapeBlocked) :
+                 const RGBColor& color, double layer, double angle, const std::string& imgFile, bool relativePath, bool movementBlocked, bool /* shapeBlocked */) :
     SUMOPolygon(id, type, color, shape, geo, fill, lineWidth, layer, angle, imgFile, relativePath),
     GNEShape(id, net, GLO_POLYGON, SUMO_TAG_POLY, movementBlocked, {}, {}, {}, {}, {}, {}, {}, {}),
-         myBlockShape(shapeBlocked),
-mySimplifiedShape(false) {
+    mySimplifiedShape(false) {
     // update centering boundary without updating grid
     updateCenteringBoundary(false);
     // check if imgFile is valid
@@ -67,7 +68,7 @@ GNEPoly::getMoveOperation(const double shapeOffset) {
     if (myBlockMovement) {
         // nothing to move
         return nullptr;
-    } else if (myBlockShape) {
+    } else if (myNet->getViewNet()->getViewParent()->getMoveFrame()->getNetworkModeOptions()->getMoveWholePolygons()) {
         // move entire shape
         return new GNEMoveOperation(this, myShape);
     } else {
@@ -202,9 +203,15 @@ GNEPoly::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
     } else {
         GUIDesigns::buildFXMenuCommand(ret, "Close shape\t\tClose polygon's shape", nullptr, &parent, MID_GNE_POLYGON_CLOSE);
     }
+    // add separator
+    new FXMenuSeparator(ret);
     // create a extra FXMenuCommand if mouse is over a vertex
-    int index = getVertexIndex(myNet->getViewNet()->getPositionInformation(), false);
+    const int index = getVertexIndex(myNet->getViewNet()->getPositionInformation(), false);
     if (index != -1) {
+        // check if we're in network mode
+        if (myNet->getViewNet()->getEditModes().networkEditMode == NetworkEditMode::NETWORK_MOVE) {
+            GUIDesigns::buildFXMenuCommand(ret, "Set custom Geometry Point", nullptr, &parent, MID_GNE_CUSTOM_GEOMETRYPOINT);
+        }
         FXMenuCommand* removeGeometryPoint = GUIDesigns::buildFXMenuCommand(ret, "Remove geometry point\t\tRemove geometry point under mouse", nullptr, &parent, MID_GNE_POLYGON_DELETE_GEOMETRY_POINT);
         FXMenuCommand* setFirstPoint = GUIDesigns::buildFXMenuCommand(ret, "Set first geometry point\t\tSet", nullptr, &parent, MID_GNE_POLYGON_SET_FIRST_POINT);
         // disable setFirstPoint if shape only have three points
@@ -290,7 +297,7 @@ GNEPoly::drawGL(const GUIVisualizationSettings& s) const {
             glPopMatrix();
         }
         // draw contour if shape isn't blocked
-        if (!myBlockShape) {
+        if (!myNet->getViewNet()->getViewParent()->getMoveFrame()->getNetworkModeOptions()->getMoveWholePolygons()) {
             // push contour matrix
             glPushMatrix();
             // translate to front
@@ -376,12 +383,6 @@ GNEPoly::deleteGeometryPoint(const Position& pos, bool allowUndo) {
     } else {
         WRITE_WARNING("Number of remaining points insufficient")
     }
-}
-
-
-bool
-GNEPoly::isPolygonBlocked() const {
-    return myBlockShape;
 }
 
 
@@ -542,8 +543,6 @@ GNEPoly::getAttribute(SumoXMLAttr key) const {
             return toString(myGEO);
         case GNE_ATTR_BLOCK_MOVEMENT:
             return toString(myBlockMovement);
-        case GNE_ATTR_BLOCK_SHAPE:
-            return toString(myBlockShape);
         case GNE_ATTR_CLOSE_SHAPE:
             return toString(myShape.isClosed());
         case GNE_ATTR_SELECTED:
@@ -575,7 +574,6 @@ GNEPoly::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList* un
         case SUMO_ATTR_ANGLE:
         case SUMO_ATTR_GEO:
         case GNE_ATTR_BLOCK_MOVEMENT:
-        case GNE_ATTR_BLOCK_SHAPE:
         case GNE_ATTR_CLOSE_SHAPE:
         case GNE_ATTR_SELECTED:
         case GNE_ATTR_PARAMETERS:
@@ -628,8 +626,6 @@ GNEPoly::isValid(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_GEO:
             return canParse<bool>(value);
         case GNE_ATTR_BLOCK_MOVEMENT:
-            return canParse<bool>(value);
-        case GNE_ATTR_BLOCK_SHAPE:
             return canParse<bool>(value);
         case GNE_ATTR_CLOSE_SHAPE:
             if (canParse<bool>(value)) {
@@ -754,9 +750,6 @@ GNEPoly::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case GNE_ATTR_BLOCK_MOVEMENT:
             myBlockMovement = parse<bool>(value);
-            break;
-        case GNE_ATTR_BLOCK_SHAPE:
-            myBlockShape = parse<bool>(value);
             break;
         case GNE_ATTR_CLOSE_SHAPE:
             if (parse<bool>(value)) {

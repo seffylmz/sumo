@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -187,23 +187,6 @@ NBPTStop::registerAdditionalEdge(std::string wayId, std::string edgeId) {
 }
 
 
-const std::map<std::string, std::string>&
-NBPTStop::getMyAdditionalEdgeCandidates() const {
-    return myAdditionalEdgeCandidates;
-}
-
-
-void
-NBPTStop::setMyOrigEdgeId(const std::string& myOrigEdgeId) {
-    NBPTStop::myOrigEdgeId = myOrigEdgeId;
-}
-
-
-void
-NBPTStop::setMyPTStopLength(double myPTStopLength) {
-    NBPTStop::myPTStopLength = myPTStopLength;
-}
-
 bool
 NBPTStop::findLaneAndComputeBusStopExtent(const NBEdgeCont& ec) {
     NBEdge* edge = ec.getByID(myEdgeId);
@@ -234,11 +217,6 @@ NBPTStop::findLaneAndComputeBusStopExtent(const NBEdge* edge) {
     return myEdgeId == ""; // loose stop. Try later when processing lines
 }
 
-
-void
-NBPTStop::setMyPTStopId(std::string id) {
-    myPTStopId = id;
-}
 
 void
 NBPTStop::clearAccess() {

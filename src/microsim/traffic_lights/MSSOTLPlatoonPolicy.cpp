@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2010-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2010-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -20,8 +20,12 @@
 /****************************************************************************/
 
 #include "MSSOTLPlatoonPolicy.h"
+//#define SWARM_DEBUG
 
 
+// ===========================================================================
+// method definitions
+// ===========================================================================
 MSSOTLPlatoonPolicy::MSSOTLPlatoonPolicy(const std::map<std::string, std::string>& parameters) :
     MSSOTLPolicy("Platoon", parameters) {
     init();
@@ -43,12 +47,12 @@ MSSOTLPlatoonPolicy::MSSOTLPlatoonPolicy(MSSOTLPolicyDesirability* desirabilityA
 bool MSSOTLPlatoonPolicy::canRelease(SUMOTime elapsed, bool thresholdPassed, bool pushButtonPressed,
                                      const MSPhaseDefinition* stage, int vehicleCount) {
 //  DBG(std::ostringstream str; str << "invoked MSTLPlatoonPolicy::canRelease()"; WRITE_MESSAGE(str.str()););
-    DBG(
-        std::ostringstream str;
-        str << "MSSOTLPlatoonPolicy::canRelease elapsed " << elapsed << " threshold " << thresholdPassed << " pushbutton " << pushButtonPressed << " vcount " << vehicleCount
-        << " minD " << stage->minDuration << " maxD " << stage->maxDuration; str << " will return " << ((thresholdPassed && ((vehicleCount == 0) || (elapsed >= stage->maxDuration))) ? "true" : "false");
-        WRITE_MESSAGE(str.str());
-    );
+#ifdef SWARM_DEBUG
+    std::ostringstream str;
+    str << "MSSOTLPlatoonPolicy::canRelease elapsed " << elapsed << " threshold " << thresholdPassed << " pushbutton " << pushButtonPressed << " vcount " << vehicleCount
+    << " minD " << stage->minDuration << " maxD " << stage->maxDuration; str << " will return " << ((thresholdPassed && ((vehicleCount == 0) || (elapsed >= stage->maxDuration))) ? "true" : "false");
+    WRITE_MESSAGE(str.str());
+#endif
     if (elapsed >= stage->minDuration) {
         if (pushButtonLogic(elapsed, pushButtonPressed, stage)) {
             return true;

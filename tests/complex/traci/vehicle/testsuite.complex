@@ -1,3 +1,9 @@
+# test accessing the ssm device
+ssm
+
+# Tests for lateral collisions
+lateralCollision
+
 # tests for vehicle mapping
 moveToXY
 
@@ -37,6 +43,9 @@ getNeighbors
 
 # Tests traci.vehicle.getNeighbors() method in presence of multiple leaders/followers
 getNeighborsSublane
+
+# Tests traci.vehicle.getNeighbors() method
+getNeighborsOpposite
 
 # use changeLaneRelative to change to the opposite side and back
 changeOpposite

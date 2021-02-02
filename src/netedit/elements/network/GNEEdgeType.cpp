@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -66,6 +66,7 @@ GNEEdgeType::GNEEdgeType(GNENet* net, const std::string &ID, const NBTypeCont::E
     speed = edgeType->speed;
     priority = edgeType->priority;
     permissions = edgeType->permissions;
+    spreadType = edgeType->spreadType;
     width = edgeType->width;
     attrs = edgeType->attrs;
     laneTypeDefinitions = edgeType->laneTypeDefinitions;
@@ -234,6 +235,8 @@ GNEEdgeType::getAttribute(SumoXMLAttr key) const {
             } else {
                 return getVehicleClassNames(invertPermissions(permissions));
             }
+        case SUMO_ATTR_SPREADTYPE:
+            return SUMOXMLDefinitions::LaneSpreadFunctions.getString(spreadType);
         case SUMO_ATTR_WIDTH:
             if (attrs.count(key) == 0) {
                 return toString(NBEdge::UNSPECIFIED_WIDTH);
@@ -262,6 +265,7 @@ GNEEdgeType::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList
         case SUMO_ATTR_SPEED:
         case SUMO_ATTR_ALLOW:
         case SUMO_ATTR_DISALLOW:
+        case SUMO_ATTR_SPREADTYPE:
         case SUMO_ATTR_DISCARD:
         case SUMO_ATTR_WIDTH:
         case SUMO_ATTR_PRIORITY:
@@ -294,6 +298,8 @@ GNEEdgeType::isValid(SumoXMLAttr key, const std::string& value) {
             } else {
                 return canParseVehicleClasses(value);
             }
+        case SUMO_ATTR_SPREADTYPE:
+            return SUMOXMLDefinitions::LaneSpreadFunctions.hasString(value);
         case SUMO_ATTR_WIDTH:
             if (value.empty() || (value == "-1")) {
                 return true;
@@ -344,9 +350,9 @@ GNEEdgeType::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case SUMO_ATTR_ALLOW:
             if (value.empty()) {
-                attrs.erase(SUMO_ATTR_DISALLOW);
+                attrs.erase(SUMO_ATTR_ALLOW);
             } else {
-                attrs.insert(SUMO_ATTR_DISALLOW);
+                attrs.insert(SUMO_ATTR_ALLOW);
                 permissions = parseVehicleClasses(value);
             }
             break;
@@ -357,6 +363,9 @@ GNEEdgeType::setAttribute(SumoXMLAttr key, const std::string& value) {
                 attrs.insert(SUMO_ATTR_DISALLOW);
                 permissions = invertPermissions(parseVehicleClasses(value));
             }
+            break;
+        case SUMO_ATTR_SPREADTYPE:
+            spreadType = SUMOXMLDefinitions::LaneSpreadFunctions.get(value);
             break;
         case SUMO_ATTR_DISCARD:
             if (value.empty()) {

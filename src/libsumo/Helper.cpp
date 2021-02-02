@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2017-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -184,7 +184,7 @@ Helper::handleSubscriptions(const SUMOTime t) {
     for (std::vector<libsumo::Subscription>::iterator i = mySubscriptions.begin(); i != mySubscriptions.end();) {
         const libsumo::Subscription& s = *i;
         const bool isArrivedVehicle = (s.commandId == CMD_SUBSCRIBE_VEHICLE_VARIABLE || s.commandId == CMD_SUBSCRIBE_VEHICLE_CONTEXT)
-                                      && (find(getVehicleStateChanges(MSNet::VEHICLE_STATE_ARRIVED).begin(), getVehicleStateChanges(MSNet::VEHICLE_STATE_ARRIVED).end(), s.id) != getVehicleStateChanges(MSNet::VEHICLE_STATE_ARRIVED).end());
+                                      && (find(getVehicleStateChanges(MSNet::VehicleState::ARRIVED).begin(), getVehicleStateChanges(MSNet::VehicleState::ARRIVED).end(), s.id) != getVehicleStateChanges(MSNet::VehicleState::ARRIVED).end());
         const bool isArrivedPerson = (s.commandId == libsumo::CMD_SUBSCRIBE_PERSON_VARIABLE || s.commandId == libsumo::CMD_SUBSCRIBE_PERSON_CONTEXT)
                                      && MSNet::getInstance()->getPersonControl().get(s.id) == nullptr;
         if (s.endTime < t || isArrivedVehicle || isArrivedPerson) {
@@ -1312,7 +1312,7 @@ Helper::moveToXYMap(const Position& pos, double maxRouteDistance, bool mayLeaveN
         double angleDiffN = 1. - (u.angleDiff / 180.);
         double idN = u.ID ? 1 : 0;
         double onRouteN = u.onRoute ? 1 : 0;
-        double sameEdgeN = u.sameEdge ? MIN2(currentRouteEdge->getLength() / speed, (double)1.) : 0;
+        double sameEdgeN = u.sameEdge ? MIN2(currentRouteEdge->getLength() / MAX2(NUMERICAL_EPS, speed), (double)1.) : 0;
         double value = (distN * .5 // distance is more important than angle because the vehicle might be driving in the opposite direction
                         + angleDiffN * 0.35 /*.5 */
                         + idN * 1
@@ -1367,7 +1367,9 @@ Helper::moveToXYMap(const Position& pos, double maxRouteDistance, bool mayLeaveN
 
 bool
 Helper::findCloserLane(const MSEdge* edge, const Position& pos, SUMOVehicleClass vClass, double& bestDistance, MSLane** lane) {
-    if (edge == nullptr || bestDistance < POSITION_EPS) {
+    // TODO maybe there is a way to abort this early if the lane already found is good enough but simply
+    // checking for bestDistance < POSITON_EPS gives ugly order dependencies (#7933), so think twice and profile first
+    if (edge == nullptr) {
         return false;
     }
     bool newBest = false;

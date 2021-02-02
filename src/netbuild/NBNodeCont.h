@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -223,12 +223,13 @@ public:
      * @param[in, opt. changed] dc The district container needed if a node shall be removed
      * @param[in, opt. changed] ec The edge container needed for joining edges
      * @param[in, opt. changed] tlc The traffic lights container to remove nodes from
+     * @param[in, opt. changed] sc The pt stops container to update stop edges
+     * @param[in, opt. changed] pc The pt stops container to update stop edges
      * @param[in] removeGeometryNodes Whether geometry nodes shall also be removed
      * @return The number of removed nodes
      */
     int removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc,
-                            NBPTStopCont& sc, NBPTLineCont& lc,
-                            NBParkingCont& pc,
+                            NBPTStopCont& sc, NBParkingCont& pc,
                             bool removeGeometryNodes);
     /// @}
 

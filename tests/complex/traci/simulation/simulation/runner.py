@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2008-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -75,6 +75,7 @@ print(traci.simulation.getSubscriptionResults())
 for step in range(6):
     print("step", step)
     traci.simulationStep()
+    print("pendingVehicles", traci.simulation.getPendingVehicles())
     print(traci.simulation.getSubscriptionResults())
 checkVehicleStates()
 print("deltaT", traci.simulation.getDeltaT())

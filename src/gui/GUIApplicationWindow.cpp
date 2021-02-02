@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -439,13 +439,13 @@ GUIApplicationWindow::fillMenuBar() {
     new FXMenuSeparator(myEditMenu);
     GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
                                            "Edit Breakpoints", "Ctrl+B", "Opens a dialog for editing breakpoints.",
-                                           nullptr, this, MID_HOTKEY_CTRL_B_EDITBREAKPOINT_OPENDATAELEMENTS);
+                                           GUIIconSubSys::getIcon(GUIIcon::APP_BREAKPOINTS), this, MID_HOTKEY_CTRL_B_EDITBREAKPOINT_OPENDATAELEMENTS);
     GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
                                            "Edit Visualisation", "F9", "Opens a dialog for editing visualization settings.",
-                                           nullptr, this, MID_HOTKEY_F9_EDIT_VIEWSCHEME);
+                                           GUIIconSubSys::getIcon(GUIIcon::COLORWHEEL), this, MID_HOTKEY_F9_EDIT_VIEWSCHEME);
     GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
                                            "Edit Viewport", "Ctrl+I", "Opens a dialog for editing viewing area, zoom and rotation.",
-                                           nullptr, this, MID_HOTKEY_CTRL_I_EDITVIEWPORT);
+                                           GUIIconSubSys::getIcon(GUIIcon::EDITVIEWPORT), this, MID_HOTKEY_CTRL_I_EDITVIEWPORT);
     new FXMenuSeparator(myEditMenu);
     GUIDesigns::buildFXMenuCommandShortcut(myEditMenu,
                                            "Open in netedit", "Ctrl+T", "Opens the netedit application with the current network.",
@@ -457,12 +457,13 @@ GUIApplicationWindow::fillMenuBar() {
     GUIDesigns::buildFXMenuCommandShortcut(mySettingsMenu,
                                            "Application Settings...", "", "Open a Dialog for Application Settings editing.",
                                            nullptr, this, MID_APPSETTINGS);
-    new FXMenuCheck(mySettingsMenu,
+    myGamingModeCheckbox = new FXMenuCheck(mySettingsMenu,
                     "Gaming Mode\tCtrl+G\tToggle gaming mode on/off.",
                     this, MID_HOTKEY_CTRL_G_GAMINGMODE_TOOGLEGRID);
-    new FXMenuCheck(mySettingsMenu,
-                    "Full Screen Mode\tCtrl+F\tToggle full screen mode on/off.",
-                    this, MID_HOTKEY_CTRL_F_FULSCREENMODE);
+    GUIDesigns::buildFXMenuCommandShortcut(mySettingsMenu,
+                    "Full Screen Mode", "Ctrl+F", "Toggle full screen mode on/off.",
+                    GUIIconSubSys::getIcon(GUIIcon::FULL_SCREEN), this, MID_HOTKEY_CTRL_F_FULSCREENMODE);
+    
     // build Locate menu
     myLocatorMenu = new FXMenuPane(this);
     GUIDesigns::buildFXMenuTitle(myMenuBar, "&Locate", nullptr, myLocatorMenu);
@@ -506,6 +507,7 @@ GUIApplicationWindow::fillMenuBar() {
     new FXMenuCheck(myLocatorMenu,
                     "Show vehicles outside the road network\t\tShow vehicles that are teleporting or driving remote-controlled outside the road network in locator dialog.",
                     this, MID_LISTTELEPORTING);
+    
     // build control menu
     myControlMenu = new FXMenuPane(this);
     GUIDesigns::buildFXMenuTitle(myMenuBar, "Simulation", nullptr, myControlMenu);
@@ -1218,6 +1220,7 @@ GUIApplicationWindow::onCmdGaming(FXObject*, FXSelector, void*) {
     myAmGaming = !myAmGaming;
     myGLWindows[0]->getView()->getVisualisationSettings().gaming = myAmGaming;
     if (myAmGaming) {
+        myGamingModeCheckbox->setCheck(TRUE);
         myMenuBar->hide();
         myStatusbar->hide();
         myToolBar1->hide();
@@ -1239,6 +1242,7 @@ GUIApplicationWindow::onCmdGaming(FXObject*, FXSelector, void*) {
         myEmergencyVehicleLabel->setFgColor(MFXUtils::getFXColor(RGBColor::RED));
         myTotalDistanceLabel->setFgColor(MFXUtils::getFXColor(RGBColor::RED));
     } else {
+        myGamingModeCheckbox->setCheck(FALSE);
         myMenuBar->show();
         myStatusbar->show();
         myToolBar1->show();

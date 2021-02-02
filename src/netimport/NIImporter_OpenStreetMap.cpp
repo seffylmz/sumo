@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -527,8 +527,8 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
         if (addForward) {
             assert(numLanesForward > 0);
             NBEdge* nbe = new NBEdge(id, from, to, type, speed, numLanesForward, tc.getEdgeTypePriority(type),
-                                     forwardWidth, NBEdge::UNSPECIFIED_OFFSET, shape,
-                                     StringUtils::escapeXML(streetName), origID, lsf, true);
+                                     forwardWidth, NBEdge::UNSPECIFIED_OFFSET, shape, lsf,
+                                     StringUtils::escapeXML(streetName), origID, true);
             nbe->setPermissions(forwardPermissions);
             if ((e->myBuswayType & WAY_FORWARD) != 0) {
                 nbe->setPermissions(SVC_BUS, 0);
@@ -552,8 +552,8 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
         if (addBackward) {
             assert(numLanesBackward > 0);
             NBEdge* nbe = new NBEdge(reverseID, to, from, type, speedBackward, numLanesBackward, tc.getEdgeTypePriority(type),
-                                     backwardWidth, NBEdge::UNSPECIFIED_OFFSET, shape.reverse(),
-                                     StringUtils::escapeXML(streetName), origID, lsf, true);
+                                     backwardWidth, NBEdge::UNSPECIFIED_OFFSET, shape.reverse(), lsf,
+                                     StringUtils::escapeXML(streetName), origID, true);
             nbe->setPermissions(backwardPermissions);
             if ((e->myBuswayType & WAY_BACKWARD) != 0) {
                 nbe->setPermissions(SVC_BUS, 0);
@@ -1182,7 +1182,7 @@ NIImporter_OpenStreetMap::RelationHandler::resetValues() {
     myToWay = INVALID_ID;
     myViaNode = INVALID_ID;
     myViaWay = INVALID_ID;
-    myRestrictionType = RESTRICTION_UNKNOWN;
+    myRestrictionType = RestrictionType::UNKNOWN;
     myPlatforms.clear();
     myStops.clear();
     myWays.clear();
@@ -1289,9 +1289,9 @@ NIImporter_OpenStreetMap::RelationHandler::myStartElement(int element,
                 // @note: the 'right/left/straight' part is ignored since the information is
                 // redundantly encoded in the 'from', 'to' and 'via' members
                 if (value.substr(0, 5) == "only_") {
-                    myRestrictionType = RESTRICTION_ONLY;
+                    myRestrictionType = RestrictionType::ONLY;
                 } else if (value.substr(0, 3) == "no_") {
-                    myRestrictionType = RESTRICTION_NO;
+                    myRestrictionType = RestrictionType::NO;
                 } else {
                     WRITE_WARNINGF("Found unknown restriction type '%' in relation '%'", value, toString(myCurrentRelation));
                 }
@@ -1339,7 +1339,7 @@ NIImporter_OpenStreetMap::RelationHandler::myEndElement(int element) {
         if (myIsRestriction) {
             assert(myCurrentRelation != INVALID_ID);
             bool ok = true;
-            if (myRestrictionType == RESTRICTION_UNKNOWN) {
+            if (myRestrictionType == RestrictionType::UNKNOWN) {
                 WRITE_WARNINGF("Ignoring restriction relation '%' with unknown type.", toString(myCurrentRelation));
                 ok = false;
             }
@@ -1502,7 +1502,7 @@ NIImporter_OpenStreetMap::RelationHandler::applyRestriction() const {
             WRITE_WARNINGF("to-edge '%' of restriction relation could not be determined", toString(myToWay));
             return false;
         }
-        if (myRestrictionType == RESTRICTION_ONLY) {
+        if (myRestrictionType == RestrictionType::ONLY) {
             from->addEdge2EdgeConnection(to, true);
             // make sure that these connections remain disabled even if network
             // modifications (ramps.guess) reset existing connections
@@ -1812,6 +1812,7 @@ NIImporter_OpenStreetMap::usableType(const std::string& type, const std::string&
         double bikelaneWidth = NBEdge::UNSPECIFIED_WIDTH;
         bool defaultIsOneWay = true;
         SVCPermissions permissions = 0;
+        LaneSpreadFunction spreadType = LaneSpreadFunction::RIGHT;
         bool discard = true;
         for (auto& type2 : types) {
             if (!tc.getEdgeTypeShallBeDiscarded(type2)) {
@@ -1821,6 +1822,7 @@ NIImporter_OpenStreetMap::usableType(const std::string& type, const std::string&
                 defaultIsOneWay &= tc.getEdgeTypeIsOneWay(type2);
                 //std::cout << "merging component " << type2 << " into type " << newType << " allows=" << getVehicleClassNames(tc.getPermissions(type2)) << " oneway=" << defaultIsOneWay << "\n";
                 permissions |= tc.getEdgeTypePermissions(type2);
+                spreadType = tc.getEdgeTypeSpreadType(type2);
                 width = MAX2(width, tc.getEdgeTypeWidth(type2));
                 sidewalkWidth = MAX2(sidewalkWidth, tc.getEdgeTypeSidewalkWidth(type2));
                 bikelaneWidth = MAX2(bikelaneWidth, tc.getEdgeTypeBikeLaneWidth(type2));
@@ -1845,8 +1847,8 @@ NIImporter_OpenStreetMap::usableType(const std::string& type, const std::string&
         }
 
         WRITE_MESSAGE("Adding new type '" + type + "' (first occurence for edge '" + id + "').");
-        tc.insertEdgeType(newType, numLanes, maxSpeed, prio, permissions, width, defaultIsOneWay,
-                          sidewalkWidth, bikelaneWidth, 0, 0, 0);
+        tc.insertEdgeType(newType, numLanes, maxSpeed, prio, permissions, spreadType, width, 
+                          defaultIsOneWay, sidewalkWidth, bikelaneWidth, 0, 0, 0);
         for (auto& type3 : types) {
             if (!tc.getEdgeTypeShallBeDiscarded(type3)) {
                 tc.copyEdgeTypeRestrictionsAndAttrs(type3, newType);

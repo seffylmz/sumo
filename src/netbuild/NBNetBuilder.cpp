@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -64,7 +64,8 @@ void
 NBNetBuilder::applyOptions(OptionsCont& oc) {
     // apply options to type control
     myTypeCont.setEdgeTypeDefaults(oc.getInt("default.lanenumber"), oc.getFloat("default.lanewidth"), oc.getFloat("default.speed"),
-                                   oc.getInt("default.priority"), parseVehicleClasses("", oc.getString("default.disallow")));
+                                   oc.getInt("default.priority"), parseVehicleClasses("", oc.getString("default.disallow")), 
+                                   SUMOXMLDefinitions::LaneSpreadFunctions.get(oc.getString("default.spreadtype")));
     // apply options to edge control
     myEdgeCont.applyOptions(oc);
     // apply options to traffic light logics control
@@ -238,14 +239,13 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     }
     //
     if (mayAddOrRemove) {
-        int no = 0;
         const bool removeGeometryNodes = oc.exists("geometry.remove") && oc.getBool("geometry.remove");
         before = PROGRESS_BEGIN_TIME_MESSAGE("Removing empty nodes" + std::string(removeGeometryNodes ? " and geometry nodes" : ""));
         // removeUnwishedNodes needs turnDirections. @todo: try to call this less often
         NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
-        no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myTLLCont, myPTStopCont, myPTLineCont, myParkingCont, removeGeometryNodes);
+        const int numRemoved = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myTLLCont, myPTStopCont, myParkingCont, removeGeometryNodes);
         PROGRESS_TIME_MESSAGE(before);
-        WRITE_MESSAGE("   " + toString(no) + " nodes removed.");
+        WRITE_MESSAGE("   " + toString(numRemoved) + " nodes removed.");
     }
 
     // MOVE TO ORIGIN

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -163,7 +163,7 @@ public:
     static void changeSublane(const std::string& vehID, double latDist);
 
     static void slowDown(const std::string& vehID, double speed, double duration);
-    static void openGap(const std::string& vehID, double newTimeHeadway, double newSpaceHeadway, double duration, double changeRate, double maxDecel = libsumo::INVALID_DOUBLE_VALUE, const std::string& referenceVehID = "");
+    static void openGap(const std::string& vehID, double newTimeHeadway, double newSpaceHeadway, double duration, double changeRate, double maxDecel = -1, const std::string& referenceVehID = "");
     static void deactivateGapControl(const std::string& vehID);
     static void requestToC(const std::string& vehID, double leadTime);
     static void setSpeed(const std::string& vehID, double speed);

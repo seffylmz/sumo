@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2011-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -78,7 +78,8 @@ def buildMSI(sourceZip=INPUT_DEFAULT, outFile=OUTPUT_DEFAULT,
     for wxs in glob.glob(wxsPattern):
         with open(os.path.join(tmpDir, os.path.basename(wxs)), "w") as wxsOut:
             dataDir = os.path.dirname(license)
-            wxsOut.write(open(wxs).read().format(version=SUMO_VERSION, license=license, bindir=os.path.join(sumoRoot, "bin"),
+            wxsOut.write(open(wxs).read().format(version=SUMO_VERSION, license=license,
+                                                 bindir=os.path.join(sumoRoot, "bin"),
                                                  banner=os.path.join(dataDir, "bannrbmp.bmp"),
                                                  dialogbg=os.path.join(dataDir, "dlgbmp.bmp"),
                                                  webwizico=os.path.join(dataDir, "webWizard.ico")))

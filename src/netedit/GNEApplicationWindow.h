@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -18,6 +18,7 @@
 // The main window of Netedit (adapted from GUIApplicationWindow)
 /****************************************************************************/
 #pragma once
+#include <config.h>
 
 #include "GNEApplicationWindowHelper.h"
 
@@ -232,6 +233,12 @@ public:
     /// @brief called when the update/FXCall redo is executed
     long onUpdRedo(FXObject* obj, FXSelector sel, void* ptr);
 
+    /// @brief toogle viewOption
+    long onCmdToogleViewOption(FXObject*, FXSelector, void*);
+
+    /// @brief update viewOption
+    long onUpdToogleViewOption(FXObject*, FXSelector, void*);
+
     /// @brief called when the command/FXCall save as plain xml is executed
     long onCmdSaveAsPlainXML(FXObject*, FXSelector, void*);
 
@@ -392,6 +399,9 @@ public:
     /// @brief check if undo-redo is enabled
     const std::string& isUndoRedoEnabled() const;
 
+    /// @brief getEdit Menu Commands (needed for show/hide menu commands)
+    GNEApplicationWindowHelper::EditMenuCommands &getEditMenuCommands();
+
 protected:
     /// @brief FOX needs this for static members
     GNEApplicationWindow();
@@ -409,6 +419,7 @@ protected:
                 *myFileMenuAdditionals,
                 *myFileMenuDemandElements,
                 *myFileMenuDataElements,
+                *myModesMenu,
                 *myEditMenu,
                 *myProcessingMenu,
                 *myLocatorMenu,
@@ -452,6 +463,9 @@ private:
     /// @brief File Menu Commands
     GNEApplicationWindowHelper::FileMenuCommands myFileMenuCommands;
 
+    /// @brief Modes Menu Commands
+    GNEApplicationWindowHelper::ModesMenuCommands myModesMenuCommands;
+
     /// @brief Edit Menu Commands
     GNEApplicationWindowHelper::EditMenuCommands myEditMenuCommands;
 
@@ -493,4 +507,13 @@ private:
 
     /// @brief warns about unsaved changes in demand elements and gives the user the option to abort
     bool continueWithUnsavedDemandElementChanges(const std::string& operation);
+
+    /// @brief extract folder
+    FXString getFolder(const std::string &folder) const;
+
+    /// @brief Invalidated copy constructor.
+    GNEApplicationWindow(const GNEApplicationWindow&) = delete;
+
+    /// @brief Invalidated assignment operator.
+    GNEApplicationWindow& operator=(const GNEApplicationWindow&) = delete;
 };

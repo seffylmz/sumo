@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2007-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2007-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -69,10 +69,14 @@ MSDispatch_TraCI::interpretDispatch(MSDevice_Taxi* taxi, const std::vector<std::
             throw InvalidArgument("Reservation id '" + resID + "' is not known");
         }
     }
-    if (reservations.size() == 1) {
-        taxi->dispatch(*reservations.front());
-    } else {
-        taxi->dispatchShared(reservations);
+    try {
+        if (reservations.size() == 1) {
+            taxi->dispatch(*reservations.front());
+        } else {
+            taxi->dispatchShared(reservations);
+        }
+    } catch (ProcessError& e) {
+        throw InvalidArgument(e.what());
     }
     // in case of ride sharing the same reservation may occur multiple times
     std::set<const Reservation*> unique(reservations.begin(), reservations.end());

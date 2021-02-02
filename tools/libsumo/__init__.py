@@ -1,5 +1,5 @@
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2018-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2018-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -128,6 +128,8 @@ def isLoaded():
 
 
 _libsumo_step = simulation.step
+
+
 def simulationStep(step=0):
     _libsumo_step(step)
     result = []
@@ -136,6 +138,8 @@ def simulationStep(step=0):
         result += [(k, v) for k, v in domain.getAllContextSubscriptionResults().items()]
     _manageStepListeners(step)
     return result
+
+
 simulation.step = simulationStep
 
 

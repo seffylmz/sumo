@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -870,20 +870,23 @@ GUIVisualizationSettings::initSumoGuiDefaults() {
     scheme.addColor(RGBColor::YELLOW, (double)180);
     scheme.addColor(RGBColor::RED, (double)900);
     vehicleColorer.addScheme(scheme);
-    scheme = GUIColorScheme("by stop delay", RGBColor::BLUE, "", false, 0, COL_SCHEME_DYNAMIC);
+    scheme = GUIColorScheme("by stop delay", RGBColor::GREY, "", false, -1, COL_SCHEME_DYNAMIC);
+    scheme.addColor(RGBColor::BLUE, (double)0);
     scheme.addColor(RGBColor::CYAN, (double)10);
     scheme.addColor(RGBColor::GREEN, (double)60);
     scheme.addColor(RGBColor::YELLOW, (double)120);
     scheme.addColor(RGBColor::ORANGE, (double)300);
     scheme.addColor(RGBColor::RED, (double)900);
+    scheme.setAllowsNegativeValues(true);
     vehicleColorer.addScheme(scheme);
-    scheme = GUIColorScheme("by stop arrival delay", RGBColor::BLUE, "", false, 0, COL_SCHEME_DYNAMIC);
+    scheme = GUIColorScheme("by stop arrival delay", RGBColor::GREY, "", false, INVALID_DOUBLE, COL_SCHEME_DYNAMIC);
+    scheme.addColor(RGBColor::MAGENTA, (double) -10);
+    scheme.addColor(RGBColor::BLUE, (double)0);
     scheme.addColor(RGBColor::CYAN, (double)10);
     scheme.addColor(RGBColor::GREEN, (double)60);
     scheme.addColor(RGBColor::YELLOW, (double)120);
     scheme.addColor(RGBColor::ORANGE, (double)300);
     scheme.addColor(RGBColor::RED, (double)900);
-    scheme.addColor(RGBColor::MAGENTA, (double) -10);
     scheme.setAllowsNegativeValues(true);
     vehicleColorer.addScheme(scheme);
     scheme = GUIColorScheme("by lateral speed", RGBColor(179, 179, 179, 255), "0", false, 0, COL_SCHEME_DYNAMIC);

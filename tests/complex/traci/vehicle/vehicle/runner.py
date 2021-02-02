@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2008-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2008-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -229,7 +229,8 @@ for i in range(6):
     if traci.vehicle.getSpeed("1") == 0:
         traci.vehicle.resume("1")
     print(traci.vehicle.getSubscriptionResults(vehID))
-    print(traci.vehicle.getNextStops(vehID))
+    print(traci.vehicle.getStops(vehID))
+    print("legacy getNextStops", traci.vehicle.getNextStops(vehID))
 check("2")
 print("nextTLS", traci.vehicle.getNextTLS("2"))
 traci.vehicle.setSpeedMode(vehID, 0)  # disable all checks
@@ -262,7 +263,8 @@ for i in range(6):
     print("step", step())
     print(traci.vehicle.getSubscriptionResults("2"))
     print(traci.vehicle.getSubscriptionResults(vehID))
-    print(traci.vehicle.getNextStops(vehID))
+    print(traci.vehicle.getStops(vehID))
+    print("legacy getNextStops", traci.vehicle.getNextStops(vehID))
 traci.vehicle.remove("1")
 try:
     traci.vehicle.addLegacy("anotherOne", "horizontal", pos=-1)
@@ -345,7 +347,8 @@ parkingVeh = "parking"
 traci.vehicle.addLegacy(parkingVeh, "horizontal")
 traci.vehicle.setStop(parkingVeh, "2fi", pos=20.0, laneIndex=0, duration=10,
                       flags=traci.constants.STOP_PARKING)
-print("nextStop:", traci.vehicle.getNextStops(parkingVeh))
+print("nextStop:", traci.vehicle.getStops(parkingVeh))
+print("legacy getNextStops", traci.vehicle.getNextStops(parkingVeh))
 for i in range(20):
     print("step", step())
     checkOffRoad(parkingVeh)
@@ -471,7 +474,8 @@ except traci.TraCIException:
 traci.vehicle.subscribe(electricVeh, [tc.VAR_POSITION, tc.VAR_POSITION3D])
 for i in range(10):
     step()
-    print(('%s speed="%s" consumed="%s" charged="%s" totalConsumed="%s" totalRegenerated="%s" cap="%s" maxCap="%s" station="%s" mass=%s emissionClass=%s electricityConsumption=%s') % (
+    print(('%s speed="%s" consumed="%s" charged="%s" totalConsumed="%s" totalRegenerated="%s" cap="%s" ' +
+           'maxCap="%s" station="%s" mass=%s emissionClass=%s electricityConsumption=%s') % (
         electricVeh,
         traci.vehicle.getSpeed(electricVeh),
         traci.vehicle.getParameter(electricVeh, "device.battery.energyConsumed"),

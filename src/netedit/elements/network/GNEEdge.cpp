@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -42,11 +42,13 @@
 //#define DEBUG_SMOOTH_GEOM
 //#define DEBUGCOND(obj) (true)
 #define VEHICLE_GAP 1
+#define ENDPOINT_TOLERANCE 2
 
 // ===========================================================================
 // static
 // ===========================================================================
 const double GNEEdge::SNAP_RADIUS = SUMO_const_halfLaneWidth;
+const double GNEEdge::SNAP_RADIUS_SQUARED = (SUMO_const_halfLaneWidth * SUMO_const_halfLaneWidth);
 
 // ===========================================================================
 // members methods
@@ -54,15 +56,15 @@ const double GNEEdge::SNAP_RADIUS = SUMO_const_halfLaneWidth;
 
 GNEEdge::GNEEdge(GNENet* net, NBEdge* nbe, bool wasSplit, bool loaded):
     GNENetworkElement(net, nbe->getID(), GLO_EDGE, SUMO_TAG_EDGE, {
-    net->retrieveJunction(nbe->getFromNode()->getID()), net->retrieveJunction(nbe->getToNode()->getID())
-},
-{}, {}, {}, {}, {}, {}, {}),
-myNBEdge(nbe),
-myLanes(0),
-myAmResponsible(false),
-myWasSplit(wasSplit),
-myConnectionStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
-myUpdateGeometry(true) {
+        net->retrieveJunction(nbe->getFromNode()->getID()), net->retrieveJunction(nbe->getToNode()->getID())
+    },
+    {}, {}, {}, {}, {}, {}, {}),
+    myNBEdge(nbe),
+    myLanes(0),
+    myAmResponsible(false),
+    myWasSplit(wasSplit),
+    myConnectionStatus(loaded ? FEATURE_LOADED : FEATURE_GUESSED),
+    myUpdateGeometry(true) {
     // Create lanes
     int numLanes = myNBEdge->getNumLanes();
     myLanes.reserve(numLanes);
@@ -173,7 +175,7 @@ GNEEdge::getMoveOperation(const double shapeOffset) {
             // declare new index
             int newIndex = index;
             // check if we have to create a new index
-            if (positionAtOffset.distanceSquaredTo2D(shapeToMove[index]) > (SNAP_RADIUS * SNAP_RADIUS)) {
+            if (positionAtOffset.distanceSquaredTo2D(shapeToMove[index]) > SNAP_RADIUS_SQUARED) {
                 newIndex = shapeToMove.insertAtClosest(positionAtOffset, true);
             }
             // check if attribute carrier is selected
@@ -212,8 +214,8 @@ GNEEdge::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoLi
     // declare shape to move
     PositionVector shape = myNBEdge->getGeometry();
     // obtain flags for start and end positions
-    const bool customStartPosition = (myNBEdge->getGeometry().front() != getParentJunctions().front()->getNBNode()->getPosition());
-    const bool customEndPosition = (myNBEdge->getGeometry().back() != getParentJunctions().back()->getNBNode()->getPosition());
+    const bool customStartPosition = (myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE);
+    const bool customEndPosition = (myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE);
     // get variable for last index
     const int lastIndex = (int)myNBEdge->getGeometry().size() - 1;
     // flag to enable/disable remove geometry point
@@ -225,7 +227,7 @@ GNEEdge::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoLi
         removeGeometryPoint = false;
     }
     // check distance
-    if (shape[index].distanceSquaredTo2D(clickedPosition) > (SNAP_RADIUS * SNAP_RADIUS)) {
+    if (shape[index].distanceSquaredTo2D(clickedPosition) > SNAP_RADIUS_SQUARED) {
         removeGeometryPoint = false;
     }
     // check custom start position
@@ -267,9 +269,11 @@ GNEEdge::removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoLi
 
 
 bool
-GNEEdge::clickedOverShapeStart(const Position& pos) {
-    if (myNBEdge->getGeometry().front() != getParentJunctions().front()->getNBNode()->getPosition()) {
-        return (myNBEdge->getGeometry().front().distanceTo2D(pos) < SNAP_RADIUS);
+GNEEdge::hasCustomEndPoints() const {
+    if (myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) {
+        return true;
+    } else if (myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) {
+        return true;
     } else {
         return false;
     }
@@ -277,9 +281,38 @@ GNEEdge::clickedOverShapeStart(const Position& pos) {
 
 
 bool
-GNEEdge::clickedOverShapeEnd(const Position& pos) {
-    if (myNBEdge->getGeometry().back() != getParentJunctions().back()->getNBNode()->getPosition()) {
-        return (myNBEdge->getGeometry().back().distanceTo2D(pos) < SNAP_RADIUS);
+GNEEdge::clickedOverShapeStart(const Position& pos) const {
+    if (myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) {
+        return (myNBEdge->getGeometry().front().distanceSquaredTo2D(pos) < SNAP_RADIUS_SQUARED);
+    } else {
+        return false;
+    }
+}
+
+
+bool
+GNEEdge::clickedOverShapeEnd(const Position& pos) const {
+    if (myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) {
+        return (myNBEdge->getGeometry().back().distanceSquaredTo2D(pos) < SNAP_RADIUS_SQUARED);
+    } else {
+        return false;
+    }
+}
+
+
+bool 
+GNEEdge::clickedOverGeometryPoint(const Position& pos) const {
+    // first check inner geometry
+    const PositionVector innenShape = myNBEdge->getInnerGeometry();
+    // iterate over geometry point
+    for (const auto &geometryPoint : innenShape) {
+        if (geometryPoint.distanceSquaredTo2D(pos) < SNAP_RADIUS_SQUARED) {
+            return true;
+        }
+    }
+    // check start and end shapes
+    if (clickedOverShapeStart(pos) || clickedOverShapeEnd(pos)) {
+        return true;
     } else {
         return false;
     }
@@ -405,7 +438,7 @@ Position
 GNEEdge::getSplitPos(const Position& clickPos) {
     const PositionVector& geom = myNBEdge->getGeometry();
     int index = geom.indexOfClosest(clickPos);
-    if (geom[index].distanceTo2D(clickPos) < SNAP_RADIUS) {
+    if (geom[index].distanceSquaredTo2D(clickPos) < SNAP_RADIUS_SQUARED) {
         // split at existing geometry point
         return geom[index];
     } else {
@@ -417,11 +450,13 @@ GNEEdge::getSplitPos(const Position& clickPos) {
 
 void
 GNEEdge::editEndpoint(Position pos, GNEUndoList* undoList) {
-    if ((myNBEdge->getGeometry().front() != getParentJunctions().front()->getNBNode()->getPosition()) && (myNBEdge->getGeometry().front().distanceTo2D(pos) < SNAP_RADIUS)) {
+    if ((myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) &&
+        (myNBEdge->getGeometry().front().distanceSquaredTo2D(pos) < SNAP_RADIUS_SQUARED)) {
         undoList->p_begin("remove endpoint");
         setAttribute(GNE_ATTR_SHAPE_START, "", undoList);
         undoList->p_end();
-    } else if ((myNBEdge->getGeometry().back() != getParentJunctions().back()->getNBNode()->getPosition()) && (myNBEdge->getGeometry().back().distanceTo2D(pos) < SNAP_RADIUS)) {
+    } else if ((myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) && 
+        (myNBEdge->getGeometry().back().distanceSquaredTo2D(pos) < SNAP_RADIUS_SQUARED)) {
         undoList->p_begin("remove endpoint");
         setAttribute(GNE_ATTR_SHAPE_END, "", undoList);
         undoList->p_end();
@@ -437,7 +472,7 @@ GNEEdge::editEndpoint(Position pos, GNEUndoList* undoList) {
             undoList->p_begin("set endpoint");
             int index = geom.indexOfClosest(pos);
             // check if snap to existing geometry
-            if (geom[index].distanceTo2D(pos) < SNAP_RADIUS) {
+            if (geom[index].distanceSquaredTo2D(pos) < SNAP_RADIUS_SQUARED) {
                 pos = geom[index];
             }
             Position destPos = getParentJunctions().back()->getNBNode()->getPosition();
@@ -685,6 +720,8 @@ GNEEdge::copyEdgeType(const GNEEdgeType *edgeType, GNEUndoList* undoList) {
     setAttribute(SUMO_ATTR_SPEED, edgeType->getAttribute(SUMO_ATTR_SPEED), undoList);
     // set allow (no disallow)
     setAttribute(SUMO_ATTR_ALLOW, edgeType->getAttribute(SUMO_ATTR_ALLOW), undoList);
+    // set spreadType
+    setAttribute(SUMO_ATTR_SPREADTYPE, edgeType->getAttribute(SUMO_ATTR_SPREADTYPE), undoList);
     // set width
     setAttribute(SUMO_ATTR_WIDTH, edgeType->getAttribute(SUMO_ATTR_WIDTH), undoList);
     // set priority
@@ -757,7 +794,7 @@ GNEEdge::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_SHAPE:
             return toString(myNBEdge->getInnerGeometry());
         case SUMO_ATTR_SPREADTYPE:
-            return toString(myNBEdge->getLaneSpreadFunction());
+            return SUMOXMLDefinitions::LaneSpreadFunctions.getString(myNBEdge->getLaneSpreadFunction());
         case SUMO_ATTR_NAME:
             return myNBEdge->getStreetName();
         case SUMO_ATTR_ALLOW:
@@ -788,13 +825,13 @@ GNEEdge::getAttribute(SumoXMLAttr key) const {
         case GNE_ATTR_MODIFICATION_STATUS:
             return myConnectionStatus;
         case GNE_ATTR_SHAPE_START:
-            if (myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) < 2) {
+            if (myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) {
                 return "";
             } else {
                 return toString(myNBEdge->getGeometry().front());
             }
         case GNE_ATTR_SHAPE_END:
-            if (myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) < 2) {
+            if (myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) {
                 return "";
             } else {
                 return toString(myNBEdge->getGeometry().back());
@@ -1203,7 +1240,7 @@ GNEEdge::drawEdgeGeometryPoints(const GUIVisualizationSettings& s, const GNELane
             }
             // draw line geometry, start and end points if shapeStart or shape end is edited, and depending of drawForRectangleSelection
             if (drawBigGeometryPoints) {
-                if ((myNBEdge->getGeometry().front() != getParentJunctions().front()->getNBNode()->getPosition()) &&
+                if ((myNBEdge->getGeometry().front().distanceSquaredTo2D(getParentJunctions().front()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) &&
                         (!s.drawForRectangleSelection || (myNet->getViewNet()->getPositionInformation().distanceSquaredTo2D(myNBEdge->getGeometry().front()) <= (circleWidthSquared + 2)))) {
                     glPushMatrix();
                     glTranslated(myNBEdge->getGeometry().front().x(), myNBEdge->getGeometry().front().y(), 0.1);
@@ -1226,7 +1263,7 @@ GNEEdge::drawEdgeGeometryPoints(const GUIVisualizationSettings& s, const GNELane
                         glPopMatrix();
                     }
                 }
-                if ((myNBEdge->getGeometry().back() != getParentJunctions().back()->getNBNode()->getPosition()) &&
+                if ((myNBEdge->getGeometry().back().distanceSquaredTo2D(getParentJunctions().back()->getNBNode()->getPosition()) > ENDPOINT_TOLERANCE) &&
                         (!s.drawForRectangleSelection || (myNet->getViewNet()->getPositionInformation().distanceSquaredTo2D(myNBEdge->getGeometry().back()) <= (circleWidthSquared + 2)))) {
                     glPushMatrix();
                     glTranslated(myNBEdge->getGeometry().back().x(), myNBEdge->getGeometry().back().y(), 0.1);
@@ -1261,44 +1298,42 @@ GNEEdge::drawEdgeGeometryPoints(const GUIVisualizationSettings& s, const GNELane
 // ===========================================================================
 
 GNEEdge::StackPosition::StackPosition(const double departPos, const double length) :
-    tuple(departPos, departPos + length) {
+    pair(departPos, departPos + length) {
 }
 
 
 double
 GNEEdge::StackPosition::beginPosition() const {
-    return std::get<0>(*this);
+    return first;
 }
 
 
 double
 GNEEdge::StackPosition::endPosition() const {
-    return std::get<1>(*this);
+    return second;
 }
 
 
 GNEEdge::StackDemandElements::StackDemandElements(const StackPosition stackedPosition, GNEDemandElement* demandElement) :
-    tuple(stackedPosition, {
-    demandElement
-}) {
+    pair(stackedPosition, {demandElement}) {
 }
 
 
 void
 GNEEdge::StackDemandElements::addDemandElements(GNEDemandElement* demandElement) {
-    std::get<1>(*this).push_back(demandElement);
+    second.push_back(demandElement);
 }
 
 
 const GNEEdge::StackPosition&
 GNEEdge::StackDemandElements::getStackPosition() const {
-    return std::get<0>(*this);
+    return first;
 }
 
 
 const std::vector<GNEDemandElement*>&
 GNEEdge::StackDemandElements::getDemandElements() const {
-    return std::get<1>(*this);
+    return second;
 }
 
 

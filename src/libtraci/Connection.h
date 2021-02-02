@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -20,6 +20,7 @@
 // C++ TraCI client API implementation
 /****************************************************************************/
 #pragma once
+#include <config.h>
 #include <vector>
 #include <map>
 #include <limits>
@@ -97,31 +98,21 @@ public:
      * @param[in] objID The object to retrieve the variable from
      * @param[in] add Optional additional parameter
      */
-    void createCommand(int cmdID, int varID, const std::string& objID, tcpip::Storage* add = nullptr) const;
-    void createFilterCommand(int cmdID, int varID, tcpip::Storage* add = nullptr) const;
+    void createCommand(int cmdID, int varID, const std::string* const objID, tcpip::Storage* add = nullptr) const;
 
 
-    /** @brief Sends a SubscribeVariable request
+    /** @brief Sends a SubscribeContext or a SubscribeVariable request
      * @param[in] domID The domain of the variable
      * @param[in] objID The object to subscribe the variables from
      * @param[in] beginTime The begin time step of subscriptions
      * @param[in] endTime The end time step of subscriptions
+     * @param[in] domain The domain of the objects which values shall be returned (-1 means variable subscription)
+     * @param[in] range The range around the obj to investigate (only meaningful for context subscription)
      * @param[in] vars The variables to subscribe
+     * @param[in] params map of variable ids to parameters if needed
      */
-    void subscribeObjectVariable(int domID, const std::string& objID, double beginTime, double endTime, const std::vector<int>& vars, const libsumo::TraCIResults& params);
-
-
-    /** @brief Sends a SubscribeContext request
-     * @param[in] domID The domain of the variable
-     * @param[in] objID The object to subscribe the variables from
-     * @param[in] beginTime The begin time step of subscriptions
-     * @param[in] endTime The end time step of subscriptions
-     * @param[in] domain The domain of the objects which values shall be returned
-     * @param[in] range The range around the obj to investigate
-     * @param[in] vars The variables to subscribe
-     */
-    void subscribeObjectContext(int domID, const std::string& objID, double beginTime, double endTime,
-                                int domain, double range, const std::vector<int>& vars, const libsumo::TraCIResults& params);
+    void subscribe(int domID, const std::string& objID, double beginTime, double endTime,
+                   int domain, double range, const std::vector<int>& vars, const libsumo::TraCIResults& params);
     /// @}
 
 
@@ -143,6 +134,7 @@ public:
     /// @}
 
     tcpip::Storage& doCommand(int command, int var, const std::string& id, tcpip::Storage* add = nullptr);
+    void addFilter(int var, tcpip::Storage* add = nullptr);
 
     void readVariableSubscription(int responseID, tcpip::Storage& inMsg);
     void readContextSubscription(int responseID, tcpip::Storage& inMsg);

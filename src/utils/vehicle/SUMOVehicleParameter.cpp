@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -63,8 +63,8 @@ SUMOVehicleParameter::defaultOptionOverrides(const OptionsCont& oc, const std::s
 
 
 void
-SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc, const SumoXMLTag tag, const std::string& typeID) const {
-    dev.openTag(tag).writeAttr(SUMO_ATTR_ID, id);
+SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc, const SumoXMLTag altTag, const std::string& typeID) const {
+    dev.openTag(altTag).writeAttr(SUMO_ATTR_ID, id);
     if (typeID == "") {
         if (wasSet(VEHPARS_VTYPE_SET)) {
             dev.writeAttr(SUMO_ATTR_TYPE, vtypeid);
@@ -73,8 +73,8 @@ SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc, const Sumo
         dev.writeAttr(SUMO_ATTR_TYPE, typeID);
     }
     // write depart depending of tag
-    if ((tag == SUMO_TAG_FLOW) || (tag == SUMO_TAG_PERSONFLOW) ||
-            (tag == GNE_TAG_FLOW_ROUTE) || (tag == GNE_TAG_FLOW_WITHROUTE)) {
+    if ((altTag == SUMO_TAG_FLOW) || (altTag == SUMO_TAG_PERSONFLOW) ||
+            (altTag == GNE_TAG_FLOW_ROUTE) || (altTag == GNE_TAG_FLOW_WITHROUTE)) {
         dev.writeAttr(SUMO_ATTR_BEGIN, getDepart());
     } else {
         dev.writeAttr(SUMO_ATTR_DEPART, getDepart());

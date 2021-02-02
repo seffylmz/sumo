@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -100,6 +100,7 @@ public:
     /** @brief Returns the IDs of the transportables on a given bus stop.
      */
     static std::vector<std::string> getBusStopWaitingIDList(const std::string& stopID);
+    static std::vector<std::string> getPendingVehicles();
 
     static std::vector<libsumo::TraCICollision> getCollisions();
 

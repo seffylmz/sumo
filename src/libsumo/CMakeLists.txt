@@ -87,23 +87,25 @@ if(SWIG_FOUND)
             else()
                 SWIG_ADD_MODULE(libsumojni java libsumo.i)
             endif()
-            if (MSVC OR APPLE)
+            if (CLANG_COMPILER AND WIN32)
+                set_source_files_properties(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-Wno-strict-aliasing")
+                swig_link_libraries(libsumojni -Wl,--whole-archive libsumostatic ${sumolibs} -Wl,--no-whole-archive)
+            elseif (MSVC OR APPLE)
                 swig_link_libraries(libsumojni libsumostatic ${sumolibs})
             else()
                 set_source_files_properties(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-Wno-strict-aliasing")
                 swig_link_libraries(libsumojni -Wl,--whole-archive libsumostatic ${sumolibs} -Wl,--no-whole-archive)
             endif()
-            ADD_CUSTOM_COMMAND(TARGET libsumojni POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory java/META-INF
-                COMMAND ${CMAKE_COMMAND} -E make_directory classes/META-INF
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/NOTICE.md java/META-INF
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE java/META-INF
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/NOTICE.md classes/META-INF
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE classes/META-INF
-                COMMAND "${Java_JAVAC_EXECUTABLE}" -source 1.8 -target 1.8 -d classes java/*.java
-                COMMAND "${Java_JAR_EXECUTABLE}" -cfM ${CMAKE_SOURCE_DIR}/bin/libsumojni.jar -C classes .
-                COMMAND "${Java_JAR_EXECUTABLE}" -cfM ${CMAKE_SOURCE_DIR}/bin/libsumojni_src.jar -C java .
-            )
+            if (MVN_EXECUTABLE)
+                ADD_CUSTOM_COMMAND(TARGET libsumojni POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E make_directory src/main/java/org/eclipse/sumo/libsumo
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory java src/main/java/org/eclipse/sumo/libsumo
+                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../../tools/build/pom.py libsumo
+                    COMMAND ${MVN_COMMAND_PREFIX} ${MVN_EXECUTABLE} --batch-mode clean install source:jar
+                )
+            else()
+                message(WARNING "Could not build libsumo jar, maven was not found.")
+            endif()
             set_property(TARGET libsumojni PROPERTY FOLDER "libsumo")
         else()
             message(WARNING "ENABLE_JAVA_BINDINGS is set but Java or JNI was not found.")
@@ -148,7 +150,9 @@ if(SWIG_FOUND)
                     # needed to selectively build the python module on the build server
                     set_property(TARGET ${SWIG_MODULE_libsumo_REAL_NAME} PROPERTY EXCLUDE_FROM_ALL TRUE)
                 endif()
-                if (MSVC OR APPLE)
+                if (CLANG_COMPILER AND WIN32)
+                    swig_link_libraries(libsumo -Wl,--whole-archive libsumostatic ${sumolibs} -Wl,--no-whole-archive)
+                elseif (MSVC OR APPLE)
                     # disable python module for the debug build because virtually no one has a python debug dll to link against
 #                    set_property(TARGET ${SWIG_MODULE_libsumo_REAL_NAME} PROPERTY EXCLUDE_FROM_DEFAULT_BUILD_DEBUG TRUE)
                     set_property(TARGET ${SWIG_MODULE_libsumo_REAL_NAME} PROPERTY FOLDER "libsumo")
@@ -175,7 +179,9 @@ add_library(libsumocpp SHARED ${libsumostatic_STAT_SRCS})
 set_property(TARGET libsumocpp PROPERTY FOLDER "libsumo")
 set_target_properties(libsumocpp PROPERTIES PREFIX "")
 install(TARGETS libsumocpp DESTINATION ${CMAKE_INSTALL_LIBDIR})
-if (MSVC OR APPLE)
+if (CLANG_COMPILER AND WIN32)
+    target_link_libraries(libsumocpp PRIVATE -Wl,--whole-archive ${sumolibs} -Wl,--no-whole-archive)
+elseif (MSVC OR APPLE)
     target_link_libraries(libsumocpp PRIVATE ${sumolibs})
 else ()
     target_link_libraries(libsumocpp PRIVATE -Wl,--whole-archive ${sumolibs} -Wl,--no-whole-archive)

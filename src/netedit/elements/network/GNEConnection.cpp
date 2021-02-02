@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -358,6 +358,9 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
             connectionColor = s.colorSettings.selectedConnectionColor;
         } else if (mySpecialColor != nullptr) {
             connectionColor = *mySpecialColor;
+        } else if (myNet->getViewNet()->getEditModes().isCurrentSupermodeNetwork() && 
+            (myNet->getViewNet()->getEditModes().networkEditMode == NetworkEditMode::NETWORK_CONNECT)) {
+            connectionColor = RGBColor::GREY;
         } else {
             // Set color depending of the link state
             connectionColor = GNEInternalLane::colorForLinksState(getLinkState());

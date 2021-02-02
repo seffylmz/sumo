@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -228,7 +228,7 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
                 NBEdge* source =
                     new NBEdge(id, districtNode, parkingPlace,
                                "Connection", c->getMeanSpeed(/*distc*/) / (double) 3.6, 3, -1,
-                               NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET);
+                               NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, LaneSpreadFunction::RIGHT);
                 if (!ec.insert(source)) { // !!! in den Konstruktor
                     throw 1; // !!!
                 }
@@ -245,7 +245,7 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
                 NBEdge* destination =
                     new NBEdge(id, parkingPlace, districtNode,
                                "Connection", (double) 100 / (double) 3.6, 2, -1,
-                               NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET);
+                               NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, LaneSpreadFunction::RIGHT);
                 if (!ec.insert(destination)) { // !!! (in den Konstruktor)
                     throw 1; // !!!
                 }

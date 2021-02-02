@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -19,6 +19,8 @@
 /****************************************************************************/
 
 #include "GUIDesigns.h"
+
+#include "utils/foxtools/FXMenuCheckIcon.h"
 
 
 // ===========================================================================
@@ -55,6 +57,28 @@ GUIDesigns::buildFXMenuCommandShortcut(FXComposite* p, const std::string& text, 
     menuCommand->setHeight(GUIDesignHeight);
     // return menuCommand
     return menuCommand;
+}
+
+
+FXMenuCheck*
+GUIDesigns::buildFXMenuCheckbox(FXComposite* p, const std::string& text, const std::string& info, FXObject* tgt, FXSelector sel) {
+    // build menu checkbox
+    FXMenuCheck* menuCheck = new FXMenuCheck(p, (text + "\t\t" + info).c_str(), tgt, sel, LAYOUT_FIX_HEIGHT);
+    // set height (to avoid problems between Windows und Linux)
+    menuCheck->setHeight(GUIDesignHeight);
+    // return menuCommand
+    return menuCheck;
+}
+
+
+FXMenuCheckIcon*
+GUIDesigns::buildFXMenuCheckboxIcon(FXComposite* p, const std::string& text, const std::string& info, FXIcon* icon, FXObject* tgt, FXSelector sel) {
+    // build menu checkbox
+    FXMenuCheckIcon* menuCheck = new FXMenuCheckIcon(p, (text + "\t\t" + info).c_str(), icon, tgt, sel, LAYOUT_FIX_HEIGHT);
+    // set height (to avoid problems between Windows und Linux)
+    menuCheck->setHeight(GUIDesignHeight);
+    // return menuCommand
+    return menuCheck;
 }
 
 

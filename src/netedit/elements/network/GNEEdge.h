@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -19,6 +19,7 @@
 // Basically a container for an NBEdge with drawing and editing capabilities
 /****************************************************************************/
 #pragma once
+#include <config.h>
 #include "GNENetworkElement.h"
 
 #include <netbuild/NBEdge.h>
@@ -87,13 +88,19 @@ public:
     void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList);
     /// @}
 
-    /// @name functions for edit start and end shape positions
+    /// @name functions for geometry points
     /// @{
+    /// @brief check if current edge has custom end points
+    bool hasCustomEndPoints() const;
+
     /// @brief return true if user clicked over ShapeStart
-    bool clickedOverShapeStart(const Position& pos);
+    bool clickedOverShapeStart(const Position& pos) const;
 
     /// @brief return true if user clicked over ShapeEnd
-    bool clickedOverShapeEnd(const Position& pos);
+    bool clickedOverShapeEnd(const Position& pos) const;
+
+    /// @brief return true if user clicked over a Geometry Point
+    bool clickedOverGeometryPoint(const Position& pos) const;
     /// @}
 
     /// @brief update edge geometry after junction move
@@ -225,8 +232,11 @@ public:
     /// @brief check if edge has a restricted lane
     bool hasRestrictedLane(SUMOVehicleClass vclass) const;
 
-    // the radius in which to register clicks for geometry nodes
+    // @brief the radius in which to register clicks for geometry nodes
     static const double SNAP_RADIUS;
+
+    // @brief the radius in which to register clicks for geometry nodes (Squared)
+    static const double SNAP_RADIUS_SQUARED;
 
     /// @brief clear current connections
     void clearGNEConnections();
@@ -288,7 +298,7 @@ protected:
 
 private:
     /// @brief Stack position (used to stack demand elements over edges)
-    class StackPosition : public std::tuple<double, double> {
+    class StackPosition : public std::pair<double, double> {
 
     public:
         /// @brief constructor
@@ -302,7 +312,7 @@ private:
     };
 
     /// @brief Stack demand elements
-    class StackDemandElements : public std::tuple<StackPosition, std::vector<GNEDemandElement*> > {
+    class StackDemandElements : public std::pair<StackPosition, std::vector<GNEDemandElement*> > {
 
     public:
         /// @brief constructor

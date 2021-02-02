@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2011-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -164,12 +164,11 @@ NIXMLTrafficLightsHandler::initTrafficLightLogic(const SUMOSAXAttributes& attrs,
             } else {
                 deleteDefault = true;
             }
-            assert(newDef != 0);
+            assert(newDef != nullptr);
             loadedDef = new NBLoadedSUMOTLDef(id, programID, offset, type);
             // copy nodes and controlled inner edges
-            std::vector<NBNode*> nodes = newDef->getNodes();
-            for (std::vector<NBNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-                loadedDef->addNode(*it);
+            for (NBNode* const n : newDef->getNodes()) {
+                loadedDef->addNode(n);
             }
             loadedDef->addControlledInnerEdges(newDef->getControlledInnerEdges());
             if (deleteDefault) {

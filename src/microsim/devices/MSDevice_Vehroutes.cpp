@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2009-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2009-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -114,7 +114,7 @@ MSDevice_Vehroutes::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDev
 // ---------------------------------------------------------------------------
 void
 MSDevice_Vehroutes::StateListener::vehicleStateChanged(const SUMOVehicle* const vehicle, MSNet::VehicleState to, const std::string& info) {
-    if (to == MSNet::VEHICLE_STATE_NEWROUTE) {
+    if (to == MSNet::VehicleState::NEWROUTE) {
         const auto& deviceEntry = myDevices.find(vehicle);
         if (deviceEntry != myDevices.end()) {
             deviceEntry->second->addRoute(info);

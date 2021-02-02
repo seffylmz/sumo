@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2017-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -304,8 +304,8 @@ Vehicle::getBestLanes(const std::string& vehID) {
         info.allowsContinuation = (ret.readUnsignedByte() == 1);
 
         ret.readUnsignedByte();
-        const int m = ret.readInt();
-        for (int i = 0; i < m; ++i) {
+        int m = ret.readInt();
+        while (m-- > 0) {
             info.continuationLanes.push_back(ret.readString());
         }
         result.push_back(info);
@@ -703,8 +703,12 @@ Vehicle::replaceStop(const std::string& vehID,
 
 void
 Vehicle::rerouteParkingArea(const std::string& vehID, const std::string& parkingAreaID) {
-    Dom::setString(libsumo::CMD_REROUTE_TO_PARKING, vehID, parkingAreaID);
+    tcpip::Storage content;
+    Dom::writeCompound(content, 1);
+    Dom::writeTypedString(content, parkingAreaID);
+    Dom::set(libsumo::CMD_REROUTE_TO_PARKING, vehID, &content);
 }
+
 
 void
 Vehicle::resume(const std::string& vehID) {
@@ -812,19 +816,21 @@ Vehicle::slowDown(const std::string& vehID, double speed, double duration) {
 void
 Vehicle::openGap(const std::string& vehID, double newTimeHeadway, double newSpaceHeadway, double duration, double changeRate, double maxDecel, const std::string& referenceVehID) {
     tcpip::Storage content;
-    Dom::writeCompound(content, 6);
+    Dom::writeCompound(content, referenceVehID != "" ? 6 : 5);
     Dom::writeTypedDouble(content, newTimeHeadway);
     Dom::writeTypedDouble(content, newSpaceHeadway);
     Dom::writeTypedDouble(content, duration);
     Dom::writeTypedDouble(content, changeRate);
     Dom::writeTypedDouble(content, maxDecel);
-    Dom::writeTypedString(content, referenceVehID);
+    if (referenceVehID != "") {
+        Dom::writeTypedString(content, referenceVehID);
+    }
     Dom::set(libsumo::CMD_OPENGAP, vehID, &content);
 }
 
 void
 Vehicle::deactivateGapControl(const std::string& vehID) {
-    openGap(vehID, -1, -1, -1, -1, -1, "");
+    openGap(vehID, -1, -1, -1, -1);
 }
 
 void
@@ -937,8 +943,7 @@ Vehicle::setEffort(const std::string& vehID, const std::string& edgeID,
 
 
 void
-Vehicle::rerouteTraveltime(const std::string& vehID, const bool currentTravelTimes) {
-    // UNUSED_PARAMETER(currentTravelTimes); // !!! see #5943
+Vehicle::rerouteTraveltime(const std::string& vehID, const bool /* currentTravelTimes */) {
     tcpip::Storage content;
     Dom::writeCompound(content, 0);
     Dom::set(libsumo::CMD_REROUTE_TRAVELTIME, vehID, &content);
@@ -1153,7 +1158,12 @@ Vehicle::subscribeLeader(const std::string& vehID, double dist, double begin, do
 
 void
 Vehicle::addSubscriptionFilterLanes(const std::vector<int>& lanes, bool noOpposite, double downstreamDist, double upstreamDist) {
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_LANES);
+    tcpip::Storage content;
+    content.writeUnsignedByte((int)lanes.size());
+    for (int lane : lanes) {
+        content.writeUnsignedByte(lane < 0 ? lane + 256 : lane);
+    }
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_LANES, &content);
     if (noOpposite) {
         addSubscriptionFilterNoOpposite();
     }
@@ -1168,7 +1178,7 @@ Vehicle::addSubscriptionFilterLanes(const std::vector<int>& lanes, bool noOpposi
 
 void
 Vehicle::addSubscriptionFilterNoOpposite() {
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_NOOPPOSITE);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_NOOPPOSITE);
 }
 
 
@@ -1176,7 +1186,7 @@ void
 Vehicle::addSubscriptionFilterDownstreamDistance(double dist) {
     tcpip::Storage content;
     Dom::writeTypedDouble(content, dist);
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_DOWNSTREAM_DIST, &content);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_DOWNSTREAM_DIST, &content);
 }
 
 
@@ -1184,7 +1194,7 @@ void
 Vehicle::addSubscriptionFilterUpstreamDistance(double dist) {
     tcpip::Storage content;
     Dom::writeTypedDouble(content, dist);
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_DOWNSTREAM_DIST, &content);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_UPSTREAM_DIST, &content);
 }
 
 
@@ -1224,14 +1234,14 @@ Vehicle::addSubscriptionFilterLCManeuver(int direction, bool noOpposite, double 
 
 void
 Vehicle::addSubscriptionFilterLeadFollow(const std::vector<int>& lanes) {
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_LEAD_FOLLOW);
-    // TODO lanes
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_LEAD_FOLLOW);
+    addSubscriptionFilterLanes(lanes);
 }
 
 
 void
 Vehicle::addSubscriptionFilterTurn(double downstreamDist, double upstreamDist) {
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_TURN);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_TURN);
     if (downstreamDist != libsumo::INVALID_DOUBLE_VALUE) {
         addSubscriptionFilterDownstreamDistance(downstreamDist);
     }
@@ -1245,7 +1255,7 @@ void
 Vehicle::addSubscriptionFilterVClass(const std::vector<std::string>& vClasses) {
     tcpip::Storage content;
     Dom::writeTypedStringList(content, vClasses);
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_VCLASS, &content);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_VCLASS, &content);
 }
 
 
@@ -1253,7 +1263,7 @@ void
 Vehicle::addSubscriptionFilterVType(const std::vector<std::string>& vTypes) {
     tcpip::Storage content;
     Dom::writeTypedStringList(content, vTypes);
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_VTYPE, &content);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_VTYPE, &content);
 }
 
 
@@ -1261,7 +1271,7 @@ void
 Vehicle::addSubscriptionFilterFieldOfVision(double openingAngle) {
     tcpip::Storage content;
     Dom::writeTypedDouble(content, openingAngle);
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_FIELD_OF_VISION, &content);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_FIELD_OF_VISION, &content);
 }
 
 
@@ -1269,7 +1279,7 @@ void
 Vehicle::addSubscriptionFilterLateralDistance(double lateralDist, double downstreamDist, double upstreamDist) {
     tcpip::Storage content;
     Dom::writeTypedDouble(content, lateralDist);
-    libtraci::Connection::getActive().createFilterCommand(libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE, libsumo::FILTER_TYPE_LATERAL_DIST, &content);
+    libtraci::Connection::getActive().addFilter(libsumo::FILTER_TYPE_LATERAL_DIST, &content);
     if (downstreamDist != libsumo::INVALID_DOUBLE_VALUE) {
         addSubscriptionFilterDownstreamDistance(downstreamDist);
     }

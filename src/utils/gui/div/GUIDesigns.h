@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -22,6 +22,12 @@
 
 #include <string>
 #include <fx.h>
+
+// ===========================================================================
+// Class declaration
+// ===========================================================================
+
+class FXMenuCheckIcon;
 
 // ===========================================================================
 // Definitions
@@ -112,16 +118,19 @@
 /// @name FXButtons for dialogs
 /// @{
 /// @brief OK Button
-#define GUIDesignButtonOK       (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
+#define GUIDesignButtonOK                   (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
 
 /// @brief Accept Button
-#define GUIDesignButtonAccept   (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
+#define GUIDesignButtonAccept               (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
 
 /// @brief Cancel Button
-#define GUIDesignButtonCancel   (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
+#define GUIDesignButtonCancel               (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
 
 /// @brief Reset Button
-#define GUIDesignButtonReset    (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
+#define GUIDesignButtonReset                (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, 75, GUIDesignHeight, 2, 2, 2, 2
+
+/// @brief Button with custom width (used in GNEGeometryPointDialog)
+#define GUIDesignButtonCustomWidth(width)   (ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT | FRAME_THICK | FRAME_RAISED), 0, 0, width, GUIDesignHeight, 2, 2, 2, 2
 
 /// @}
 
@@ -225,8 +234,11 @@
 /// @brief label extended over frame without thick and with text justify to left, used to show information in frames
 #define GUIDesignLabelFrameThicked      (FRAME_THICK | JUSTIFY_LEFT | LAYOUT_FILL_X | ICON_BEFORE_TEXT), 0, 0, 0, 0, 2, 2, 2, 2
 
-/// @brief label with thick, text justify to left and wdth of 100
+/// @brief label with thick, text justify to left and width of 100
 #define GUIDesignLabelThick100          (FRAME_THICK | ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 100, GUIDesignHeight, 2, 2, 2, 2
+
+/// @brief label with thick, text justify to left and width of 100
+#define GUIDesignLabelThick50           (FRAME_THICK | ICON_BEFORE_TEXT | LAYOUT_FIX_WIDTH | LAYOUT_FIX_HEIGHT), 0, 0, 50, GUIDesignHeight, 2, 2, 2, 2
 
 /// @}
 
@@ -590,6 +602,12 @@ public:
 
     /// @brief build menu command
     static FXMenuCommand* buildFXMenuCommandShortcut(FXComposite* p, const std::string& text, const std::string& shortcut, const std::string& info, FXIcon* icon, FXObject* tgt, FXSelector sel);
+
+    /// @brief build menu checkbox
+    static FXMenuCheck* buildFXMenuCheckbox(FXComposite* p, const std::string& text, const std::string& info, FXObject* tgt, FXSelector sel);
+
+    /// @brief build menu checkbox with icon
+    static FXMenuCheckIcon* buildFXMenuCheckboxIcon(FXComposite* p, const std::string& text, const std::string& info, FXIcon* icon, FXObject* tgt, FXSelector sel);
 
     /// @brief build menu command
     static FXMenuCommand* buildFXMenuCommand(FXComposite* p, const std::string& text, FXIcon* icon, FXObject* tgt, FXSelector sel);

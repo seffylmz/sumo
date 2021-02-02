@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2007-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2007-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -74,7 +74,6 @@ def shape2json(net, geometry):
     }
 
 
-
 if __name__ == "__main__":
     options = parse_args()
     net = sumolib.net.readNet(options.netFile, withInternal=options.internal)
@@ -136,4 +135,4 @@ if __name__ == "__main__":
     geojson["type"] = "FeatureCollection"
     geojson["features"] = features
     with open(options.outFile, 'w') as outf:
-        outf.write(json.dumps(geojson, sort_keys=True, indent=4))
+        outf.write(json.dumps(geojson, sort_keys=True, indent=4, separators=(',', ': ')))

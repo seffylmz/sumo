@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2002-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -43,11 +43,6 @@ class MSE2Collector;
  * @note The maximal green time can be exceeded if no vehicles are present on other approaches;
  */
 class MSDelayBasedTrafficLightLogic : public MSSimpleTrafficLightLogic {
-public:
-    /// @brief Definition of a map from lanes to corresponding areal detectors
-//    typedef std::map<MSLane*, MSE2Collector*> LaneDetectorMap;
-    typedef std::map<MSLane*, MSE2Collector*> LaneDetectorMap;
-
 public:
     /** @brief Constructor
      * @param[in] tlcontrol The tls control responsible for this tls
@@ -120,7 +115,7 @@ protected:
 
 protected:
     /// A map from lanes to the corresponding lane detectors
-    LaneDetectorMap myLaneDetectors;
+    std::map<const MSLane*, MSE2Collector*> myLaneDetectors;
 
     /// Range of the connected detector, which provides the information on approaching vehicles
     double myDetectionRange;

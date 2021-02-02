@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -513,6 +513,10 @@ MSAbstractLaneChangeModel::cancelRequest(int state, int laneOffset) {
     return ret != state;
 }
 
+double
+MSAbstractLaneChangeModel::getMaxSpeedLat2() const {
+    return MAX2(myVehicle.getVehicleType().getMaxSpeedLat(), myMaxSpeedLatStanding);
+}
 
 void
 MSAbstractLaneChangeModel::initLastLaneChangeOffset(int dir) {
@@ -641,7 +645,7 @@ MSAbstractLaneChangeModel::updateTargetLane() {
     }
 #ifdef DEBUG_TARGET_LANE
     if (debugVehicle()) {
-        std::cout << "\n   newTarget (offset=" << targetDir << "): " << (myTargetLane == nullptr ? "NULL" : myTargetLane->getID())
+        std::cout << "\n   newTarget (maneuverDist=" << myManeuverDist << " offset=" << targetDir << "): " << (myTargetLane == nullptr ? "NULL" : myTargetLane->getID())
                   << " newFurtherTargets: " << toString(myFurtherTargetLanes)
                   << std::endl;
     }

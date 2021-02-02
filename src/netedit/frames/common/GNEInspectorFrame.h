@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -19,6 +19,7 @@
 // The Widget for modifying network-element attributes (i.e. lane speed)
 /****************************************************************************/
 #pragma once
+#include <config.h>
 
 #include <netedit/frames/GNEFrame.h>
 
@@ -94,15 +95,6 @@ public:
 
         /// @brief pointer to check box "Block movement"
         FXCheckButton* myCheckBoxBlockMovement;
-
-        /// @frame horizontal frame for block shape
-        FXHorizontalFrame* myHorizontalFrameBlockShape;
-
-        /// @brief Label for Check blocked shape
-        FXLabel* myLabelBlockShape;
-
-        /// @brief pointer to check box "Block Shape"
-        FXCheckButton* myCheckBoxBlockShape;
 
         /// @frame horizontal frame for close shape
         FXHorizontalFrame* myHorizontalFrameCloseShape;

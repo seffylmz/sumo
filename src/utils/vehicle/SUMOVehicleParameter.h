@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -441,11 +441,11 @@ public:
      *
      * @param[in, out] dev The device to write into
      * @param[in] oc The options to get defaults from
-     * @param[in] tag The "root" tag to write (defaults to vehicle)
-     * @param[in] tag The typeID to write (defaults to member vtypeid)
+     * @param[in] altTag The "root" tag to write (defaults to vehicle)
+     * @param[in] typeID The typeID to write (defaults to member vtypeid)
      * @exception IOError not yet implemented
      */
-    void write(OutputDevice& dev, const OptionsCont& oc, const SumoXMLTag tag = SUMO_TAG_VEHICLE, const std::string& typeID = "") const;
+    void write(OutputDevice& dev, const OptionsCont& oc, const SumoXMLTag altTag = SUMO_TAG_VEHICLE, const std::string& typeID = "") const;
 
     /** @brief Returns whether the defaults shall be used
      * @param[in] oc The options to get the options from

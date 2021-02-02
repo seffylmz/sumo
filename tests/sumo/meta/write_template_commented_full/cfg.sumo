@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Fri Dec 18 16:35:18 2020 by Eclipse SUMO sumo Version v1_8_0+0332-d62ab2d821
+<!-- generated on Fri Jan 22 15:27:33 2021 by Eclipse SUMO sumo Version v1_8_0+0678-194dd5d
 -->
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -243,6 +243,9 @@
         <!-- Save person and container states (experimental) -->
         <save-state.transportables value="false" type="BOOL"/>
 
+        <!-- Write internal state values with the given precision (default 2) -->
+        <save-state.precision value="2" type="INT"/>
+
     </output>
 
     <time>
@@ -439,7 +442,7 @@
         <persontrip.taxi.waiting-time value="300" type="TIME"/>
 
         <!-- Use FLOAT as a maximum train length when initializing the railway router -->
-        <railway.max-train-length value="5000" type="FLOAT"/>
+        <railway.max-train-length value="1000" type="FLOAT"/>
 
         <!-- The probability for a vehicle to have a &apos;rerouting&apos; device -->
         <device.rerouting.probability value="-1" type="FLOAT"/>

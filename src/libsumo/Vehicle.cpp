@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -635,15 +635,12 @@ Vehicle::getNeighbors(const std::string& vehID, const int mode) {
     int dir = (1 & mode) != 0 ? -1 : 1;
     bool queryLeaders = (2 & mode) != 0;
     bool blockersOnly = (4 & mode) != 0;
-
     MSBaseVehicle* vehicle = Helper::getVehicle(vehID);
     MSVehicle* veh = dynamic_cast<MSVehicle*>(vehicle);
-    std::vector<std::pair<std::string, double> > neighs;
+    std::vector<std::pair<std::string, double> > result;
     if (veh == nullptr) {
-        return neighs;
+        return result;
     }
-    auto& lcm = veh->getLaneChangeModel();
-
 #ifdef DEBUG_NEIGHBORS
     if (DEBUG_COND) {
         std::cout << "getNeighbors() for veh '" << vehID << "': dir=" << dir
@@ -651,53 +648,67 @@ Vehicle::getNeighbors(const std::string& vehID, const int mode) {
                   << ", blockersOnly=" << blockersOnly << std::endl;
     }
 #endif
-
-
-
-    if (blockersOnly) {
-        // Check if a blocking neigh exists in the given direction
-        bool blocked = false;
-        if (dir == -1) {
-            if (queryLeaders) {
-                blocked = (lcm.getOwnState() & LCA_BLOCKED_BY_RIGHT_LEADER) != 0;
-            } else {
-                blocked = (lcm.getOwnState() & LCA_BLOCKED_BY_RIGHT_FOLLOWER) != 0;
-            }
-        } else {
-            if (queryLeaders) {
-                blocked = (lcm.getOwnState() & LCA_BLOCKED_BY_LEFT_LEADER) != 0;
-            } else {
-                blocked = (lcm.getOwnState() & LCA_BLOCKED_BY_LEFT_FOLLOWER) != 0;
-            }
-        }
-
-#ifdef DEBUG_NEIGHBORS
-        if (DEBUG_COND) {
-            std::cout << " blocked=" << blocked << std::endl;
-        }
-#endif
-
-        if (!blocked) {
-            // Not blocked => return empty vector
-            return neighs;
-        }
+    if (veh->getLaneChangeModel().isOpposite()) {
+        // getParallelLane works relative to lane forward direction
+        dir *= -1;
     }
 
-    const std::shared_ptr<MSLeaderDistanceInfo> res = queryLeaders ? lcm.getLeaders(dir) : lcm.getFollowers(dir);
-    if (res != nullptr && res->hasVehicles()) {
-        auto distIt = begin(res->getDistances());
-        auto vehIt = begin(res->getVehicles());
-        while (distIt != end(res->getDistances())) {
-            if (*vehIt != nullptr) {
-                if (neighs.size() == 0 || neighs.back().first != (*vehIt)->getID()) {
-                    neighs.push_back(std::make_pair((*vehIt)->getID(), *distIt));
+    MSLane* targetLane = veh->getLane()->getParallelLane(dir);
+    if (targetLane == nullptr) {
+        return result;
+    }
+    // need to recompute leaders and followers (#8119)
+    const bool opposite = &veh->getLane()->getEdge() != &targetLane->getEdge();
+    MSLeaderDistanceInfo neighbors(targetLane, nullptr, 0);
+    if (queryLeaders) {
+        if (opposite) {
+            double pos = targetLane->getOppositePos(veh->getPositionOnLane());
+            neighbors = targetLane->getFollowersOnConsecutive(veh, pos, true);
+        } else {
+            targetLane->addLeaders(veh, veh->getPositionOnLane(), neighbors);
+        }
+    } else {
+        if (opposite) {
+            double pos = targetLane->getOppositePos(veh->getPositionOnLane());
+            targetLane->addLeaders(veh, pos, neighbors);
+            neighbors.fixOppositeGaps(true);
+        } else {
+            neighbors = targetLane->getFollowersOnConsecutive(veh, veh->getBackPositionOnLane(), true);
+        }
+    }
+    if (blockersOnly) {
+        // filter out vehicles that aren't blocking
+        MSLeaderDistanceInfo blockers(targetLane, nullptr, 0);
+        for (int i = 0; i < neighbors.numSublanes(); i++) {
+            CLeaderDist n = neighbors[i];
+            if (n.first != nullptr) {
+                const MSVehicle* follower = veh;
+                const MSVehicle* leader = n.first;
+                if (!queryLeaders) {
+                    std::swap(follower, leader);
+                }
+                const double secureGap = (follower->getCarFollowModel().getSecureGap(
+                            follower, leader, follower->getSpeed(), leader->getSpeed(), leader->getCarFollowModel().getMaxDecel())
+                        * follower->getLaneChangeModel().getSafetyFactor());
+                if (n.second < secureGap) {
+                    blockers.addLeader(n.first, n.second, 0, i);
                 }
             }
-            ++vehIt;
-            ++distIt;
+        }
+        neighbors = blockers;
+    }
+
+    if (neighbors.hasVehicles()) {
+        for (int i = 0; i < neighbors.numSublanes(); i++) {
+            CLeaderDist n = neighbors[i];
+            if (n.first != nullptr &&
+                    // avoid duplicates
+                    (result.size() == 0 || result.back().first != n.first->getID())) {
+                result.push_back(std::make_pair(n.first->getID(), n.second));
+            }
         }
     }
-    return neighs;
+    return result;
 }
 
 

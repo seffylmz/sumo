@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2017-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -297,6 +297,11 @@ Simulation::getBusStopWaitingIDList(const std::string& stopID) {
 }
 
 
+std::vector<std::string>
+Simulation::getPendingVehicles() {
+    return Dom::getStringVector(libsumo::VAR_PENDING_VEHICLES, "");
+}
+
 std::vector<libsumo::TraCICollision>
 Simulation::getCollisions() {
     std::vector<libsumo::TraCICollision> result;
@@ -498,7 +503,7 @@ Simulation::writeMessage(const std::string& msg) {
 
 void
 Simulation::subscribe(const std::vector<int>& varIDs, double begin, double end, const libsumo::TraCIResults& params) {
-    libtraci::Connection::getActive().subscribeObjectVariable(libsumo::CMD_SUBSCRIBE_SIM_VARIABLE, "", begin, end, varIDs, params);
+    libtraci::Connection::getActive().subscribe(libsumo::CMD_SUBSCRIBE_SIM_VARIABLE, "", begin, end, -1, -1, varIDs, params);
 }
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2011-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2011-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -255,6 +255,13 @@ class LaneDomain(Domain):
         Returns the ids of internal lanes that are in conflict with the given internal lane id
         """
         return self.getFoes(laneID, "")
+
+    def getPendingVehicles(self, laneID):
+        """getPendingVehicles(string) -> list(string)
+        Returns a list of all vehicle ids waiting for insertion on this lane (with depart delay)
+        """
+        return self._getUniversal(tc.VAR_PENDING_VEHICLES, laneID)
+
 
     def setAllowed(self, laneID, allowedClasses):
         """setAllowed(string, list) -> None

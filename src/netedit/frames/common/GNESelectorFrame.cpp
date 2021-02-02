@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -579,10 +579,6 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBTag(FXObject*, FXSelector, void*) {
         if (tagValue.canBlockMovement()) {
             myMatchAttrComboBox->appendItem(toString(GNE_ATTR_BLOCK_MOVEMENT).c_str());
         }
-        // check if item can block shape
-        if (tagValue.canBlockShape()) {
-            myMatchAttrComboBox->appendItem(toString(GNE_ATTR_BLOCK_SHAPE).c_str());
-        }
         // check if item can close shape
         if (tagValue.canCloseShape()) {
             myMatchAttrComboBox->appendItem(toString(GNE_ATTR_CLOSE_SHAPE).c_str());
@@ -629,15 +625,6 @@ GNESelectorFrame::MatchAttribute::onCmdSelMBAttribute(FXObject*, FXSelector, voi
         extraAttrProperty = GNEAttributeProperties(GNE_ATTR_BLOCK_MOVEMENT,
                             GNEAttributeProperties::AttrProperty::BOOL | GNEAttributeProperties::AttrProperty::DEFAULTVALUESTATIC,
                             "Block movement",
-                            "false");
-        tagPropertiesCopy.addAttribute(extraAttrProperty);
-    }
-    // add extra attribute if item can block shape
-    if (tagValue.canBlockShape()) {
-        // add an extra AttributeValues to allow select ACs using as criterium "block shape"
-        extraAttrProperty = GNEAttributeProperties(GNE_ATTR_BLOCK_SHAPE,
-                            GNEAttributeProperties::AttrProperty::BOOL | GNEAttributeProperties::AttrProperty::DEFAULTVALUESTATIC,
-                            "Block shape",
                             "false");
         tagPropertiesCopy.addAttribute(extraAttrProperty);
     }

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -835,9 +835,9 @@ NBNodeShapeComputer::computeUniqueDirectionList(
         }
         // clean up
         for (NBEdge* e2 : same[e1]) {
-            auto e2NewAll = std::find(newAll.begin(), newAll.end(), e2);
-            if (e2NewAll != newAll.end()) {
-                newAll.erase(e2NewAll);
+            auto e2NewAllIt = std::find(newAll.begin(), newAll.end(), e2);
+            if (e2NewAllIt != newAll.end()) {
+                newAll.erase(e2NewAllIt);
             }
         }
     }

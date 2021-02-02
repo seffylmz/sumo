@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -204,8 +204,8 @@ GUICompleteSchemeStorage::writeSettings(FXApp* app) {
     const std::vector<std::string>& names = getNames();
     app->reg().writeIntEntry("VisualizationSettings", "settingNo", (FXint) names.size() - myNumInitialSettings);
     int gidx = 0;
-    for (std::vector<std::string>::const_iterator i = names.begin() + myNumInitialSettings; i != names.end(); ++i, ++gidx) {
-        const GUIVisualizationSettings& item = mySettings.find(*i)->second;
+    for (std::vector<std::string>::const_iterator it = names.begin() + myNumInitialSettings; it != names.end(); ++it, ++gidx) {
+        const GUIVisualizationSettings& item = mySettings.find(*it)->second;
         std::string sname = "visset#" + toString(gidx);
 
         app->reg().writeStringEntry("VisualizationSettings", sname.c_str(), item.name.c_str());

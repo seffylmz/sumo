@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -81,6 +81,7 @@ MSStateHandler::~MSStateHandler() {
 void
 MSStateHandler::saveState(const std::string& file, SUMOTime step) {
     OutputDevice& out = OutputDevice::getDevice(file);
+    out.setPrecision(OptionsCont::getOptions().getInt("save-state.precision"));
     out.writeHeader<MSEdge>(SUMO_TAG_SNAPSHOT);
     out.writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo.dlr.de/xsd/state_file.xsd");
     out.writeAttr(SUMO_ATTR_VERSION, VERSION_STRING).writeAttr(SUMO_ATTR_TIME, time2string(step)).writeAttr(SUMO_ATTR_TYPE, MSGlobals::gUseMesoSim ? "meso" : "micro");
@@ -362,7 +363,7 @@ MSStateHandler::closeVehicle() {
             MSNet::getInstance()->getInsertionControl().alreadyDeparted(v);
             if (MSRailSignalControl::hasInstance()) {
                 // register route for deadlock prevention (vehicleStateChanged would not be called otherwise)
-                MSRailSignalControl::getInstance().vehicleStateChanged(v, MSNet::VEHICLE_STATE_NEWROUTE, "loadState");
+                MSRailSignalControl::getInstance().vehicleStateChanged(v, MSNet::VehicleState::NEWROUTE, "loadState");
             }
         }
         while (!myDeviceAttrs.empty()) {

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -60,6 +60,7 @@ NBTypeCont::LaneTypeDefinition::LaneTypeDefinition(double _speed, double _width,
 NBTypeCont::EdgeTypeDefinition::EdgeTypeDefinition() :
     speed((double) 13.89), priority(-1),
     permissions(SVC_UNSPECIFIED),
+    spreadType(LaneSpreadFunction::RIGHT),
     oneWay(true), discard(false),
     width(NBEdge::UNSPECIFIED_WIDTH),
     widthResolution(0),
@@ -89,11 +90,13 @@ NBTypeCont::EdgeTypeDefinition::EdgeTypeDefinition(const EdgeTypeDefinition* edg
 
 
 NBTypeCont::EdgeTypeDefinition::EdgeTypeDefinition(int numLanes, double _speed, int _priority,
-    double _width, SVCPermissions _permissions, bool _oneWay, double _sideWalkWidth, 
+    double _width, SVCPermissions _permissions, LaneSpreadFunction _spreadType, bool _oneWay, double _sideWalkWidth,
     double _bikeLaneWidth, double _widthResolution, double _maxWidth, double _minWidth) :
     speed(_speed), priority(_priority),
     permissions(_permissions),
-    oneWay(_oneWay), discard(false),
+    spreadType(_spreadType),
+    oneWay(_oneWay), 
+    discard(false),
     width(_width),
     widthResolution(_widthResolution),
     maxWidth(_maxWidth),
@@ -159,25 +162,25 @@ NBTypeCont::setEdgeTypeDefaults(int defaultNumLanes,
                                 double defaultLaneWidth,
                                 double defaultSpeed,
                                 int defaultPriority,
-                                SVCPermissions defaultPermissions) {
+                                SVCPermissions defaultPermissions,
+                                LaneSpreadFunction defaultSpreadType) {
     myDefaultType->laneTypeDefinitions.clear();
     myDefaultType->laneTypeDefinitions.resize(defaultNumLanes);
     myDefaultType->width = defaultLaneWidth;
     myDefaultType->speed = defaultSpeed;
     myDefaultType->priority = defaultPriority;
     myDefaultType->permissions = defaultPermissions;
+    myDefaultType->spreadType = defaultSpreadType;
 }
 
 
 void
 NBTypeCont::insertEdgeType(const std::string& id, int numLanes, double maxSpeed, int prio,
-                           SVCPermissions permissions, double width, bool oneWayIsDefault,
-                           double sidewalkWidth, double bikeLaneWidth,
-                           double widthResolution,
-                           double maxWidth,
-                           double minWidth) {
+                           SVCPermissions permissions, LaneSpreadFunction spreadType, double width,
+                           bool oneWayIsDefault, double sidewalkWidth, double bikeLaneWidth,
+                           double widthResolution, double maxWidth, double minWidth) {
     // Create edge type definition
-    EdgeTypeDefinition *newType = new EdgeTypeDefinition(numLanes, maxSpeed, prio, width, permissions, oneWayIsDefault, sidewalkWidth, bikeLaneWidth, widthResolution, maxWidth, minWidth);
+    EdgeTypeDefinition *newType = new EdgeTypeDefinition(numLanes, maxSpeed, prio, width, permissions, spreadType, oneWayIsDefault, sidewalkWidth, bikeLaneWidth, widthResolution, maxWidth, minWidth);
     // check if edgeType already exist in types
     TypesCont::iterator old = myEdgeTypes.find(id);
     // if exists, then update restrictions and attributes
@@ -364,6 +367,10 @@ NBTypeCont::writeEdgeTypes(OutputDevice& into) const {
         if ((edgeType.second->attrs.count(SUMO_ATTR_DISALLOW) > 0) || (edgeType.second->attrs.count(SUMO_ATTR_ALLOW) > 0)) {
             writePermissions(into, edgeType.second->permissions);
         }
+        // write spreadType (unless default)
+        if ((edgeType.second->attrs.count(SUMO_ATTR_SPREADTYPE) > 0) && edgeType.second->spreadType != LaneSpreadFunction::RIGHT) {
+            into.writeAttr(SUMO_ATTR_SPREADTYPE, SUMOXMLDefinitions::LaneSpreadFunctions.getString(edgeType.second->spreadType));
+        }
         // write oneWay
         if (edgeType.second->attrs.count(SUMO_ATTR_ONEWAY) > 0) {
             into.writeAttr(SUMO_ATTR_ONEWAY, edgeType.second->oneWay);
@@ -494,6 +501,12 @@ NBTypeCont::wasSetEdgeTypeAttribute(const std::string& type, const SumoXMLAttr a
 SVCPermissions
 NBTypeCont::getEdgeTypePermissions(const std::string& type) const {
     return getEdgeType(type)->permissions;
+}
+
+
+LaneSpreadFunction
+NBTypeCont::getEdgeTypeSpreadType(const std::string& type) const {
+    return getEdgeType(type)->spreadType;
 }
 
 

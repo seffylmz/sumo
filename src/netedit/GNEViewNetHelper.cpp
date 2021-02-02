@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -29,6 +29,7 @@
 #include <netedit/elements/network/GNEInternalLane.h>
 #include <netedit/elements/network/GNEJunction.h>
 #include <netedit/frames/common/GNESelectorFrame.h>
+#include <netedit/frames/common/GNEMoveFrame.h>
 #include <netedit/frames/network/GNETLSEditorFrame.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/div/GUIDesigns.h>
@@ -358,6 +359,16 @@ GNEViewNetHelper::ObjectsUnderCursor::getLaneFront() const {
         } else {
             return nullptr;
         }
+    }
+}
+
+
+const std::vector<GNELane*>& 
+GNEViewNetHelper::ObjectsUnderCursor::getLanes() const {
+    if (mySwapLane2edge) {
+        return myEdgeObjects.lanes;
+    } else {
+        return myLaneObjects.lanes;
     }
 }
 
@@ -957,7 +968,7 @@ GNEViewNetHelper::MoveSingleElementValues::beginMoveSingleElementNetworkMode() {
         // get snap radius
         const double snap_radius = myViewNet->getVisualisationSettings().neteditSizeSettings.polygonGeometryPointRadius;
         // check if we clicked over shape
-        if (distanceToShape <= snap_radius) {
+        if ((distanceToShape <= snap_radius) || myViewNet->getViewParent()->getMoveFrame()->getNetworkModeOptions()->getMoveWholePolygons()) {
             // get move operation
             GNEMoveOperation* moveOperation = myViewNet->myObjectsUnderCursor.getPolyFront()->getMoveOperation(polygonShapeOffset);
             // continue if move operation is valid
@@ -1030,8 +1041,17 @@ GNEViewNetHelper::MoveSingleElementValues::beginMoveSingleElementNetworkMode() {
             // edge values wasn't calculated, then return false
             return false;
         } else {
-            // calculate shape offset
-            const double shapeOffset = myViewNet->myObjectsUnderCursor.getEdgeFront()->getNBEdge()->getGeometry().nearest_offset_to_point2D(myViewNet->getPositionInformation());
+            double shapeOffset = -1;
+            if (myViewNet->myObjectsUnderCursor.getEdgeFront()->clickedOverShapeStart(myViewNet->getPositionInformation())) {
+                // move shape start
+                shapeOffset = 0;
+            } else if (myViewNet->myObjectsUnderCursor.getEdgeFront()->clickedOverShapeEnd(myViewNet->getPositionInformation())) {
+                // move shape end
+                shapeOffset = myViewNet->myObjectsUnderCursor.getEdgeFront()->getNBEdge()->getGeometry().length2D();
+            } else {
+                // calculate shape offset
+                shapeOffset = myViewNet->myObjectsUnderCursor.getEdgeFront()->getNBEdge()->getGeometry().nearest_offset_to_point2D(myViewNet->getPositionInformation());
+            }
             // get move operation
             GNEMoveOperation* moveOperation = myViewNet->myObjectsUnderCursor.getEdgeFront()->getMoveOperation(shapeOffset);
             // continue if move operation is valid
@@ -1838,6 +1858,8 @@ GNEViewNetHelper::EditModes::setNetworkEditMode(NetworkEditMode mode, const bool
             default:
                 break;
         }
+        // update cursors
+        myViewNet->updateCursor();
         // update network mode specific controls
         myViewNet->updateNetworkModeSpecificControls();
     }
@@ -1875,6 +1897,8 @@ GNEViewNetHelper::EditModes::setDemandEditMode(DemandEditMode mode, const bool f
         myViewNet->myNet->computeNetwork(myViewNet->myViewParent->getGNEAppWindows());
         // update DijkstraRouter of RouteCalculatorInstance
         myViewNet->myNet->getPathCalculator()->updatePathCalculator();
+        // update cursors
+        myViewNet->updateCursor();
         // update network mode specific controls
         myViewNet->updateDemandModeSpecificControls();
     }
@@ -1914,6 +1938,8 @@ GNEViewNetHelper::EditModes::setDataEditMode(DataEditMode mode, const bool force
         for (const auto& dataSet : myViewNet->getNet()->getAttributeCarriers()->getDataSets()) {
             dataSet.second->updateAttributeColors();
         }
+        // update cursors
+        myViewNet->updateCursor();
         // update network mode specific controls
         myViewNet->updateDataModeSpecificControls();
     }

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2012-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2012-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -73,6 +73,7 @@ public:
     static std::vector<std::string> getLastStepVehicleIDs(std::string laneID);
     static std::vector<std::string> getFoes(const std::string& laneID, const std::string& toLaneID);
     static std::vector<std::string> getInternalFoes(const std::string& laneID);
+    static const std::vector<std::string> getPendingVehicles(const std::string& laneID);
 
     LIBSUMO_ID_PARAMETER_API
     LIBSUMO_SUBSCRIPTION_API

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -155,7 +155,7 @@ NIImporter_SUMO::_loadNetwork(OptionsCont& oc) {
                                ed->type, ed->maxSpeed,
                                (int) ed->lanes.size(),
                                ed->priority, NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET,
-                               ed->shape, ed->streetName, "", ed->lsf, true); // always use tryIgnoreNodePositions to keep original shape
+                               ed->shape, ed->lsf, ed->streetName, "", true); // always use tryIgnoreNodePositions to keep original shape
         e->setLoadedLength(ed->length);
         e->updateParameters(ed->getParametersMap());
         e->setDistance(ed->distance);

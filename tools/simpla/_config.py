@@ -1,5 +1,5 @@
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2017-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -207,7 +207,7 @@ def load(filename):
         elif e.tag == "catchupDist":
             if hasAttributes(e):
                 dist = float(list(e.attrib.values())[0])
-                if maxgap <= 0:
+                if dist <= 0:
                     if rp.VERBOSITY >= 1:
                         warn("Parameter catchupDist must be positive. Ignoring given value: %s" % (dist), True)
                 else:

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2007-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2007-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -28,6 +28,7 @@
 // holds codes used for TraCI
 /****************************************************************************/
 #pragma once
+#include <config.h>
 
 #if __cplusplus >= 201103L
 #define TRACI_CONST constexpr
@@ -1179,6 +1180,9 @@ TRACI_CONST int VAR_EMERGENCYSTOPPING_VEHICLES_IDS = 0x8a;
 
 // clears the simulation of all not inserted vehicles (set: simulation)
 TRACI_CONST int CMD_CLEAR_PENDING_VEHICLES = 0x94;
+
+// retrieve number of not inserted  vehicles (get: simulation, edge, lane)
+TRACI_CONST int VAR_PENDING_VEHICLES = 0x94;
 
 // triggers saving simulation state (set: simulation)
 TRACI_CONST int CMD_SAVE_SIMSTATE = 0x95;

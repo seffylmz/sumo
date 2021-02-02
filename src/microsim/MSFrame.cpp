@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2002-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2002-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -281,12 +281,14 @@ MSFrame::fillOptions() {
     oc.addDescription("save-state.prefix", "Output", "Prefix for network states");
     oc.doRegister("save-state.suffix", new Option_String(".xml.gz"));
     oc.addDescription("save-state.suffix", "Output", "Suffix for network states (.xml.gz or .xml)");
-    oc.doRegister("save-state.files", new Option_FileName());//
+    oc.doRegister("save-state.files", new Option_FileName());
     oc.addDescription("save-state.files", "Output", "Files for network states");
     oc.doRegister("save-state.rng", new Option_Bool(false));
     oc.addDescription("save-state.rng", "Output", "Save random number generator states");
     oc.doRegister("save-state.transportables", new Option_Bool(false));
     oc.addDescription("save-state.transportables", "Output", "Save person and container states (experimental)");
+    oc.doRegister("save-state.precision", new Option_Integer(2));
+    oc.addDescription("save-state.precision", "Output", "Write internal state values with the given precision (default 2)");
 
     // register the simulation settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));
@@ -479,7 +481,7 @@ MSFrame::fillOptions() {
     oc.doRegister("persontrip.taxi.waiting-time", new Option_String("300", "TIME"));
     oc.addDescription("persontrip.taxi.waiting-time", "Routing", "Estimated time for taxi pickup");
 
-    oc.doRegister("railway.max-train-length", new Option_Float(5000.0));
+    oc.doRegister("railway.max-train-length", new Option_Float(1000.0));
     oc.addDescription("railway.max-train-length", "Routing", "Use FLOAT as a maximum train length when initializing the railway router");
 
     // devices
@@ -764,7 +766,7 @@ MSFrame::checkOptions() {
     if (oc.getBool("duration-log.statistics") && oc.isDefault("verbose")) {
         oc.set("verbose", "true");
     }
-    if (oc.isDefault("precision") && string2time(oc.getString("step-length")) < 10) {
+    if (oc.isDefault("precision") && string2time(oc.getString("step-length")) % 10 != 0) {
         oc.set("precision", "3");
     }
     if (oc.isDefault("tracker-interval") && !oc.isDefault("step-length")) {

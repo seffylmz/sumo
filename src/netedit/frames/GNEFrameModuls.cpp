@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -1492,7 +1492,9 @@ GNEFrameModuls::DrawingShape::DrawingShape(GNEFrame* frameParent) :
     information
             << "- 'Start drawing' or ENTER\n"
             << "  to create shape.\n"
-            << "- 'Stop drawing' or ESC to\n"
+            << "- 'Stop drawing' or ENTER to\n"
+            << "  finish shape creation.\n"
+            << "- 'Abort drawing' or ESC to\n"
             << "  abort shape creation.\n"
             << "- 'Shift + Click' to remove\n"
             << "  last inserted point.";
@@ -2791,7 +2793,7 @@ GNEFrameModuls::PathLegend::PathLegend(GNEFrame* frameParent) :
     legendLabel = new FXLabel(this, " edge selected", 0, GUIDesignLabelLeft);
     legendLabel->setBackColor(MFXUtils::getFXColor(frameParent->getViewNet()->getVisualisationSettings().candidateColorSettings.source));
     // edge conflict (vClass)
-    legendLabel = new FXLabel(this, " edge conflic (vClass)", 0, GUIDesignLabelLeft);
+    legendLabel = new FXLabel(this, " edge conflict (vClass)", 0, GUIDesignLabelLeft);
     legendLabel->setBackColor(MFXUtils::getFXColor(frameParent->getViewNet()->getVisualisationSettings().candidateColorSettings.special));
     // edge disconnected
     legendLabel = new FXLabel(this, " edge disconnected", 0, GUIDesignLabelLeft);

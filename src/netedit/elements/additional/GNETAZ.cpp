@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -22,9 +22,14 @@
 #include <netedit/GNENet.h>
 #include <netedit/GNEUndoList.h>
 #include <netedit/GNEViewNet.h>
+#include <netedit/GNEViewParent.h>
 #include <netedit/changes/GNEChange_Attribute.h>
-#include <utils/gui/globjects/GUIPolygon.h>
+#include <netedit/frames/common/GNEMoveFrame.h>
 #include <utils/gui/div/GLHelper.h>
+#include <utils/gui/div/GUIDesigns.h>
+#include <utils/gui/div/GUIParameterTableWindow.h>
+#include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
+#include <utils/gui/globjects/GUIPolygon.h>
 
 #include "GNETAZ.h"
 
@@ -42,15 +47,14 @@ const double GNETAZ::myHintSizeSquared = 0.64;
 
 GNETAZ::GNETAZ(const std::string& id, GNENet* net, PositionVector shape, RGBColor color, bool blockMovement) :
     GNETAZElement(id, net, GLO_TAZ, SUMO_TAG_TAZ, blockMovement,
-{}, {}, {}, {}, {}, {}, {}, {}),
-SUMOPolygon(id, "", color, shape, false, false, 1),
-myBlockShape(false),
-myMaxWeightSource(0),
-myMinWeightSource(0),
-myAverageWeightSource(0),
-myMaxWeightSink(0),
-myMinWeightSink(0),
-myAverageWeightSink(0) {
+        {}, {}, {}, {}, {}, {}, {}, {}),
+    SUMOPolygon(id, "", color, shape, false, false, 1),
+    myMaxWeightSource(0),
+    myMinWeightSource(0),
+    myAverageWeightSource(0),
+    myMaxWeightSink(0),
+    myMinWeightSink(0),
+    myAverageWeightSink(0) {
     // update geometry
     updateGeometry();
 }
@@ -65,7 +69,7 @@ GNETAZ::getMoveOperation(const double shapeOffset) {
     if (myBlockMovement) {
         // nothing to move
         return nullptr;
-    } else if (myBlockShape) {
+    } else if (myNet->getViewNet()->getViewParent()->getMoveFrame()->getNetworkModeOptions()->getMoveWholePolygons()) {
         // move entire shape
         return new GNEMoveOperation(this, myShape);
     } else {
@@ -97,6 +101,22 @@ GNETAZ::getMoveOperation(const double shapeOffset) {
             }
         }
     }
+}
+
+
+int
+GNETAZ::getVertexIndex(Position pos, bool snapToGrid) {
+    // check if position has to be snapped to grid
+    if (snapToGrid) {
+        pos = myNet->getViewNet()->snapToActiveGrid(pos);
+    }
+    // first check if vertex already exists
+    for (const auto& shapePosition : myShape) {
+        if (shapePosition.distanceTo2D(pos) < myNet->getViewNet()->getVisualisationSettings().neteditSizeSettings.polygonGeometryPointRadius) {
+            return myShape.indexOfClosest(shapePosition);
+        }
+    }
+    return -1;
 }
 
 
@@ -187,15 +207,30 @@ GNETAZ::getCenteringBoundary() const {
 }
 
 
-bool
-GNETAZ::isShapeBlocked() const {
-    return myBlockShape;
-}
-
-
 std::string
 GNETAZ::getParentName() const {
     return myNet->getMicrosimID();
+}
+
+
+GUIGLObjectPopupMenu*
+GNETAZ::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
+    GUIGLObjectPopupMenu* ret = new GUIGLObjectPopupMenu(app, parent, *this);
+    buildPopupHeader(ret, app);
+    buildCenterPopupEntry(ret);
+    buildNameCopyPopupEntry(ret);
+    // build selection and show parameters menu
+    myNet->getViewNet()->buildSelectionACPopupEntry(ret, this);
+    buildShowParamsPopupEntry(ret);
+    // create a extra FXMenuCommand if mouse is over a vertex
+    const int index = getVertexIndex(myNet->getViewNet()->getPositionInformation(), false);
+    if (index != -1) {
+        // check if we're in network mode
+        if (myNet->getViewNet()->getEditModes().networkEditMode == NetworkEditMode::NETWORK_MOVE) {
+            GUIDesigns::buildFXMenuCommand(ret, "Set custom Geometry Point", nullptr, &parent, MID_GNE_CUSTOM_GEOMETRYPOINT);
+        }
+    }
+    return ret;
 }
 
 
@@ -258,7 +293,7 @@ GNETAZ::drawGL(const GUIVisualizationSettings& s) const {
             glPopMatrix();
         }
         // draw contour if shape isn't blocked
-        if (!myBlockShape) {
+        if (!myNet->getViewNet()->getViewParent()->getMoveFrame()->getNetworkModeOptions()->getMoveWholePolygons()) {
             // push contour matrix
             glPushMatrix();
             // translate to front
@@ -339,8 +374,6 @@ GNETAZ::getAttribute(SumoXMLAttr key) const {
         }
         case GNE_ATTR_BLOCK_MOVEMENT:
             return toString(myBlockMovement);
-        case GNE_ATTR_BLOCK_SHAPE:
-            return toString(myBlockShape);
         case GNE_ATTR_SELECTED:
             return toString(isAttributeCarrierSelected());
         case GNE_ATTR_PARAMETERS:
@@ -396,7 +429,6 @@ GNETAZ::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList* und
         case SUMO_ATTR_FILL:
         case SUMO_ATTR_EDGES:
         case GNE_ATTR_BLOCK_MOVEMENT:
-        case GNE_ATTR_BLOCK_SHAPE:
         case GNE_ATTR_SELECTED:
         case GNE_ATTR_PARAMETERS:
             undoList->p_add(new GNEChange_Attribute(this, key, value));
@@ -425,8 +457,6 @@ GNETAZ::isValid(SumoXMLAttr key, const std::string& value) {
                 return SUMOXMLDefinitions::isValidListOfTypeID(value);
             }
         case GNE_ATTR_BLOCK_MOVEMENT:
-            return canParse<bool>(value);
-        case GNE_ATTR_BLOCK_SHAPE:
             return canParse<bool>(value);
         case GNE_ATTR_SELECTED:
             return canParse<bool>(value);
@@ -534,9 +564,6 @@ GNETAZ::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case GNE_ATTR_BLOCK_MOVEMENT:
             myBlockMovement = parse<bool>(value);
-            break;
-        case GNE_ATTR_BLOCK_SHAPE:
-            myBlockShape = parse<bool>(value);
             break;
         case GNE_ATTR_SELECTED:
             if (parse<bool>(value)) {

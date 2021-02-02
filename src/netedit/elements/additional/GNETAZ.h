@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2001-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -18,6 +18,7 @@
 //
 /****************************************************************************/
 #pragma once
+#include <config.h>
 #include <netedit/GNEMoveElement.h>
 #include <utils/shapes/SUMOPolygon.h>
 
@@ -51,6 +52,13 @@ public:
     */
     GNEMoveOperation* getMoveOperation(const double shapeOffset);
 
+    /**@brief return index of a vertex of shape, or of a new vertex if position is over an shape's edge
+     * @param pos position of new/existent vertex
+     * @param snapToGrid enable or disable snapToActiveGrid
+     * @return index of position vector
+     */
+    int getVertexIndex(Position pos, bool snapToGrid);
+
     /// @brief remove geometry point in the clicked position
     void removeGeometryPoint(const Position clickedPosition, GNEUndoList* undoList);
 
@@ -75,14 +83,20 @@ public:
 
     /// @}
 
-    /// @brief return true if Shape TAZ is blocked
-    bool isShapeBlocked() const;
-
     /// @name inherited from GUIGlObject
     /// @{
     /// @brief Returns the name of the parent object
     /// @return This object's parent id
     std::string getParentName() const;
+
+    /**@brief Returns an own popup-menu
+     *
+     * @param[in] app The application needed to build the popup-menu
+     * @param[in] parent The parent window needed to build the popup-menu
+     * @return The built popup-menu
+     * @see GUIGlObject::getPopUpMenu
+     */
+    GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent);
 
     /**@brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
@@ -137,9 +151,6 @@ public:
 protected:
     /// @brief boundary used during moving of elements
     Boundary myMovingGeometryBoundary;
-
-    /// @brief flag for block shape
-    bool myBlockShape;
 
     /// @brief geometry for lenghts/rotations
     GNEGeometry::Geometry myTAZGeometry;

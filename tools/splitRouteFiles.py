@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2010-2020 German Aerospace Center (DLR) and others.
+# Copyright (C) 2010-2021 German Aerospace Center (DLR) and others.
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # https://www.eclipse.org/legal/epl-2.0/
@@ -33,6 +33,7 @@ import ctypes
 from xml.sax import make_parser, handler
 from collections import defaultdict
 from optparse import OptionParser
+import gzip
 
 
 def getFreeSpace(folder):
@@ -168,7 +169,10 @@ def splitFiles(routeFiles, typesFile, routesPrefix, step, verbose, modifyID,
     for routesIn in routeFiles:
         if verbose:
             print("Reading routes from", routesIn)
-        f = open(routesIn, 'rb')
+        if '.gz' in routesIn:
+            f = gzip.open(routesIn, 'rb')
+        else:
+            f = open(routesIn, 'rb')
         while True:
             pos = f.tell()
             line = f.readline()
@@ -294,19 +298,19 @@ def main(args=None):
         if options.verbose:
             print("Reading detectors")
         reader = RouteReader(options.collectfile, options.edgecount, options.pythonedge)
-        conn = None
-        if options.detconn:
-            import MySQLdb
-            from detector import readDetectorDB
-            dbargs = options.detconn.split(":")
-            conn = MySQLdb.connect(host=dbargs[2], user=dbargs[0],
-                                   passwd=dbargs[1], db=dbargs[3])
-            detReader = readDetectorDB(conn)
-            conn.close()
-        else:
-            detReader = DetectorReader(options.detfile)
-        for edge, group in detReader.getEdgeDataIterator():
-            reader.addEdge(edge)
+#        conn = None
+#        if options.detconn:
+#            import MySQLdb
+#            from detector import readDetectorDB
+#            dbargs = options.detconn.split(":")
+#            conn = MySQLdb.connect(host=dbargs[2], user=dbargs[0],
+#                                   passwd=dbargs[1], db=dbargs[3])
+#            detReader = readDetectorDB(conn)
+#            conn.close()
+#        else:
+#            detReader = DetectorReader(options.detfile)
+#        for edge, group in detReader.getEdgeDataIterator():
+#            reader.addEdge(edge)
     elif options.collectfile:
         reader = RouteReader(options.collectfile, options.edgecount, options.pickleedge, True)
     splitFiles(expandedArgs, options.typesfile, tempPrefix, options.step,
@@ -334,5 +338,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(sys.argv[0]), "..", "loop"))
-    from detector import DetectorReader
+#    from detector import DetectorReader
     main()

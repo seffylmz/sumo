@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2017-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -260,6 +260,10 @@ Lane::getInternalFoes(const std::string& laneID) {
     //return Dom::getFoes(laneID, "");
 }
 
+const std::vector<std::string>
+Lane::getPendingVehicles(const std::string& laneID) {
+    return Dom::getStringVector(libsumo::VAR_PENDING_VEHICLES, laneID);
+}
 
 void
 Lane::setAllowed(std::string laneID, std::string allowedClass) {

@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2013-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2013-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -165,7 +165,7 @@ public:
     void dispatch(const Reservation& res);
 
     /// @brief service the given reservations
-    void dispatchShared(const std::vector<const Reservation*>& reservations);
+    void dispatchShared(std::vector<const Reservation*> reservations);
 
     /// @brief whether the given person is allowed to board this taxi
     bool allowsBoarding(MSTransportable* t) const;
@@ -233,6 +233,9 @@ private:
 
     /// @brief algorithm for controlling idle behavior
     MSIdling* myIdleAlgorithm;
+
+    /// @brief reservations currently being served
+    std::set<const Reservation*> myCurrentReservations;
 
     /// @brief the time between successive calls to the dispatcher
     static SUMOTime myDispatchPeriod;

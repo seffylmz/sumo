@@ -1,6 +1,6 @@
 /****************************************************************************/
 // Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2010-2020 German Aerospace Center (DLR) and others.
+// Copyright (C) 2010-2021 German Aerospace Center (DLR) and others.
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
 // https://www.eclipse.org/legal/epl-2.0/
@@ -288,10 +288,10 @@ void MSSOTLE2Sensors::buildSensorForLane(MSLane* lane, NLDetectorBuilder& nb, do
             std::ostringstream oss;
             oss << "Sensor on lane " << lane->getID() << " is long " << lensorLength << ", while it should be " << sensorLength << ". Continuing it on the other lanes if possible";
             WRITE_MESSAGE(oss.str())
-            for (std::vector<MSLane::IncomingLaneInfo>::const_iterator it = lane->getIncomingLanes().begin(); it != lane->getIncomingLanes().end(); ++it) {
-                const MSEdge* edge = &it->lane->getEdge();
-                if (!edge->isInternal() && !edge->isWalkingArea() && !edge->isCrossing()) {
-                    buildContinueSensior(lane, nb, sensorLength, it->lane, lensorLength);
+            for (const MSLane::IncomingLaneInfo& it : lane->getIncomingLanes()) {
+                const MSEdge& inEdge = it.lane->getEdge();
+                if (!inEdge.isInternal() && !inEdge.isWalkingArea() && !inEdge.isCrossing()) {
+                    buildContinueSensior(lane, nb, sensorLength, it.lane, lensorLength);
                 }
             }
         }
