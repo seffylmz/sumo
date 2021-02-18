@@ -1,6 +1,5 @@
 ---
 title: ChangeLog
-permalink: /ChangeLog/
 ---
 
 ## Git Master
@@ -9,31 +8,41 @@ permalink: /ChangeLog/
 - Simulation
   - Fixed disappearing vehicle when transporting containers with taxi. Issue #7893
   - Fixed collisions between pedestrians and vehicles on shared space #7960
-  - Vehicles with low (desired) decel value will no longer perform an emergency stop on after being when caught in the "Yellow Light Dilemma Zone". Instead they will brake with decel **--tls.yellow.min-decel** (default: 3) as long as they have a sufficiently high emergencyDecel value. Issue #7956
+  - Vehicles with low (desired) decel value will no longer perform an emergency stop when caught in the "Yellow Light Dilemma Zone". Instead they will brake with decel **--tls.yellow.min-decel** (default: 3) as long as they have a sufficiently high emergencyDecel value. Issue #7956
   - Fixed invalid output directory for **--device.taxi.dispatch-algorithm.outout**. Issue #8013
-  - Fixed error when loading saved state with vehicles that stopped due to collision. Issue #8030, #8063  
+  - Fixed error when loading saved state with vehicles that stopped due to collision. Issue #8030, #8063 , #7696
   - Fixed bug where an emergency vehicle does not advance in the rescue lane. Issue #8072
   - When a junction collision is detected, the vehicle with right of way is now classified as the victim. Issue #8094
+  - Fixed inconsistent vehicle positioning after collision stop #8109
+  - Fixed slow initialization of railway router. Issue #8120
+  - Fixed invalid braking of vehicles at traffic light junctions with crossings. Issue #8116
+  - Fixed insufficent precision of timestamps when using low step-length (i.e. 0.025). Issue #8129
+  - Fixed crash when using junction-taz in combination with taxi device. Issue #8152
   - Sublane model fixes
     - Fixed deadlock in roundabout. Issue #7935
     - Fixed invalid deceleration at intersection due to misinterpreting lateral position of approaching foes #7925
     - Fixed collision in sublane model after parallel internal edges (requries rebuilding the network) #3619
     - Fixed invalid collision warning. Issue #8068
     - Fixed invalid vehicle angle in subsecond simulation. Issue #8070
+    - Lateral deviation due to lcSigma > 0 is now independent of step-length when using `latAlignment="arbitrary"`. Issue #8154
+    - Lateral no longer exceeds lcAccelLat. Issue #8195
   - Opposite direction driving fixes
-    - Fixed undetected collisions. Issue #8082
+    - Fixed undetected collisions. Issue #8082, #8111
     - Fixed invalid collision warning. Issue #8079
-    - Fixed unsafe driving. Issue #8082, #8084
+    - Fixed unsafe driving. Issue #8082, #8084, #8112, #8141
     - Fixed late change to the opposite side due to misidentification of oncoming vehicle #8080
+    - Fixed premature arrival while on the opposite side. Issue #8199
 
 - meso
   - Fixed invalid jam-front back-propagation speed. Issue #8000 (Regression in 1.7.0)
-  - Fixed invalid warning when using stop-output with multiple stops on the same segment. Issue #8001
+  - Fixed invalid warning when using stop-output with multiple stops on the same segment. Issue #8001  
   
 - sumo-gui
   - Fixed long pause on right-click in large networks. Issue #7927 (Regression in 1.4.0)
   - Routes for vehicles with dark color are no longer colored black. Issue #7934
   - Fixed crash when using network property dialog in meso. Issue #7998
+  - Person drawing style "as circles" is now drawing circles as intended. Issue #8130
+  - Fixed crash when opening person parameter dialog for a person with depart="triggered". Issue #8164
   
 - netedit
   - Fixed invalid E2 detector shape #7895 (Regression in 1.7.0)
@@ -60,6 +69,10 @@ permalink: /ChangeLog/
   - Fixed issues with mapping location and speed for funnction 'person.moveToXY' . Issue #7907, #7908
   - Fixed crash when switching to carFollowModel that requries vehicle variables. Issue #7949
   - Fixed crash when using traci.simulation.getDistanceRoad. Issue #5114
+  - Fixed non-deterministic behavior for person.moveToXY. Issue #7933
+  - Function vehicle.getNeighbors now correctly handles neighbors that changed lane after the ego vehicle in the same simulation step. #8119
+  - Fixed [simpla](Simpla.md) crashes. Issue #8151, #8179
+  - Fixed crash when starting traci with option traceFile, closing and starting again without traceFile. Issue #8177
   
 - Tools
   - Fixed error in xml2csv.py when loading files names consists only of numbers. Issue #7910
@@ -76,11 +89,21 @@ permalink: /ChangeLog/
   - Added new option **--collision-output** to write information on collisions to an XML file. Issue #7990.
   - Actuated traffic lights based on detector gaps now support [custom detection gaps per lane](Simulation/Traffic_Lights.md#lane-specific_max-gap). Issue #7997
   - Improved computational efficiency of bluelight device. Issue #7206
+  - Added option **--save-state.precision** to configure the numerical precision when saving simulation state. Issue #8115
+  - busStop attribute personCapacity can now cause pedestrian jams when the busStop is filled to capacity. Issue #3706
+  - Taxi device now supports option **--device.taxi.idle-algorithm** [stop|randomCircling] to control the behavior of idle taxis. #8132
+  - The sublane model now supports modeling an inverse relation between longitudinal and lateral speed (higher lateral speed while stopped and lower while driving fast). This is achieved by setting a negative values for attribute 'lcMaxSpeedLatFactor' and by setting 'lcMaxSpeedLatStanding' > 'maxSpeedLat'. #8064
+  - Added new vType attribute 'jmIgnoreJunctionFoeProb' to allow ignoring foes (vehicles and pedestrians) that are already on the junction. Issue #8078
   
 - sumo-gui
   - Random color for containers is now supported. Issue #7941
   - Added 'Update' button to object selection dialogs to refresh the object list. Issue #7942
   - Multiple gui setting schemes can now be loaded from the same input file. Issue #8012
+  - Add vehicle drawing style 'draw as circles'. Issue #5947
+  - BusStop parameter dialog now includes a summary of lines which are being waited for. Issue #8138
+  - Background images can now be removed using the 'Clear Decals' button. Issue #8144
+  - Vehicle lengths will now be scaled according to [custom edge lengths](Simulation/Distances.md) to avoid confusing visual overlap. A new vehicle visualization setting checkbox 'scale length with geometry' is provided to disable scaling. Issue #6920
+  
 
 - netedit
   - Added file menu options 'reload additionals' and 'reload demand'. Issue #6099
@@ -92,6 +115,7 @@ permalink: /ChangeLog/
   - Shapes of selected edges can now be shifted orthogonally to their driving direction via move mode frame controls. Issue #2456
   - Polygons can now be moved without changing their shape (with new move mode checkbox). Issue #5268
   - New custom cursors added to the **Inspect**, **Delete**, **Select** and **Move** modes. Issue #4818
+  - Added new top-level 'Modes' menu for selecting edit mode. All mode-specific toggle options are now included in the 'Edit'-menu  #8059
 
 - netconvert
   - Added option **--tls.no-mixed** which prevents building phases where different connections from the same lane have green and red signals. Issue #7821
@@ -100,14 +124,21 @@ permalink: /ChangeLog/
   - When using option **--junctions.join-turns** to merge overlapping networks with diffent junction ids, the option **--edges.join** can now be used to automatically remove duplicate edges. Issue #8019
   - Added option **--railway.topology.repair.minimal**. This works similar to **--railway.topology.repair** but avoids creating bidirectional tracks that are not needed for public transport routes (only applies when using option **--ptline-outut**). Issue #7982
   - Public transport edges that are disconnected from the main road network (in particular railways) are now included in the output when using option **--keep.edges.components 1** as long as they have public transport stops that are written via option **--ptstop-output**. Issue #8061
+  - Edge types now support attribute 'spreadType'. Issue #7897
+  - The behavior of option **--geometry.remove** (merging subsequent edges with common attributes) no longer depends on written **--ptstop-output** (stops will be remapped onto merged edges). To enable legacy behavior, the option **--geometry.remove.keep-ptstops** may be set. Issue #8155
 
 
 - TraCI
   - Added function 'traci.simulation.getCollisions' to retrieve a list of collision objects for the current time step. This also includes collisions between vehicles and pedestrians. Issue #7728
   - Can now retrieve vehicle parameters 'device.battery.totalEnergyConsumed' and 'device.battery.totalEnergyRegenerated' when a vehicle has the battery device. Issue #6507
+  - vehicle.dispatchTaxi now supports re-dispatching a taxi that is already in pickup or occupied mode. Issue #8148
+  - Vehicles that are accumlating insertion delay (because they cannot safely enter the network as schedule) can now be retrieved using the functions 'traci.simulation.getPendingVehicles', 'traci.edge.getPendingVehicles' and 'traci.lane.getPendingVehicles. Issue #8157
+  - Taxi customers (including those that shall be picked up but are not yet on board) can now be trieved using `traci.vehicle.getParameter(vehID, "device.taxi.currentCustomers")`. Issue #8189
+  - The reservation objects returnd by [traci.person.getTaxiReservations](Simulation/Taxi.md#gettaxireservations) now includes persons that are eligible for re-dispatch and includes the state of the reservation (new, assigned, on board). Issue #8168
 
 - Tools
   - The tool [gridDistricts.py](Tools/District.md#griddistrictspy) can be used to generated a grid of districts (TAZs) for a given network. #7946
+  - [netcheck.py](Tools/Net.md#netcheckpy) now supports option **--print-types** to analyze the edge types of the different network components. Issue #8097
 
 ### Other
 
@@ -118,6 +149,24 @@ permalink: /ChangeLog/
   - Parallel turn lanes are no longer written as distinct edges but are instead written as multi-lane edge with different lane lenghts. As before, lane-changing on an intersection is not permitted on a turn lane. Issue #7954
   - Written network version is now 1.9.0
   
+- Tools
+  - Some obsolete tools were moved to tools/purgatory (let us know if you were using them). Issue #1425
+  - The following tools were renamed/relocated: (issue #1425)
+    - tools/shapes/debug2shapes.py -> tools/devel/debug2shapes.py
+    - tools/build/timing.py -> tools/devel/timing.py
+    - tools/build/rebuild_cscope.sh -> tools/devel/rebuild_cscope.sh
+    - tools/xml/schemaCheck.py -> tools/build/schemaCheck.py
+    - tools/xml/rebuildSchemata.py -> tools/build/rebuildSchemata.py
+    - tools/assign/networkStatistics.py -> tools/output/tripStatistics.py
+    - tools/osmTaxiStop.py -> tools/import/osm/osmTaxiStop.py
+    - tools/addParkingAreaStops2Routes.py -> tools/route/addParkingAreaStops2Routes.py
+    - tools/addStops2Routes.py -> tools/route/addStops2Routes.py
+    - tools/route2sel.py -> tools/route/route2sel.py
+    - tools/splitRouteFiles.py -> tools/route/splitRouteFiles.py
+    - tools/tls_buildTransitions.py → tools/tls/buildTransitions.py
+    - tools/generateTurnRatios.py -> tools/turn-defs/generateTurnRatios.py
+    - tools/assign/matrixDailyToHourly.py -> tools/district/aggregateAndSplitMatrices.py
+    
 
 ## Version 1.8.0 (02.12.2020)
 
@@ -1190,7 +1239,7 @@ permalink: /ChangeLog/
   - Function *vehicle.moveTo* can now be used to move the vehicle to any lane on its route including those that were already passed.
 
 - Tools
-  - Added new toolbox [{{SUMO}}/tools/contributed/saga]({{Source}}tools/contributed/saga) (SUMO Activity Generation) to create intermodal scenarios from OSM data. This includes building a virtual population and generating mobility plans for a while day.
+  - Added new toolbox [{{SUMO}}/tools/contributed/saga]({{Source}}tools/contributed/) (SUMO Activity Generation) to create intermodal scenarios from OSM data. This includes building a virtual population and generating mobility plans for a while day.
   - [Public transport import from
     OSM](Tutorials/PT_from_OpenStreetMap.md) (also used by
     [osmWebWizard](Tools/Import/OSM.md#osmwebwizardpy) now
@@ -1289,7 +1338,7 @@ permalink: /ChangeLog/
 
 - netedit
   - *split junction* is now working reliably in intermodal networks. Issue #4999
-  - Fixed crash when [copying edge template](netedit.md#edge_template) with lane-specific attributes. Issue #5005
+  - Fixed crash when [copying edge template](Netedit/index.md#edge_template) with lane-specific attributes. Issue #5005
   - Fixed index of created lanes when adding restricted lanes with context menu. This is partly a regression fix and partly an improvement over the earlier behavior. Issue #5006
   - Inspection contour now works correctly for spread bidirectional rail edges. Issue #5064
   - Now showing correct edge length when using *endOffset*. Issue #5066
@@ -1940,7 +1989,7 @@ permalink: /ChangeLog/
     vehicles and the reporting period can be configured. Issue #1910
   - FCD-output can now be restricted to a subset of network edges
     loaded from a file with option **--fcd-output.filter-edges.input-file** {{DT_FILE}}. The file format is that of an
-    edge selection as saved by [netedit](netedit.md).
+    edge selection as saved by [netedit](Netedit/index.md).
   - Intended departure times (attribute *depart*) and intended
     vehicle id (attribute *intended*) are now added to
     vehroute-output of public transport rides. Issue #3948
@@ -2279,101 +2328,52 @@ permalink: /ChangeLog/
 
 ## Older Versions
 
-- [Changes from Version 0.31.0 to Version
-  0.32.0](Z/Changes_from_Version_0.31.0_to_Version_0.32.0.md)
-- [Changes from Version 0.30.0 to Version
-  0.31.0](Z/Changes_from_Version_0.30.0_to_Version_0.31.0.md)
-- [Changes from Version 0.29.0 to Version
-  0.30.0](Z/Changes_from_Version_0.29.0_to_Version_0.30.0.md)
-- [Changes from Version 0.28.0 to Version
-  0.29.0](Z/Changes_from_Version_0.28.0_to_Version_0.29.0.md)
-- [Changes from Version 0.27.1 to Version
-  0.28.0](Z/Changes_from_Version_0.27.1_to_Version_0.28.0.md)
-- [Changes from Version 0.27.0 to Version
-  0.27.1](Z/Changes_from_Version_0.27.0_to_Version_0.27.1.md)
-- [Changes from Version 0.26.0 to Version
-  0.27.0](Z/Changes_from_Version_0.26.0_to_Version_0.27.0.md)
-- [Changes from Version 0.25.0 to Version
-  0.26.0](Z/Changes_from_Version_0.25.0_to_Version_0.26.0.md)
-- [Changes from Version 0.24.0 to Version
-  0.25.0](Z/Changes_from_Version_0.24.0_to_Version_0.25.0.md)
-- [Changes from Version 0.23.0 to Version
-  0.24.0](Z/Changes_from_Version_0.23.0_to_Version_0.24.0.md)
-- [Changes from Version 0.22.0 to Version
-  0.23.0](Z/Changes_from_Version_0.22.0_to_Version_0.23.0.md)
-- [Changes from Version 0.21.0 to Version
-  0.22.0](Z/Changes_from_Version_0.21.0_to_Version_0.22.0.md)
-- [Changes from Version 0.20.0 to Version
-  0.21.0](Z/Changes_from_Version_0.20.0_to_Version_0.21.0.md)
-- [Changes from Version 0.19.0 to Version
-  0.20.0](Z/Changes_from_Version_0.19.0_to_Version_0.20.0.md)
-- [Changes from Version 0.18.0 to Version
-  0.19.0](Z/Changes_from_Version_0.18.0_to_Version_0.19.0.md)
-- [Changes from Version 0.17.1 to Version
-  0.18.0](Z/Changes_from_Version_0.17.1_to_Version_0.18.0.md)
-- [Changes from Version 0.17.0 to Version
-  0.17.1](Z/Changes_from_Version_0.17.0_to_Version_0.17.1.md)
-- [Changes from Version 0.16.0 to Version
-  0.17.0](Z/Changes_from_Version_0.16.0_to_Version_0.17.0.md)
-- [Changes from Version 0.15.0 to Version
-  0.16.0](Z/Changes_from_Version_0.15.0_to_Version_0.16.0.md)
-- [Changes from Version 0.14.0 to Version
-  0.15.0](Z/Changes_from_Version_0.14.0_to_Version_0.15.0.md)
-- [Changes from Version 0.13.1 to Version
-  0.14.0](Z/Changes_from_Version_0.13.1_to_Version_0.14.0.md)
-- [Changes from Version 0.13.0 to Version
-  0.13.1](Z/Changes_from_Version_0.13.0_to_Version_0.13.1.md)
-- [Changes from Version 0.12.3 to Version
-  0.13.0](Z/Changes_from_Version_0.12.3_to_Version_0.13.0.md)
-- [Changes from Version 0.12.2 to Version
-  0.12.3](Z/Changes_from_Version_0.12.2_to_Version_0.12.3.md)
-- [Changes from Version 0.12.1 to Version
-  0.12.2](Z/Changes_from_Version_0.12.1_to_Version_0.12.2.md)
-- [Changes from Version 0.12.0 to Version
-  0.12.1](Z/Changes_from_Version_0.12.0_to_Version_0.12.1.md)
-- [Changes from Version 0.11.1 to Version
-  0.12.0](Z/Changes_from_Version_0.11.1_to_Version_0.12.0.md)
-- [Changes from Version 0.11.0 to Version
-  0.11.1](Z/Changes_from_Version_0.11.0_to_Version_0.11.1.md)
-- [Changes from Version 0.10.3 to Version
-  0.11.0](Z/Changes_from_Version_0.10.3_to_Version_0.11.0.md)
-- [Changes from Version 0.10.2 to Version
-  0.10.3](Z/Changes_from_Version_0.10.2_to_Version_0.10.3.md)
-- [Changes from Version 0.10.1 to Version
-  0.10.2](Z/Changes_from_Version_0.10.1_to_Version_0.10.2.md)
-- [Changes from Version 0.10.0 to Version
-  0.10.1](Z/Changes_from_Version_0.10.0_to_Version_0.10.1.md)
-- [Changes from Version 0.9.10 to Version
-  0.10.0](Z/Changes_from_Version_0.9.10_to_Version_0.10.0.md)
-- [Changes from version 0.9.9 to version
-  0.9.10](Z/Changes_from_version_0.9.9_to_version_0.9.10.md)
-- [Changes from version 0.9.8 to version
-  0.9.9](Z/Changes_from_version_0.9.8_to_version_0.9.9.md)
-- [Changes from version 0.9.7 to version
-  0.9.8](Z/Changes_from_version_0.9.7_to_version_0.9.8.md)
-- [Changes from version 0.9.6 to version
-  0.9.7](Z/Changes_from_version_0.9.6_to_version_0.9.7.md)
-- [Changes from version 0.9.5 to version
-  0.9.6](Z/Changes_from_version_0.9.5_to_version_0.9.6.md)
-- [Changes from version 0.9.3 to version
-  0.9.4](Z/Changes_from_version_0.9.3_to_version_0.9.4.md)
-- [Changes from version 0.9.2 to version
-  0.9.3](Z/Changes_from_version_0.9.2_to_version_0.9.3.md)
-- [Changes from version 0.9.1 to version
-  0.9.2](Z/Changes_from_version_0.9.1_to_version_0.9.2.md)
-- [Changes from version 0.9.0 to version
-  0.9.1](Z/Changes_from_version_0.9.0_to_version_0.9.1.md)
-- [Changes from version 0.8.x to version
-  0.9.0](Z/Changes_from_version_0.8.x_to_version_0.9.0.md)
-- [Changes from version 0.8.2.2 to version
-  0.8.3](Z/Changes_from_version_0.8.2.2_to_version_0.8.3.md)
-- [Changes from version 0.8.2.1 to version
-  0.8.2.2](Z/Changes_from_version_0.8.2.1_to_version_0.8.2.2.md)
-- [Changes from version 0.8.0.2 to version
-  0.8.2.1](Z/Changes_from_version_0.8.0.2_to_version_0.8.2.1.md)
-- [Changes from version 0.8.0.1 to version
-  0.8.0.2](Z/Changes_from_version_0.8.0.1_to_version_0.8.0.2.md)
-- [Changes from version 0.8.0 to version
-  0.8.0.1](Z/Changes_from_version_0.8.0_to_version_0.8.0.1.md)
-- [Changes from version 0.7.0 to version
-  pre0.8](Z/Changes_from_version_0.7.0_to_version_pre0.8.md)
+- [Changes to Version 0.32.0](Z/Changes_from_Version_0.31.0_to_Version_0.32.0.md)
+- [Changes to Version 0.31.0](Z/Changes_from_Version_0.30.0_to_Version_0.31.0.md)
+- [Changes to Version 0.30.0](Z/Changes_from_Version_0.29.0_to_Version_0.30.0.md)
+- [Changes to Version 0.29.0](Z/Changes_from_Version_0.28.0_to_Version_0.29.0.md)
+- [Changes to Version 0.28.0](Z/Changes_from_Version_0.27.1_to_Version_0.28.0.md)
+- [Changes to Version 0.27.1](Z/Changes_from_Version_0.27.0_to_Version_0.27.1.md)
+- [Changes to Version 0.27.0](Z/Changes_from_Version_0.26.0_to_Version_0.27.0.md)
+- [Changes to Version 0.26.0](Z/Changes_from_Version_0.25.0_to_Version_0.26.0.md)
+- [Changes to Version 0.25.0](Z/Changes_from_Version_0.24.0_to_Version_0.25.0.md)
+- [Changes to Version 0.24.0](Z/Changes_from_Version_0.23.0_to_Version_0.24.0.md)
+- [Changes to Version 0.23.0](Z/Changes_from_Version_0.22.0_to_Version_0.23.0.md)
+- [Changes to Version 0.22.0](Z/Changes_from_Version_0.21.0_to_Version_0.22.0.md)
+- [Changes to Version 0.21.0](Z/Changes_from_Version_0.20.0_to_Version_0.21.0.md)
+- [Changes to Version 0.20.0](Z/Changes_from_Version_0.19.0_to_Version_0.20.0.md)
+- [Changes to Version 0.19.0](Z/Changes_from_Version_0.18.0_to_Version_0.19.0.md)
+- [Changes to Version 0.18.0](Z/Changes_from_Version_0.17.1_to_Version_0.18.0.md)
+- [Changes to Version 0.17.1](Z/Changes_from_Version_0.17.0_to_Version_0.17.1.md)
+- [Changes to Version 0.17.0](Z/Changes_from_Version_0.16.0_to_Version_0.17.0.md)
+- [Changes to Version 0.16.0](Z/Changes_from_Version_0.15.0_to_Version_0.16.0.md)
+- [Changes to Version 0.15.0](Z/Changes_from_Version_0.14.0_to_Version_0.15.0.md)
+- [Changes to Version 0.14.0](Z/Changes_from_Version_0.13.1_to_Version_0.14.0.md)
+- [Changes to Version 0.13.1](Z/Changes_from_Version_0.13.0_to_Version_0.13.1.md)
+- [Changes to Version 0.13.0](Z/Changes_from_Version_0.12.3_to_Version_0.13.0.md)
+- [Changes to Version 0.12.3](Z/Changes_from_Version_0.12.2_to_Version_0.12.3.md)
+- [Changes to Version 0.12.2](Z/Changes_from_Version_0.12.1_to_Version_0.12.2.md)
+- [Changes to Version 0.12.1](Z/Changes_from_Version_0.12.0_to_Version_0.12.1.md)
+- [Changes to Version 0.12.0](Z/Changes_from_Version_0.11.1_to_Version_0.12.0.md)
+- [Changes to Version 0.11.1](Z/Changes_from_Version_0.11.0_to_Version_0.11.1.md)
+- [Changes to Version 0.11.0](Z/Changes_from_Version_0.10.3_to_Version_0.11.0.md)
+- [Changes to Version 0.10.3](Z/Changes_from_Version_0.10.2_to_Version_0.10.3.md)
+- [Changes to Version 0.10.2](Z/Changes_from_Version_0.10.1_to_Version_0.10.2.md)
+- [Changes to Version 0.10.1](Z/Changes_from_Version_0.10.0_to_Version_0.10.1.md)
+- [Changes to Version 0.10.0](Z/Changes_from_Version_0.9.10_to_Version_0.10.0.md)
+- [Changes to Version 0.9.10](Z/Changes_from_version_0.9.9_to_version_0.9.10.md)
+- [Changes to Version 0.9.9](Z/Changes_from_version_0.9.8_to_version_0.9.9.md)
+- [Changes to Version 0.9.8](Z/Changes_from_version_0.9.7_to_version_0.9.8.md)
+- [Changes to Version 0.9.7](Z/Changes_from_version_0.9.6_to_version_0.9.7.md)
+- [Changes to Version 0.9.6](Z/Changes_from_version_0.9.5_to_version_0.9.6.md)
+- [Changes to Version 0.9.4](Z/Changes_from_version_0.9.3_to_version_0.9.4.md)
+- [Changes to Version 0.9.3](Z/Changes_from_version_0.9.2_to_version_0.9.3.md)
+- [Changes to Version 0.9.2](Z/Changes_from_version_0.9.1_to_version_0.9.2.md)
+- [Changes to Version 0.9.1](Z/Changes_from_version_0.9.0_to_version_0.9.1.md)
+- [Changes to Version 0.9.0](Z/Changes_from_version_0.8.x_to_version_0.9.0.md)
+- [Changes to Version 0.8.3](Z/Changes_from_version_0.8.2.2_to_version_0.8.3.md)
+- [Changes to Version 0.8.2.2](Z/Changes_from_version_0.8.2.1_to_version_0.8.2.2.md)
+- [Changes to Version 0.8.2.1](Z/Changes_from_version_0.8.0.2_to_version_0.8.2.1.md)
+- [Changes to Version 0.8.0.2](Z/Changes_from_version_0.8.0.1_to_version_0.8.0.2.md)
+- [Changes to Version 0.8.0.1](Z/Changes_from_version_0.8.0_to_version_0.8.0.1.md)
+- [Changes to Version pre0.8](Z/Changes_from_version_0.7.0_to_version_pre0.8.md)

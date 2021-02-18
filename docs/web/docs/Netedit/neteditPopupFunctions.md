@@ -1,6 +1,5 @@
 ---
-title: netedit/neteditPopupFunctions
-permalink: /netedit/neteditPopupFunctions/
+title: neteditPopupFunctions
 ---
 
 # Popup-Menu Functions

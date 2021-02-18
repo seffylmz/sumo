@@ -16,6 +16,8 @@
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @author  Leonhard Luecken
+/// @author  Mirko Barthauer
+/// @author  Johannes Rummel
 /// @date    11.06.2013
 ///
 // An SSM-device logs encounters / conflicts of the carrying vehicle with other surrounding vehicles
@@ -39,6 +41,7 @@
 #include <microsim/MSEdge.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleControl.h>
+#include <microsim/MSJunctionControl.h>
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <utils/geom/Position.h>
 #include <utils/geom/GeoConvHelper.h>
@@ -88,10 +91,15 @@
 #define DEFAULT_EXTRA_TIME 5.      // in seconds, events get logged for extra time even if encounter is over
 
 // ===========================================================================
+// static members
+// ===========================================================================
+std::set<const MSEdge*> MSDevice_SSM::myEdgeFilter;
+bool MSDevice_SSM::myEdgeFilterInitialized(false);
+bool MSDevice_SSM::myEdgeFilterActive(false);
+
+// ===========================================================================
 // method definitions
 // ===========================================================================
-
-
 
 /// Nicer output for EncounterType enum
 std::ostream& operator<<(std::ostream& out, MSDevice_SSM::EncounterType type) {
@@ -226,6 +234,52 @@ MSDevice_SSM::insertOptions(OptionsCont& oc) {
 }
 
 void
+MSDevice_SSM::initEdgeFilter() {
+    myEdgeFilterInitialized = true;
+    if (OptionsCont::getOptions().isSet("device.ssm.filter-edges.input-file")) {
+        const std::string file = OptionsCont::getOptions().getString("device.ssm.filter-edges.input-file");
+        std::ifstream strm(file.c_str());
+        if (!strm.good()) {
+            throw ProcessError("Could not load names of edges for filtering SSM device output from '" + file + "'.");
+        }
+        myEdgeFilterActive = true;
+        while (strm.good()) {
+            std::string line;
+            strm >> line;
+            // maybe we're loading an edge-selection
+            if (StringUtils::startsWith(line, "edge:")) {
+                std::string edgeID = line.substr(5);
+                MSEdge* edge = MSEdge::dictionary(edgeID);
+                if (edge != nullptr) {
+                    myEdgeFilter.insert(edge);
+                }
+                else {
+                    WRITE_WARNING("Unknown edge ID '" + edgeID + "' in SSM device edge filter (" + file + "): " + line);
+                }
+            }
+            else if (StringUtils::startsWith(line, "junction:")) {
+                // get the internal edge(s) of a junction
+                std::string junctionID = line.substr(9);
+                MSJunction* junction = MSNet::getInstance()->getJunctionControl().get(junctionID);
+                if (junction != nullptr) {
+                    for (MSLane* const internalLane : junction->getInternalLanes()) {
+                        myEdgeFilter.insert(&(internalLane->getEdge()));
+                    }
+                }
+                else {
+                    WRITE_WARNING("Unknown junction ID '" + junctionID + "' in SSM device edge filter (" + file + "): " + line);
+                }
+            }
+            else if (line == "") { // ignore empty lines (mostly last line)
+            }
+            else {
+                WRITE_WARNING("Cannot interpret line in SSM device edge filter (" + file + "): " + line);
+            }
+        }
+    }
+}
+
+void
 MSDevice_SSM::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>& into) {
     if (equippedByDefaultAssignmentOptions(OptionsCont::getOptions(), "ssm", v, false)) {
         if (MSGlobals::gUseMesoSim) {
@@ -262,6 +316,11 @@ MSDevice_SSM::buildVehicleDevices(SUMOVehicle& v, std::vector<MSVehicleDevice*>&
         // Build the device (XXX: who deletes it?)
         MSDevice_SSM* device = new MSDevice_SSM(v, deviceID, file, thresholds, trajectories, range, extraTime, useGeo);
         into.push_back(device);
+
+        // Init spatial filter (once)
+        if (!myEdgeFilterInitialized) {
+            initEdgeFilter();
+        }
     }
 }
 
@@ -419,7 +478,15 @@ MSDevice_SSM::update() {
 #endif
     // Scan surroundings for other vehicles
     FoeInfoMap foes;
-    findSurroundingVehicles(*myHolderMS, myRange, foes);
+    bool scan = true;
+    if (myEdgeFilterActive) {
+        // Is the ego vehicle inside the filtered edge subset?
+        const MSEdge* egoEdge = &((*myHolderMS).getLane()->getEdge());
+        scan = myEdgeFilter.find(egoEdge) != myEdgeFilter.end();
+    }
+    if (scan) {
+        findSurroundingVehicles(*myHolderMS, myRange, foes);
+    }
 
 #ifdef DEBUG_SSM
     if (DEBUG_COND(myHolderMS)) {

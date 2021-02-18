@@ -1022,9 +1022,9 @@ MSVehicle::hasValidRouteStart(std::string& msg) {
 
 bool
 MSVehicle::hasArrived() const {
-    return (myCurrEdge == myRoute->end() - 1
+    return ((myCurrEdge == myRoute->end() - 1 || (myParameter->arrivalEdge >= 0 && getRoutePosition() >= myParameter->arrivalEdge))
             && (myStops.empty() || myStops.front().edge != myCurrEdge)
-            && myState.myPos > myArrivalPos - POSITION_EPS
+            && (myLaneChangeModel->isOpposite() ? myLane->getLength() - myState.myPos : myState.myPos) > myArrivalPos - POSITION_EPS
             && !isRemoteControlled());
 }
 
@@ -2239,7 +2239,8 @@ MSVehicle::planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVecto
         }
 
         //  check whether the vehicle is on its final edge
-        if (myCurrEdge + view + 1 == myRoute->end()) {
+        if (myCurrEdge + view + 1 == myRoute->end()
+                || (myParameter->arrivalEdge >= 0 && getRoutePosition() + view == myParameter->arrivalEdge)) {
             const double arrivalSpeed = (myParameter->arrivalSpeedProcedure == ArrivalSpeedDefinition::GIVEN ?
                                          myParameter->arrivalSpeed : laneMaxV);
             // subtract the arrival speed from the remaining distance so we get one additional driving step with arrival speed
@@ -2766,8 +2767,26 @@ MSVehicle::checkLinkLeader(const MSLink* link, const MSLane* lane, double seen,
                 std::cout << SIMTIME << " veh=" << getID() << " is blocked on link to " << link->getViaLaneOrLane()->getID() << " by pedestrian. dist=" << it->distToCrossing << "\n";
             }
 #endif
+            if (getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_JUNCTION_FOE_PROB, 0) > 0
+                    && getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_JUNCTION_FOE_PROB, 0) >= RandHelper::rand(getRNG())) {
+#ifdef DEBUG_PLAN_MOVE
+                if (DEBUG_COND) {
+                    std::cout << SIMTIME << " veh=" << getID() << " is ignoring pedestrian (jmIgnoreJunctionFoeProb)\n";
+                }
+#endif
+                continue;
+            }
             adaptToLeader(std::make_pair(this, -1), seen, lastLink, lane, v, vLinkPass, it->distToCrossing);
         } else if (isLeader(link, leader) || (*it).inTheWay) {
+            if (getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_JUNCTION_FOE_PROB, 0) > 0
+                    && getVehicleType().getParameter().getJMParam(SUMO_ATTR_JM_IGNORE_JUNCTION_FOE_PROB, 0) >= RandHelper::rand(getRNG())) {
+#ifdef DEBUG_PLAN_MOVE
+                if (DEBUG_COND) {
+                    std::cout << SIMTIME << " veh=" << getID() << " is ignoring linkLeader=" << leader->getID() << " (jmIgnoreJunctionFoeProb)\n";
+                }
+#endif
+                continue;
+            }
             if (MSGlobals::gLateralResolution > 0 &&
                     // sibling link (XXX: could also be partial occupator where this check fails)
                     &leader->getLane()->getEdge() == &lane->getEdge()) {
@@ -5079,10 +5098,24 @@ MSVehicle::updateBestLanes(bool forceRebuild, const MSLane* startLane) {
             }
         }
         index = 0;
+        bool requiredChangeRightForbidden = false;
+        int requireChangeToLeftForbidden = -1;
         for (std::vector<LaneQ>::iterator j = last.begin(); j != last.end(); ++j, ++index) {
             if ((*j).length < bestLength) {
                 (*j).bestLaneOffset = bestThisIndex - index;
+
+                if ((*j).bestLaneOffset < 0 && (!(*j).lane->allowsChangingRight(getVClass()) || requiredChangeRightForbidden)) {
+                    // this lane and all further lanes to the left cannot be used
+                    requiredChangeRightForbidden = true;
+                    (*j).length -= (*j).currentLength;
+                } else if ((*j).bestLaneOffset > 0 && !(*j).lane->allowsChangingLeft(getVClass())) {
+                    // this lane and all previous lanes to the right cannot be used
+                    requireChangeToLeftForbidden = (*j).lane->getIndex();
+                }
             }
+        }
+        for (int i = requireChangeToLeftForbidden; i >= 0; i--) {
+            last[i].length -= last[i].currentLength;
         }
     }
 #ifdef DEBUG_BESTLANES
@@ -5154,16 +5187,6 @@ MSVehicle::updateBestLanes(bool forceRebuild, const MSLane* startLane) {
                 }
             }
 
-#ifdef DEBUG_BESTLANES
-            if (DEBUG_COND) {
-                std::cout << "   edge=" << cE.getID() << "\n";
-                std::vector<LaneQ>& laneQs = clanes;
-                for (std::vector<LaneQ>::iterator j = laneQs.begin(); j != laneQs.end(); ++j) {
-                    std::cout << "     lane=" << (*j).lane->getID() << " length=" << (*j).length << " bestOffset=" << (*j).bestLaneOffset << "\n";
-                }
-            }
-#endif
-
         } else {
             // only needed in case of disconnected routes
             int bestNextIndex = 0;
@@ -5189,6 +5212,8 @@ MSVehicle::updateBestLanes(bool forceRebuild, const MSLane* startLane) {
         }
         // set bestLaneOffset for all lanes
         index = 0;
+        bool requiredChangeRightForbidden = false;
+        int requireChangeToLeftForbidden = -1;
         for (std::vector<LaneQ>::iterator j = clanes.begin(); j != clanes.end(); ++j, ++index) {
             if ((*j).length < clanes[bestThisIndex].length
                     || ((*j).length == clanes[bestThisIndex].length && abs((*j).bestLaneOffset) > abs(clanes[bestThisIndex].bestLaneOffset))
@@ -5199,9 +5224,20 @@ MSVehicle::updateBestLanes(bool forceRebuild, const MSLane* startLane) {
                     // try to move away from the lower-priority lane before it ends
                     (*j).length = (*j).currentLength;
                 }
+                if ((*j).bestLaneOffset < 0 && (!(*j).lane->allowsChangingRight(getVClass()) || requiredChangeRightForbidden)) {
+                    // this lane and all further lanes to the left cannot be used
+                    requiredChangeRightForbidden = true;
+                    (*j).length -= (*j).currentLength;
+                } else if ((*j).bestLaneOffset > 0 && !(*j).lane->allowsChangingLeft(getVClass())) {
+                    // this lane and all previous lanes to the right cannot be used
+                    requireChangeToLeftForbidden = (*j).lane->getIndex();
+                }
             } else {
                 (*j).bestLaneOffset = 0;
             }
+        }
+        for (int i = requireChangeToLeftForbidden; i >= 0; i--) {
+            clanes[i].length -= clanes[i].currentLength;
         }
 
         //vehicle with elecHybrid device prefers running under an overhead wire
@@ -5214,6 +5250,17 @@ MSVehicle::updateBestLanes(bool forceRebuild, const MSLane* startLane) {
                 }
             }
         }
+
+#ifdef DEBUG_BESTLANES
+        if (DEBUG_COND) {
+            std::cout << "   edge=" << cE.getID() << "\n";
+            std::vector<LaneQ>& laneQs = clanes;
+            for (std::vector<LaneQ>::iterator j = laneQs.begin(); j != laneQs.end(); ++j) {
+                std::cout << "     lane=" << (*j).lane->getID() << " length=" << (*j).length << " bestOffset=" << (*j).bestLaneOffset << "\n";
+            }
+        }
+#endif
+
     }
     updateOccupancyAndCurrentBestLane(startLane);
 #ifdef DEBUG_BESTLANES
@@ -5833,7 +5880,7 @@ MSVehicle::unsafeLinkAhead(const MSLane* lane) const {
         DriveItemVector::const_iterator di = myLFLinkLanes.begin();
         while (!lane->isLinkEnd(link) && seen <= dist) {
             if (!lane->getEdge().isInternal()
-                    && (((*link)->getState() == LINKSTATE_ZIPPER && seen < MSLink::ZIPPER_ADAPT_DIST)
+                    && (((*link)->getState() == LINKSTATE_ZIPPER && seen < (*link)->getFoeVisibilityDistance())
                         || !(*link)->havePriority())) {
                 // find the drive item corresponding to this link
                 bool found = false;

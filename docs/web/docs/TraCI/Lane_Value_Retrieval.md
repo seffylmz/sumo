@@ -1,6 +1,5 @@
 ---
-title: TraCI/Lane Value Retrieval
-permalink: /TraCI/Lane_Value_Retrieval/
+title: Lane Value Retrieval
 ---
 
 # Command 0xa3: Get Lane Variable

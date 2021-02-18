@@ -1,6 +1,5 @@
 ---
-title: Simulation/Shapes
-permalink: /Simulation/Shapes/
+title: Shapes
 ---
 
 # Using additional Polygons and POIs within the Simulation

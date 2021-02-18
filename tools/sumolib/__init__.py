@@ -21,6 +21,12 @@ from __future__ import absolute_import
 import os
 import sys
 import subprocess
+import gzip
+import io
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
 from xml.sax import parseString, handler
 from optparse import OptionParser, OptionGroup, Option
 
@@ -217,3 +223,14 @@ def _intTime(tStr):
 
 def _laneID2edgeID(laneID):
     return laneID[:laneID.rfind("_")]
+
+
+def open(fileOrURL, tryGZip=True, mode="rb"):
+    try:
+        if fileOrURL.startswith("http"):
+            return io.BytesIO(urlopen(fileOrURL).read())
+        if tryGZip:
+            return gzip.open(fileOrURL)
+    finally:
+        pass
+    return io.open(fileOrURL, mode=mode)

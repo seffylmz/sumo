@@ -1,6 +1,5 @@
 ---
-title: Models/Emissions
-permalink: /Models/Emissions/
+title: Emissions
 ---
 
 # Introduction

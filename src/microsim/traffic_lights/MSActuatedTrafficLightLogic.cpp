@@ -66,7 +66,9 @@ MSActuatedTrafficLightLogic::MSActuatedTrafficLightLogic(MSTLLogicControl& tlcon
         const std::map<std::string, std::string>& parameter,
         const std::string& basePath) :
     MSSimpleTrafficLightLogic(tlcontrol, id, programID, TrafficLightType::ACTUATED, phases, step, delay, parameter),
-    myLastTrySwitchTime(0) {
+    myLastTrySwitchTime(0),
+    myTraCISwitch(false)
+{
     myMaxGap = StringUtils::toDouble(getParameter("max-gap", DEFAULT_MAX_GAP));
     myPassingTime = StringUtils::toDouble(getParameter("passing-time", DEFAULT_PASSING_TIME));
     myDetectorGap = StringUtils::toDouble(getParameter("detector-gap", DEFAULT_DETECTOR_GAP));
@@ -450,6 +452,25 @@ MSActuatedTrafficLightLogic::deactivateProgram() {
     }
 }
 
+void
+MSActuatedTrafficLightLogic::changeStepAndDuration(MSTLLogicControl& tlcontrol,
+        SUMOTime simStep, int step, SUMOTime stepDuration) {
+    // do not change timing if the phase changes
+    if (step >= 0 && step != myStep) {
+        myStep = step;
+        myPhases[myStep]->myLastSwitch = MSNet::getInstance()->getCurrentTimeStep();
+        setTrafficLightSignals(simStep);
+        tlcontrol.get(getID()).executeOnSwitchActions();
+    } else if (step < 0) {
+        // TraCI requested new timing
+        mySwitchCommand->deschedule(this);
+        mySwitchCommand = new SwitchCommand(tlcontrol, this, stepDuration + simStep);
+        MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
+                mySwitchCommand, stepDuration + simStep);
+        myTraCISwitch = true;
+    }
+}
+
 SUMOTime
 MSActuatedTrafficLightLogic::trySwitch() {
     // checks if the actual phase should be continued
@@ -477,9 +498,10 @@ MSActuatedTrafficLightLogic::trySwitch() {
         std::cout << SIMTIME << " p=" << myStep << " trySwitch dGap=" << detectionGap << " multi=" << multiTarget << "\n";
     }
 #endif
-    if (detectionGap < std::numeric_limits<double>::max() && !multiTarget) {
+    if (detectionGap < std::numeric_limits<double>::max() && !multiTarget && !myTraCISwitch) {
         return duration(detectionGap);
     }
+    myTraCISwitch = false;
     // decide the next phase
     const int origStep = myStep;
     int nextStep = myStep;
@@ -590,7 +612,7 @@ MSActuatedTrafficLightLogic::decideNextPhase() {
     const auto& cands = myPhases[myStep]->nextPhases;
     // decide by priority
     // first target is the default when thre is no traffic
-    // @note: the keep the current phase, even when there is no traffic, it must be added to 'next' explicitly
+    // @note: to keep the current phase, even when there is no traffic, it must be added to 'next' explicitly
     int result = cands.front();
     int maxPrio = 0;
     SUMOTime actDuration = MSNet::getInstance()->getCurrentTimeStep() - myPhases[myStep]->myLastSwitch;

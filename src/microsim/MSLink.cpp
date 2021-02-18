@@ -61,12 +61,8 @@ const SUMOTime MSLink::myLookaheadTime = TIME2STEPS(1);
 // additional caution is needed when approaching a zipper link
 const SUMOTime MSLink::myLookaheadTimeZipper = TIME2STEPS(4);
 
-const double MSLink::ZIPPER_ADAPT_DIST(100);
-
 #define INVALID_TIME -1000
 
-// time to link in seconds below which adaptation should take place
-#define ZIPPER_ADAPT_TIME 10
 // the default safety gap when passing before oncoming pedestrians
 #define JM_CROSSING_GAP_DEFAULT 10
 
@@ -1417,10 +1413,10 @@ MSLink::getZipperSpeed(const MSVehicle* ego, const double dist, double vSafe,
         throw ProcessError("Zipper junctions with more than two conflicting lanes are not supported (at junction '"
                            + myJunction->getID() + "')");
     }
-    const SUMOTime now = MSNet::getInstance()->getCurrentTimeStep();
-    const double secondsToArrival = STEPS2TIME(arrivalTime - now);
-    if (secondsToArrival > ZIPPER_ADAPT_TIME && dist > ZIPPER_ADAPT_DIST) {
+    const double brakeGap = ego->getCarFollowModel().brakeGap(ego->getSpeed(), ego->getCarFollowModel().getMaxDecel(), 0);
+    if (dist > MAX2(myFoeVisibilityDistance, brakeGap)) {
 #ifdef DEBUG_ZIPPER
+        const SUMOTime now = MSNet::getInstance()->getCurrentTimeStep();
         if (DEBUG_COND_ZIPPER) DEBUGOUT(SIMTIME << " getZipperSpeed ego=" << ego->getID()
                                             << " dist=" << dist << " ignoring foes (arrival in " << STEPS2TIME(arrivalTime - now) << ")\n")
 #endif
@@ -1430,6 +1426,7 @@ MSLink::getZipperSpeed(const MSVehicle* ego, const double dist, double vSafe,
     if (DEBUG_COND_ZIPPER) DEBUGOUT(SIMTIME << " getZipperSpeed ego=" << ego->getID()
                                         << " egoAT=" << arrivalTime
                                         << " dist=" << dist
+                                        << " brakeGap=" << brakeGap
                                         << " vSafe=" << vSafe
                                         << " numFoes=" << collectFoes->size()
                                         << "\n")
@@ -1486,7 +1483,8 @@ MSLink::getZipperSpeed(const MSVehicle* ego, const double dist, double vSafe,
 
         const double vMax = ego->getLane()->getVehicleMaxSpeed(ego);
         const double vAccel = ego->getCarFollowModel().estimateSpeedAfterDistance(dist, ego->getSpeed(), ego->getCarFollowModel().getMaxAccel());
-        const double vEnd = MIN3(vMax, vAccel, uEnd);
+        const double vDecel = ego->getCarFollowModel().estimateSpeedAfterDistance(dist, ego->getSpeed(), ego->getCarFollowModel().getMaxDecel());
+        const double vEnd = MIN3(vMax, vAccel, MAX2(uEnd, vDecel));
         const double vAvg = (ego->getSpeed() + vEnd) / 2;
         const double te0 = dist / MAX2(NUMERICAL_EPS, vAvg);
         const double te = MAX2(1.0, ceil((te0) / TS) * TS);
@@ -1527,6 +1525,7 @@ MSLink::getZipperSpeed(const MSVehicle* ego, const double dist, double vSafe,
                                              << " aSafeGap=" << a
                                              << " vMax=" << vMax
                                              << " vAccel=" << vAccel
+                                             << " vDecel=" << vDecel
                                              << " vEnd=" << vEnd
                                              << " vSafeGap=" << vSafeGap
                                              << " vFollow=" << vFollow

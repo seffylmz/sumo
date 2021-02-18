@@ -50,7 +50,8 @@ Reservation::getID() const {
 
 MSDispatch::MSDispatch(const std::map<std::string, std::string>& params) :
     Parameterised(params),
-    myOutput(nullptr)
+    myOutput(nullptr),
+    myReservationCount(0)
 {
     const std::string opt = "device.taxi.dispatch-algorithm.output";
     if (OptionsCont::getOptions().isSet(opt)) {
@@ -89,7 +90,7 @@ MSDispatch::addReservation(MSTransportable* person,
         }
     }
     if (!added) {
-        Reservation* newRes = new Reservation({person}, reservationTime, pickupTime, from, fromPos, to, toPos, group);
+        Reservation* newRes = new Reservation(toString(myReservationCount++), {person}, reservationTime, pickupTime, from, fromPos, to, toPos, group);
         myGroupReservations[group].push_back(newRes);
         result = newRes;
     }
@@ -118,6 +119,12 @@ MSDispatch::getReservations() {
 }
 
 
+std::vector<const Reservation*>
+MSDispatch::getRunningReservations() {
+    return std::vector<const Reservation*>(myRunningReservations.begin(), myRunningReservations.end());
+}
+
+
 void
 MSDispatch::servedReservation(const Reservation* res) {
     if (myRunningReservations.count(res)) {
@@ -132,6 +139,7 @@ MSDispatch::servedReservation(const Reservation* res) {
         throw ProcessError("Inconsistent group reservations (2).");
     }
     myRunningReservations.insert(*it2);
+    const_cast<Reservation*>(*it2)->state = Reservation::ASSIGNED;
     it->second.erase(it2);
     if (it->second.empty()) {
         myGroupReservations.erase(it);

@@ -40,8 +40,7 @@
 class MSDispatch_TraCI : public MSDispatch {
 public:
     MSDispatch_TraCI(const std::map<std::string, std::string>& params) :
-        MSDispatch(params),
-        myReservationCount(0)
+        MSDispatch(params)
     { }
 
     /// @brief add a new reservation
@@ -56,14 +55,17 @@ public:
     /// @brief do nothing (dispatch happens via TraCI calls)
     virtual void computeDispatch(SUMOTime /*now*/, const std::vector<MSDevice_Taxi*>& /*fleet*/) {}
 
-    std::string getReservationID(Reservation* res);
-
     /// @brief trigger taxi dispatch. @note: method exists so subclasses can inject code at this point (ride sharing)
     void interpretDispatch(MSDevice_Taxi* taxi, const std::vector<std::string>& reservationsIDs);
 
+    /// @brief split existing reservations and return the new reservation id
+    std::string splitReservation(std::string resID, std::vector<std::string> personIDs);
+
+    /// @brief erase reservation from storage
+    void fulfilledReservation(const Reservation* res);
+
 private:
-    int myReservationCount;
-    StringBijection<Reservation*> myReservationLookup;
+    StringBijection<const Reservation*> myReservationLookup;
 
 private:
     /// @brief Invalidated assignment operator.

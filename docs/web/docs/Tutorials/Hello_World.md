@@ -1,6 +1,5 @@
 ---
-title: Tutorials/Hello World
-permalink: /Tutorials/Hello_World/
+title: Hello World
 ---
 
 !!! caution
@@ -8,7 +7,7 @@ permalink: /Tutorials/Hello_World/
 
 ## Requirements
 
-- [sumo-gui](../sumo-gui.md) and [netedit](../netedit.md) version ≥ 1.4.0
+- [sumo-gui](../sumo-gui.md) and [netedit](../Netedit/index.md) version ≥ 1.4.0
 
 ## Introduction
 
@@ -22,15 +21,15 @@ In order to perform a very basic simulation in SUMO, it is required to have at l
 - SUMO configuration file
 
 In SUMO a street network consists of nodes
-(junctions) and edges (streets connecting the junctions). In this tutorial we will use [netedit](../netedit.md) to create our basic net.
+(junctions) and edges (streets connecting the junctions). In this tutorial we will use [netedit](../Netedit/index.md) to create our basic net.
 
-Routes are defined by connecting edges and assigning Vehicles that pass through them. In this tutorial we will use [netedit](../netedit.md) to create this.
+Routes are defined by connecting edges and assigning Vehicles that pass through them. In this tutorial we will use [netedit](../Netedit/index.md) to create this.
 
 The SUMO Configuration file is where certain options and all files (Network, Route, etc.) are being listed, so that SUMO can find and use them.
 
 ## Creating the Network in netedit
 
-Open [netedit](../netedit.md) and create a new network by selecting *File-\>New Network* or using the shortcut `Ctrl + N`
+Open [netedit](../Netedit/index.md) and create a new network by selecting *File-\>New Network* or using the shortcut `Ctrl + N`
 
 
 Make sure that **Network** is selected.
@@ -135,6 +134,6 @@ That's it! You have your first simulation scenario in SUMO :)
 
 ## Further Reading
 
-Do you want to do this exercise again, but using a text editor instead of the netedit graphic interface? Visit [this tutorial](../Tutorials/Hello_SUMO.md).
+Do you want to do this exercise again, but using a text editor instead of the netedit graphic interface? Visit [this tutorial](Hello_SUMO.md).
 
-More [Tutorials](../Tutorials.md).
+More [Tutorials](index.md).

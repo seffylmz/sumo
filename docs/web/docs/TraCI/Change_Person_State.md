@@ -1,6 +1,5 @@
 ---
-title: TraCI/Change Person State
-permalink: /TraCI/Change_Person_State/
+title: Change Person State
 ---
 
 ## Command 0xce: Change Person State

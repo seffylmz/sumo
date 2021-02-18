@@ -1,6 +1,5 @@
 ---
-title: netedit/editmodes
-permalink: /netedit/editmodes/
+title: editmodes
 ---
 
 # Edit modes

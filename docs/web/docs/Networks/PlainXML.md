@@ -1,6 +1,5 @@
 ---
-title: Networks/PlainXML
-permalink: /Networks/PlainXML/
+title: PlainXML
 ---
 
 **SUMO**-Networks have two representations:
@@ -272,7 +271,7 @@ The right-of-way rules are indicated in [sumo-gui by the colored bars at the end
 *junctions-\>show lane to lane connections*.
 
 The right-of-way relationship between any two connections ca be shown in
-[netedit using right-of-way mode](../netedit.md#right-of-way).
+[netedit using right-of-way mode](../Netedit/index.md#right-of-way).
 
 If a vehicle is braking in the simulation, the responsible foe vehicle
 (if any) can also be [identified directly](../sumo-gui.md#right_of_way).
@@ -285,7 +284,7 @@ If a vehicle is braking in the simulation, the responsible foe vehicle
 Sometimes your network may contain nodes which are very close together
 forming a big cluster. This happens frequently when [Importing Networks from OpenStreetMap](../Networks/Import/OpenStreetMap.md).
 [netconvert](../netconvert.md) supports the option **--junctions.join** to find such
-clusters and join them into a big and well shaped junction. Junctions can also be joined manually with [netedit](../netedit.md#processing_menu_options). It is even possible to [undo joins](../netedit.md#junction) that were computed automatically.
+clusters and join them into a big and well shaped junction. Junctions can also be joined manually with [netedit](../Netedit/index.md#processing_menu_options). It is even possible to [undo joins](../Netedit/index.md#junction) that were computed automatically.
 
 ### Reasons for joining node clusters
 Within an intersection, special rules of traffic do apply. When modelling an intersection by a cluster of nodes, the edges within the cluster are regular roads where these rules cannot be applied. 
@@ -549,6 +548,7 @@ The definition of a lane contains the following optional attributes:
 | width          | float                                                                                                               | width in meters (used for visualization)                                                                                                   |
 | endOffset      | float \>= 0                                                                                                         | Move the stop line back from the intersection by the given amount (effectively shortening the lane and locally enlarging the intersection) |
 | shape          | List of positions; each position is encoded in x,y or x,y,z in meters (do not separate the numbers with a space\!). | A custom shape for this lane.<br><br>**Note:** The lane lengths will be averaged in the generated network. Lane-changing will ignore gaps between lanes.     |
+type          | string | a custom type description for this lane (only informational) |
 
 See "Vehicle Classes" for further information about [allowed vehicle classes](../Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md#abstract_vehicle_class)
 and their usage.
@@ -845,6 +845,8 @@ Here, a connection from the edge's "*<FROM_EDGE_ID\>*" lane with the number *<IN
 | uncontrolled   | bool  | false   | if set to *true*, This connection will not be TLS-controlled despite its node being controlled. |
 | allow     | list of vehicle classes    |    | set custom permissions independent of from-lane and to-lane permissions. |
 | disallow  | list of vehicle classes    |    | set custom permissions independent of from-lane and to-lane permissions. |
+| changeLeft        | list of vehicle classes | List of vehicle classes that may change left from this lane |
+| changeRight       | list of vehicle classes | List of vehicle classes that may change right from this lane |
 
 If you only wish to **remove** a connection it may be convenient to use
 the following xml definition: `<delete from="<FROM_EDGE_ID>" to="<T0_EDGE_ID>"/>`. The attributes are the same as for the

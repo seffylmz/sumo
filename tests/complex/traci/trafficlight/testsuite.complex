@@ -1,5 +1,11 @@
+# rail signal constraint retrieval and modification
+constraints
+
 # Tests the trafficlight API
 trafficlight
+
+# test offset manipulation
+offset
 
 # Tests the trafficlight API
 railsignal_state

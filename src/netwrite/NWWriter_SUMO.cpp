@@ -349,10 +349,12 @@ NWWriter_SUMO::writeInternalEdges(OutputDevice& into, const NBEdgeCont& ec, cons
                 const NBEdge::Lane& successor = k.toEdge->getLanes()[k.toLane];
                 SVCPermissions permissions = (k.permissions != SVC_UNSPECIFIED) ? k.permissions : (
                                                  successor.permissions & e->getPermissions(k.fromLane));
+                SVCPermissions changeLeft = k.changeLeft != SVC_UNSPECIFIED ? k.changeLeft : SVCAll;
+                SVCPermissions changeRight = k.changeRight != SVC_UNSPECIFIED ? k.changeRight : SVCAll;
                 const double width = n.isConstantWidthTransition() && e->getNumLanes() > k.toEdge->getNumLanes() ? e->getLaneWidth(k.fromLane) : successor.width;
                 writeLane(into, k.getInternalLaneID(), k.vmax,
                           permissions, successor.preferred,
-                          SVCAll, SVCAll, // #XXX todo
+                          changeLeft, changeRight,
                           NBEdge::UNSPECIFIED_OFFSET, NBEdge::UNSPECIFIED_OFFSET,
                           std::map<int, double>(), width, k.shape, &k,
                           k.length, k.internalLaneIndex, oppositeLaneID[k.getInternalLaneID()], "");
@@ -529,10 +531,10 @@ NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& lID,
     if (type != "") {
         into.writeAttr(SUMO_ATTR_TYPE, type);
     }
-    if (changeLeft != SVCAll) {
+    if (changeLeft != SVC_UNSPECIFIED && changeLeft != SVCAll) {
         into.writeAttr(SUMO_ATTR_CHANGE_LEFT, getVehicleClassNames(changeLeft));
     }
-    if (changeRight != SVCAll) {
+    if (changeRight != SVC_UNSPECIFIED && changeRight != SVCAll) {
         into.writeAttr(SUMO_ATTR_CHANGE_RIGHT, getVehicleClassNames(changeRight));
     }
     if (stopOffsets.size() != 0) {
@@ -662,11 +664,15 @@ NWWriter_SUMO::writeInternalNodes(OutputDevice& into, const NBNode& n) {
             std::string incLanes = (*k).getInternalLaneID();
             std::vector<std::string> foeIDs;
             for (std::string incLane : (*k).foeIncomingLanes) {
-                incLanes += " " + incLane;
-                if (incLane[0] == ':' && viaIDs[incLane] != "") {
+                if (incLane[0] == ':') {
                     // intersecting left turns
-                    foeIDs.push_back(viaIDs[incLane] + "_0");
+                    const int index = StringUtils::toInt(incLane.substr(1));
+                    incLane = internalLaneIDs[index];
+                    if (viaIDs[incLane] != "") {
+                        foeIDs.push_back(viaIDs[incLane] + "_0");
+                    }
                 }
+                incLanes += " " + incLane;
             }
             into.writeAttr(SUMO_ATTR_INCLANES, incLanes);
             const std::vector<int>& foes = (*k).foeInternalLinks;
@@ -703,6 +709,12 @@ NWWriter_SUMO::writeConnection(OutputDevice& into, const NBEdge& from, const NBE
         }
         if (c.permissions != SVC_UNSPECIFIED) {
             writePermissions(into, c.permissions);
+        }
+        if (c.changeLeft != SVC_UNSPECIFIED && c.changeLeft != SVCAll) {
+            into.writeAttr(SUMO_ATTR_CHANGE_LEFT, getVehicleClassNames(c.changeLeft));
+        }
+        if (c.changeRight != SVC_UNSPECIFIED && c.changeRight != SVCAll) {
+            into.writeAttr(SUMO_ATTR_CHANGE_RIGHT, getVehicleClassNames(c.changeRight));
         }
         if (c.speed != NBEdge::UNSPECIFIED_SPEED) {
             into.writeAttr(SUMO_ATTR_SPEED, c.speed);

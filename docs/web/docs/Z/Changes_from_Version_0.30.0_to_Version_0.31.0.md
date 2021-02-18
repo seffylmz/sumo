@@ -1,9 +1,8 @@
 ---
-title: Z/Changes from Version 0.30.0 to Version 0.31.0
-permalink: /Z/Changes_from_Version_0.30.0_to_Version_0.31.0/
+title: Changes from Version 0.30.0 to Version 0.31.0
 ---
 
-## Version 0.31.0 (14.09.2017)
+**Release date: 14.09.2017**
 
 ### Bugfixes
 
@@ -284,7 +283,7 @@ permalink: /Z/Changes_from_Version_0.30.0_to_Version_0.31.0/
     scale the output network. #3351
 
 - netedit
-  - [POIs and Polygons](../netedit.md#pois_and_polygons) can
+  - [POIs and Polygons](../Netedit/index.md#pois_and_polygons) can
     now be defined with a new editing mode. #1667
   - Minimum and maximum phase duration for actuated traffic lights
     can now be defined. #831

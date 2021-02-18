@@ -22,6 +22,7 @@
 
 #include <utils/common/SUMOTime.h>
 #include <utils/foxtools/FXSynchQue.h>
+#include <utils/foxtools/FXRecentNetworks.h>
 #include <utils/foxtools/FXThreadEvent.h>
 #include <utils/foxtools/MFXInterThreadEventClient.h>
 #include <utils/geom/Position.h>
@@ -122,7 +123,7 @@ struct GNEApplicationWindowHelper {
         void buildRecentFiles(FXMenuPane* fileMenu);
 
         /// @brief List of recent nets and config files
-        FXRecentFiles myRecentNetsAndConfigs;
+        FXRecentNetworks myRecentNetsAndConfigs;
 
     private:
         /// @brief pointer to current GNEApplicationWindow
@@ -378,7 +379,7 @@ struct GNEApplicationWindowHelper {
             void hideNetworkViewOptionsMenuChecks();
 
             /// @brief menu check to show grid button
-            FXMenuCheckIcon* menuCheckShowGrid;
+            FXMenuCheckIcon* menuCheckToogleGrid;
 
             /// @brief menu check to draw vehicles in begin position or spread in lane
             FXMenuCheckIcon* menuCheckDrawSpreadVehicles;
@@ -416,6 +417,9 @@ struct GNEApplicationWindowHelper {
             /// @brief check checkable to create auto create opposite edge
             FXMenuCheckIcon* menuCheckAutoOppositeEdge;
 
+            /// @brief separator
+            FXMenuSeparator* separator;
+
         private:
             /// @brief pointer to current GNEApplicationWindows
             GNEApplicationWindow* myGNEApp;
@@ -440,7 +444,7 @@ struct GNEApplicationWindowHelper {
             void hideDemandViewOptionsMenuChecks();
 
             /// @brief menu check to show grid button
-            FXMenuCheckIcon* menuCheckShowGrid;
+            FXMenuCheckIcon* menuCheckToogleGrid;
 
             /// @brief menu check to draw vehicles in begin position or spread in lane
             FXMenuCheckIcon* menuCheckDrawSpreadVehicles;
@@ -456,6 +460,9 @@ struct GNEApplicationWindowHelper {
 
             /// @brief menu check for lock Person
             FXMenuCheckIcon* menuCheckLockPerson;
+
+            /// @brief separator
+            FXMenuSeparator* separator;
 
         private:
             /// @brief pointer to current GNEApplicationWindows
@@ -488,6 +495,9 @@ struct GNEApplicationWindowHelper {
 
             /// @brief menu check to show Demand Elements
             FXMenuCheckIcon* menuCheckShowDemandElements;
+
+            /// @brief separator
+            FXMenuSeparator* separator;
 
         private:
             /// @brief pointer to current GNEApplicationWindows
@@ -535,9 +545,6 @@ struct GNEApplicationWindowHelper {
 
         /// @brief FXMenuCommand for edit view port
         FXMenuCommand* editViewPort;
-
-        /// @brief FXMenuCommand for toogle grid
-        FXMenuCommand* toogleGrid;
 
         /// @brief FXMenuCommand for clear Front element
         FXMenuCommand* clearFrontElement;

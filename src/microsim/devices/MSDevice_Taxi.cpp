@@ -471,10 +471,18 @@ MSDevice_Taxi::notifyLeave(SUMOTrafficObject& /*veh*/, double /*lastPos*/, MSMov
 }
 
 void
-MSDevice_Taxi::customerEntered(const MSTransportable* /*t*/) {
+MSDevice_Taxi::customerEntered(const MSTransportable* t) {
     myState |= OCCUPIED;
     if (!hasFuturePickup()) {
         myState &= ~PICKUP;
+    }
+    for (const Reservation* res : myCurrentReservations) {
+        for (const MSTransportable* cand : res->persons) {
+            if (cand == t) {
+                const_cast<Reservation*>(res)->state = Reservation::ONBOARD;
+                break;
+            }
+        }
     }
 }
 
@@ -538,6 +546,8 @@ MSDevice_Taxi::getParameter(const std::string& key) const {
         return toString(STEPS2TIME(myOccupiedTime));
     } else if (key == "state") {
         return toString(myState);
+    } else if (key == "currentCustomers") {
+        return joinNamedToStringSorting(myCustomers, " ");
     }
     throw InvalidArgument("Parameter '" + key + "' is not supported for device of type '" + deviceName() + "'");
 }

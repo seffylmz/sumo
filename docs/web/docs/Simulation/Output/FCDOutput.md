@@ -1,6 +1,5 @@
 ---
-title: Simulation/Output/FCDOutput
-permalink: /Simulation/Output/FCDOutput/
+title: FCDOutput
 ---
 
 The FCD (floating car data) export contains location and speed along
@@ -108,7 +107,7 @@ Output can be restricted to specific vehicle types or vehicle ids by [controllin
 
 ### Restricting the locations
 Output can be restricted to a specific set of edges by loading a list of edges from a file with option **--fcd-output.filter-edges.input-file** {{DT_FILE}}. The file format for
-this is the same as the one when saving selections in  [netedit](../../netedit.md):
+this is the same as the one when saving selections in  [netedit](../../Netedit/index.md):
 ```
 edge:id1
 edge:id2

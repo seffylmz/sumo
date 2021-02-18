@@ -812,6 +812,12 @@ TRACI_CONST int TL_NEXT_SWITCH = 0x2d;
 // current state, using external signal names (get: traffic lights)
 TRACI_CONST int TL_EXTERNAL_STATE = 0x2e;
 
+// add/get rail signal constraints
+TRACI_CONST int TL_CONSTRAINT = 0x2f;
+
+// switch order of trains encoded in rail signal constraints (set: traffic lights)
+TRACI_CONST int TL_CONSTRAINT_REVERSE = 0x32;
+
 // outgoing link number (get: lanes)
 TRACI_CONST int LANE_LINK_NUMBER = 0x30;
 
@@ -1259,6 +1265,9 @@ TRACI_CONST int REMOVE_STAGE = 0xc5;
 
 // retrieve taxi reservation (person)
 TRACI_CONST int VAR_TAXI_RESERVATIONS = 0xc6;
+
+// manipulate taxi reservation (person)
+TRACI_CONST int SPLIT_TAXI_RESERVATIONS = 0xc7;
 
 // sample last route (routeprobe)
 TRACI_CONST int VAR_SAMPLE_LAST = 0x20;

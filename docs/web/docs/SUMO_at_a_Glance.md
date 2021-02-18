@@ -1,6 +1,5 @@
 ---
 title: SUMO at a Glance
-permalink: /SUMO_at_a_Glance/
 ---
 
 ## About
@@ -49,7 +48,7 @@ simulation (network and routes import, DUA, simulation)
   - Only standard C++ and portable libraries are used
   - Packages for Windows main Linux distributions exist
 - High interoperability through usage of XML-data only
-- Open source ([EPL](https://eclipse.org/legal/epl-v20.html))
+- Open source ([EPL 2.0](https://eclipse.org/legal/epl-v20.html))
 
 ## Usage Examples
 
@@ -72,7 +71,7 @@ The package includes:
 | [sumo](sumo.md)                             | The microscopic simulation with no visualization; command line application                                         |
 | [sumo-gui](sumo-gui.md)                     | The microscopic simulation with a graphical user interface                                                        |
 | [netconvert](netconvert.md)                 | Network importer and generator; reads road networks from different formats and converts them into the SUMO-format   |
-| [netedit](netedit.md)                       | A graphical network editor.                                                                                  |
+| [netedit](Netedit/index.md)                       | A graphical network editor.                                                                                  |
 | [netgenerate](netgenerate.md)               | Generates abstract networks for the SUMO-simulation                    |
 | [duarouter](duarouter.md)                   | Computes the fastest routes through the network, importing different types of demand description. Performs the DUA      |
 | [jtrrouter](jtrrouter.md)                   | Computes routes using junction turning percentages                                                               |
@@ -83,10 +82,10 @@ The package includes:
 | [activitygen](activitygen.md)               | Generates a demand based on mobility wishes of a modeled population                                |
 | [emissionsMap](Tools/Emissions.md#emissionsmap)          | Generates an emission map                                                                   |
 | [emissionsDrivingCycle](Tools/Emissions.md#emissionsdrivingcycle) | Calculates emission values based on a given driving cycle                           |
-| [Additional Tools](Tools.md)           | There are some tasks for which writing a large application is not necessary. Several solutions for different problems may be covered by these tools.            |
+| [Additional Tools](Tools/index.md)           | There are some tasks for which writing a large application is not necessary. Several solutions for different problems may be covered by these tools.            |
 
 Several parties have extended the SUMO package during their work and
-submitted their code. These contributions are usually not tested and may be outdated. Find a list of all Contributions [here](Contributed.md).
+submitted their code. These contributions are usually not tested and may be outdated. Find a list of all Contributions [here](Contributed/index.md).
 
 ## History
 

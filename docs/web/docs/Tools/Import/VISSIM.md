@@ -1,6 +1,5 @@
 ---
-title: Tools/Import/VISSIM
-permalink: /Tools/Import/VISSIM/
+title: VISSIM
 ---
 
 # Extension tools to import features from VISSIM \*.inpx files

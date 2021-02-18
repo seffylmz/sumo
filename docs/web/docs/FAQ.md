@@ -1,7 +1,7 @@
 ---
 title: FAQ
-permalink: /FAQ/
 ---
+
 ## General
 
 ### What is SUMO?
@@ -40,7 +40,7 @@ permalink: /FAQ/
 
 ### Are there any tutorials or ready to use scenarios?
 
-  The main page for [tutorials](Tutorials.md) lists several for beginners and advanced topics, there 
+  The main page for [tutorials](Tutorials/index.md) lists several for beginners and advanced topics, there 
   are also some [videos on YouTube](https://www.youtube.com/results?search_query=sumo+simulation+tutorial).
   For scenarios have a look at our [scenario page](Data/Scenarios.md).
 
@@ -206,7 +206,7 @@ in your domain).
 you may appear to be lazy).
   - read the FAQ
   - read the documentation
-  - check out the [Tutorials](Tutorials.md)
+  - check out the [Tutorials](Tutorials/index.md)
   - do a web search (past questions and answers from the mailing
     list can be found by google)
 - Do not ask the same thing twice in a short span of time. If you are
@@ -389,7 +389,7 @@ and simply type `git pull`.
 ### How to get an older version of SUMO?
 
   see
-  [Downloads\#SUMO_-_older_releases](Downloads.md#sumo_-_older_releases).
+  [Alternative download and older releases](Downloads.md#sumo_-_alternative_download_and_older_releases).
   On Linux, older versions [must be built from source](Installing/Linux_Build.md).
 
 ### How to check out revision 5499 (or any other outdated sumo)?
@@ -403,14 +403,8 @@ and simply type `git pull`.
 
 ### Which platforms are supported?
 
-  We compile regularly under Windows 7 and Windows Server 2012 R2
-  using Visual Studio 2013 (32bit and 64bit) and have daily builds on
-  Linux (openSUSE Leap 42.1 (64bit) and openSUSE 13.1 (32bit)).
-  Furthermore there are nightly builds on the [open build service](https://build.opensuse.org/package/show?package=sumo_nightly&project=home%3Abehrisch).
-  SUMO can be installed on macOS via Homebrew (or built from source).
-  We would be happy to hear about successful builds on other
-  platforms. We already heard about successful builds on Solaris and
-  Cygwin.
+  We compile regularly under Windows 10 using Visual Studio 2019 and have daily builds on
+  Linux. SUMO can also be installed on macOS via Homebrew (or built from source).
 
 ### Can I run multiple versions of SUMO alongside each other?
 
@@ -427,7 +421,7 @@ and simply type `git pull`.
 
 ### Troubleshooting
 
-  See [Installing/Linux Build](Installing/Linux_Build.md) or
+  See [Installing/Linux Build](Installing/Linux_Build.md), [Installing/macOS Build](Installing/MacOS_Build.md) or
   [Installing/Windows Build](Installing/Windows_Build.md).
 
 ### Uninstalling
@@ -539,12 +533,12 @@ At line/column 10/46
 - By having right-of-way rules that work somewhat differently than
   expected (this part of the *.net.xml* file is particularly complex)
 - By losing properties when later being edited with
-  [netedit](netedit.md)
+  [netedit](Netedit/index.md)
 - By failing to work with updated versions of [sumo](sumo.md)
 
 If you need to modify a network there are several possibilities:
 
-1.  Edit the network with [netedit](netedit.md)
+1.  Edit the network with [netedit](Netedit/index.md)
 2.  Modify the original input files and then rebuild the net with
     [netconvert](netconvert.md).
 3.  Patch the network with [netconvert](netconvert.md). You can
@@ -632,7 +626,7 @@ use the Linux version or download the [nightly-extra version](https://sumo.dlr.d
 
 ### How can I obtain netedit?
 
-  [netedit](netedit.md) is available as part of the regular
+  [netedit](Netedit/index.md) is available as part of the regular
   distribution since version 0.25.0.
 
 ## Traffic Demand Generation
@@ -779,13 +773,13 @@ registered
 
 ### How do I change the duration of cycles and phases?
 
-  use [netedit](netedit.md#traffic_lights)
+  use [netedit](Netedit/index.md#traffic_lights)
 
 ### I can not see a vehicle moving in my simulation
 
   There may be several reasons why you do not see the cars.
 
-- The simulation is not yet running (click the "play" button (![Image:play.gif](images/Play.gif "Image:play.gif")), see [sumo-gui#Usage_Description](sumo-gui.md#usage_description))
+- The simulation is not yet running (click the "play" button (![Play.gif](images/Play.gif "Play")), see [sumo-gui#Usage_Description](sumo-gui.md#usage_description))
 - If your simulation area is too big, cars will not be displayed
   unless you zoom into the net. Cars are simply to small when looking
   from far away. To change this you may also set the option *Draw with

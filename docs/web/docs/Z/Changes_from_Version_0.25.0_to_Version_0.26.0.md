@@ -1,9 +1,8 @@
 ---
-title: Z/Changes from Version 0.25.0 to Version 0.26.0
-permalink: /Z/Changes_from_Version_0.25.0_to_Version_0.26.0/
+title: Changes from Version 0.25.0 to Version 0.26.0
 ---
 
-## Version 0.26.0 (19.04.2016)
+**Release date: 19.04.2016**
 
 ### Bugfixes
 
@@ -332,7 +331,7 @@ permalink: /Z/Changes_from_Version_0.25.0_to_Version_0.26.0/
     state](../Simulation/SaveAndLoad.md)
   - [Arrival parameters are now
     documented](../Definition_of_Vehicles,_Vehicle_Types,_and_Routes.md#a_vehicles_depart_and_arrival_parameter)
-  - Extended [netedit](../netedit.md) documentation.
+  - Extended [netedit](../Netedit/index.md) documentation.
   - Described [netdiff.py](../Tools/Net.md#netdiffpy), a tool
     for comparing networks which was undocumented for a long time.
   - Added page on [modelling networks for motorway simulation. In

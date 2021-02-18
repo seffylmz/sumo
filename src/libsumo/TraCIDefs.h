@@ -544,9 +544,10 @@ public:
                      double departPos,
                      double arrivalPos,
                      double depart,
-                     double reservationTime) :
+                     double reservationTime,
+                     int state) :
         id(id), persons(persons), group(group), fromEdge(fromEdge), toEdge(toEdge), departPos(departPos), arrivalPos(arrivalPos),
-        depart(depart), reservationTime(reservationTime) {}
+        depart(depart), reservationTime(reservationTime), state(state) {}
     /// @brief The id of the taxi reservation (usable for traci.vehicle.dispatchTaxi)
     std::string id;
     /// @brief The persons ids that are part of this reservation
@@ -565,6 +566,8 @@ public:
     double depart;
     /// @brief time when the reservation was made
     double reservationTime;
+    /// @brief the state of this reservation
+    int state;
 };
 
 struct TraCICollision {
@@ -581,6 +584,20 @@ struct TraCICollision {
     std::string lane;
     /// @brief The position of the collision along the lane
     double pos;
+};
+
+
+struct TraCISignalConstraint {
+    /// @brief the tripId or vehicle id of the train that is constrained
+    std::string tripId;
+    /// @brief the tripId or vehicle id of the train that must pass first
+    std::string foeId;
+    /// @brief the tlsID of the rail signla that the foe must pass first
+    std::string foeSignal;
+    /// @brief the number of trains that must be recorded at the foeSignal
+    int limit;
+    /// @brief the type of constraint (predecessor:0, insertionPredecessor:1)
+    int type;
 };
 
 }

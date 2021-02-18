@@ -174,8 +174,8 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_Y_REDO,                         GNEApplicationWindow::onCmdRedo),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_Y_REDO,                         GNEApplicationWindow::onUpdRedo),
     // Network view options
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWGRID,             GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWGRID,             GNEApplicationWindow::onUpdToogleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID,           GNEApplicationWindow::onCmdToogleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID,           GNEApplicationWindow::onUpdToogleViewOption),
     FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES,   GNEApplicationWindow::onCmdToogleViewOption),
     FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES,   GNEApplicationWindow::onUpdToogleViewOption),
     FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWDEMANDELEMENTS,   GNEApplicationWindow::onCmdToogleViewOption),
@@ -327,6 +327,7 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_CTRL_SHIFT_V_FORCESAVEDEMANDELEMENTS,    GNEApplicationWindow::onCmdForceSaveDemandElements),
     FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_CTRL_SHIFT_W_FORCESAVEDATAELEMENTS,      GNEApplicationWindow::onCmdForceSaveDataElements),
     FXMAPFUNC(SEL_COMMAND,              MID_HOTKEY_SHIFT_F12_FOCUSUPPERELEMENT,             GNEApplicationWindow::onCmdFocusFrame),
+    FXMAPFUNC(SEL_UPDATE,               MID_GNE_MODESMENUTITLE,                             GNEApplicationWindow::onUpdRequiereViewNet),
 };
 
 // Object implementation
@@ -353,6 +354,7 @@ GNEApplicationWindow::GNEApplicationWindow(FXApp* a, const std::string& configPa
     myLocatorMenu(nullptr),
     myWindowsMenu(nullptr),
     myHelpMenu(nullptr),
+    myModesMenuTitle(nullptr),
     myMessageWindow(nullptr),
     myMainSplitter(nullptr),
     hadDependentBuild(false),
@@ -760,6 +762,10 @@ GNEApplicationWindow::onCmdReload(FXObject*, FXSelector, void*) {
             myModesMenuCommands.networkMenuCommands.hideNetworkMenuCommands();
             myModesMenuCommands.demandMenuCommands.hideDemandMenuCommands();
             myModesMenuCommands.dataMenuCommands.hideDataMenuCommands();
+            // hide view options
+            myEditMenuCommands.networkViewOptions.hideNetworkViewOptionsMenuChecks();
+            myEditMenuCommands.demandViewOptions.hideDemandViewOptionsMenuChecks();
+            myEditMenuCommands.dataViewOptions.hideDataViewOptionsMenuChecks();
         } else {
             // abort reloading (because "cancel button" was pressed)
             return 1;
@@ -783,6 +789,10 @@ GNEApplicationWindow::onCmdClose(FXObject*, FXSelector, void*) {
         myModesMenuCommands.networkMenuCommands.hideNetworkMenuCommands();
         myModesMenuCommands.demandMenuCommands.hideDemandMenuCommands();
         myModesMenuCommands.dataMenuCommands.hideDataMenuCommands();
+        // hide view options
+        myEditMenuCommands.networkViewOptions.hideNetworkViewOptionsMenuChecks();
+        myEditMenuCommands.demandViewOptions.hideDemandViewOptionsMenuChecks();
+        myEditMenuCommands.dataViewOptions.hideDataViewOptionsMenuChecks();
     }
     return 1;
 }
@@ -1066,7 +1076,9 @@ GNEApplicationWindow::fillMenuBar() {
         nullptr, this, MID_HOTKEY_CTRL_Q_CLOSE);
     // build modes menu
     myModesMenu = new FXMenuPane(this);
-    GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Modes", nullptr, myModesMenu);
+    myModesMenuTitle = GUIDesigns::buildFXMenuTitle(myToolbarsGrip.menu, "&Modes", nullptr, myModesMenu);
+    myModesMenuTitle->setTarget(this);
+    myModesMenuTitle->setSelector(MID_GNE_MODESMENUTITLE);
     // build Supermode commands and hide it
     mySupermodeCommands.buildSupermodeCommands(myModesMenu);
     mySupermodeCommands.hideSupermodeCommands();
@@ -1085,8 +1097,10 @@ GNEApplicationWindow::fillMenuBar() {
     myEditMenuCommands.networkViewOptions.buildNetworkViewOptionsMenuChecks(myEditMenu);
     myEditMenuCommands.demandViewOptions.buildDemandViewOptionsMenuChecks(myEditMenu);
     myEditMenuCommands.dataViewOptions.buildDataViewOptionsMenuChecks(myEditMenu);
-    // build separator
-    new FXMenuSeparator(myEditMenu);
+    // hide view options
+    myEditMenuCommands.networkViewOptions.hideNetworkViewOptionsMenuChecks();
+    myEditMenuCommands.demandViewOptions.hideDemandViewOptionsMenuChecks();
+    myEditMenuCommands.dataViewOptions.hideDataViewOptionsMenuChecks();
     // build view menu commands
     myEditMenuCommands.buildViewMenuCommands(myEditMenu);
     // build separator
@@ -1790,6 +1804,14 @@ GNEApplicationWindow::onCmdFocusFrame(FXObject*, FXSelector, void*) {
 }
 
 
+long 
+GNEApplicationWindow::onUpdRequiereViewNet(FXObject* sender, FXSelector, void*) {
+    // enable or disable sender element depending of viewNet
+    sender->handle(this, myViewNet ? FXSEL(SEL_COMMAND, ID_ENABLE) : FXSEL(SEL_COMMAND, ID_DISABLE), nullptr);
+    return 1;
+}
+
+
 long
 GNEApplicationWindow::onCmdEditViewport(FXObject*, FXSelector, void*) {
     // check that view exists
@@ -2235,7 +2257,7 @@ GNEApplicationWindow::onCmdToogleViewOption(FXObject* obj, FXSelector sel, void*
     if (myViewNet) {
         // continue depending of selector
         switch (FXSELID(sel)) {
-            case MID_GNE_NETWORKVIEWOPTIONS_SHOWGRID:
+            case MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID:
                 return myViewNet->onCmdToogleShowGrid(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES:
                 return myViewNet->onCmdToogleDrawSpreadVehicles(obj, sel, ptr);
@@ -2294,8 +2316,8 @@ GNEApplicationWindow::onUpdToogleViewOption(FXObject* obj, FXSelector sel, void*
     if (myViewNet && menuCheck) {
         // continue depending of selector
         switch (FXSELID(sel)) {
-            case MID_GNE_NETWORKVIEWOPTIONS_SHOWGRID:
-                if (myViewNet->getNetworkViewOptions().menuCheckShowGrid->amChecked()) {
+            case MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID:
+                if (myViewNet->getNetworkViewOptions().menuCheckToogleGrid->amChecked()) {
                     menuCheck->setCheck(TRUE);
                 } else {
                     menuCheck->setCheck(FALSE);
@@ -2380,7 +2402,7 @@ GNEApplicationWindow::onUpdToogleViewOption(FXObject* obj, FXSelector sel, void*
                 }
                 break;
             case MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID:
-                if (myViewNet->getDemandViewOptions().menuCheckShowGrid->amChecked()) {
+                if (myViewNet->getDemandViewOptions().menuCheckToogleGrid->amChecked()) {
                     menuCheck->setCheck(TRUE);
                 } else {
                     menuCheck->setCheck(FALSE);
@@ -3212,8 +3234,8 @@ GNEApplicationWindow::continueWithUnsavedChanges(const std::string& operation) {
             // write warning if netedit is running in testing mode
             WRITE_DEBUG("Closed FXMessageBox 'Confirm " + operation + " network' with 'Quit'");
             if (continueWithUnsavedAdditionalChanges(operation) && continueWithUnsavedDemandElementChanges(operation)) {
-                // clear undo list and return true to continue with closing/reload
-                myUndoList->p_clear();
+                // clear undo list
+                clearUndoList();
                 return true;
             } else {
                 return false;
@@ -3226,8 +3248,8 @@ GNEApplicationWindow::continueWithUnsavedChanges(const std::string& operation) {
                 return false;
             }
             if (continueWithUnsavedAdditionalChanges(operation) && continueWithUnsavedDemandElementChanges(operation)) {
-                // clear undo list and return true to continue with closing/reload
-                myUndoList->p_clear();
+                // clear undo list
+                clearUndoList();
                 return true;
             } else {
                 return false;
@@ -3244,8 +3266,8 @@ GNEApplicationWindow::continueWithUnsavedChanges(const std::string& operation) {
         }
     } else {
         if (continueWithUnsavedAdditionalChanges(operation) && continueWithUnsavedDemandElementChanges(operation)) {
-            // clear undo list and return true to continue with closing/reload
-            myUndoList->p_clear(); //only ask once
+            // clear undo list
+            clearUndoList();
             return true;
         } else {
             // return false to stop closing/reloading
@@ -3441,6 +3463,15 @@ GNEApplicationWindow::getEditMenuCommands() {
     return myEditMenuCommands;
 }
 
+
+void 
+GNEApplicationWindow::clearUndoList() {
+    // destropy Popup (to avoid crashes)
+    myViewNet->destroyPopup();
+    // clear undo list and return true to continue with closing/reload
+    myUndoList->p_clear();
+}
+
 // ---------------------------------------------------------------------------
 // GNEApplicationWindow - protected methods
 // ---------------------------------------------------------------------------
@@ -3460,6 +3491,7 @@ GNEApplicationWindow::GNEApplicationWindow() :
     myLocatorMenu(nullptr),
     myWindowsMenu(nullptr),
     myHelpMenu(nullptr),
+    myModesMenuTitle(nullptr),
     myMessageWindow(nullptr),
     myMainSplitter(nullptr),
     hadDependentBuild(false),

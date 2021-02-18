@@ -1,7 +1,8 @@
 ---
-title: Z/Changes from version 0.8.0.2 to version 0.8.2.1
-permalink: /Z/Changes_from_version_0.8.0.2_to_version_0.8.2.1/
+title: Changes from version 0.8.0.2 to version 0.8.2.1
 ---
+
+**Release date: 22.12.2004**
 
 **Please remind that several option names have changed!** The most
 important: "net-files" (router, simulation) is now "net-file"...

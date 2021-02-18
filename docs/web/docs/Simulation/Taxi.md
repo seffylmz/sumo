@@ -1,7 +1,7 @@
 ---
-title: Simulation/Taxi
-permalink: /Simulation/Taxi
+title: Taxi
 ---
+
 # Introduction
 Since version 1.5.0 SUMO supports simulation of demand responsive transport (DRT)
 via the taxi device. This allows a fleet of taxis to service customer requests
@@ -101,7 +101,7 @@ To couple an external dispatch algorithm to SUMO, the following [TraCI](../TraCI
 !!! note
     To make use of these functions, the option **--device.taxi.dispatch-algorithm traci** must be set
 
-- traci.person.getTaxiReservations(onlyNew)
+- traci.person.getTaxiReservations(reservationState)
 - traci.vehicle.getTaxiFleet(taxiState)
 - traci.vehicle.dispatchTaxi(vehID, reservations)
 
@@ -110,6 +110,64 @@ This set of API calls can be used to simplify writing custom dispatch algorithms
 - manage existing reservations
 - manage the taxi fleet
 - dispatch a taxi to service one or more reservations by giving a list of reservation ids (vehicle routing and stopping is then automatic).
+
+## getTaxiReservations
+
+Returns a list of of Reservation objects that have the following attributes
+
+- id
+- persons
+- group
+- state
+- fromEdge
+- toEdge
+- arrivalPos
+- departPos
+- depart
+- reservationTime
+- state (positive value, see below)
+
+When calling `traci.person.getTaxiReservations(reservationState)` the following arguments for reservationState are supported:
+
+- 0: return all reservations regardless of state
+- 1: return only new reservations
+- 2: return reservations already retrieved
+- 4: return reservations that have been assigned to a taxi
+- 8: return reservations that have been picked up
+
+## getTaxiFleet
+
+A taxi can be in any of the following states:
+
+- 0 (emtpy) : taxi is idle
+- 1 (pickup):  taxi is en-route to pick up a customer
+- 2 (occupied): taxi has customer on board and is driving to drop-off
+- 3 (pickup + occupied): taxi has customer on board but will pick up more customers
+
+when calling `traci.vehicle.getTaxiFleet(taxiState)` the following arguments for taxiState are supported:
+
+- -1: (return all taxis regardless of state)
+- 0: return only empty taxis
+- 1: return taxis in state 1 and 3
+- 2: return taxis in state 2 and 3
+- 3: return taxis in state 3
+
+## dispatchTaxi
+
+If a taxi is empty, the following dispatch calls are supported
+
+- dispatchTaxi(vehID, [reservationID]): pickup and drop-off persons belonging to the given reservation ID
+- If more than one reservation ID is given, each individual reservation ID must occur exactly twice in the list for complete pickup and drop-off. The first occurence of an ID denotes pick-up and the second occurence denotes drop-off.
+
+Example 1:  dispatchTaxi(vehID, [a]) means: pick up and drop off a.
+
+Example 2:  dispatchTaxi(vehID, [a, a, b, c, b, c]) means: pick up and drop off a, then pick up b and c and then drop off b and c.
+
+If a taxi is not in state empty the following re-dispatch calls are supported
+
+- new reservations have no overlap with previous reservation: append new reservations to the previous reservations
+- new reservations include all previous unique reservation ids exactly twice: reset current route and stops and treat as complete new dispatch. If one of the persons of the earlier reservation is already picked up, ignore the first occurrence of the reservation in the reservation list
+- new reservations mentions include all previous unique reservation ids once or twice, all customers that are mentioned once are already picked up: reset current route and stops, use the single-occurence ids as as drop-of
 
 # Outputs
 
@@ -126,11 +184,8 @@ form:
 The following parameters can be retrieved via `traci.vehicle.getParameter` and written via **--fcd-output.params**.
 It is also possible to color vehicles in [SUMO-GUI 'by param (numerical)'](../sumo-gui.md#vehicle_visualisation_settings) by setting these keys.
 
-- device.taxi.state:
-  - 0: empty
-  - 1: driving to pickup customer
-  - 2: occupied
-  - 3: pickup + occupied (during ride sharing)
+- device.taxi.state: returns integer value (see #gettaxifleet)  
 - device.taxi.customers: total number of customers served
 - device.taxi.occupiedDistance: total distance driven in m with customer on board
 - device.taxi.occupiedTime: total time driven in s with customers on board
+- device.taxi.currentCustomers: space-separated list of persons that are to be picked up or already on board

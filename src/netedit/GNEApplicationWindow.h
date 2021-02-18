@@ -316,8 +316,11 @@ public:
     /// @brief force save data elements (flag)
     long onCmdForceSaveDataElements(FXObject* sender, FXSelector sel, void* ptr);
 
-    /// @brief called if the user hits f
+    /// @brief called if the user hits key combination for focus on frame
     long onCmdFocusFrame(FXObject* sender, FXSelector sel, void* ptr);
+
+    /// @brief enable or disable sender object depending if viewNet exist
+    long onUpdRequiereViewNet(FXObject* sender, FXSelector sel, void* ptr);
 
     /// @brief called if the user press key combination Ctrl + G to toogle grid
     long onCmdToogleGrid(FXObject*, FXSelector, void*);
@@ -402,6 +405,9 @@ public:
     /// @brief getEdit Menu Commands (needed for show/hide menu commands)
     GNEApplicationWindowHelper::EditMenuCommands &getEditMenuCommands();
 
+    /// @brief clear undo list
+    void clearUndoList();
+
 protected:
     /// @brief FOX needs this for static members
     GNEApplicationWindow();
@@ -425,6 +431,9 @@ protected:
                 *myLocatorMenu,
                 *myWindowsMenu,
                 *myHelpMenu;
+
+    /// @brief menu title for modes
+    FXMenuTitle* myModesMenuTitle;
 
     /// @brief A window to display messages, warnings and error in
     GUIMessageWindow* myMessageWindow;

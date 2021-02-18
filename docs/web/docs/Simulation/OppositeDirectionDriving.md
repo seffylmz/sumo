@@ -1,6 +1,5 @@
 ---
-title: Simulation/OppositeDirectionDriving
-permalink: /Simulation/OppositeDirectionDriving/
+title: Opposite Direction Driving
 ---
 
 # Opposite-Direction-Driving

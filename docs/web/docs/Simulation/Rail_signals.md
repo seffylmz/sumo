@@ -1,6 +1,5 @@
 ---
-title: Simulation/Rail signals
-permalink: /Simulation/Rail_signals/
+title: Rail signals
 ---
 
 Rail signals are

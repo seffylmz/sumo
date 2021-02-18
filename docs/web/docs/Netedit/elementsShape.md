@@ -1,6 +1,5 @@
 ---
-title: netedit/elementsShape
-permalink: /netedit/elementsShape/
+title: elementsShape
 ---
 
 # Shape elements

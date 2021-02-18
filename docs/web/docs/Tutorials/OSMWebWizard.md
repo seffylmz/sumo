@@ -1,6 +1,5 @@
 ---
-title: Tutorials/OSMWebWizard
-permalink: /Tutorials/OSMWebWizard/
+title: OSMWebWizard
 ---
 
 # About
@@ -15,7 +14,7 @@ in the sumo-gui.
 
 # Requirements
 
-- [SUMO](../Installing.md) installation
+- [SUMO](../Installing/index.md) installation
 - [Python](http://www.python.org) (\>= 2.7) installation
 
 # Getting started
@@ -133,4 +132,4 @@ data. The contents of the directory look like this:
 
 You may now edit those files and re-run the simulation. To learn more
 about the SUMO scenario files, please consult the other
-[Tutorials](../Tutorials.md) as well.
+[Tutorials](index.md) as well.

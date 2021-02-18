@@ -1,6 +1,5 @@
 ---
-title: Basics/Computer Skills
-permalink: /Basics/Basic_Computer_Skills/
+title: Computer Skills
 ---
 
 # Introduction
@@ -46,7 +45,7 @@ Explorer [here](https://www.teacherclick.com/winxp/t_4_1.htm) or
 SUMO consists of many separate programs for different simulation-related
 tasks (a reference to all the separate programs can be found
 [here](../SUMO_at_a_Glance.md#included_applications) and a list of the additional Tools [here](../index.md#additional_tools)).
-Only [sumo-gui](../sumo-gui.md) (*sumo-gui.exe*) and [netedit](../netedit.md) (*netedit.exe*) have a
+Only [sumo-gui](../sumo-gui.md) (*sumo-gui.exe*) and [netedit](../Netedit/index.md) (*netedit.exe*) have a
 graphical user interface (GUI). All other programs must be called from
 the **command line**.
 
@@ -103,7 +102,7 @@ and press `enter`
 
 ## SUMO_HOME
 
-Many [tools](../Tools.md) require the environment variable
+Many [tools](../Tools/index.md) require the environment variable
 `SUMO_HOME` to be set to the base directory of the sumo installation.
 This is the directory containing the folders *bin* and *tools*. Setting
 environment variables is explained below.

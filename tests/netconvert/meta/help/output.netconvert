@@ -1,4 +1,4 @@
-Eclipse SUMO netconvert Version v1_8_0+0635-4f1a99aa91
+Eclipse SUMO netconvert Version v1_8_0+1148-fede844
  Copyright (C) 2001-2021 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 Network importer / builder for the microscopic, multi-modal traffic simulation
  SUMO.
@@ -135,6 +135,8 @@ Processing Options:
                                         are not modified (Each id on a single
                                         line. Selection files from sumo-gui are
                                         also supported)
+  --geometry.remove.keep-ptstops       Ensure that edges with public transport
+                                        stops are not modified
   --geometry.remove.min-length FLOAT   Allow merging edges with differing
                                         attributes when their length is below
                                         min-length
@@ -497,6 +499,9 @@ Railway Options:
 
 Formats Options:
   --discard-params STR[]               Remove the list of keys from all params
+  --ignore-change-restrictions STR[]   List vehicle classes that may ignore
+                                        lane changing restrictions ('all'
+                                        discards all restrictions)
   --osm.skip-duplicates-check          Skips the check for duplicate nodes and
                                         edges
   --osm.elevation                      Imports elevation data

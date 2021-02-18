@@ -54,9 +54,9 @@ MsgHandler*
 MsgHandler::getMessageInstance() {
     if (myMessageInstance == nullptr) {
         if (myFactory == nullptr) {
-            myMessageInstance = new MsgHandler(MT_MESSAGE);
+            myMessageInstance = new MsgHandler(MsgType::MT_MESSAGE);
         } else {
-            myMessageInstance = myFactory(MT_MESSAGE);
+            myMessageInstance = myFactory(MsgType::MT_MESSAGE);
         }
     }
     return myMessageInstance;
@@ -67,9 +67,9 @@ MsgHandler*
 MsgHandler::getWarningInstance() {
     if (myWarningInstance == nullptr) {
         if (myFactory == nullptr) {
-            myWarningInstance = new MsgHandler(MT_WARNING);
+            myWarningInstance = new MsgHandler(MsgType::MT_WARNING);
         } else {
-            myWarningInstance = myFactory(MT_WARNING);
+            myWarningInstance = myFactory(MsgType::MT_WARNING);
         }
     }
     return myWarningInstance;
@@ -79,7 +79,7 @@ MsgHandler::getWarningInstance() {
 MsgHandler*
 MsgHandler::getErrorInstance() {
     if (myErrorInstance == nullptr) {
-        myErrorInstance = new MsgHandler(MT_ERROR);
+        myErrorInstance = new MsgHandler(MsgType::MT_ERROR);
     }
     return myErrorInstance;
 }
@@ -88,7 +88,7 @@ MsgHandler::getErrorInstance() {
 MsgHandler*
 MsgHandler::getDebugInstance() {
     if (myDebugInstance == nullptr) {
-        myDebugInstance = new MsgHandler(MT_DEBUG);
+        myDebugInstance = new MsgHandler(MsgType::MT_DEBUG);
     }
     return myDebugInstance;
 }
@@ -97,7 +97,7 @@ MsgHandler::getDebugInstance() {
 MsgHandler*
 MsgHandler::getGLDebugInstance() {
     if (myGLDebugInstance == nullptr) {
-        myGLDebugInstance = new MsgHandler(MT_GLDEBUG);
+        myGLDebugInstance = new MsgHandler(MsgType::MT_GLDEBUG);
     }
     return myGLDebugInstance;
 }
@@ -115,6 +115,9 @@ MsgHandler::enableDebugGLMessages(bool enable) {
 
 void
 MsgHandler::inform(std::string msg, bool addType) {
+    if (addType && !myInitialMessages.empty() && myInitialMessages.size() < 5) {
+        myInitialMessages.push_back(msg);
+    }
     // beautify progress output
     if (myAmProcessingProcess) {
         myAmProcessingProcess = false;
@@ -168,6 +171,14 @@ MsgHandler::clear(bool resetInformed) {
         }
     }
     myAggregationCount.clear();
+    if (!resetInformed && myInitialMessages.size() > 1) {
+        const bool wasInformed = myWasInformed;
+        for (const std::string& msg : myInitialMessages) {
+            inform(msg, false);
+        }
+        myInitialMessages.clear();
+        myWasInformed = wasInformed;
+    }
 }
 
 
@@ -242,7 +253,9 @@ MsgHandler::initOutputOptions() {
         getErrorInstance()->addRetriever(logFile);
         getWarningInstance()->addRetriever(logFile);
     }
-    if (!oc.getBool("verbose")) {
+    if (oc.getBool("verbose")) {
+        getErrorInstance()->myInitialMessages.push_back("Repeating initial error messages:");
+    } else {
         getMessageInstance()->removeRetriever(&OutputDevice::getDevice("stdout"));
     }
 }
@@ -265,7 +278,7 @@ MsgHandler::cleanupOnEnd() {
 
 MsgHandler::MsgHandler(MsgType type) :
     myType(type), myWasInformed(false), myAggregationThreshold(-1) {
-    if (type == MT_MESSAGE) {
+    if (type == MsgType::MT_MESSAGE) {
         addRetriever(&OutputDevice::getDevice("stdout"));
     } else {
         addRetriever(&OutputDevice::getDevice("stderr"));

@@ -65,7 +65,7 @@
 
 //#define DEBUG_JOINJUNCTIONS
 //#define DEBUG_GUESSSIGNALS
-#define DEBUGNODEID "3513423881"
+#define DEBUGNODEID ""
 #define DEBUGNODEID2 ""
 //#define DEBUGNODEID "5548037023"
 #define DEBUGCOND(obj) ((obj) != 0 && ((obj)->getID() == DEBUGNODEID || (obj)->getID() == DEBUGNODEID2))
@@ -470,6 +470,9 @@ NBNodeCont::removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec,
         // no need to keep pt stop edges, they are remapped later
         // no need to keep all pt route edges. They are validated again before writing
         pc.addEdges2Keep(oc, edges2keep);
+        if (oc.getBool("geometry.remove.keep-ptstops")) {
+            sc.addEdges2Keep(oc, edges2keep);
+        }
     }
     std::vector<NBNode*> toRemove;
     for (const auto& i : myNodes) {
@@ -1564,11 +1567,38 @@ void
 NBNodeCont::joinNodeCluster(NodeSet cluster, NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc, NBNode* predefined, bool resetConnections) {
     const bool origNames = OptionsCont::getOptions().getBool("output.original-names");
     assert(cluster.size() > 1);
-    Position pos;
-    bool setTL;
     std::string id = "cluster";
-    TrafficLightType type;
+    Position pos;
+    bool setTL = false;
     SumoXMLNodeType nodeType = SumoXMLNodeType::UNKNOWN;
+    TrafficLightType type = SUMOXMLDefinitions::TrafficLightTypes.get(OptionsCont::getOptions().getString("tls.default-type"));
+    // collect edges
+    std::set<NBEdge*, ComparatorIdLess> allEdges;
+    for (NBNode* n : cluster) {
+        const EdgeVector& edges = n->getEdges();
+        allEdges.insert(edges.begin(), edges.end());
+    }
+    // determine edges with are incoming or fully inside
+    std::set<NBEdge*, ComparatorIdLess> clusterIncoming;
+    std::set<NBEdge*, ComparatorIdLess> inside;
+    for (NBEdge* e : allEdges) {
+        if (cluster.count(e->getToNode()) > 0) {
+            if (cluster.count(e->getFromNode()) > 0) {
+                inside.insert(e);
+                if (e->getSignalPosition() != Position::INVALID) {
+                    setTL = true;
+                    nodeType = SumoXMLNodeType::TRAFFIC_LIGHT;
+                }
+            } else {
+                clusterIncoming.insert(e);
+            }
+        }
+    }
+#ifdef DEBUG_JOINJUNCTIONS
+    std::cout << "joining cluster " << joinNamedToString(cluster, ' ') << "\n"
+              << "  incoming=" << toString(clusterIncoming) << "\n"
+              << "  inside=" << toString(inside) << "\n";
+#endif
     analyzeCluster(cluster, id, pos, setTL, type, nodeType);
     NBNode* newNode = nullptr;
     if (predefined != nullptr) {
@@ -1606,29 +1636,6 @@ NBNodeCont::joinNodeCluster(NodeSet cluster, NBDistrictCont& dc, NBEdgeCont& ec,
             throw ProcessError("Could not allocate tls '" + id + "'.");
         }
     }
-    // collect edges
-    std::set<NBEdge*, ComparatorIdLess> allEdges;
-    for (NBNode* n : cluster) {
-        const EdgeVector& edges = n->getEdges();
-        allEdges.insert(edges.begin(), edges.end());
-    }
-    // determine edges with are incoming or fully inside
-    std::set<NBEdge*, ComparatorIdLess> clusterIncoming;
-    std::set<NBEdge*, ComparatorIdLess> inside;
-    for (NBEdge* e : allEdges) {
-        if (cluster.count(e->getToNode()) > 0) {
-            if (cluster.count(e->getFromNode()) > 0) {
-                inside.insert(e);
-            } else {
-                clusterIncoming.insert(e);
-            }
-        }
-    }
-#ifdef DEBUG_JOINJUNCTIONS
-    std::cout << "joining cluster " << joinNamedToString(cluster, ' ') << "\n"
-              << "  incoming=" << toString(clusterIncoming) << "\n"
-              << "  inside=" << toString(inside) << "\n";
-#endif
 
     // determine possible connectivity from outside edges
     std::map<NBEdge*, EdgeSet> reachable;
@@ -1751,7 +1758,6 @@ void
 NBNodeCont::analyzeCluster(NodeSet cluster, std::string& id, Position& pos,
                            bool& hasTLS, TrafficLightType& type, SumoXMLNodeType& nodeType) {
     id += "_" + joinNamedToString(cluster, '_');
-    hasTLS = false;
     bool ambiguousType = false;
     for (NBNode* j : cluster) {
         pos.add(j->getPosition());
@@ -2272,6 +2278,9 @@ NBNodeCont::computeNodeShapes(double mismatchThreshold) {
 
 void
 NBNodeCont::printBuiltNodesStatistics() const {
+    WRITE_MESSAGE("-----------------------------------------------------");
+    WRITE_MESSAGE("Summary:");
+
     int numUnregulatedJunctions = 0;
     int numDeadEndJunctions = 0;
     int numTrafficLightJunctions = 0;
@@ -2349,6 +2358,12 @@ NBNodeCont::printBuiltNodesStatistics() const {
     if (numDistrictJunctions > 0) {
         WRITE_MESSAGE("  District junctions      : " + toString(numDistrictJunctions));
     }
+    const GeoConvHelper& geoConvHelper = GeoConvHelper::getProcessing();
+    WRITE_MESSAGE(" Network boundaries:");
+    WRITE_MESSAGE("  Original boundary  : " + toString(geoConvHelper.getOrigBoundary()));
+    WRITE_MESSAGE("  Applied offset     : " + toString(geoConvHelper.getOffsetBase()));
+    WRITE_MESSAGE("  Converted boundary : " + toString(geoConvHelper.getConvBoundary()));
+    WRITE_MESSAGE("-----------------------------------------------------");
 }
 
 

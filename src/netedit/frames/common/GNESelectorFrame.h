@@ -25,6 +25,14 @@
 #include <netedit/GNEViewNetHelper.h>
 
 // ===========================================================================
+// class declaration
+// ===========================================================================
+
+class GNEElementSet;
+class GNEMatchAttribute;
+class GNEMatchGenericDataAttribute;
+
+// ===========================================================================
 // class definitions
 // ===========================================================================
 /**
@@ -126,6 +134,12 @@ public:
 
         /// @brief check boxes for type-based selection locking and selected object counts
         std::map<GUIGlObjectType, ObjectTypeEntry*> myTypeEntries;
+
+        /// @brief Invalidated copy constructor.
+        LockGLObjectTypes(const LockGLObjectTypes&) = delete;
+
+        /// @brief Invalidated assignment operator.
+        LockGLObjectTypes& operator=(const LockGLObjectTypes&) = delete;
     };
 
     // ===========================================================================
@@ -163,6 +177,7 @@ public:
         /// @}
 
     protected:
+        /// @brief FOX need this
         FOX_CONSTRUCTOR(ModificationMode)
 
     private:
@@ -180,228 +195,12 @@ public:
 
         /// @brief how to modify selection
         Operation myModificationModeType;
-    };
 
-    // ===========================================================================
-    // class ElementSet
-    // ===========================================================================
+        /// @brief Invalidated copy constructor.
+        ModificationMode(const ModificationMode&) = delete;
 
-    class ElementSet : protected FXGroupBox {
-        /// @brief FOX-declaration
-        FXDECLARE(GNESelectorFrame::ElementSet)
-
-    public:
-        /// @brief Element Set Type
-        enum class Type {
-            NETWORKELEMENT,
-            ADDITIONALELEMENT,
-            SHAPE,
-            TAZELEMENT,
-            DEMANDELEMENT,
-            DATA,
-            INVALID,
-        };
-
-        /// @brief constructor
-        ElementSet(GNESelectorFrame* selectorFrameParent);
-
-        /// @brief destructor
-        ~ElementSet();
-
-        /// @brief get current selected element set
-        Type getElementSet() const;
-
-        /// @brief refresh element set
-        void refreshElementSet();
-
-        /// @brief update current element set (called after
-
-        /// @name FOX-callbacks
-        /// @{
-
-        /// @brief Called when the user change the set of element to search (networkElement, Additional or shape)
-        long onCmdSelectElementSet(FXObject*, FXSelector, void*);
-
-        /// @}
-
-    protected:
-        FOX_CONSTRUCTOR(ElementSet)
-
-    private:
-        /// @brief pointer to Selector Frame Parent
-        GNESelectorFrame* mySelectorFrameParent;
-
-        /// @brief Combo Box with the element sets
-        FXComboBox* mySetComboBox;
-
-        /// @brief current element set selected
-        Type myCurrentElementSet;
-    };
-
-    // ===========================================================================
-    // class MatchAttribute
-    // ===========================================================================
-
-    class MatchAttribute : protected FXGroupBox {
-        /// @brief FOX-declaration
-        FXDECLARE(GNESelectorFrame::MatchAttribute)
-
-    public:
-        /// @brief constructor
-        MatchAttribute(GNESelectorFrame* selectorFrameParent);
-
-        /// @brief destructor
-        ~MatchAttribute();
-
-        /// @brief enable match attributes
-        void enableMatchAttribute();
-
-        /// @brief disable match attributes
-        void disableMatchAttribute();
-
-        /// @brief show match attributes
-        void showMatchAttribute();
-
-        /// @brief hide match attributes
-        void hideMatchAttribute();
-
-        /// @name FOX-callbacks
-        /// @{
-
-        /**@brief Called when the user selectes a tag in the match box
-         * @note updates the attr listbox and repaints itself
-         */
-        long onCmdSelMBTag(FXObject*, FXSelector, void*);
-
-        /**@brief Called when the user selectes a tag in the match box
-         * @note updates the attr listbox and repaints itself
-         */
-        long onCmdSelMBAttribute(FXObject*, FXSelector, void*);
-
-        /**@brief Called when the user enters a new selection expression
-         * @note validates expression and modifies current selection
-         */
-        long onCmdSelMBString(FXObject*, FXSelector, void*);
-
-        /**@brief Called when the user clicks the help button
-         * @note pop up help window
-         */
-        long onCmdHelp(FXObject*, FXSelector, void*);
-
-        /// @}
-
-    protected:
-        FOX_CONSTRUCTOR(MatchAttribute)
-
-    private:
-        /// @brief pointer to Selector Frame Parent
-        GNESelectorFrame* mySelectorFrameParent;
-
-        /// @brief tag of the match box
-        FXComboBox* myMatchTagComboBox;
-
-        /// @brief attributes of the match box
-        FXComboBox* myMatchAttrComboBox;
-
-        /// @brief current SumoXMLTag tag
-        SumoXMLTag myCurrentTag;
-
-        /// @brief current SumoXMLTag Attribute
-        SumoXMLAttr myCurrentAttribute;
-
-        /// @brief string of the match
-        FXTextField* myMatchString;
-
-        /// @brief match string button
-        FXButton* myMatchStringButton;
-    };
-
-    // ===========================================================================
-    // class MatchGenericDataAttribute
-    // ===========================================================================
-
-    class MatchGenericDataAttribute : protected FXGroupBox {
-        /// @brief FOX-declaration
-        FXDECLARE(GNESelectorFrame::MatchGenericDataAttribute)
-
-    public:
-        /// @brief constructor
-        MatchGenericDataAttribute(GNESelectorFrame* selectorFrameParent);
-
-        /// @brief destructor
-        ~MatchGenericDataAttribute();
-
-        /// @brief enable match attributes
-        void enableMatchGenericDataAttribute();
-
-        /// @brief disable match attributes
-        void disableMatchGenericDataAttribute();
-
-        /// @brief show match attributes
-        void showMatchGenericDataAttribute();
-
-        /// @brief hide match attributes
-        void hideMatchGenericDataAttribute();
-
-        /// @name FOX-callbacks
-        /// @{
-
-        /// @brief Called when the user selects an interval
-        long onCmdSetInterval(FXObject*, FXSelector, void*);
-
-        /// @brief Called when the user change begin text field
-        long onCmdSetBegin(FXObject*, FXSelector, void*);
-
-        /// @brief Called when the user change end text field
-        long onCmdSetEnd(FXObject*, FXSelector, void*);
-
-        /// @brief Called when the user selects a tag in the match box
-        long onCmdSelectTag(FXObject*, FXSelector, void*);
-
-        /// @brief Called when the user selects an attribute in the match box
-        long onCmdSelectAttribute(FXObject*, FXSelector, void*);
-
-        /// @brief Called when the user enters a new selection expression
-        long onCmdProcessString(FXObject*, FXSelector, void*);
-
-        /// @brief Called when the user clicks the help button
-        long onCmdHelp(FXObject*, FXSelector, void*);
-
-        /// @}
-
-    protected:
-        FOX_CONSTRUCTOR(MatchGenericDataAttribute)
-
-    private:
-        /// @brief pointer to Selector Frame Parent
-        GNESelectorFrame* mySelectorFrameParent;
-
-        /// @brief tag of the match box
-        FXComboBox* myIntervalSelector;
-
-        /// @brief TextField for begin
-        FXTextField* myBegin;
-
-        /// @brief TextField for end
-        FXTextField* myEnd;
-
-        /// @brief tag of the match box
-        FXComboBox* myMatchGenericDataTagComboBox;
-
-        /// @brief attributes of the match box
-        FXComboBox* myMatchGenericDataAttrComboBox;
-
-        /// @brief current SumoXMLTag tag
-        SumoXMLTag myCurrentTag;
-
-        /// @brief current string Attribute
-        std::string myCurrentAttribute;
-
-        /// @brief string of the match
-        FXTextField* myMatchGenericDataString;
-
-        // declare a set and fill it with all intervals
-        std::map<std::pair<double, double>, int> myIntervals;
+        /// @brief Invalidated assignment operator.
+        ModificationMode& operator=(const ModificationMode&) = delete;
     };
 
     // ===========================================================================
@@ -428,6 +227,7 @@ public:
         /// @}
 
     protected:
+        /// @brief FOX need this
         FOX_CONSTRUCTOR(VisualScaling)
 
     private:
@@ -436,6 +236,12 @@ public:
 
         /// @brief Spinner for selection scaling
         FXRealSpinner* mySelectionScaling;
+
+        /// @brief Invalidated copy constructor.
+        VisualScaling(const VisualScaling&) = delete;
+
+        /// @brief Invalidated assignment operator.
+        VisualScaling& operator=(const VisualScaling&) = delete;
     };
 
     // ===========================================================================
@@ -481,11 +287,18 @@ public:
         /// @}
 
     protected:
+        /// @brief FOX need this
         FOX_CONSTRUCTOR(SelectionOperation)
 
     private:
         /// @brief pointer to Selector Frame Parent
         GNESelectorFrame* mySelectorFrameParent;
+
+        /// @brief Invalidated copy constructor.
+        SelectionOperation(const SelectionOperation&) = delete;
+
+        /// @brief Invalidated assignment operator.
+        SelectionOperation& operator=(const SelectionOperation&) = delete;
     };
 
     /**@brief Constructor
@@ -511,37 +324,6 @@ public:
      */
     void handleIDs(const std::vector<GNEAttributeCarrier*>& ACs, const ModificationMode::Operation setop = ModificationMode::Operation::DEFAULT);
 
-    /// @brief get selected items Modul
-    LockGLObjectTypes* getLockGLObjectTypes() const;
-
-    /// @brief get modification mode modul
-    ModificationMode* getModificationModeModul() const;
-
-private:
-    /// @brief modul for lock selected items
-    LockGLObjectTypes* myLockGLObjectTypes;
-
-    /// @brief modul for change modification mode
-    ModificationMode* myModificationMode;
-
-    /// @brief modul for select element set
-    ElementSet* myElementSet;
-
-    /// @brief modul for match attribute
-    MatchAttribute* myMatchAttribute;
-
-    /// @brief modul for match generic data attribute
-    MatchGenericDataAttribute* myMatchGenericDataAttribute;
-
-    /// @brief modul for visual scaling
-    VisualScaling* myVisualScaling;
-
-    /// @brief modul for selection operations
-    SelectionOperation* mySelectionOperation;
-
-    /// @brief check if there is ACs to select/unselect
-    bool ACsToSelected() const;
-
     /**@brief return ACs of the given type with matching attrs
      * @param[in] ACTag XML Tag of AttributeCarrier
      * @param[in] ACAttr XML Attribute of AttributeCarrier
@@ -555,4 +337,44 @@ private:
      * @param[in] compOp One of {<,>,=} for matching against val or '@' for matching against expr
      */
     std::vector<GNEAttributeCarrier*> getGenericMatches(const std::vector<GNEGenericData*>& genericDatas, const std::string& attr, const char compOp, const double val, const std::string& expr);
+
+    /// @brief get vertical frame that holds all widgets of frame
+    FXVerticalFrame* getContentFrame() const;
+
+    /// @brief get selected items Modul
+    LockGLObjectTypes* getLockGLObjectTypes() const;
+
+    /// @brief get modification mode modul
+    ModificationMode* getModificationModeModul() const;
+
+private:
+    /// @brief modul for lock selected items
+    LockGLObjectTypes* myLockGLObjectTypes;
+
+    /// @brief modul for change modification mode
+    ModificationMode* myModificationMode;
+
+    /// @brief moduls for select network element set
+    GNEElementSet* myNetworkElementSet;
+
+    /// @brief moduls for select demand element set
+    GNEElementSet* myDemandElementSet;
+
+    /// @brief moduls for select data element set
+    GNEElementSet*myDataElementSet;
+
+    /// @brief modul for visual scaling
+    VisualScaling* myVisualScaling;
+
+    /// @brief modul for selection operations
+    SelectionOperation* mySelectionOperation;
+
+    /// @brief check if there is ACs to select/unselect
+    bool ACsToSelected() const;
+
+    /// @brief Invalidated copy constructor.
+    GNESelectorFrame(const GNESelectorFrame&) = delete;
+
+    /// @brief Invalidated assignment operator.
+    GNESelectorFrame& operator=(const GNESelectorFrame&) = delete;
 };

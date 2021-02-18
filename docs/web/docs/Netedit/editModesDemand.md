@@ -1,6 +1,5 @@
 ---
-title: netedit/editModesDemand
-permalink: /netedit/editModesDemand/
+title: editModesDemand
 ---
 
 # Demand specific modes

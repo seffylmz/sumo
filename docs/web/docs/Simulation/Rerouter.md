@@ -1,6 +1,5 @@
 ---
-title: Simulation/Rerouter
-permalink: /Simulation/Rerouter/
+title: Rerouter
 ---
 
 # Rerouter

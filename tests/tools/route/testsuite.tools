@@ -21,6 +21,11 @@ sort
 
 # Cut down routes from a large scenario to a sub-scenario
 cut_routes
+
+# Cut down trips from a large scenario to a sub-scenario
+cutTrips
+
+# test route statistics
 routeStats
 
 # tests for modifying departure times
@@ -28,6 +33,9 @@ departOffset
 
 # test for generating edge traffic counts
 showDepartsAndArrivalsPerEdge
+
+# generated traces for use with tracemapper
+tracegenerator
 
 # simple route reconstruction from gps trace
 tracemapper
@@ -38,10 +46,18 @@ implausibleRoutes
 # test generating polygons from route input
 route2poly
 analyzePersonPlans
-addStops2Routes
 
 # add delay to stops (increase duration)
 addStopDelay
 
 # test tool for validation public transport schedule in route file 
 checkStopOrder
+
+# transform vehicles to flow definitions
+vehicle2flow
+
+# tests for adding stops at parking areas
+addStops2Routes
+
+# tests for stopping vehicle at end of the route
+addParkingAreaStops2Routes

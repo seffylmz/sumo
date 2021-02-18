@@ -634,7 +634,16 @@ GNEAttributeCarrier::getAllowedTagsByCategory(const int tagPropertyCategory, con
     if (tagPropertyCategory & GNETagProperties::ADDITIONALELEMENT) {
         // fill additional tags
         for (const auto& tagProperty : myTagProperties) {
-            if (tagProperty.second.isAdditionalElement() && (!onlyDrawables || tagProperty.second.isDrawable())) {
+            // avoid symbols (It will be implemented in #7355)
+            if (!tagProperty.second.isSymbol() && tagProperty.second.isAdditionalElement() && (!onlyDrawables || tagProperty.second.isDrawable())) {
+                allowedTags.push_back(std::make_pair(tagProperty.first, toString(tagProperty.first)));
+            }
+        }
+    }
+    if (tagPropertyCategory & GNETagProperties::SYMBOL) {
+        // fill symbol tags
+        for (const auto& tagProperty : myTagProperties) {
+            if (tagProperty.second.isSymbol()) {
                 allowedTags.push_back(std::make_pair(tagProperty.first, toString(tagProperty.first)));
             }
         }
@@ -1152,6 +1161,10 @@ GNEAttributeCarrier::fillNetworkElements() {
         attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
         myTagProperties[currentTag].addAttribute(attrProperty);
 
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_TYPE,
+                                              GNEAttributeProperties::STRING | GNEAttributeProperties::DEFAULTVALUESTATIC,
+                                              "Lane type description (optional)");
+        myTagProperties[currentTag].addAttribute(attrProperty);
     }
     currentTag = SUMO_TAG_CROSSING;
     {
@@ -1300,6 +1313,21 @@ GNEAttributeCarrier::fillNetworkElements() {
                                               "sets custom shape for the connection");
         myTagProperties[currentTag].addAttribute(attrProperty);
 
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_CHANGE_LEFT,
+                GNEAttributeProperties::VCLASS | GNEAttributeProperties::LIST | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::VCLASSES,
+                "Permit changing left only for to the given vehicle classes",
+                "all");
+        attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+        attrProperty = GNEAttributeProperties(SUMO_ATTR_CHANGE_RIGHT,
+                GNEAttributeProperties::VCLASS | GNEAttributeProperties::LIST | GNEAttributeProperties::DISCRETE | GNEAttributeProperties::DEFAULTVALUESTATIC | GNEAttributeProperties::VCLASSES,
+                "Permit changing right only for to the given vehicle classes",
+                "all");
+        attrProperty.setDiscreteValues(SumoVehicleClassStrings.getStrings());
+        myTagProperties[currentTag].addAttribute(attrProperty);
+
+
         attrProperty = GNEAttributeProperties(SUMO_ATTR_DIR,
                                               GNEAttributeProperties::STRING,
                                               "turning direction for this connection (computed)");
@@ -1314,10 +1342,10 @@ GNEAttributeCarrier::fillNetworkElements() {
     {
         // set values of tag
         myTagProperties[currentTag] = GNETagProperties(currentTag,
-                                      GNETagProperties::NETWORKELEMENT,
+                                      GNETagProperties::INTERNALLANE,
                                       GNETagProperties::DRAWABLE,
                                       GUIIcon::JUNCTION);
-        //  internal lanes don't have attributes
+        //  internal lanes does't have attributes
     }
 }
 

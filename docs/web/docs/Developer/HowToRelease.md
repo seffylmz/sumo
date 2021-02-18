@@ -1,6 +1,5 @@
 ---
-title: Developer/HowToRelease
-permalink: /Developer/HowToRelease/
+title: HowToRelease
 ---
 
 ## Packages
@@ -52,7 +51,7 @@ software (Veins, VSimRTI, flow etc.) at this stage.
   - generate options documentation from configuration templates
     using `tools/build/configTemplateToWiki.py`
   - recheck/rebuild the configuration xsd schemata (if options were
-    added) using `tools/xml/rebuildSchemata.py` 
+    added) using `tools/build/rebuildSchemata.py` 
 - check the internal tests (same procedure as above), especially the
   (to be) published scenarios
 - GitHub
@@ -125,7 +124,7 @@ If everything is fine:
   - add files to the release
   - change default download attributes
   - update files at the [opensuse build
-    service](https://build.opensuse.org/package/show?package=sumo&project=home%3Abehrisch)
+    service](https://build.opensuse.org/package/show/home:behrisch/sumo)
 - update the ubuntu ppa (see
 <https://askubuntu.com/questions/642632/how-to-bump-the-version-of-a-package-available-in-another-users-ppa>)
   - this assumes you have the devscripts package as well as all sumo dependencies installed

@@ -50,6 +50,14 @@ class MSVehicleType;
  */
 class MSRouteHandler : public SUMORouteHandler {
 public:
+
+    /// @brief enum for object type
+    enum class ObjectTypeEnum {
+        PERSON,
+        CONTAINER,
+        UNDEFINED
+    };
+
     /// @brief standard constructor
     MSRouteHandler(const std::string& file, bool addVehiclesDirectly);
 
@@ -60,6 +68,7 @@ public:
     static std::mt19937* getParsingRNG() {
         return &myParsingRNG;
     }
+
 
 protected:
     /// @name inherited from GenericSAXHandler
@@ -131,8 +140,8 @@ protected:
     /// @brief Ends the processing of a container
     void closeContainer();
 
-	/// @brief Ends the processing of a containerFlow
-	void closeContainerFlow();
+    /// @brief Ends the processing of a containerFlow
+    void closeContainerFlow();
 
     /// @brief Ends the processing of a flow
     void closeFlow();
@@ -155,11 +164,14 @@ protected:
     /// @brief Processing of a container
     void addContainer(const SUMOSAXAttributes& attrs);
 
-	/// @brief Processing of a ride or transport
-	void addRideOrTransport(const SUMOSAXAttributes& attrs, bool isRide);
+    /// @brief Processing of a ride
+    void addRide(const SUMOSAXAttributes& attrs);
 
-	/// @brief Processing of a tranship
+    /// @brief Processing of a tranship
     void addTranship(const SUMOSAXAttributes& attrs);
+
+    /// @brief Processing of a transport
+    void addTransport(const SUMOSAXAttributes& attrs);
 
     ///@ brief parse depart- and arrival positions of a walk
     void parseWalkPositions(const SUMOSAXAttributes& attrs, const std::string& personID,
@@ -175,11 +187,14 @@ protected:
     int myActiveRouteRepeat;
     SUMOTime myActiveRoutePeriod;
 
-    /// @brief The plan of the current person
-    MSTransportable::MSTransportablePlan* myActivePlan;
+    /// @brief The type of the current object
+    ObjectTypeEnum myActiveType;
 
-    /// @brief The plan of the current container
-    MSTransportable::MSTransportablePlan* myActiveContainerPlan;
+    /// @brief The name of the current object type
+    std::string myActiveTypeName;
+
+    /// @brief The plan of the current transportable (person or container)
+    MSTransportable::MSTransportablePlan* myActiveTransportablePlan;
 
     /// @brief Information whether vehicles shall be directly added to the network or kept within the buffer
     bool myAddVehiclesDirectly;
@@ -204,13 +219,19 @@ protected:
 
 private:
     /// @brief delete already created MSTransportablePlans if error occurs before handing over responsibility to a MSTransportable.
-    void deleteActivePlans();
+    void deleteActivePlanAndVehicleParameter();
 
-	/// @brief ends the flow of a transportable (person or container)
-	void closeTransportableFlow(bool isPerson);
+    /// @brief reset MSTransportablePlans after transportable tag closes
+    void resetActivePlanAndVehicleParameter();
+    
+    /// @brief ends the flow of a transportable
+    void closeTransportableFlow();
+
+    /// @brief ends the processing of a transportable (as person or container)
+    void closeTransportable();
 
     /// @brief delete already created MSTransportablePlans if error occurs before handing over responsibility to a MSTransportable.
-    void addFlowTransportable(SUMOTime depart, MSVehicleType* type, const std::string& baseID, int i, bool isPerson);
+    void addFlowTransportable(SUMOTime depart, MSVehicleType* type, const std::string& baseID, int i);
 
     /// @brief determine the default group for rides and trips
     static std::string getDefaultGroup(const std::string& personID);
@@ -223,4 +244,11 @@ private:
 
     /// @brief Invalidated assignment operator
     MSRouteHandler& operator=(const MSRouteHandler& s) = delete;
+
+    /// @brief Check if vtype of given transportable exists
+    void checkTransportableType();
+
+    /// @brief Processing of a transport
+    void addRideOrTransport(const SUMOSAXAttributes& attrs, const SumoXMLTag modeTag);
+
 };

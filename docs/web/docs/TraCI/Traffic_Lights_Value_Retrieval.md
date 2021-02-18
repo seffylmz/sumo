@@ -1,6 +1,5 @@
 ---
-title: TraCI/Traffic Lights Value Retrieval
-permalink: /TraCI/Traffic_Lights_Value_Retrieval/
+title: Traffic Lights Value Retrieval
 ---
 
 ## Command 0xa2: Get Traffic Lights Variable

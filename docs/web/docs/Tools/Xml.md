@@ -1,6 +1,5 @@
 ---
-title: Tools/Xml
-permalink: /Tools/Xml/
+title: Xml
 ---
 
 ## xml2csv.py

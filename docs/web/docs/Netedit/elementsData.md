@@ -1,6 +1,5 @@
 ---
-title: netedit/elementsData
-permalink: /netedit/elementsData/
+title: elementsData
 ---
 
 # netedit data elements

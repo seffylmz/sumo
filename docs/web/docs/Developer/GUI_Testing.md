@@ -1,6 +1,5 @@
 ---
-title: Developer/GUI Testing
-permalink: /Developer/GUI_Testing/
+title: GUI Testing
 ---
 
 SUMO's netedit tests use

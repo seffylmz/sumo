@@ -1,6 +1,5 @@
 ---
-title: Simulation/Calibrator
-permalink: /Simulation/Calibrator/
+title: Calibrator
 ---
 
 # Calibrators

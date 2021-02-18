@@ -1,6 +1,5 @@
 ---
-title: TraCI/Vehicle Value Retrieval
-permalink: /TraCI/Vehicle_Value_Retrieval/
+title: Vehicle Value Retrieval
 ---
 
 ## Command 0xa4: Get Vehicle Variable
@@ -432,7 +431,7 @@ value is also shown in the table.
 <tr class="odd">
 <td><p>parameter (0x7e)</p></td>
 <td><p>string</p></td>
-<td><p><a href="#Device_and_LaneChangeModel_Parameter_Retrieval_0x7e" title="wikilink">Returns the value for the given string parameter</a></p></td>
+<td><p><a href="#device_and_lanechangemodel_parameter_retrieval_0x7e" title="wikilink">Returns the value for the given string parameter</a></p></td>
 <td><p><a href="https://sumo.dlr.de/pydoc/traci._vehicle.html#VehicleDomain-getParameter">getParameter</a></p></td>
 </tr>
 <tr class="even">
@@ -716,6 +715,7 @@ call](../TraCI/GenericParameters.md#get_parameter).
 - device.taxi.customers
 - device.taxi.occupiedTime
 - device.taxi.occupiedDistance
+- device.taxi.currentCustomers
 - device.example.customValue1 (return the value of option **--device.example.parameter**)
 - device.example.customValue2 (return the value of vehicle parameter
   *example*)

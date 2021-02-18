@@ -423,11 +423,11 @@ SUMOVehicleParserHelper::parseCommonAttributes(const SUMOSAXAttributes& attrs, c
     if (attrs.hasAttribute(SUMO_ATTR_DEPARTEDGE)) {
         std::string helper = attrs.get<std::string>(SUMO_ATTR_DEPARTEDGE, ret->id.c_str(), ok);
         int edgeIndex;
-        DepartEdgeDefinition ded;
-        if (SUMOVehicleParameter::parseDepartEdge(helper, element, ret->id, edgeIndex, ded, error)) {
+        RouteIndexDefinition rid;
+        if (SUMOVehicleParameter::parseRouteIndex(helper, element, ret->id, SUMO_ATTR_DEPARTEDGE, edgeIndex, rid, error)) {
             ret->parametersSet |= VEHPARS_DEPARTEDGE_SET;
             ret->departEdge = edgeIndex;
-            ret->departEdgeProcedure = ded;
+            ret->departEdgeProcedure = rid;
         } else {
             handleError(hardFail, abortCreation, error);
         }
@@ -480,6 +480,19 @@ SUMOVehicleParserHelper::parseCommonAttributes(const SUMOSAXAttributes& attrs, c
             ret->parametersSet |= VEHPARS_ARRIVALSPEED_SET;
             ret->arrivalSpeed = speed;
             ret->arrivalSpeedProcedure = asd;
+        } else {
+            handleError(hardFail, abortCreation, error);
+        }
+    }
+    // parse arrival edge information
+    if (attrs.hasAttribute(SUMO_ATTR_ARRIVALEDGE)) {
+        std::string helper = attrs.get<std::string>(SUMO_ATTR_ARRIVALEDGE, ret->id.c_str(), ok);
+        int edgeIndex;
+        RouteIndexDefinition rid;
+        if (SUMOVehicleParameter::parseRouteIndex(helper, element, ret->id, SUMO_ATTR_ARRIVALEDGE, edgeIndex, rid, error)) {
+            ret->parametersSet |= VEHPARS_ARRIVALEDGE_SET;
+            ret->arrivalEdge = edgeIndex;
+            ret->arrivalEdgeProcedure = rid;
         } else {
             handleError(hardFail, abortCreation, error);
         }
@@ -1371,6 +1384,7 @@ SUMOVehicleParserHelper::parseJMParams(SUMOVTypeParameter& into, const SUMOSAXAt
         allowedJMAttrs.insert(SUMO_ATTR_JM_IGNORE_KEEPCLEAR_TIME);
         allowedJMAttrs.insert(SUMO_ATTR_JM_IGNORE_FOE_SPEED);
         allowedJMAttrs.insert(SUMO_ATTR_JM_IGNORE_FOE_PROB);
+        allowedJMAttrs.insert(SUMO_ATTR_JM_IGNORE_JUNCTION_FOE_PROB);
         allowedJMAttrs.insert(SUMO_ATTR_JM_SIGMA_MINOR);
         allowedJMAttrs.insert(SUMO_ATTR_JM_STOPLINE_GAP);
         allowedJMAttrs.insert(SUMO_ATTR_JM_TIMEGAP_MINOR);

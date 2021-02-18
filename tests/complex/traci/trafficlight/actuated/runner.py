@@ -31,15 +31,48 @@ import sumolib  # noqa
 tlsID = "C"
 traci.start([sumolib.checkBinary('sumo'), "-c", "sumo.sumocfg"] + sys.argv[1:])
 
+logics = traci.trafficlight.getAllProgramLogics(tlsID)
+programID = traci.trafficlight.getProgram(tlsID)
+logic = None
+for cand in logics:
+    if cand.programID == programID:
+        logic = cand
+
+assert(logic)
+numPhases = len(logic.phases)
+print("current program '%s' has %s phases" % (programID, numPhases))
+
+
+def check():
+    print("%s phase=%s" % (
+        traci.simulation.getTime(),
+        traci.trafficlight.getPhase(tlsID)))
+
 
 # default actuated
 print("max-gap:", traci.trafficlight.getParameter(tlsID, "max-gap"))
+# make the first actuated phase 2 seconds longer
+traci.trafficlight.setPhaseDuration(tlsID, 7)
+traci.trafficlight.setPhase(tlsID, 0)
 for i in range(180):
+    check()
+    if i == 50:
+        phase = traci.trafficlight.getPhase(tlsID)
+        newPhase = (phase + 3) % numPhases
+        print("jumping from phase %s to %s" % (phase, newPhase))
+        traci.trafficlight.setPhase(tlsID, newPhase)
+        traci.trafficlight.setPhaseDuration(tlsID, 20)
     traci.simulationStep()
+
 # change parameter
 traci.trafficlight.setParameter(tlsID, "max-gap", "10")
 print("max-gap:", traci.trafficlight.getParameter(tlsID, "max-gap"))
+prolonged = False
 for i in range(180):
+    if not prolonged and traci.trafficlight.getPhase(tlsID) == 0:
+        # make the first actuated phase shorter once
+        traci.trafficlight.setPhaseDuration(tlsID, 30)
+        prolonged = True
     traci.simulationStep()
 
 traci.close()

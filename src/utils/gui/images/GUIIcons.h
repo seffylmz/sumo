@@ -48,6 +48,7 @@ enum class GUIIcon {
     CLOSE,
     HELP,
     HALL_OF_FAME,
+    CLEARMESSAGEWINDOW,
     /// @}
 
     /// @name simulation control icons
@@ -192,7 +193,7 @@ enum class GUIIcon {
 
     /// @name NETEDIT common mode specific icons
     /// @{
-    COMMONMODE_CHECKBOX_GRID,
+    COMMONMODE_CHECKBOX_TOOGLEGRID,
     COMMONMODE_CHECKBOX_SPREADVEHICLE,
     COMMONMODE_CHECKBOX_SHOWDEMANDELEMENTS,
     /// @}

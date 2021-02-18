@@ -1,6 +1,5 @@
 ---
-title: Simulation/Distances
-permalink: /Simulation/Distances/
+title: Distances
 ---
 
 # Introduction
@@ -22,7 +21,7 @@ However, lengths of edges and lanes can be different from the euclidean
 distance (referred to as a **length-geometry-mismtach**) are there are several reasons why this occurs.
 
 
-[sumo-gui](../sumo-gui.md/#edgelane_visualisation_settings) and [netedit](../netedit.md) can be configured to color lanes by ''by given length/geometrical length'' which highlights the mismatch between both distance values.
+[sumo-gui](../sumo-gui.md/#edgelane_visualisation_settings) and [netedit](../Netedit/index.md) can be configured to color lanes by ''by given length/geometrical length'' which highlights the mismatch between both distance values.
 
 ## Short Lanes
 Lanes with a geometrical length of 0 have an assigned minimum length of 0.1m.
@@ -47,4 +46,7 @@ length-geometry-mismatch. For example, railway networks with switches and parall
 geometrical lengths are reduced. To keep the driving-lengths at their realistic values, each edge is given a custom length value the mismatch.
 
 # Vehicle lengths in sumo-gui
-By default, vehicle lengths are not affected by length-geometry-mismatch. This means, vehicles may seem to violate minimum gaps or even collide if they are driving on an edge where the (driving) length is longer than the geometrical (euclidean) length.
+By default, vehicle lengths are scaled according to length-geometry mismatch. This corresponds to visual shortening when looking from above at a vehicle that is driving on a step include (the visual horizontal length is shorter than total road length). To prevent scaling, the vehicle gui option 'scale length with geometry' can be disabled.
+
+!!! note
+    Until version 1.9.0 Vehicle lengths were not affected by length-geometry-mismatch. This means, vehicles may have seemed to violate minimum gaps or even collide if they were driving on an edge where the (driving) length is longer than the geometrical (euclidean) length.

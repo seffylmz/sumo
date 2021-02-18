@@ -42,6 +42,30 @@ attribute of it's first stop), the prior train A that leaves this stop is
 identified (also based on "until"). Then a constraint is created that prevents
 insertion of B until train A has passed the next signal that lies beyond the
 stop.
+
+
+Inconsistent contraints may arise from inconsistent input and cause simulation
+deadlock. To avoid this, the option --abort-unordered can be used to avoid
+generating constraints that are likely to be inconsistent.
+When the option is set the ordering of vehicles is cross-checked with regard to
+arrival and until times:
+
+- predecessor constraints (which are based on sorted arrival times)
+  should have the same ordering when looking until-times
+  If an inconsistent ordering is found, the vehicle that goes first in the
+  simulation (earlier until time) will not get a constraint to wait for the
+  vehicle that goes earlier according to the 'arrival' value. and also will not
+  receive any constraints at subsequent signals
+  Also, no further predecessorConstraints are generated for that busStop
+
+- insertionPredecessor constraints (which are based on sorted until times)
+  should have the same ordering when looking at arrival times
+  If an inconsistent ordering is found, the vehicle that goes second in the
+  simulation (later until time) will not get a constraint to wait for the
+  vehicle that goes later according to the 'arrival' value.
+  Also, no further insertionPredecessor constraints are generated for that busStop
+
+
 """
 
 from __future__ import absolute_import
@@ -123,6 +147,18 @@ def get_options(args=None):
     options.delay = parseTime(options.delay)
 
     return options
+
+class Conflict:
+    def __init__(self, tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID, conflictTime):
+        self.tripID      = tripID
+        self.otherSignal = otherSignal
+        self.otherTripID = otherTripID
+        self.limit       = limit
+        self.line        = line
+        self.otherLine   = otherLine
+        self.vehID       = vehID
+        self.otherVehID  = otherVehID
+        self.conflictTime = conflictTime
 
 
 def getTravelTime(net, edges):
@@ -326,7 +362,7 @@ def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
     numIgnoredConflicts = 0
     # signal -> [(tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID), ...]
     conflicts = defaultdict(list)
-    ignoredVehicles = set()
+    ignoredVehicles = dict() # tripId -> earliestConflictTime
     for switch, stopRoutes2 in switchRoutes.items():
         numSwitchConflicts = 0
         numIgnoredSwitchConflicts = 0
@@ -372,7 +408,9 @@ def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
                                       humanReadableTime(parseTime(nStop.until))),
                                   file=sys.stderr)
                             # ignoredVehicles.insert(pStop.vehID)
-                            ignoredVehicles.add(nStop.vehID)
+                            if (nStop.vehID not in ignoredVehicles or
+                                    ignoredVehicles[nStop.vehID] > nArrival):
+                                ignoredVehicles[nStop.vehID] = nArrival
                         ignore = True
                         continue
                     if (options.abortUnordered and nStop.vehID in ignoredVehicles):
@@ -411,15 +449,27 @@ def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
                             humanReadableTime(end), options.delay, pSignal,
                             pStop, nStop))
                     limit += countPassingTrainsToOtherStops(options, pSignal, busStop, pTimeAtSignal, end, signalTimes)
-                    conflicts[nSignal].append((nStop.prevTripId, pSignal, pStop.prevTripId, limit,
+                    conflicts[nSignal].append(Conflict(nStop.prevTripId, pSignal, pStop.prevTripId, limit,
                                                # attributes for adding comments
-                                               nStop.prevLine, pStop.prevLine, nStop.vehID, pStop.vehID))
+                                               nStop.prevLine, pStop.prevLine, nStop.vehID, pStop.vehID, nArrival))
         if options.verbose:
             print("Found %s conflicts at switch %s" % (numSwitchConflicts, switch))
             if numIgnoredSwitchConflicts > 0:
                 print("Ignored %s conflicts at switch %s" % (numIgnoredSwitchConflicts, switch))
 
     print("Found %s conflicts" % numConflicts)
+
+    if numIgnoredConflicts > 0:
+        # find additonal conflicts to ignore based on timing of other ignored conflicts (#7890)
+        for signal, signalConflicts in conflicts.items():
+            conflicts2 = []
+            for c in signalConflicts:
+                if c.tripID in ignoredVehicles and ignoredVehicles[c.tripID] < c.conflictTime:
+                    numIgnoredConflicts += 1
+                else:
+                    conflicts2.append(c)
+        conflicts[signal] = conflicts2
+
     if numIgnoredConflicts > 0:
         print("Ignored %s conflicts" % numIgnoredConflicts)
     return conflicts
@@ -526,9 +576,10 @@ def findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoute
                             continue
                         # predecessor tripId after stop is needed
                         pTripId = pStop.getAttributeSecure("tripId", pStop.vehID)
-                        conflicts[nSignal].append((nStop.prevTripId, pSignal, pTripId, limit,
+                        conflicts[nSignal].append(Conflict(nStop.prevTripId, pSignal, pTripId, limit,
                                                    # attributes for adding comments
-                                                   nStop.prevLine, pStop.prevLine, nStop.vehID, pStop.vehID))
+                                                   nStop.prevLine,
+                                                   pStop.prevLine, nStop.vehID, pStop.vehID, nStop.arrival))
                         numConflicts += 1
                         if busStop == options.debugStop:
                             print("   found insertionConflict pSignal=%s nSignal=%s pTripId=%s" % (
@@ -543,20 +594,19 @@ def findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoute
     return conflicts
 
 
-def writeConstraint(options, outf, tag, values):
-    tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID = values
+def writeConstraint(options, outf, tag, c):
     comment = ""
+    limit = c.limit + options.limit
     if options.commentLine:
-        if line != "":
-            comment += "line=%s " % line
-        if otherLine != "":
-            comment += "foeLine=%s " % otherLine
+        if c.line != "":
+            comment += "line=%s " % c.line
+        if c.otherLine != "":
+            comment += "foeLine=%s " % c.otherLine
     if options.commentId:
-        if vehID != tripID:
-            comment += "vehID=%s " % vehID
-        if otherVehID != otherTripID:
-            comment += "foeID=%s " % otherVehID
-    limit += options.limit
+        if c.vehID != c.tripID:
+            comment += "vehID=%s " % c.vehID
+        if c.otherVehID != c.otherTripID:
+            comment += "foeID=%s " % c.otherVehID
     if comment != "":
         comment = "   <!-- %s -->" % comment
     if limit == 1:
@@ -564,7 +614,7 @@ def writeConstraint(options, outf, tag, values):
     else:
         limit = ' limit="%s"' % limit
     outf.write('        <%s tripId="%s" tl="%s" foes="%s"%s/>%s\n' % (
-        tag, tripID, otherSignal, otherTripID, limit, comment))
+        tag, c.tripID, c.otherSignal, c.otherTripID, limit, comment))
 
 
 def main(options):
@@ -582,10 +632,10 @@ def main(options):
         sumolib.writeXMLHeader(outf, "$Id$", "additional")  # noqa
         for signal in signals:
             outf.write('    <railSignalConstraints id="%s">\n' % signal)
-            for values in conflicts[signal]:
-                writeConstraint(options, outf, "predecessor", values)
-            for values in insertionConflicts[signal]:
-                writeConstraint(options, outf, "insertionPredecessor", values)
+            for conflict in conflicts[signal]:
+                writeConstraint(options, outf, "predecessor", conflict)
+            for conflict in insertionConflicts[signal]:
+                writeConstraint(options, outf, "insertionPredecessor", conflict)
             outf.write('    </railSignalConstraints>\n')
         outf.write('</additional>\n')
 

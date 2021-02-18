@@ -2193,6 +2193,9 @@ NBNode::checkIsRemovable() const {
 
 bool
 NBNode::checkIsRemovableReporting(std::string& reason) const {
+    if (getEdges().empty()) {
+        return true;
+    }
     // check whether this node is included in a traffic light or crossing
     if (myTrafficLights.size() != 0) {
         reason = "TLS";
@@ -3027,8 +3030,13 @@ NBNode::buildWalkingAreas(int cornerDetail, double joinMinDist) {
         if (myWalkingAreaCustomShapes.size() > 0) {
             for (auto wacs : myWalkingAreaCustomShapes) {
                 // every edge in wasc.edges must be part of connected
-                if (wacs.shape.size() != 0 && includes(connected, wacs.edges)) {
-                    wa.shape = wacs.shape;
+                if ((wacs.shape.size() != 0 || wacs.width != NBEdge::UNSPECIFIED_WIDTH) && includes(connected, wacs.edges)) {
+                    if (wacs.shape.size() != 0) {
+                        wa.shape = wacs.shape;
+                    } 
+                    if (wacs.width != NBEdge::UNSPECIFIED_WIDTH) {
+                        wa.width = wacs.width;
+                    }
                     wa.hasCustomShape = true;
                 }
             }
@@ -3179,10 +3187,11 @@ NBNode::edgesBetween(const NBEdge* e1, const NBEdge* e2) const {
 
 
 void
-NBNode::addWalkingAreaShape(EdgeVector edges, const PositionVector& shape) {
+NBNode::addWalkingAreaShape(EdgeVector edges, const PositionVector& shape, double width) {
     WalkingAreaCustomShape wacs;
     wacs.edges.insert(edges.begin(), edges.end());
     wacs.shape = shape;
+    wacs.width = width;
     myWalkingAreaCustomShapes.push_back(wacs);
 }
 

@@ -17,7 +17,6 @@ copy_test_path:input_routes2.rou.xml
 copy_test_path:input_flows.flows.xml
 copy_test_path:input_turns.xml
 copy_test_path:input_detectors.det.xml
-copy_test_path:tracefile.xml
 copy_test_path:tracefile.txt
 copy_test_path:input_weights.dump.xml
 copy_test_path:e2_output.xml
@@ -149,6 +148,7 @@ restrictions:restrictions.txt
 parking:input_routes.rou.parking.xml
 parking:parking_parkingLot.add.xml
 toolcfg:out.toolcfg
+tracefile:tracefile_out.txt
 
 [run_dependent_text]
 output:Begin time
@@ -204,6 +204,8 @@ errors:Scipy version [0-9]+\.[0-9]+\.[0-9]+{REPLACE Scipy}
 errors:OptimizeWarning
 errors:/home/
 errors:C:
+errors:D:
+errors:unknown url type{REPLACE [Errno 2] No such file or directory}
 omnet:<!-- generated on
 shawn:<!-- generated on
 gpsdat:r[0-9]

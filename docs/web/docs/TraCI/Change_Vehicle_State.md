@@ -1,6 +1,5 @@
 ---
-title: TraCI/Change Vehicle State
-permalink: /TraCI/Change_Vehicle_State/
+title: Change Vehicle State
 ---
 
 # Command 0xc4: Change Vehicle State

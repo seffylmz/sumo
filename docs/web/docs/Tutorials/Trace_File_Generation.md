@@ -1,6 +1,5 @@
 ---
-title: Tutorials/Trace File Generation
-permalink: /Tutorials/Trace_File_Generation/
+title: Trace File Generation
 ---
 
 # Introduction

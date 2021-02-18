@@ -1,6 +1,5 @@
 ---
-title: netedit
-permalink: /netedit/
+title: elements
 ---
 
 # netedit elements

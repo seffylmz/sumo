@@ -1,6 +1,5 @@
 ---
-title: Simulation/Output/Instantaneous Induction Loops Detectors
-permalink: /Simulation/Output/Instantaneous_Induction_Loops_Detectors/
+title: Instantaneous Induction Loops Detectors
 ---
 
 ## Instantiating within the Simulation
@@ -8,7 +7,7 @@ permalink: /Simulation/Output/Instantaneous_Induction_Loops_Detectors/
 An instantaneous induction loop is defined this way within an additional
 file like this:
 
-```
+```xml
 <instantInductionLoop id="<ID>" lane="<LANE_ID>" pos="<POSITION_ON_LANE>" file="<OUTPUT_FILE>" [friendlyPos="x"]/>
 ```
 
@@ -34,7 +33,7 @@ The attributes:
 | vTypes         | string             | space separated list of vehicle type ids to consider, "" means all; default "".                       |
 
 !!! note
-    Instead of manually defining detectors in an xml file, they can also be defined visually with [netedit](../../netedit.md).
+    Instead of manually defining detectors in an xml file, they can also be defined visually with [netedit](../../Netedit/index.md).
 
 ## Generated Output
 

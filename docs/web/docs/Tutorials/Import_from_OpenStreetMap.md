@@ -1,6 +1,5 @@
 ---
-title: Tutorials/Import from OpenStreetMap
-permalink: /Tutorials/Import_from_OpenStreetMap/
+title: Import from OpenStreetMap
 ---
 
 ![OpenStreetMapOverview.svg](../images/OpenStreetMapOverview.svg "OpenStreetMapOverview.svg")

@@ -1,6 +1,5 @@
 ---
-title: Simulation/Bluetooth
-permalink: /Simulation/Bluetooth/
+title: Bluetooth
 ---
 
 # Overview

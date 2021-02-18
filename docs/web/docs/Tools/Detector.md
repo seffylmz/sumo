@@ -1,6 +1,5 @@
 ---
-title: Tools/Detector
-permalink: /Tools/Detector/
+title: Detector
 ---
 
 # flowrouter.py

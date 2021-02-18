@@ -52,19 +52,30 @@ GNEParkingArea::~GNEParkingArea() {}
 void
 GNEParkingArea::updateGeometry() {
     // Get value of option "lefthand"
-    double offsetSign = OptionsCont::getOptions().getBool("lefthand") ? -1 : 1;
-
+    const double offsetSign = OptionsCont::getOptions().getBool("lefthand") ? -1 : 1;
+    // calculate spaceDim
+    const double spaceDim = myRoadSideCapacity > 0 ? (getEndPosition() - getStartPosition()) / myRoadSideCapacity * getParentLanes().front()->getLengthGeometryFactor() : 7.5;
+    // calculate lenght
+    const double length = canParse<double>(myLength) && (parse<double>(myLength) > 0) ? parse<double>(myLength) : spaceDim;
     // Update common geometry of stopping place
-    setStoppingPlaceGeometry(getParentLanes().front()->getParentEdge()->getNBEdge()->getLaneWidth(getParentLanes().front()->getIndex()) / 2 + myWidth);
-
+    setStoppingPlaceGeometry(myWidth);
     // Obtain a copy of the shape
     PositionVector tmpShape = myAdditionalGeometry.getShape();
-
     // Move shape to side
-    tmpShape.move2side(1.5 * offsetSign);
-
+    tmpShape.move2side(1.5 * offsetSign + myWidth);
     // Get position of the sign
     mySignPos = tmpShape.getLineCenter();
+    // clear LotSpaceDefinitions
+    myLotSpaceDefinitions.clear();
+    // iterate over 
+    for (int i = 0; i < myRoadSideCapacity; ++i) {
+        // calculate pos
+        const Position pos = GeomHelper::calculateLotSpacePosition(myAdditionalGeometry.getShape(), i, spaceDim, myAngle, myWidth, length);
+        // calculate angle
+        const double angle = GeomHelper::calculateLotSpaceAngle(myAdditionalGeometry.getShape(), i, spaceDim, myAngle);
+        // add GNElotEntry
+        myLotSpaceDefinitions.push_back(GNELotSpaceDefinition(pos.x(), pos.y(), pos.z(), angle, myWidth, length));
+    }
 }
 
 
@@ -100,13 +111,19 @@ GNEParkingArea::drawGL(const GUIVisualizationSettings& s) const {
         // set base color
         GLHelper::setColor(baseColor);
         // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
-        GNEGeometry::drawGeometry(myNet->getViewNet(), myAdditionalGeometry, myWidth * parkingAreaExaggeration);
+        GNEGeometry::drawGeometry(myNet->getViewNet(), myAdditionalGeometry, myWidth * 0.5 * parkingAreaExaggeration);
         // draw detail
         if (s.drawDetail(s.detailSettings.stoppingPlaceDetails, parkingAreaExaggeration)) {
             // draw sign
             drawSign(s, parkingAreaExaggeration, baseColor, signColor, "P");
             // draw lock icon
             GNEViewNetHelper::LockIcon::drawLockIcon(this, myAdditionalGeometry, parkingAreaExaggeration, 0, 0, true);
+            // Traslate to front
+            glTranslated(0, 0, 0.1);
+            // draw lotSpaceDefinitions
+            for (const auto& lsd : myLotSpaceDefinitions) {
+                GLHelper::drawSpaceOccupancies(parkingAreaExaggeration, lsd.position, lsd.rotation, lsd.width, lsd.length, true);
+            }
         }
         // pop draw matrix
         glPopMatrix();
@@ -118,10 +135,10 @@ GNEParkingArea::drawGL(const GUIVisualizationSettings& s) const {
         drawAdditionalName(s);
         // check if dotted contours has to be drawn
         if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
-            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::INSPECT, s, myAdditionalGeometry.getShape(), myWidth, parkingAreaExaggeration);
+            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::INSPECT, s, myAdditionalGeometry.getShape(), myWidth * 0.5, parkingAreaExaggeration);
         }
         if (s.drawDottedContour() || myNet->getViewNet()->getFrontAttributeCarrier() == this) {
-            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::FRONT, s, myAdditionalGeometry.getShape(), myWidth, parkingAreaExaggeration);
+            GNEGeometry::drawDottedContourShape(GNEGeometry::DottedContourType::FRONT, s, myAdditionalGeometry.getShape(), myWidth * 0.5, parkingAreaExaggeration);
         }
         // draw child spaces
         for (const auto& parkingSpace : getChildAdditionals()) {
@@ -267,6 +284,24 @@ GNEParkingArea::isValid(SumoXMLAttr key, const std::string& value) {
 }
 
 // ===========================================================================
+// protected
+// ===========================================================================
+
+GNEParkingArea::GNELotSpaceDefinition::GNELotSpaceDefinition() :
+    rotation(0),
+    width(0),
+    length(0) {
+}
+
+
+GNEParkingArea::GNELotSpaceDefinition::GNELotSpaceDefinition(double x, double y, double z, double rotation_, double width_, double length_) :
+    position(Position(x, y, z)),
+    rotation(rotation_),
+    width(width_),
+    length(length_) {
+}
+
+// ===========================================================================
 // private
 // ===========================================================================
 
@@ -311,6 +346,8 @@ GNEParkingArea::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         case SUMO_ATTR_ROADSIDE_CAPACITY:
             myRoadSideCapacity = parse<int>(value);
+            // update boundary
+            updateCenteringBoundary(true);
             break;
         case SUMO_ATTR_ONROAD:
             myOnRoad = parse<bool>(value);

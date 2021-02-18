@@ -1,9 +1,8 @@
 ---
-title: Z/Changes from Version 0.31.0 to Version 0.32.0
-permalink: /Z/Changes_from_Version_0.31.0_to_Version_0.32.0/
+title: Changes from Version 0.31.0 to Version 0.32.0
 ---
 
-## Version 0.32.0 (19.12.2017)
+**Release date: 19.12.2017**
 
 ### Bugfixes
 
@@ -256,7 +255,7 @@ permalink: /Z/Changes_from_Version_0.31.0_to_Version_0.32.0/
 have a look at
 [Installing/Windows_CMake](../Installing/Windows_CMake.md) for
 information on how to build SUMO on Windows with CMake. There are
-also helper scripts in preparation at [{{SUMO}}/tools/build]({{Source}}tools/build) for instance [{{SUMO}}/tools/build/buildMSVS15Project.py]({{Source}}tools/build/buildMSVS15Project.py).
+also helper scripts in preparation at [{{SUMO}}/tools/build]({{Source}}tools/build) for instance `tools/build/buildMSVS15Project.py`.
 
 - Simulation
   - **chargingstations-output** now writes times as seconds rather

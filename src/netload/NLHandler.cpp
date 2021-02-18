@@ -496,8 +496,13 @@ NLHandler::addLane(const SUMOSAXAttributes& attrs) {
         return;
     }
     const SVCPermissions permissions = parseVehicleClasses(allow, disallow, myNetworkVersion);
-    const SVCPermissions changeLeft = parseVehicleClasses(changeLeftS, "", myNetworkVersion);
-    const SVCPermissions changeRight = parseVehicleClasses(changeRightS, "", myNetworkVersion);
+    SVCPermissions changeLeft = parseVehicleClasses(changeLeftS, "", myNetworkVersion);
+    SVCPermissions changeRight = parseVehicleClasses(changeRightS, "", myNetworkVersion);
+    if (MSGlobals::gLefthand) {
+        // internally, changeLeft always checks for the higher lane index
+        // even though the higher lane index is to the right in a left-hand network
+        std::swap(changeLeft, changeRight);
+    }
     if (permissions != SVCAll || changeLeft != SVCAll || changeRight != SVCAll) {
         myNet.setPermissionsFound();
     }
@@ -1247,10 +1252,10 @@ NLHandler::addConnection(const SUMOSAXAttributes& attrs) {
     MSLink* link = nullptr;
     try {
         const int fromLaneIdx = attrs.get<int>(SUMO_ATTR_FROM_LANE, nullptr, ok);
-        const double foeVisibilityDistance = attrs.getOpt<double>(SUMO_ATTR_VISIBILITY_DISTANCE, nullptr, ok, 4.5);
         const int toLaneIdx = attrs.get<int>(SUMO_ATTR_TO_LANE, nullptr, ok);
         LinkDirection dir = parseLinkDir(attrs.get<std::string>(SUMO_ATTR_DIR, nullptr, ok));
         LinkState state = parseLinkState(attrs.get<std::string>(SUMO_ATTR_STATE, nullptr, ok));
+        const double foeVisibilityDistance = attrs.getOpt<double>(SUMO_ATTR_VISIBILITY_DISTANCE, nullptr, ok, state == LINKSTATE_ZIPPER ? 100 : 4.5);
         bool keepClear = attrs.getOpt<bool>(SUMO_ATTR_KEEP_CLEAR, nullptr, ok, true);
         std::string tlID = attrs.getOpt<std::string>(SUMO_ATTR_TLID, nullptr, ok, "");
         std::string viaID = attrs.getOpt<std::string>(SUMO_ATTR_VIA, nullptr, ok, "");

@@ -123,8 +123,6 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(GUISUMOAbstractView* parent, GUIV
         new FXLabel(m11, "Color", nullptr, GUIDesignViewSettingsLabel1);
         myBackgroundColor = new FXColorWell(m11, MFXUtils::getFXColor(settings->backgroundColor), this, MID_SIMPLE_VIEW_COLORCHANGE, GUIDesignViewSettingsColorWell);
 
-        new FXHorizontalSeparator(frame1, GUIDesignHorizontalSeparator);
-
         FXVerticalFrame* verticalFrameDecals = new FXVerticalFrame(frame1, GUIDesignViewSettingsVerticalFrame3);
         new FXLabel(verticalFrameDecals, "Decals:");
         myDecalsFrame = new FXVerticalFrame(verticalFrameDecals);
@@ -136,7 +134,7 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(GUISUMOAbstractView* parent, GUIV
         new FXHorizontalSeparator(frame1, GUIDesignHorizontalSeparator);
 
         FXMatrix* m12 = new FXMatrix(frame1, 2, GUIDesignViewSettingsMatrix1);
-        myShowGrid = new FXCheckButton(m12, "Show grid", this, MID_SIMPLE_VIEW_COLORCHANGE, GUIDesignCheckButtonViewSettings);
+        myShowGrid = new FXCheckButton(m12, "Toogle grid", this, MID_SIMPLE_VIEW_COLORCHANGE, GUIDesignCheckButtonViewSettings);
         myShowGrid->setCheck(mySettings->showGrid);
         new FXLabel(m12, "");
         FXMatrix* m121 = new FXMatrix(m12, 2, GUIDesignViewSettingsMatrix2);
@@ -288,7 +286,9 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(GUISUMOAbstractView* parent, GUIV
         myShowBTRange->setCheck(mySettings->showBTRange);
         myShowRouteIndex = new FXCheckButton(m33, "Show route index", this, MID_SIMPLE_VIEW_COLORCHANGE);
         myShowRouteIndex->setCheck(mySettings->showRouteIndex);
-        new FXLabel(m33, " ", nullptr, GUIDesignViewSettingsLabel1);
+        myScaleLength = new FXCheckButton(m33, "Scale length with geometry", this, MID_SIMPLE_VIEW_COLORCHANGE);
+        myScaleLength->setCheck(mySettings->scaleLength);
+        //new FXLabel(m33, " ", nullptr, GUIDesignViewSettingsLabel1);
         //myShowLaneChangePreference = new FXCheckButton(m33, "Show lane change preference", this, MID_SIMPLE_VIEW_COLORCHANGE);
         //myShowLaneChangePreference->setCheck(mySettings->drawLaneChangePreference);
         //tmpc = new FXCheckButton(m33, "Show needed headway", 0 ,0);
@@ -639,9 +639,9 @@ GUIDialog_ViewSettings::onCmdCancel(FXObject*, FXSelector, void*) {
 
 
 long
-GUIDialog_ViewSettings::onCmdNameChange(FXObject*, FXSelector, void* data) {
-    if (data != nullptr) {
-        FXString dataS = (char*) data; // !!!unicode
+GUIDialog_ViewSettings::onCmdNameChange(FXObject*, FXSelector, void* ptr) {
+    if (ptr != nullptr) {
+        FXString dataS = (char*) ptr; // !!!unicode
         // check whether this item has been added twice
         if (dataS == mySchemeName->getItemText(mySchemeName->getNumItems() - 1)) {
             for (int i = 0; i < mySchemeName->getNumItems() - 1; ++i) {
@@ -699,6 +699,7 @@ GUIDialog_ViewSettings::onCmdNameChange(FXObject*, FXSelector, void* data) {
     myShowBrakeGap->setCheck(mySettings->drawBrakeGap);
     myShowBTRange->setCheck(mySettings->showBTRange);
     myShowRouteIndex->setCheck(mySettings->showRouteIndex);
+    myScaleLength->setCheck(mySettings->scaleLength);
     /*
     myShowLaneChangePreference->setCheck(mySettings->drawLaneChangePreference);
     */
@@ -942,6 +943,7 @@ GUIDialog_ViewSettings::onCmdColorChange(FXObject* sender, FXSelector, void* /*v
     tmpSettings.drawBrakeGap = (myShowBrakeGap->getCheck() != FALSE);
     tmpSettings.showBTRange = (myShowBTRange->getCheck() != FALSE);
     tmpSettings.showRouteIndex = (myShowRouteIndex->getCheck() != FALSE);
+    tmpSettings.scaleLength = (myScaleLength->getCheck() != FALSE);
     /*
     tmpSettings.drawLaneChangePreference = (myShowLaneChangePreference->getCheck() != FALSE);
     */
@@ -1399,7 +1401,7 @@ GUIDialog_ViewSettings::onCmdSaveDecals(FXObject*, FXSelector, void* /*data*/) {
 
 
 long 
-GUIDialog_ViewSettings::onCmdClearDecals(FXObject*, FXSelector, void* data) {
+GUIDialog_ViewSettings::onCmdClearDecals(FXObject*, FXSelector, void* /*data*/) {
     // lock decals mutex
     myDecalsLock->lock();
     // clear decals
@@ -1428,9 +1430,9 @@ GUIDialog_ViewSettings::rebuildDecalsTable() {
     // set table attributes
     const int numRows = MAX2((int)10, (int)myDecals->size() + 1);
     myDecalsTable->setTableSize(numRows, cols);
-    myDecalsTable->setColumnText(0, "picture file");
-    myDecalsTable->setColumnText(1, "center x");
-    myDecalsTable->setColumnText(2, "center y");
+    myDecalsTable->setColumnText(0, "file");
+    myDecalsTable->setColumnText(1, "centerX");
+    myDecalsTable->setColumnText(2, "centerY");
     myDecalsTable->setColumnText(3, "width");
     myDecalsTable->setColumnText(4, "height");
     myDecalsTable->setColumnText(5, "rotation");
@@ -1728,8 +1730,8 @@ GUIDialog_ViewSettings::updatePOIParams() {
 }
 
 long
-GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
-    MFXEditedTableItem* i = (MFXEditedTableItem*) data;
+GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* ptr) {
+    MFXEditedTableItem* i = (MFXEditedTableItem*) ptr;
     std::string value = i->item->getText().text();
     // check whether the inserted value is empty
     if (value.find_first_not_of(" ") == std::string::npos) {

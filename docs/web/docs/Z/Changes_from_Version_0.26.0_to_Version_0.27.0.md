@@ -1,9 +1,8 @@
 ---
-title: Z/Changes from Version 0.26.0 to Version 0.27.0
-permalink: /Z/Changes_from_Version_0.26.0_to_Version_0.27.0/
+title: Changes from Version 0.26.0 to Version 0.27.0
 ---
 
-## Version 0.27.0 (12.07.2016)
+**Release date: 12.07.2016**
 
 ### Bugfixes
 

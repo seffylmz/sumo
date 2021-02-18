@@ -1,10 +1,9 @@
 ---
-title: Basics/Using the Command Line Applications
-permalink: /Basics/Using_the_Command_Line_Applications/
+title: Using the Command Line Applications
 ---
 
 Most of the applications from the SUMO package are command line tools.
-Currently, only [sumo-gui](../sumo-gui.md) and [netedit](../netedit.md) are not. If you do not
+Currently, only [sumo-gui](../sumo-gui.md) and [netedit](../Netedit/index.md) are not. If you do not
 know what a "command line" is, we refer you to the page about [basic computer skills](../Basics/Basic_Computer_Skills.md#running_programs_from_the_command_line).
 
 The following presents some peculiarities of the SUMO-suite
@@ -328,7 +327,7 @@ application.
 
 # Using Python tools from the Command Line
 
-Many [tools](../Tools.md) that are distributed by SUMO (in the
+Many [tools](../Tools/index.md) that are distributed by SUMO (in the
 {{SUMO}}/tools folder are written in the [python](https://www.python.org/)
 programming language. To use them, **python 2.7** must be [installed on your computer](https://www.python.org/downloads/).
 

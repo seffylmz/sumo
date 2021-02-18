@@ -542,7 +542,9 @@ public:
                                   const PositionVector& customShape,
                                   bool uncontrolled,
                                   bool warnOnly,
-                                  SVCPermissions permissions = SVC_UNSPECIFIED);
+                                  SVCPermissions permissions = SVC_UNSPECIFIED,
+                                  SVCPermissions changeLeft = SVC_UNSPECIFIED,
+                                  SVCPermissions changeRight = SVC_UNSPECIFIED);
 
     bool hasPostProcessConnection(const std::string& from, const std::string& to = "");
 
@@ -610,6 +612,9 @@ public:
     /// @brief ensure that all edges have valid nodes
     bool checkConsistency(const NBNodeCont& nc);
 
+    /// @brief modify all restrictions on lane changing for edges and connections
+    void updateAllChangeRestrictions(SVCPermissions ignoring);
+
 private:
     /// @brief compute the form factor for a loop of edges
     static double formFactor(const EdgeVector& loopEdges);
@@ -635,7 +640,10 @@ private:
                               double length_,
                               const PositionVector& customShape_,
                               bool uncontrolled_,
-                              bool warnOnly_, SVCPermissions permissions_) :
+                              bool warnOnly_,
+                              SVCPermissions permissions_,
+                              SVCPermissions changeLeft_,
+                              SVCPermissions changeRight_) :
             from(from_), fromLane(fromLane_), to(to_), toLane(toLane_), mayDefinitelyPass(mayDefinitelyPass_), keepClear(keepClear_), contPos(contPos_),
             visibility(visibility_),
             speed(speed_),
@@ -643,6 +651,8 @@ private:
             customShape(customShape_),
             uncontrolled(uncontrolled_),
             permissions(permissions_),
+            changeLeft(changeLeft_),
+            changeRight(changeRight_),
             warnOnly(warnOnly_)
         {}
         /// @brief The id of the edge the connection starts at
@@ -671,6 +681,10 @@ private:
         bool uncontrolled;
         /// @brief custom permissions for connection
         SVCPermissions permissions;
+        /// @brief custom lane changing permissions for connection
+        SVCPermissions changeLeft;
+        /// @brief custom lane changing permissions for connection
+        SVCPermissions changeRight;
         /// @brief whether a failure to set this connection is a warning or an error
         bool warnOnly;
     };

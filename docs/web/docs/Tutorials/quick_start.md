@@ -1,6 +1,5 @@
 ---
-title: Tutorials/quick start
-permalink: /Tutorials/quick_start/
+title: Quick Start
 ---
 
 This tutorial covers a basic application and essential functions of SUMO
@@ -181,7 +180,7 @@ on the chosen edge. As you can see on the left side of the following
 picture, the different meanings of the dyed edges are shown in the
 Legend. ![con1.png](../images/Con1.png "con1.png")
 For further information and a deeper sight, please go to
-[netedit](../netedit.md).
+[netedit](../Netedit/index.md).
 
   - Another topic is the priority of each edge. In our example, the
     priority is 1 by default. To change the priority, please select the
@@ -378,4 +377,4 @@ up. An illustration example is given in Figure 1.9.
 !!! note
     If you start the tutorial with [sumo-gui](../sumo-gui.md), the whole network is visible at first but no vehicles can be seen because the view is zoomed out very far. You need to zoom in by holding the right mouse button and moving the mouse to be able to see any vehicles. Furthermore, you need not set the delay value to something greater than 0. Otherwise, the simulation may be over very quickly and you do not get to see vehicle movements.
 
-Back to [Tutorials](../Tutorials.md)
+Back to [Tutorials](index.md)

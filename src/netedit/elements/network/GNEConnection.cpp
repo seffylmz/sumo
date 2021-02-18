@@ -148,7 +148,7 @@ GNEConnection::getMoveOperation(const double shapeOffset) {
         // get connection
         const auto& connection = getNBEdgeConnection();
         // get original shape
-        const PositionVector originalShape = connection.customShape.size() > 0 ? connection.customShape : connection.shape;
+        const PositionVector originalShape = connection.customShape.size() > 0 ? connection.customShape : myConnectionGeometry.getShape();
         // declare shape to move
         PositionVector shapeToMove = originalShape;
         // first check if in the given shapeOffset there is a geometry point
@@ -329,8 +329,12 @@ GNEConnection::updateCenteringBoundary(const bool /*updateGrid*/) {
 
 void
 GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
+    // get edited network element
+    const GNENetworkElement* editedNetworkElement = myNet->getViewNet()->getEditNetworkElementShapes().getEditedNetworkElement();
     // declare a flag to check if shape has to be draw
     bool drawConnection = true;
+    // declare flag to check if push glID
+    bool pushGLID = true;
     if ((myNet->getViewNet()->getEditModes().isCurrentSupermodeDemand()) &&
             s.drawDetail(s.detailSettings.connectionsDemandMode, s.addSize.getExaggeration(s, this))) {
         drawConnection = !myShapeDeprecated;
@@ -341,8 +345,13 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
         drawConnection = false;
     }
     // check if we're editing this connection
-    if (myNet->getViewNet()->getEditNetworkElementShapes().getEditedNetworkElement() == this) {
-        drawConnection = true;
+    if (editedNetworkElement && (editedNetworkElement->getTagProperty().getTag() == SUMO_TAG_CONNECTION)) {
+        if (editedNetworkElement->getAttribute(GNE_ATTR_PARENT) == getAttribute(GNE_ATTR_PARENT)) {
+            drawConnection = true;
+        }
+        if (editedNetworkElement != this) {
+            pushGLID = false;
+        }
     }
     // Check if connection must be drawed
     if (drawConnection) {
@@ -358,9 +367,6 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
             connectionColor = s.colorSettings.selectedConnectionColor;
         } else if (mySpecialColor != nullptr) {
             connectionColor = *mySpecialColor;
-        } else if (myNet->getViewNet()->getEditModes().isCurrentSupermodeNetwork() && 
-            (myNet->getViewNet()->getEditModes().networkEditMode == NetworkEditMode::NETWORK_CONNECT)) {
-            connectionColor = RGBColor::GREY;
         } else {
             // Set color depending of the link state
             connectionColor = GNEInternalLane::colorForLinksState(getLinkState());
@@ -370,11 +376,13 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
             GLHelper::drawBoundary(getCenteringBoundary());
         }
         // Push name
-        glPushName(getGlID());
+        if (pushGLID) {
+            glPushName(getGlID());
+        }
         // Push layer matrix
         glPushMatrix();
         // translate to front
-        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_CONNECTION);
+        myNet->getViewNet()->drawTranslateFrontAttributeCarrier(this, GLO_CONNECTION, (editedNetworkElement == this)? 1 : 0);
         // Set color
         GLHelper::setColor(connectionColor);
         if ((s.scale * selectionScale < 5.) && !s.drawForRectangleSelection) {
@@ -418,7 +426,9 @@ GNEConnection::drawGL(const GUIVisualizationSettings& s) const {
                 }
             }
             // Pop name
-            glPopName();
+            if (pushGLID) {
+                glPopName();
+            }
             // check if dotted contour has to be drawn (not useful at high zoom)
             if (s.drawDottedContour() || myNet->getViewNet()->isAttributeCarrierInspected(this)) {
                 // calculate dotted geometry
@@ -489,6 +499,18 @@ GNEConnection::getAttribute(SumoXMLAttr key) const {
             } else {
                 return getVehicleClassNames(invertPermissions(nbCon.permissions));
             }
+        case SUMO_ATTR_CHANGE_LEFT:
+            if (nbCon.changeLeft == SVC_UNSPECIFIED) {
+                return "all";
+            } else {
+                return getVehicleClassNames(nbCon.changeLeft);
+            }
+        case SUMO_ATTR_CHANGE_RIGHT:
+            if (nbCon.changeRight == SVC_UNSPECIFIED) {
+                return "all";
+            } else {
+                return getVehicleClassNames(nbCon.changeRight);
+            }
         case SUMO_ATTR_SPEED:
             return toString(nbCon.speed);
         case SUMO_ATTR_LENGTH:
@@ -505,6 +527,8 @@ GNEConnection::getAttribute(SumoXMLAttr key) const {
             return toString(isAttributeCarrierSelected());
         case GNE_ATTR_PARAMETERS:
             return nbCon.getParametersStr();
+        case GNE_ATTR_PARENT:
+            return getEdgeFrom()->getParentJunctions().back()->getID();
         default:
             throw InvalidArgument(getTagStr() + " doesn't have an attribute of type '" + toString(key) + "'");
     }
@@ -526,6 +550,8 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoLi
         case SUMO_ATTR_VISIBILITY_DISTANCE:
         case SUMO_ATTR_ALLOW:
         case SUMO_ATTR_DISALLOW:
+        case SUMO_ATTR_CHANGE_LEFT:
+        case SUMO_ATTR_CHANGE_RIGHT:
         case SUMO_ATTR_SPEED:
         case SUMO_ATTR_LENGTH:
         case SUMO_ATTR_CUSTOMSHAPE:
@@ -615,6 +641,8 @@ GNEConnection::isValid(SumoXMLAttr key, const std::string& value) {
             }
         case SUMO_ATTR_ALLOW:
         case SUMO_ATTR_DISALLOW:
+        case SUMO_ATTR_CHANGE_LEFT:
+        case SUMO_ATTR_CHANGE_RIGHT:
             return canParseVehicleClasses(value);
         case SUMO_ATTR_SPEED:
             return canParse<double>(value) && (parse<double>(value) >= -1);
@@ -717,6 +745,14 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value) {
             if (successorDisallows != customPermissions) {
                 nbCon.permissions = customPermissions;
             }
+            break;
+        }
+        case SUMO_ATTR_CHANGE_LEFT: {
+            nbCon.changeLeft = value == "" ? SVC_UNSPECIFIED : parseVehicleClasses(value);
+            break;
+        }
+        case SUMO_ATTR_CHANGE_RIGHT: {
+            nbCon.changeRight = value == "" ? SVC_UNSPECIFIED : parseVehicleClasses(value);
             break;
         }
         case SUMO_ATTR_STATE:

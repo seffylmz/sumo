@@ -1,6 +1,5 @@
 ---
-title: Developer/Visual Studio Code
-permalink: /Developer/VisualStudioCode/
+title: Visual Studio Code
 ---
 
 Visual Studio Code is a lightweight integrated development environment. It can be used to develop in C/C++ (among other programming languages) on Windows, Linux and macOS. 

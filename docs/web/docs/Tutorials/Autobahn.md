@@ -1,6 +1,5 @@
 ---
-title: Tutorials/Autobahn
-permalink: /Tutorials/Autobahn/
+title: Autobahn
 ---
 
 This tutorial covers the very basic elements for creating heterogeneous
@@ -12,7 +11,7 @@ flows on a multi-lane highway and modifying and saving view settings.
 
 Editing geometry points
 
-Open [netedit](../netedit.md) to
+Open [netedit](../Netedit/index.md) to
 create a fictional highway. We keep this very simplistic for the start
 and consider a segment without on- or off-ramps. Enter the edge creation
 mode by pressing `e` and create an edge that is a few kilometers long.
@@ -110,4 +109,4 @@ settings by adding a `<gui-settings-file ... />`-element:
 If you now restart SUMO with the configuration, it will automatically
 load the view settings stored in `autobahn.view.xml`.
 
-Back to [Tutorials](../Tutorials.md).
+Back to [Tutorials](index.md).
