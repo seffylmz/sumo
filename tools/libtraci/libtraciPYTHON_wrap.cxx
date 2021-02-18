@@ -3040,65 +3040,68 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_libsumo__TraCIReservation swig_types[23]
 #define SWIGTYPE_p_libsumo__TraCIResult swig_types[24]
 #define SWIGTYPE_p_libsumo__TraCIRoadPosition swig_types[25]
-#define SWIGTYPE_p_libsumo__TraCIStage swig_types[26]
-#define SWIGTYPE_p_libsumo__TraCIString swig_types[27]
-#define SWIGTYPE_p_libsumo__TraCIStringList swig_types[28]
-#define SWIGTYPE_p_libsumo__TraCIVehicleData swig_types[29]
-#define SWIGTYPE_p_libtraci__BusStop swig_types[30]
-#define SWIGTYPE_p_libtraci__Calibrator swig_types[31]
-#define SWIGTYPE_p_libtraci__ChargingStation swig_types[32]
-#define SWIGTYPE_p_libtraci__Edge swig_types[33]
-#define SWIGTYPE_p_libtraci__InductionLoop swig_types[34]
-#define SWIGTYPE_p_libtraci__Junction swig_types[35]
-#define SWIGTYPE_p_libtraci__Lane swig_types[36]
-#define SWIGTYPE_p_libtraci__LaneArea swig_types[37]
-#define SWIGTYPE_p_libtraci__MeanData swig_types[38]
-#define SWIGTYPE_p_libtraci__MultiEntryExit swig_types[39]
-#define SWIGTYPE_p_libtraci__OverheadWire swig_types[40]
-#define SWIGTYPE_p_libtraci__POI swig_types[41]
-#define SWIGTYPE_p_libtraci__ParkingArea swig_types[42]
-#define SWIGTYPE_p_libtraci__Person swig_types[43]
-#define SWIGTYPE_p_libtraci__Polygon swig_types[44]
-#define SWIGTYPE_p_libtraci__Rerouter swig_types[45]
-#define SWIGTYPE_p_libtraci__Route swig_types[46]
-#define SWIGTYPE_p_libtraci__RouteProbe swig_types[47]
-#define SWIGTYPE_p_libtraci__Simulation swig_types[48]
-#define SWIGTYPE_p_libtraci__TrafficLight swig_types[49]
-#define SWIGTYPE_p_libtraci__VariableSpeedSign swig_types[50]
-#define SWIGTYPE_p_libtraci__Vehicle swig_types[51]
-#define SWIGTYPE_p_libtraci__VehicleType swig_types[52]
-#define SWIGTYPE_p_mapped_type swig_types[53]
-#define SWIGTYPE_p_p_PyObject swig_types[54]
-#define SWIGTYPE_p_reference swig_types[55]
-#define SWIGTYPE_p_second_type swig_types[56]
-#define SWIGTYPE_p_size_type swig_types[57]
-#define SWIGTYPE_p_std__allocatorT_int_t swig_types[58]
-#define SWIGTYPE_p_std__allocatorT_libsumo__TraCILogic_t swig_types[59]
-#define SWIGTYPE_p_std__allocatorT_libsumo__TraCINextStopData_t swig_types[60]
-#define SWIGTYPE_p_std__allocatorT_libsumo__TraCIPhase_p_t swig_types[61]
-#define SWIGTYPE_p_std__allocatorT_libsumo__TraCIReservation_t swig_types[62]
-#define SWIGTYPE_p_std__allocatorT_libsumo__TraCIStage_t swig_types[63]
-#define SWIGTYPE_p_std__allocatorT_std__string_t swig_types[64]
-#define SWIGTYPE_p_std__invalid_argument swig_types[65]
-#define SWIGTYPE_p_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t swig_types[66]
-#define SWIGTYPE_p_std__mapT_std__string_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_t_t_t swig_types[67]
-#define SWIGTYPE_p_std__mapT_std__string_std__mapT_std__string_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_std__string_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_t_t_t_t_t_t swig_types[68]
-#define SWIGTYPE_p_std__runtime_error swig_types[69]
-#define SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t swig_types[70]
-#define SWIGTYPE_p_std__vectorT_int_std__allocatorT_int_t_t swig_types[71]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCICollision_std__allocatorT_libsumo__TraCICollision_t_t swig_types[72]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCILogic_std__allocatorT_libsumo__TraCILogic_t_t swig_types[73]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCINextStopData_std__allocatorT_libsumo__TraCINextStopData_t_t swig_types[74]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t swig_types[75]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t swig_types[76]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t swig_types[77]
-#define SWIGTYPE_p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t swig_types[78]
-#define SWIGTYPE_p_std__vectorT_std__string_std__allocatorT_std__string_t_t swig_types[79]
-#define SWIGTYPE_p_swig__SwigPyIterator swig_types[80]
-#define SWIGTYPE_p_tcpip__Storage swig_types[81]
-#define SWIGTYPE_p_value_type swig_types[82]
-static swig_type_info *swig_types[84];
-static swig_module_info swig_module = {swig_types, 83, 0, 0, 0, 0};
+#define SWIGTYPE_p_libsumo__TraCISignalConstraint swig_types[26]
+#define SWIGTYPE_p_libsumo__TraCIStage swig_types[27]
+#define SWIGTYPE_p_libsumo__TraCIString swig_types[28]
+#define SWIGTYPE_p_libsumo__TraCIStringList swig_types[29]
+#define SWIGTYPE_p_libsumo__TraCIVehicleData swig_types[30]
+#define SWIGTYPE_p_libtraci__BusStop swig_types[31]
+#define SWIGTYPE_p_libtraci__Calibrator swig_types[32]
+#define SWIGTYPE_p_libtraci__ChargingStation swig_types[33]
+#define SWIGTYPE_p_libtraci__Edge swig_types[34]
+#define SWIGTYPE_p_libtraci__InductionLoop swig_types[35]
+#define SWIGTYPE_p_libtraci__Junction swig_types[36]
+#define SWIGTYPE_p_libtraci__Lane swig_types[37]
+#define SWIGTYPE_p_libtraci__LaneArea swig_types[38]
+#define SWIGTYPE_p_libtraci__MeanData swig_types[39]
+#define SWIGTYPE_p_libtraci__MultiEntryExit swig_types[40]
+#define SWIGTYPE_p_libtraci__OverheadWire swig_types[41]
+#define SWIGTYPE_p_libtraci__POI swig_types[42]
+#define SWIGTYPE_p_libtraci__ParkingArea swig_types[43]
+#define SWIGTYPE_p_libtraci__Person swig_types[44]
+#define SWIGTYPE_p_libtraci__Polygon swig_types[45]
+#define SWIGTYPE_p_libtraci__Rerouter swig_types[46]
+#define SWIGTYPE_p_libtraci__Route swig_types[47]
+#define SWIGTYPE_p_libtraci__RouteProbe swig_types[48]
+#define SWIGTYPE_p_libtraci__Simulation swig_types[49]
+#define SWIGTYPE_p_libtraci__TrafficLight swig_types[50]
+#define SWIGTYPE_p_libtraci__VariableSpeedSign swig_types[51]
+#define SWIGTYPE_p_libtraci__Vehicle swig_types[52]
+#define SWIGTYPE_p_libtraci__VehicleType swig_types[53]
+#define SWIGTYPE_p_mapped_type swig_types[54]
+#define SWIGTYPE_p_p_PyObject swig_types[55]
+#define SWIGTYPE_p_reference swig_types[56]
+#define SWIGTYPE_p_second_type swig_types[57]
+#define SWIGTYPE_p_size_type swig_types[58]
+#define SWIGTYPE_p_std__allocatorT_int_t swig_types[59]
+#define SWIGTYPE_p_std__allocatorT_libsumo__TraCILogic_t swig_types[60]
+#define SWIGTYPE_p_std__allocatorT_libsumo__TraCINextStopData_t swig_types[61]
+#define SWIGTYPE_p_std__allocatorT_libsumo__TraCIPhase_p_t swig_types[62]
+#define SWIGTYPE_p_std__allocatorT_libsumo__TraCIReservation_t swig_types[63]
+#define SWIGTYPE_p_std__allocatorT_libsumo__TraCISignalConstraint_t swig_types[64]
+#define SWIGTYPE_p_std__allocatorT_libsumo__TraCIStage_t swig_types[65]
+#define SWIGTYPE_p_std__allocatorT_std__string_t swig_types[66]
+#define SWIGTYPE_p_std__invalid_argument swig_types[67]
+#define SWIGTYPE_p_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t swig_types[68]
+#define SWIGTYPE_p_std__mapT_std__string_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_t_t_t swig_types[69]
+#define SWIGTYPE_p_std__mapT_std__string_std__mapT_std__string_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_std__string_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_std__lessT_std__string_t_std__allocatorT_std__pairT_std__string_const_std__mapT_int_std__shared_ptrT_libsumo__TraCIResult_t_std__lessT_int_t_std__allocatorT_std__pairT_int_const_std__shared_ptrT_libsumo__TraCIResult_t_t_t_t_t_t_t_t_t_t swig_types[70]
+#define SWIGTYPE_p_std__runtime_error swig_types[71]
+#define SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t swig_types[72]
+#define SWIGTYPE_p_std__vectorT_int_std__allocatorT_int_t_t swig_types[73]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCICollision_std__allocatorT_libsumo__TraCICollision_t_t swig_types[74]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCILogic_std__allocatorT_libsumo__TraCILogic_t_t swig_types[75]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCINextStopData_std__allocatorT_libsumo__TraCINextStopData_t_t swig_types[76]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t swig_types[77]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t swig_types[78]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t swig_types[79]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t swig_types[80]
+#define SWIGTYPE_p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t swig_types[81]
+#define SWIGTYPE_p_std__vectorT_std__string_std__allocatorT_std__string_t_t swig_types[82]
+#define SWIGTYPE_p_swig__SwigPyIterator swig_types[83]
+#define SWIGTYPE_p_tcpip__Storage swig_types[84]
+#define SWIGTYPE_p_value_type swig_types[85]
+static swig_type_info *swig_types[87];
+static swig_module_info swig_module = {swig_types, 86, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -6390,6 +6393,115 @@ SWIGINTERN std::vector< libsumo::TraCIReservation >::iterator std_vector_Sl_libs
 SWIGINTERN std::vector< libsumo::TraCIReservation >::iterator std_vector_Sl_libsumo_TraCIReservation_Sg__erase__SWIG_1(std::vector< libsumo::TraCIReservation > *self,std::vector< libsumo::TraCIReservation >::iterator first,std::vector< libsumo::TraCIReservation >::iterator last){ return self->erase(first, last); }
 SWIGINTERN std::vector< libsumo::TraCIReservation >::iterator std_vector_Sl_libsumo_TraCIReservation_Sg__insert__SWIG_0(std::vector< libsumo::TraCIReservation > *self,std::vector< libsumo::TraCIReservation >::iterator pos,std::vector< libsumo::TraCIReservation >::value_type const &x){ return self->insert(pos, x); }
 SWIGINTERN void std_vector_Sl_libsumo_TraCIReservation_Sg__insert__SWIG_1(std::vector< libsumo::TraCIReservation > *self,std::vector< libsumo::TraCIReservation >::iterator pos,std::vector< libsumo::TraCIReservation >::size_type n,std::vector< libsumo::TraCIReservation >::value_type const &x){ self->insert(pos, n, x); }
+
+  namespace swig {
+    template <>  struct traits< libsumo::TraCISignalConstraint > {
+      typedef pointer_category category;
+      static const char* type_name() { return"libsumo::TraCISignalConstraint"; }
+    };
+  }
+
+
+      namespace swig {
+	template <>  struct traits<std::vector< libsumo::TraCISignalConstraint, std::allocator< libsumo::TraCISignalConstraint > > > {
+	  typedef pointer_category category;
+	  static const char* type_name() {
+	    return "std::vector<" "libsumo::TraCISignalConstraint" "," "std::allocator< libsumo::TraCISignalConstraint >" " >";
+	  }
+	};
+      }
+    
+SWIGINTERN swig::SwigPyIterator *std_vector_Sl_libsumo_TraCISignalConstraint_Sg__iterator(std::vector< libsumo::TraCISignalConstraint > *self,PyObject **PYTHON_SELF){
+      return swig::make_output_iterator(self->begin(), self->begin(), self->end(), *PYTHON_SELF);
+    }
+SWIGINTERN bool std_vector_Sl_libsumo_TraCISignalConstraint_Sg____nonzero__(std::vector< libsumo::TraCISignalConstraint > const *self){
+      return !(self->empty());
+    }
+SWIGINTERN bool std_vector_Sl_libsumo_TraCISignalConstraint_Sg____bool__(std::vector< libsumo::TraCISignalConstraint > const *self){
+      return !(self->empty());
+    }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint >::size_type std_vector_Sl_libsumo_TraCISignalConstraint_Sg____len__(std::vector< libsumo::TraCISignalConstraint > const *self){
+      return self->size();
+    }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *std_vector_Sl_libsumo_TraCISignalConstraint_Sg____getslice__(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i,std::vector< libsumo::TraCISignalConstraint >::difference_type j){
+      return swig::getslice(self, i, j, 1);
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setslice____SWIG_0(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i,std::vector< libsumo::TraCISignalConstraint >::difference_type j){
+      swig::setslice(self, i, j, 1, std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >());
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setslice____SWIG_1(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i,std::vector< libsumo::TraCISignalConstraint >::difference_type j,std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &v){
+      swig::setslice(self, i, j, 1, v);
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____delslice__(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i,std::vector< libsumo::TraCISignalConstraint >::difference_type j){
+      swig::delslice(self, i, j, 1);
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____delitem____SWIG_0(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i){
+      swig::erase(self, swig::getpos(self, i));
+    }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *std_vector_Sl_libsumo_TraCISignalConstraint_Sg____getitem____SWIG_0(std::vector< libsumo::TraCISignalConstraint > *self,PySliceObject *slice){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return NULL;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type id = i;
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type jd = j;
+      return swig::getslice(self, id, jd, step);
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setitem____SWIG_0(std::vector< libsumo::TraCISignalConstraint > *self,PySliceObject *slice,std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &v){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type id = i;
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type jd = j;
+      swig::setslice(self, id, jd, step, v);
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setitem____SWIG_1(std::vector< libsumo::TraCISignalConstraint > *self,PySliceObject *slice){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type id = i;
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type jd = j;
+      swig::delslice(self, id, jd, step);
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____delitem____SWIG_1(std::vector< libsumo::TraCISignalConstraint > *self,PySliceObject *slice){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type id = i;
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::difference_type jd = j;
+      swig::delslice(self, id, jd, step);
+    }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint >::value_type const &std_vector_Sl_libsumo_TraCISignalConstraint_Sg____getitem____SWIG_1(std::vector< libsumo::TraCISignalConstraint > const *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i){
+      return *(swig::cgetpos(self, i));
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setitem____SWIG_2(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::difference_type i,std::vector< libsumo::TraCISignalConstraint >::value_type const &x){
+      *(swig::getpos(self,i)) = x;
+    }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint >::value_type std_vector_Sl_libsumo_TraCISignalConstraint_Sg__pop(std::vector< libsumo::TraCISignalConstraint > *self){
+      if (self->size() == 0)
+	throw std::out_of_range("pop from empty container");
+      std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >::value_type x = self->back();
+      self->pop_back();
+      return x;
+    }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg__append(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::value_type const &x){
+      self->push_back(x);
+    }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint >::iterator std_vector_Sl_libsumo_TraCISignalConstraint_Sg__erase__SWIG_0(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::iterator pos){ return self->erase(pos); }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint >::iterator std_vector_Sl_libsumo_TraCISignalConstraint_Sg__erase__SWIG_1(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::iterator first,std::vector< libsumo::TraCISignalConstraint >::iterator last){ return self->erase(first, last); }
+SWIGINTERN std::vector< libsumo::TraCISignalConstraint >::iterator std_vector_Sl_libsumo_TraCISignalConstraint_Sg__insert__SWIG_0(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::iterator pos,std::vector< libsumo::TraCISignalConstraint >::value_type const &x){ return self->insert(pos, x); }
+SWIGINTERN void std_vector_Sl_libsumo_TraCISignalConstraint_Sg__insert__SWIG_1(std::vector< libsumo::TraCISignalConstraint > *self,std::vector< libsumo::TraCISignalConstraint >::iterator pos,std::vector< libsumo::TraCISignalConstraint >::size_type n,std::vector< libsumo::TraCISignalConstraint >::value_type const &x){ self->insert(pos, n, x); }
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22735,6 +22847,7 @@ SWIGINTERN PyObject *_wrap_new_TraCIReservation__SWIG_1(PyObject *SWIGUNUSEDPARM
   double arg7 ;
   double arg8 ;
   double arg9 ;
+  int arg10 ;
   int res1 = SWIG_OLDOBJ ;
   int res2 = SWIG_OLDOBJ ;
   int res3 = SWIG_OLDOBJ ;
@@ -22748,6 +22861,8 @@ SWIGINTERN PyObject *_wrap_new_TraCIReservation__SWIG_1(PyObject *SWIGUNUSEDPARM
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
+  int val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -22757,9 +22872,10 @@ SWIGINTERN PyObject *_wrap_new_TraCIReservation__SWIG_1(PyObject *SWIGUNUSEDPARM
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   libsumo::TraCIReservation *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:new_TraCIReservation",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:new_TraCIReservation",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     std::string *ptr = (std::string *)0;
     res1 = SWIG_AsPtr_std_string(obj0, &ptr);
@@ -22835,9 +22951,14 @@ SWIGINTERN PyObject *_wrap_new_TraCIReservation__SWIG_1(PyObject *SWIGUNUSEDPARM
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_TraCIReservation" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
+  ecode10 = SWIG_AsVal_int(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_TraCIReservation" "', argument " "10"" of type '" "int""'");
+  } 
+  arg10 = static_cast< int >(val10);
   {
     try {
-      result = (libsumo::TraCIReservation *)new libsumo::TraCIReservation((std::string const &)*arg1,(std::vector< std::string,std::allocator< std::string > > const &)*arg2,(std::string const &)*arg3,(std::string const &)*arg4,(std::string const &)*arg5,arg6,arg7,arg8,arg9);
+      result = (libsumo::TraCIReservation *)new libsumo::TraCIReservation((std::string const &)*arg1,(std::vector< std::string,std::allocator< std::string > > const &)*arg2,(std::string const &)*arg3,(std::string const &)*arg4,(std::string const &)*arg5,arg6,arg7,arg8,arg9,arg10);
     } catch (libsumo::TraCIException &e) {
       const std::string s = e.what();
       std::string printError;
@@ -22880,20 +23001,20 @@ fail:
 
 SWIGINTERN PyObject *_wrap_new_TraCIReservation(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
-  PyObject *argv[10] = {
+  PyObject *argv[11] = {
     0
   };
   Py_ssize_t ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 9) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 10) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
   if (argc == 0) {
     return _wrap_new_TraCIReservation__SWIG_0(self, args);
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     int res = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
     _v = SWIG_CheckState(res);
@@ -22930,7 +23051,13 @@ SWIGINTERN PyObject *_wrap_new_TraCIReservation(PyObject *self, PyObject *args) 
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      return _wrap_new_TraCIReservation__SWIG_1(self, args);
+                      {
+                        int res = SWIG_AsVal_int(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_new_TraCIReservation__SWIG_1(self, args);
+                      }
                     }
                   }
                 }
@@ -22946,7 +23073,7 @@ fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_TraCIReservation'.\n"
     "  Possible C/C++ prototypes are:\n"
     "    libsumo::TraCIReservation::TraCIReservation()\n"
-    "    libsumo::TraCIReservation::TraCIReservation(std::string const &,std::vector< std::string,std::allocator< std::string > > const &,std::string const &,std::string const &,std::string const &,double,double,double,double)\n");
+    "    libsumo::TraCIReservation::TraCIReservation(std::string const &,std::vector< std::string,std::allocator< std::string > > const &,std::string const &,std::string const &,std::string const &,double,double,double,double,int)\n");
   return 0;
 }
 
@@ -23448,6 +23575,58 @@ SWIGINTERN PyObject *_wrap_TraCIReservation_reservationTime_get(PyObject *SWIGUN
   arg1 = reinterpret_cast< libsumo::TraCIReservation * >(argp1);
   result = (double) ((arg1)->reservationTime);
   resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCIReservation_state_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCIReservation *arg1 = (libsumo::TraCIReservation *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCIReservation_state_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCIReservation, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCIReservation_state_set" "', argument " "1"" of type '" "libsumo::TraCIReservation *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCIReservation * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCIReservation_state_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->state = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCIReservation_state_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCIReservation *arg1 = (libsumo::TraCIReservation *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCIReservation_state_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCIReservation, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCIReservation_state_get" "', argument " "1"" of type '" "libsumo::TraCIReservation *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCIReservation * >(argp1);
+  result = (int) ((arg1)->state);
+  resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
   return NULL;
@@ -24105,6 +24284,378 @@ SWIGINTERN PyObject *TraCICollision_swigregister(PyObject *SWIGUNUSEDPARM(self),
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
   SWIG_TypeNewClientData(SWIGTYPE_p_libsumo__TraCICollision, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_tripId_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraint_tripId_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_tripId_set" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  {
+    std::string *ptr = (std::string *)0;
+    res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "TraCISignalConstraint_tripId_set" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraint_tripId_set" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    arg2 = ptr;
+  }
+  if (arg1) (arg1)->tripId = *arg2;
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_tripId_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::string *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraint_tripId_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_tripId_get" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  result = (std::string *) & ((arg1)->tripId);
+  resultobj = SWIG_From_std_string(static_cast< std::string >(*result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_foeId_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraint_foeId_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_foeId_set" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  {
+    std::string *ptr = (std::string *)0;
+    res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "TraCISignalConstraint_foeId_set" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraint_foeId_set" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    arg2 = ptr;
+  }
+  if (arg1) (arg1)->foeId = *arg2;
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_foeId_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::string *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraint_foeId_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_foeId_get" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  result = (std::string *) & ((arg1)->foeId);
+  resultobj = SWIG_From_std_string(static_cast< std::string >(*result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_foeSignal_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraint_foeSignal_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_foeSignal_set" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  {
+    std::string *ptr = (std::string *)0;
+    res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "TraCISignalConstraint_foeSignal_set" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraint_foeSignal_set" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    arg2 = ptr;
+  }
+  if (arg1) (arg1)->foeSignal = *arg2;
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_foeSignal_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::string *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraint_foeSignal_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_foeSignal_get" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  result = (std::string *) & ((arg1)->foeSignal);
+  resultobj = SWIG_From_std_string(static_cast< std::string >(*result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_limit_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraint_limit_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_limit_set" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraint_limit_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->limit = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_limit_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraint_limit_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_limit_get" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  result = (int) ((arg1)->limit);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_type_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraint_type_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_type_set" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraint_type_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->type = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraint_type_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraint_type_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraint_type_get" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  result = (int) ((arg1)->type);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_TraCISignalConstraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_TraCISignalConstraint")) SWIG_fail;
+  {
+    try {
+      result = (libsumo::TraCISignalConstraint *)new libsumo::TraCISignalConstraint();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_libsumo__TraCISignalConstraint, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_TraCISignalConstraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  libsumo::TraCISignalConstraint *arg1 = (libsumo::TraCISignalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_TraCISignalConstraint",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_libsumo__TraCISignalConstraint, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_TraCISignalConstraint" "', argument " "1"" of type '" "libsumo::TraCISignalConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< libsumo::TraCISignalConstraint * >(argp1);
+  {
+    try {
+      delete arg1;
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *TraCISignalConstraint_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_libsumo__TraCISignalConstraint, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
 
@@ -36256,6 +36807,3043 @@ SWIGINTERN PyObject *TraCIReservationVector_swigregister(PyObject *SWIGUNUSEDPAR
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_iterator(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  PyObject **arg2 = (PyObject **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  swig::SwigPyIterator *result = 0 ;
+  
+  arg2 = &obj0;
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_iterator",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_iterator" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (swig::SwigPyIterator *)std_vector_Sl_libsumo_TraCISignalConstraint_Sg__iterator(arg1,arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_swig__SwigPyIterator, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___nonzero__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector___nonzero__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___nonzero__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (bool)std_vector_Sl_libsumo_TraCISignalConstraint_Sg____nonzero__((std::vector< libsumo::TraCISignalConstraint > const *)arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___bool__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector___bool__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___bool__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (bool)std_vector_Sl_libsumo_TraCISignalConstraint_Sg____bool__((std::vector< libsumo::TraCISignalConstraint > const *)arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___len__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector___len__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___len__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = std_vector_Sl_libsumo_TraCISignalConstraint_Sg____len__((std::vector< libsumo::TraCISignalConstraint > const *)arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___getslice__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "i",(char *) "j", NULL 
+  };
+  std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *result = 0 ;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:TraCISignalConstraintVector___getslice__",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___getslice__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___getslice__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "TraCISignalConstraintVector___getslice__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val3);
+  {
+    try {
+      try {
+        result = (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *)std_vector_Sl_libsumo_TraCISignalConstraint_Sg____getslice__(arg1,arg2,arg3);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setslice____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:TraCISignalConstraintVector___setslice__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val3);
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setslice____SWIG_0(arg1,arg2,arg3);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setslice____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg3 ;
+  std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *arg4 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  int res4 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:TraCISignalConstraintVector___setslice__",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val3);
+  {
+    std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *ptr = (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *)0;
+    res4 = swig::asptr(obj3, &ptr);
+    if (!SWIG_IsOK(res4)) {
+      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "4"" of type '" "std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector___setslice__" "', argument " "4"" of type '" "std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &""'"); 
+    }
+    arg4 = ptr;
+  }
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setslice____SWIG_1(arg1,arg2,arg3,(std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &)*arg4);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res4)) delete arg4;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res4)) delete arg4;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setslice__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[5] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 4) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_ptrdiff_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          return _wrap_TraCISignalConstraintVector___setslice____SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_ptrdiff_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          int res = swig::asptr(argv[3], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_TraCISignalConstraintVector___setslice____SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector___setslice__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__setslice__(std::vector< libsumo::TraCISignalConstraint >::difference_type,std::vector< libsumo::TraCISignalConstraint >::difference_type)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__setslice__(std::vector< libsumo::TraCISignalConstraint >::difference_type,std::vector< libsumo::TraCISignalConstraint >::difference_type,std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___delslice__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "i",(char *) "j", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:TraCISignalConstraintVector___delslice__",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___delslice__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___delslice__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "TraCISignalConstraintVector___delslice__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val3);
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____delslice__(arg1,arg2,arg3);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___delitem____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector___delitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___delitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___delitem__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____delitem____SWIG_0(arg1,arg2);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___getitem____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___getitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector___getitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  {
+    try {
+      try {
+        result = (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *)std_vector_Sl_libsumo_TraCISignalConstraint_Sg____getitem____SWIG_0(arg1,arg2);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setitem____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res3 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:TraCISignalConstraintVector___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  {
+    std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *ptr = (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *)0;
+    res3 = swig::asptr(obj2, &ptr);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &""'"); 
+    }
+    arg3 = ptr;
+  }
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setitem____SWIG_0(arg1,arg2,(std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &)*arg3);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res3)) delete arg3;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res3)) delete arg3;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setitem____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector___setitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setitem____SWIG_1(arg1,arg2);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___delitem____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector___delitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___delitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector___delitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____delitem____SWIG_1(arg1,arg2);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      catch(std::invalid_argument &_e) {
+        SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___delitem__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[3] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector___delitem____SWIG_1(self, args);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector___delitem____SWIG_0(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector___delitem__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__delitem__(std::vector< libsumo::TraCISignalConstraint >::difference_type)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__delitem__(PySliceObject *)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___getitem____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___getitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___getitem__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  {
+    try {
+      try {
+        result = (std::vector< libsumo::TraCISignalConstraint >::value_type *) &std_vector_Sl_libsumo_TraCISignalConstraint_Sg____getitem____SWIG_1((std::vector< libsumo::TraCISignalConstraint > const *)arg1,arg2);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___getitem__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[3] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector___getitem____SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector___getitem____SWIG_1(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector___getitem__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__getitem__(PySliceObject *)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__getitem__(std::vector< libsumo::TraCISignalConstraint >::difference_type) const\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setitem____SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::difference_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:TraCISignalConstraintVector___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::difference_type >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector___setitem__" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg3 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp3);
+  {
+    try {
+      try {
+        std_vector_Sl_libsumo_TraCISignalConstraint_Sg____setitem____SWIG_2(arg1,arg2,(libsumo::TraCISignalConstraint const &)*arg3);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector___setitem__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[4] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector___setitem____SWIG_1(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        int res = swig::asptr(argv[2], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_TraCISignalConstraintVector___setitem____SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_libsumo__TraCISignalConstraint, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_TraCISignalConstraintVector___setitem____SWIG_2(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector___setitem__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__setitem__(PySliceObject *,std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > const &)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__setitem__(PySliceObject *)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::__setitem__(std::vector< libsumo::TraCISignalConstraint >::difference_type,std::vector< libsumo::TraCISignalConstraint >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_pop" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      try {
+        result = std_vector_Sl_libsumo_TraCISignalConstraint_Sg__pop(arg1);
+      }
+      catch(std::out_of_range &_e) {
+        SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+      }
+      
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj((new std::vector< libsumo::TraCISignalConstraint >::value_type(static_cast< const std::vector< libsumo::TraCISignalConstraint >::value_type& >(result))), SWIGTYPE_p_libsumo__TraCISignalConstraint, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "x", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:TraCISignalConstraintVector_append",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_append" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "TraCISignalConstraintVector_append" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_append" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp2);
+  {
+    try {
+      std_vector_Sl_libsumo_TraCISignalConstraint_Sg__append(arg1,(libsumo::TraCISignalConstraint const &)*arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_TraCISignalConstraintVector__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_TraCISignalConstraintVector")) SWIG_fail;
+  {
+    try {
+      result = (std::vector< libsumo::TraCISignalConstraint > *)new std::vector< libsumo::TraCISignalConstraint >();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_TraCISignalConstraintVector__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = 0 ;
+  int res1 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_TraCISignalConstraintVector",&obj0)) SWIG_fail;
+  {
+    std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *ptr = (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *)0;
+    res1 = swig::asptr(obj0, &ptr);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_TraCISignalConstraintVector" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_TraCISignalConstraintVector" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const &""'"); 
+    }
+    arg1 = ptr;
+  }
+  {
+    try {
+      result = (std::vector< libsumo::TraCISignalConstraint > *)new std::vector< libsumo::TraCISignalConstraint >((std::vector< libsumo::TraCISignalConstraint > const &)*arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_NEW |  0 );
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_empty(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_empty",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_empty" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (bool)((std::vector< libsumo::TraCISignalConstraint > const *)arg1)->empty();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_size(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_size",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_size" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = ((std::vector< libsumo::TraCISignalConstraint > const *)arg1)->size();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_swap(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint > *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "v", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:TraCISignalConstraintVector_swap",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_swap" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "TraCISignalConstraintVector_swap" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint > &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_swap" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint > &""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp2);
+  {
+    try {
+      (arg1)->swap(*arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_begin(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_begin",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_begin" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (arg1)->begin();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_end(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_end",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_end" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (arg1)->end();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_rbegin(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::reverse_iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_rbegin",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_rbegin" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (arg1)->rbegin();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::reverse_iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_rend(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::reverse_iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_rend",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_rend" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (arg1)->rend();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::reverse_iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_clear(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_clear",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_clear" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      (arg1)->clear();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_get_allocator(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  SwigValueWrapper< std::allocator< libsumo::TraCISignalConstraint > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_get_allocator",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_get_allocator" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = ((std::vector< libsumo::TraCISignalConstraint > const *)arg1)->get_allocator();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj((new std::vector< libsumo::TraCISignalConstraint >::allocator_type(static_cast< const std::vector< libsumo::TraCISignalConstraint >::allocator_type& >(result))), SWIGTYPE_p_std__allocatorT_libsumo__TraCISignalConstraint_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_TraCISignalConstraintVector__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg1 ;
+  size_t val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_TraCISignalConstraintVector",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_size_t(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_TraCISignalConstraintVector" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg1 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val1);
+  {
+    try {
+      result = (std::vector< libsumo::TraCISignalConstraint > *)new std::vector< libsumo::TraCISignalConstraint >(arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_pop_back(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_pop_back",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_pop_back" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      (arg1)->pop_back();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_resize__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector_resize",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_resize" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector_resize" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val2);
+  {
+    try {
+      (arg1)->resize(arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_erase__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:TraCISignalConstraintVector_erase",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_erase" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_erase" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_erase" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+    }
+  }
+  {
+    try {
+      result = std_vector_Sl_libsumo_TraCISignalConstraint_Sg__erase__SWIG_0(arg1,arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_erase__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  swig::SwigPyIterator *iter3 = 0 ;
+  int res3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:TraCISignalConstraintVector_erase",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_erase" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_erase" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_erase" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+    }
+  }
+  res3 = SWIG_ConvertPtr(obj2, SWIG_as_voidptrptr(&iter3), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res3) || !iter3) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_erase" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter3);
+    if (iter_t) {
+      arg3 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_erase" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+    }
+  }
+  {
+    try {
+      result = std_vector_Sl_libsumo_TraCISignalConstraint_Sg__erase__SWIG_1(arg1,arg2,arg3);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_erase(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[4] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter) != 0));
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector_erase__SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter) != 0));
+      if (_v) {
+        swig::SwigPyIterator *iter = 0;
+        int res = SWIG_ConvertPtr(argv[2], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+        _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter) != 0));
+        if (_v) {
+          return _wrap_TraCISignalConstraintVector_erase__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector_erase'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::erase(std::vector< libsumo::TraCISignalConstraint >::iterator)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::erase(std::vector< libsumo::TraCISignalConstraint >::iterator,std::vector< libsumo::TraCISignalConstraint >::iterator)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_TraCISignalConstraintVector__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg1 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg2 = 0 ;
+  size_t val1 ;
+  int ecode1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:new_TraCISignalConstraintVector",&obj0,&obj1)) SWIG_fail;
+  ecode1 = SWIG_AsVal_size_t(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_TraCISignalConstraintVector" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg1 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_TraCISignalConstraintVector" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_TraCISignalConstraintVector" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp2);
+  {
+    try {
+      result = (std::vector< libsumo::TraCISignalConstraint > *)new std::vector< libsumo::TraCISignalConstraint >(arg1,(std::vector< libsumo::TraCISignalConstraint >::value_type const &)*arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_TraCISignalConstraintVector(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[3] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 0) {
+    return _wrap_new_TraCISignalConstraintVector__SWIG_0(self, args);
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_size_t(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_new_TraCISignalConstraintVector__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_new_TraCISignalConstraintVector__SWIG_1(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    {
+      int res = SWIG_AsVal_size_t(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_libsumo__TraCISignalConstraint, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_new_TraCISignalConstraintVector__SWIG_3(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_TraCISignalConstraintVector'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::vector()\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::vector(std::vector< libsumo::TraCISignalConstraint > const &)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::vector(std::vector< libsumo::TraCISignalConstraint >::size_type)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::vector(std::vector< libsumo::TraCISignalConstraint >::size_type,std::vector< libsumo::TraCISignalConstraint >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_push_back(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "x", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:TraCISignalConstraintVector_push_back",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_push_back" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "TraCISignalConstraintVector_push_back" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_push_back" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp2);
+  {
+    try {
+      (arg1)->push_back((std::vector< libsumo::TraCISignalConstraint >::value_type const &)*arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_front(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_front",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_front" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (std::vector< libsumo::TraCISignalConstraint >::value_type *) &((std::vector< libsumo::TraCISignalConstraint > const *)arg1)->front();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_back(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_back",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_back" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = (std::vector< libsumo::TraCISignalConstraint >::value_type *) &((std::vector< libsumo::TraCISignalConstraint > const *)arg1)->back();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_libsumo__TraCISignalConstraint, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_assign(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "n",(char *) "x", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:TraCISignalConstraintVector_assign",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_assign" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector_assign" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "TraCISignalConstraintVector_assign" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_assign" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg3 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp3);
+  {
+    try {
+      (arg1)->assign(arg2,(std::vector< libsumo::TraCISignalConstraint >::value_type const &)*arg3);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_resize__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:TraCISignalConstraintVector_resize",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_resize" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector_resize" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "TraCISignalConstraintVector_resize" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_resize" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg3 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp3);
+  {
+    try {
+      (arg1)->resize(arg2,(std::vector< libsumo::TraCISignalConstraint >::value_type const &)*arg3);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_resize(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[4] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_size_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_TraCISignalConstraintVector_resize__SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_size_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_libsumo__TraCISignalConstraint, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_TraCISignalConstraintVector_resize__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector_resize'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::resize(std::vector< libsumo::TraCISignalConstraint >::size_type)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::resize(std::vector< libsumo::TraCISignalConstraint >::size_type,std::vector< libsumo::TraCISignalConstraint >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_insert__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:TraCISignalConstraintVector_insert",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_insert" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_insert" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_insert" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+    }
+  }
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "TraCISignalConstraintVector_insert" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_insert" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg3 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp3);
+  {
+    try {
+      result = std_vector_Sl_libsumo_TraCISignalConstraint_Sg__insert__SWIG_0(arg1,arg2,(libsumo::TraCISignalConstraint const &)*arg3);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< libsumo::TraCISignalConstraint >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_insert__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::iterator arg2 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg3 ;
+  std::vector< libsumo::TraCISignalConstraint >::value_type *arg4 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  size_t val3 ;
+  int ecode3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:TraCISignalConstraintVector_insert",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_insert" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_insert" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "TraCISignalConstraintVector_insert" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::iterator""'");
+    }
+  }
+  ecode3 = SWIG_AsVal_size_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "TraCISignalConstraintVector_insert" "', argument " "3"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg3 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_libsumo__TraCISignalConstraint,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "TraCISignalConstraintVector_insert" "', argument " "4"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "TraCISignalConstraintVector_insert" "', argument " "4"" of type '" "std::vector< libsumo::TraCISignalConstraint >::value_type const &""'"); 
+  }
+  arg4 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint >::value_type * >(argp4);
+  {
+    try {
+      std_vector_Sl_libsumo_TraCISignalConstraint_Sg__insert__SWIG_1(arg1,arg2,arg3,(libsumo::TraCISignalConstraint const &)*arg4);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_insert(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[5] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 4) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter) != 0));
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_libsumo__TraCISignalConstraint, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_TraCISignalConstraintVector_insert__SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< libsumo::TraCISignalConstraint >::iterator > *>(iter) != 0));
+      if (_v) {
+        {
+          int res = SWIG_AsVal_size_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_libsumo__TraCISignalConstraint, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_TraCISignalConstraintVector_insert__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'TraCISignalConstraintVector_insert'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::insert(std::vector< libsumo::TraCISignalConstraint >::iterator,std::vector< libsumo::TraCISignalConstraint >::value_type const &)\n"
+    "    std::vector< libsumo::TraCISignalConstraint >::insert(std::vector< libsumo::TraCISignalConstraint >::iterator,std::vector< libsumo::TraCISignalConstraint >::size_type,std::vector< libsumo::TraCISignalConstraint >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_reserve(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "n", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:TraCISignalConstraintVector_reserve",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_reserve" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "TraCISignalConstraintVector_reserve" "', argument " "2"" of type '" "std::vector< libsumo::TraCISignalConstraint >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< libsumo::TraCISignalConstraint >::size_type >(val2);
+  {
+    try {
+      (arg1)->reserve(arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_TraCISignalConstraintVector_capacity(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< libsumo::TraCISignalConstraint >::size_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:TraCISignalConstraintVector_capacity",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "TraCISignalConstraintVector_capacity" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      result = ((std::vector< libsumo::TraCISignalConstraint > const *)arg1)->capacity();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_TraCISignalConstraintVector(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< libsumo::TraCISignalConstraint > *arg1 = (std::vector< libsumo::TraCISignalConstraint > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_TraCISignalConstraintVector",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_TraCISignalConstraintVector" "', argument " "1"" of type '" "std::vector< libsumo::TraCISignalConstraint > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< libsumo::TraCISignalConstraint > * >(argp1);
+  {
+    try {
+      delete arg1;
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *TraCISignalConstraintVector_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
 SWIGINTERN PyObject *_wrap_edge_getAdaptedTraveltime(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   std::string *arg1 = 0 ;
@@ -37463,6 +41051,63 @@ SWIGINTERN PyObject *_wrap_edge_getStreetName(PyObject *SWIGUNUSEDPARM(self), Py
     }
   }
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_edge_getPendingVehicles(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::string *arg1 = 0 ;
+  int res1 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  char *  kwnames[] = {
+    (char *) "edgeID", NULL 
+  };
+  std::vector< std::string,std::allocator< std::string > > result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O:edge_getPendingVehicles",kwnames,&obj0)) SWIG_fail;
+  {
+    std::string *ptr = (std::string *)0;
+    res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "edge_getPendingVehicles" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "edge_getPendingVehicles" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    arg1 = ptr;
+  }
+  {
+    try {
+      result = libtraci::Edge::getPendingVehicles((std::string const &)*arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = swig::from(static_cast< std::vector< std::string,std::allocator< std::string > > >(result));
   if (SWIG_IsNewObj(res1)) delete arg1;
   return resultobj;
 fail:
@@ -44729,6 +48374,63 @@ SWIGINTERN PyObject *_wrap_lane_getInternalFoes(PyObject *SWIGUNUSEDPARM(self), 
   {
     try {
       result = libtraci::Lane::getInternalFoes((std::string const &)*arg1);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = swig::from(static_cast< std::vector< std::string,std::allocator< std::string > > >(result));
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_lane_getPendingVehicles(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::string *arg1 = 0 ;
+  int res1 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  char *  kwnames[] = {
+    (char *) "laneID", NULL 
+  };
+  std::vector< std::string,std::allocator< std::string > > result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O:lane_getPendingVehicles",kwnames,&obj0)) SWIG_fail;
+  {
+    std::string *ptr = (std::string *)0;
+    res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "lane_getPendingVehicles" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "lane_getPendingVehicles" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    arg1 = ptr;
+  }
+  {
+    try {
+      result = libtraci::Lane::getPendingVehicles((std::string const &)*arg1);
     } catch (libsumo::TraCIException &e) {
       const std::string s = e.what();
       std::string printError;
@@ -54787,6 +58489,44 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_simulation_getPendingVehicles(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::string,std::allocator< std::string > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)":simulation_getPendingVehicles")) SWIG_fail;
+  {
+    try {
+      result = libtraci::Simulation::getPendingVehicles();
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = swig::from(static_cast< std::vector< std::string,std::allocator< std::string > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_simulation_getCollisions(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   SwigValueWrapper< std::vector< libsumo::TraCICollision,std::allocator< libsumo::TraCICollision > > > result;
@@ -61031,6 +64771,34 @@ SWIGINTERN PyObject *Swig_var_TL_EXTERNAL_STATE_get(void) {
 }
 
 
+SWIGINTERN int Swig_var_TL_CONSTRAINT_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable TL_CONSTRAINT is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_TL_CONSTRAINT_get(void) {
+  PyObject *pyobj = 0;
+  
+  pyobj = SWIG_From_int(static_cast< int >(libsumo::TL_CONSTRAINT));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_TL_CONSTRAINT_REVERSE_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable TL_CONSTRAINT_REVERSE is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_TL_CONSTRAINT_REVERSE_get(void) {
+  PyObject *pyobj = 0;
+  
+  pyobj = SWIG_From_int(static_cast< int >(libsumo::TL_CONSTRAINT_REVERSE));
+  return pyobj;
+}
+
+
 SWIGINTERN int Swig_var_LANE_LINK_NUMBER_set(PyObject *) {
   SWIG_Error(SWIG_AttributeError,"Variable LANE_LINK_NUMBER is read-only.");
   return 1;
@@ -62753,6 +66521,20 @@ SWIGINTERN PyObject *Swig_var_CMD_CLEAR_PENDING_VEHICLES_get(void) {
 }
 
 
+SWIGINTERN int Swig_var_VAR_PENDING_VEHICLES_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable VAR_PENDING_VEHICLES is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_VAR_PENDING_VEHICLES_get(void) {
+  PyObject *pyobj = 0;
+  
+  pyobj = SWIG_From_int(static_cast< int >(libsumo::VAR_PENDING_VEHICLES));
+  return pyobj;
+}
+
+
 SWIGINTERN int Swig_var_CMD_SAVE_SIMSTATE_set(PyObject *) {
   SWIG_Error(SWIG_AttributeError,"Variable CMD_SAVE_SIMSTATE is read-only.");
   return 1;
@@ -63099,6 +66881,20 @@ SWIGINTERN PyObject *Swig_var_VAR_TAXI_RESERVATIONS_get(void) {
   PyObject *pyobj = 0;
   
   pyobj = SWIG_From_int(static_cast< int >(libsumo::VAR_TAXI_RESERVATIONS));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_SPLIT_TAXI_RESERVATIONS_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable SPLIT_TAXI_RESERVATIONS is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_SPLIT_TAXI_RESERVATIONS_get(void) {
+  PyObject *pyobj = 0;
+  
+  pyobj = SWIG_From_int(static_cast< int >(libsumo::SPLIT_TAXI_RESERVATIONS));
   return pyobj;
 }
 
@@ -64087,6 +67883,82 @@ SWIGINTERN PyObject *_wrap_trafficlight_getPriorityVehicles(PyObject *SWIGUNUSED
   return resultobj;
 fail:
   if (SWIG_IsNewObj(res1)) delete arg1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_trafficlight_getConstraints(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::string *arg1 = 0 ;
+  std::string const &arg2_defvalue = "" ;
+  std::string *arg2 = (std::string *) &arg2_defvalue ;
+  int res1 = SWIG_OLDOBJ ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "tlsID",(char *) "tripId", NULL 
+  };
+  std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O|O:trafficlight_getConstraints",kwnames,&obj0,&obj1)) SWIG_fail;
+  {
+    std::string *ptr = (std::string *)0;
+    res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "trafficlight_getConstraints" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "trafficlight_getConstraints" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    arg1 = ptr;
+  }
+  if (obj1) {
+    {
+      std::string *ptr = (std::string *)0;
+      res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+      if (!SWIG_IsOK(res2)) {
+        SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "trafficlight_getConstraints" "', argument " "2"" of type '" "std::string const &""'"); 
+      }
+      if (!ptr) {
+        SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "trafficlight_getConstraints" "', argument " "2"" of type '" "std::string const &""'"); 
+      }
+      arg2 = ptr;
+    }
+  }
+  {
+    try {
+      result = libtraci::TrafficLight::getConstraints((std::string const &)*arg1,(std::string const &)*arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = swig::from(static_cast< std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > >(result));
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  if (SWIG_IsNewObj(res2)) delete arg2;
   return NULL;
 }
 
@@ -75771,7 +79643,7 @@ SWIGINTERN PyObject *_wrap_vehicle_openGap(PyObject *SWIGUNUSEDPARM(self), PyObj
   double arg3 ;
   double arg4 ;
   double arg5 ;
-  double arg6 = (double) libsumo::INVALID_DOUBLE_VALUE ;
+  double arg6 = (double) -1 ;
   std::string const &arg7_defvalue = "" ;
   std::string *arg7 = (std::string *) &arg7_defvalue ;
   int res1 = SWIG_OLDOBJ ;
@@ -81533,12 +85405,12 @@ fail:
 
 SWIGINTERN PyObject *_wrap_person_getTaxiReservations(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
-  int arg1 = (int) false ;
+  int arg1 = (int) 0 ;
   int val1 ;
   int ecode1 = 0 ;
   PyObject * obj0 = 0 ;
   char *  kwnames[] = {
-    (char *) "onlyNew", NULL 
+    (char *) "stateFilter", NULL 
   };
   std::vector< libsumo::TraCIReservation,std::allocator< libsumo::TraCIReservation > > result;
   
@@ -81579,6 +85451,74 @@ SWIGINTERN PyObject *_wrap_person_getTaxiReservations(PyObject *SWIGUNUSEDPARM(s
   resultobj = swig::from(static_cast< std::vector< libsumo::TraCIReservation,std::allocator< libsumo::TraCIReservation > > >(result));
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_person_splitTaxiReservation(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::string arg1 ;
+  std::vector< std::string,std::allocator< std::string > > *arg2 = 0 ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "reservationID",(char *) "personIDs", NULL 
+  };
+  std::string result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:person_splitTaxiReservation",kwnames,&obj0,&obj1)) SWIG_fail;
+  {
+    std::string *ptr = (std::string *)0;
+    int res = SWIG_AsPtr_std_string(obj0, &ptr);
+    if (!SWIG_IsOK(res) || !ptr) {
+      SWIG_exception_fail(SWIG_ArgError((ptr ? res : SWIG_TypeError)), "in method '" "person_splitTaxiReservation" "', argument " "1"" of type '" "std::string""'"); 
+    }
+    arg1 = *ptr;
+    if (SWIG_IsNewObj(res)) delete ptr;
+  }
+  {
+    std::vector< std::string,std::allocator< std::string > > *ptr = (std::vector< std::string,std::allocator< std::string > > *)0;
+    res2 = swig::asptr(obj1, &ptr);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "person_splitTaxiReservation" "', argument " "2"" of type '" "std::vector< std::string,std::allocator< std::string > > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "person_splitTaxiReservation" "', argument " "2"" of type '" "std::vector< std::string,std::allocator< std::string > > const &""'"); 
+    }
+    arg2 = ptr;
+  }
+  {
+    try {
+      result = libtraci::Person::splitTaxiReservation(arg1,(std::vector< std::string,std::allocator< std::string > > const &)*arg2);
+    } catch (libsumo::TraCIException &e) {
+      const std::string s = e.what();
+      std::string printError;
+      if (std::getenv("TRACI_PRINT_ERROR") != nullptr) {
+        printError = std::getenv("TRACI_PRINT_ERROR");
+      }
+      
+      if (printError == "all" || printError == "client") {
+        std::cerr << "Error: " << s << std::endl;
+      }
+      
+      PyErr_SetObject(SWIG_Python_ExceptionType(SWIGTYPE_p_libsumo__TraCIException), PyUnicode_FromString(s.c_str()));
+      SWIG_fail;
+      
+      
+      
+    } catch (std::runtime_error &e) {
+      const std::string s = std::string("SUMO error: ") + e.what();
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError, "unknown exception");
+    }
+  }
+  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res2)) delete arg2;
   return NULL;
 }
 
@@ -98866,6 +102806,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"TraCIReservation_depart_get", _wrap_TraCIReservation_depart_get, METH_VARARGS, NULL},
 	 { (char *)"TraCIReservation_reservationTime_set", _wrap_TraCIReservation_reservationTime_set, METH_VARARGS, NULL},
 	 { (char *)"TraCIReservation_reservationTime_get", _wrap_TraCIReservation_reservationTime_get, METH_VARARGS, NULL},
+	 { (char *)"TraCIReservation_state_set", _wrap_TraCIReservation_state_set, METH_VARARGS, NULL},
+	 { (char *)"TraCIReservation_state_get", _wrap_TraCIReservation_state_get, METH_VARARGS, NULL},
 	 { (char *)"delete_TraCIReservation", _wrap_delete_TraCIReservation, METH_VARARGS, NULL},
 	 { (char *)"TraCIReservation_swigregister", TraCIReservation_swigregister, METH_VARARGS, NULL},
 	 { (char *)"TraCICollision_collider_set", _wrap_TraCICollision_collider_set, METH_VARARGS, NULL},
@@ -98889,6 +102831,19 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_TraCICollision", _wrap_new_TraCICollision, METH_VARARGS, NULL},
 	 { (char *)"delete_TraCICollision", _wrap_delete_TraCICollision, METH_VARARGS, NULL},
 	 { (char *)"TraCICollision_swigregister", TraCICollision_swigregister, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_tripId_set", _wrap_TraCISignalConstraint_tripId_set, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_tripId_get", _wrap_TraCISignalConstraint_tripId_get, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_foeId_set", _wrap_TraCISignalConstraint_foeId_set, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_foeId_get", _wrap_TraCISignalConstraint_foeId_get, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_foeSignal_set", _wrap_TraCISignalConstraint_foeSignal_set, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_foeSignal_get", _wrap_TraCISignalConstraint_foeSignal_get, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_limit_set", _wrap_TraCISignalConstraint_limit_set, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_limit_get", _wrap_TraCISignalConstraint_limit_get, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_type_set", _wrap_TraCISignalConstraint_type_set, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_type_get", _wrap_TraCISignalConstraint_type_get, METH_VARARGS, NULL},
+	 { (char *)"new_TraCISignalConstraint", _wrap_new_TraCISignalConstraint, METH_VARARGS, NULL},
+	 { (char *)"delete_TraCISignalConstraint", _wrap_delete_TraCISignalConstraint, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraint_swigregister", TraCISignalConstraint_swigregister, METH_VARARGS, NULL},
 	 { (char *)"TraCILogicVector_iterator", _wrap_TraCILogicVector_iterator, METH_VARARGS, NULL},
 	 { (char *)"TraCILogicVector___nonzero__", _wrap_TraCILogicVector___nonzero__, METH_VARARGS, NULL},
 	 { (char *)"TraCILogicVector___bool__", _wrap_TraCILogicVector___bool__, METH_VARARGS, NULL},
@@ -99025,6 +102980,40 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"TraCIReservationVector_capacity", _wrap_TraCIReservationVector_capacity, METH_VARARGS, NULL},
 	 { (char *)"delete_TraCIReservationVector", _wrap_delete_TraCIReservationVector, METH_VARARGS, NULL},
 	 { (char *)"TraCIReservationVector_swigregister", TraCIReservationVector_swigregister, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_iterator", _wrap_TraCISignalConstraintVector_iterator, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___nonzero__", _wrap_TraCISignalConstraintVector___nonzero__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___bool__", _wrap_TraCISignalConstraintVector___bool__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___len__", _wrap_TraCISignalConstraintVector___len__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___getslice__", (PyCFunction) _wrap_TraCISignalConstraintVector___getslice__, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector___setslice__", _wrap_TraCISignalConstraintVector___setslice__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___delslice__", (PyCFunction) _wrap_TraCISignalConstraintVector___delslice__, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector___delitem__", _wrap_TraCISignalConstraintVector___delitem__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___getitem__", _wrap_TraCISignalConstraintVector___getitem__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector___setitem__", _wrap_TraCISignalConstraintVector___setitem__, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_pop", _wrap_TraCISignalConstraintVector_pop, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_append", (PyCFunction) _wrap_TraCISignalConstraintVector_append, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector_empty", _wrap_TraCISignalConstraintVector_empty, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_size", _wrap_TraCISignalConstraintVector_size, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_swap", (PyCFunction) _wrap_TraCISignalConstraintVector_swap, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector_begin", _wrap_TraCISignalConstraintVector_begin, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_end", _wrap_TraCISignalConstraintVector_end, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_rbegin", _wrap_TraCISignalConstraintVector_rbegin, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_rend", _wrap_TraCISignalConstraintVector_rend, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_clear", _wrap_TraCISignalConstraintVector_clear, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_get_allocator", _wrap_TraCISignalConstraintVector_get_allocator, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_pop_back", _wrap_TraCISignalConstraintVector_pop_back, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_erase", _wrap_TraCISignalConstraintVector_erase, METH_VARARGS, NULL},
+	 { (char *)"new_TraCISignalConstraintVector", _wrap_new_TraCISignalConstraintVector, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_push_back", (PyCFunction) _wrap_TraCISignalConstraintVector_push_back, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector_front", _wrap_TraCISignalConstraintVector_front, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_back", _wrap_TraCISignalConstraintVector_back, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_assign", (PyCFunction) _wrap_TraCISignalConstraintVector_assign, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector_resize", _wrap_TraCISignalConstraintVector_resize, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_insert", _wrap_TraCISignalConstraintVector_insert, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_reserve", (PyCFunction) _wrap_TraCISignalConstraintVector_reserve, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"TraCISignalConstraintVector_capacity", _wrap_TraCISignalConstraintVector_capacity, METH_VARARGS, NULL},
+	 { (char *)"delete_TraCISignalConstraintVector", _wrap_delete_TraCISignalConstraintVector, METH_VARARGS, NULL},
+	 { (char *)"TraCISignalConstraintVector_swigregister", TraCISignalConstraintVector_swigregister, METH_VARARGS, NULL},
 	 { (char *)"edge_getAdaptedTraveltime", (PyCFunction) _wrap_edge_getAdaptedTraveltime, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"edge_getEffort", (PyCFunction) _wrap_edge_getEffort, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"edge_getTraveltime", (PyCFunction) _wrap_edge_getTraveltime, METH_VARARGS | METH_KEYWORDS, NULL},
@@ -99046,6 +103035,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"edge_getLastStepLength", (PyCFunction) _wrap_edge_getLastStepLength, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"edge_getLaneNumber", (PyCFunction) _wrap_edge_getLaneNumber, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"edge_getStreetName", (PyCFunction) _wrap_edge_getStreetName, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"edge_getPendingVehicles", (PyCFunction) _wrap_edge_getPendingVehicles, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"edge_getIDList", _wrap_edge_getIDList, METH_VARARGS, NULL},
 	 { (char *)"edge_getIDCount", _wrap_edge_getIDCount, METH_VARARGS, NULL},
 	 { (char *)"edge_getParameter", (PyCFunction) _wrap_edge_getParameter, METH_VARARGS | METH_KEYWORDS, NULL},
@@ -99163,6 +103153,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"lane_getLastStepVehicleIDs", (PyCFunction) _wrap_lane_getLastStepVehicleIDs, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"lane_getFoes", (PyCFunction) _wrap_lane_getFoes, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"lane_getInternalFoes", (PyCFunction) _wrap_lane_getInternalFoes, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"lane_getPendingVehicles", (PyCFunction) _wrap_lane_getPendingVehicles, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"lane_getIDList", _wrap_lane_getIDList, METH_VARARGS, NULL},
 	 { (char *)"lane_getIDCount", _wrap_lane_getIDCount, METH_VARARGS, NULL},
 	 { (char *)"lane_getParameter", (PyCFunction) _wrap_lane_getParameter, METH_VARARGS | METH_KEYWORDS, NULL},
@@ -99322,6 +103313,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"simulation_getBusStopIDList", _wrap_simulation_getBusStopIDList, METH_VARARGS, NULL},
 	 { (char *)"simulation_getBusStopWaiting", (PyCFunction) _wrap_simulation_getBusStopWaiting, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"simulation_getBusStopWaitingIDList", (PyCFunction) _wrap_simulation_getBusStopWaitingIDList, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"simulation_getPendingVehicles", _wrap_simulation_getPendingVehicles, METH_VARARGS, NULL},
 	 { (char *)"simulation_getCollisions", _wrap_simulation_getCollisions, METH_VARARGS, NULL},
 	 { (char *)"simulation_getDeltaT", _wrap_simulation_getDeltaT, METH_VARARGS, NULL},
 	 { (char *)"simulation_getNetBoundary", _wrap_simulation_getNetBoundary, METH_VARARGS, NULL},
@@ -99361,6 +103353,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"trafficlight_getBlockingVehicles", (PyCFunction) _wrap_trafficlight_getBlockingVehicles, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"trafficlight_getRivalVehicles", (PyCFunction) _wrap_trafficlight_getRivalVehicles, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"trafficlight_getPriorityVehicles", (PyCFunction) _wrap_trafficlight_getPriorityVehicles, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"trafficlight_getConstraints", (PyCFunction) _wrap_trafficlight_getConstraints, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"trafficlight_getIDList", _wrap_trafficlight_getIDList, METH_VARARGS, NULL},
 	 { (char *)"trafficlight_getIDCount", _wrap_trafficlight_getIDCount, METH_VARARGS, NULL},
 	 { (char *)"trafficlight_getParameter", (PyCFunction) _wrap_trafficlight_getParameter, METH_VARARGS | METH_KEYWORDS, NULL},
@@ -99624,6 +103617,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"person_getSlope", (PyCFunction) _wrap_person_getSlope, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"person_getLanePosition", (PyCFunction) _wrap_person_getLanePosition, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"person_getTaxiReservations", (PyCFunction) _wrap_person_getTaxiReservations, METH_VARARGS | METH_KEYWORDS, NULL},
+	 { (char *)"person_splitTaxiReservation", (PyCFunction) _wrap_person_splitTaxiReservation, METH_VARARGS | METH_KEYWORDS, NULL},
 	 { (char *)"person_getIDList", _wrap_person_getIDList, METH_VARARGS, NULL},
 	 { (char *)"person_getIDCount", _wrap_person_getIDCount, METH_VARARGS, NULL},
 	 { (char *)"person_getParameter", (PyCFunction) _wrap_person_getParameter, METH_VARARGS | METH_KEYWORDS, NULL},
@@ -99951,6 +103945,7 @@ static swig_type_info _swigt__p_libsumo__TraCIPositionVector = {"_p_libsumo__Tra
 static swig_type_info _swigt__p_libsumo__TraCIReservation = {"_p_libsumo__TraCIReservation", "libsumo::TraCIReservation *|std::vector< libsumo::TraCIReservation >::value_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_libsumo__TraCIResult = {"_p_libsumo__TraCIResult", "libsumo::TraCIResult *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_libsumo__TraCIRoadPosition = {"_p_libsumo__TraCIRoadPosition", "libsumo::TraCIRoadPosition *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_libsumo__TraCISignalConstraint = {"_p_libsumo__TraCISignalConstraint", "libsumo::TraCISignalConstraint *|std::vector< libsumo::TraCISignalConstraint >::value_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_libsumo__TraCIStage = {"_p_libsumo__TraCIStage", "libsumo::TraCIStage *|std::vector< libsumo::TraCIStage >::value_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_libsumo__TraCIString = {"_p_libsumo__TraCIString", "libsumo::TraCIString *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_libsumo__TraCIStringList = {"_p_libsumo__TraCIStringList", "libsumo::TraCIStringList *", 0, 0, (void*)0, 0};
@@ -99988,6 +103983,7 @@ static swig_type_info _swigt__p_std__allocatorT_libsumo__TraCILogic_t = {"_p_std
 static swig_type_info _swigt__p_std__allocatorT_libsumo__TraCINextStopData_t = {"_p_std__allocatorT_libsumo__TraCINextStopData_t", "std::vector< libsumo::TraCINextStopData >::allocator_type *|std::allocator< libsumo::TraCINextStopData > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_libsumo__TraCIPhase_p_t = {"_p_std__allocatorT_libsumo__TraCIPhase_p_t", "std::vector< libsumo::TraCIPhase * >::allocator_type *|std::allocator< libsumo::TraCIPhase * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_libsumo__TraCIReservation_t = {"_p_std__allocatorT_libsumo__TraCIReservation_t", "std::vector< libsumo::TraCIReservation >::allocator_type *|std::allocator< libsumo::TraCIReservation > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__allocatorT_libsumo__TraCISignalConstraint_t = {"_p_std__allocatorT_libsumo__TraCISignalConstraint_t", "std::vector< libsumo::TraCISignalConstraint >::allocator_type *|std::allocator< libsumo::TraCISignalConstraint > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_libsumo__TraCIStage_t = {"_p_std__allocatorT_libsumo__TraCIStage_t", "std::vector< libsumo::TraCIStage >::allocator_type *|std::allocator< libsumo::TraCIStage > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_std__string_t = {"_p_std__allocatorT_std__string_t", "std::vector< std::string >::allocator_type *|std::allocator< std::string > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__invalid_argument = {"_p_std__invalid_argument", "std::invalid_argument *", 0, 0, (void*)0, 0};
@@ -100003,6 +103999,7 @@ static swig_type_info _swigt__p_std__vectorT_libsumo__TraCINextStopData_std__all
 static swig_type_info _swigt__p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t = {"_p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t", "std::vector< libsumo::TraCIPhase *,std::allocator< libsumo::TraCIPhase * > > *|std::vector< libsumo::TraCIPhase * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t = {"_p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t", "std::vector< libsumo::TraCIPosition,std::allocator< libsumo::TraCIPosition > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t = {"_p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t", "std::vector< libsumo::TraCIReservation,std::allocator< libsumo::TraCIReservation > > *|std::vector< libsumo::TraCIReservation > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t = {"_p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t", "std::vector< libsumo::TraCISignalConstraint,std::allocator< libsumo::TraCISignalConstraint > > *|std::vector< libsumo::TraCISignalConstraint > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t = {"_p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t", "std::vector< libsumo::TraCIStage > *|std::vector< libsumo::TraCIStage,std::allocator< libsumo::TraCIStage > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_std__string_std__allocatorT_std__string_t_t = {"_p_std__vectorT_std__string_std__allocatorT_std__string_t_t", "std::vector< std::string,std::allocator< std::string > > *|std::vector< std::string > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_swig__SwigPyIterator = {"_p_swig__SwigPyIterator", "swig::SwigPyIterator *", 0, 0, (void*)0, 0};
@@ -100036,6 +104033,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_libsumo__TraCIReservation,
   &_swigt__p_libsumo__TraCIResult,
   &_swigt__p_libsumo__TraCIRoadPosition,
+  &_swigt__p_libsumo__TraCISignalConstraint,
   &_swigt__p_libsumo__TraCIStage,
   &_swigt__p_libsumo__TraCIString,
   &_swigt__p_libsumo__TraCIStringList,
@@ -100073,6 +104071,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__allocatorT_libsumo__TraCINextStopData_t,
   &_swigt__p_std__allocatorT_libsumo__TraCIPhase_p_t,
   &_swigt__p_std__allocatorT_libsumo__TraCIReservation_t,
+  &_swigt__p_std__allocatorT_libsumo__TraCISignalConstraint_t,
   &_swigt__p_std__allocatorT_libsumo__TraCIStage_t,
   &_swigt__p_std__allocatorT_std__string_t,
   &_swigt__p_std__invalid_argument,
@@ -100088,6 +104087,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t,
   &_swigt__p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t,
   &_swigt__p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t,
+  &_swigt__p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t,
   &_swigt__p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t,
   &_swigt__p_std__vectorT_std__string_std__allocatorT_std__string_t_t,
   &_swigt__p_swig__SwigPyIterator,
@@ -100121,6 +104121,7 @@ static swig_cast_info _swigc__p_libsumo__TraCIPositionVector[] = {  {&_swigt__p_
 static swig_cast_info _swigc__p_libsumo__TraCIReservation[] = {  {&_swigt__p_libsumo__TraCIReservation, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_libsumo__TraCIResult[] = {  {&_swigt__p_libsumo__TraCIPositionVector, _p_libsumo__TraCIPositionVectorTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIStringList, _p_libsumo__TraCIStringListTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCINextStopData, _p_libsumo__TraCINextStopDataTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIResult, 0, 0, 0},  {&_swigt__p_libsumo__TraCIPosition, _p_libsumo__TraCIPositionTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIRoadPosition, _p_libsumo__TraCIRoadPositionTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCINextStopDataVector, _p_libsumo__TraCINextStopDataVectorTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIColor, _p_libsumo__TraCIColorTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIInt, _p_libsumo__TraCIIntTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIDouble, _p_libsumo__TraCIDoubleTo_p_libsumo__TraCIResult, 0, 0},  {&_swigt__p_libsumo__TraCIString, _p_libsumo__TraCIStringTo_p_libsumo__TraCIResult, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_libsumo__TraCIRoadPosition[] = {  {&_swigt__p_libsumo__TraCIRoadPosition, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_libsumo__TraCISignalConstraint[] = {  {&_swigt__p_libsumo__TraCISignalConstraint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_libsumo__TraCIStage[] = {  {&_swigt__p_libsumo__TraCIStage, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_libsumo__TraCIString[] = {  {&_swigt__p_libsumo__TraCIString, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_libsumo__TraCIStringList[] = {  {&_swigt__p_libsumo__TraCIStringList, 0, 0, 0},{0, 0, 0, 0}};
@@ -100158,6 +104159,7 @@ static swig_cast_info _swigc__p_std__allocatorT_libsumo__TraCILogic_t[] = {  {&_
 static swig_cast_info _swigc__p_std__allocatorT_libsumo__TraCINextStopData_t[] = {  {&_swigt__p_std__allocatorT_libsumo__TraCINextStopData_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__allocatorT_libsumo__TraCIPhase_p_t[] = {  {&_swigt__p_std__allocatorT_libsumo__TraCIPhase_p_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__allocatorT_libsumo__TraCIReservation_t[] = {  {&_swigt__p_std__allocatorT_libsumo__TraCIReservation_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__allocatorT_libsumo__TraCISignalConstraint_t[] = {  {&_swigt__p_std__allocatorT_libsumo__TraCISignalConstraint_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__allocatorT_libsumo__TraCIStage_t[] = {  {&_swigt__p_std__allocatorT_libsumo__TraCIStage_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__allocatorT_std__string_t[] = {  {&_swigt__p_std__allocatorT_std__string_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__invalid_argument[] = {  {&_swigt__p_std__invalid_argument, 0, 0, 0},{0, 0, 0, 0}};
@@ -100173,6 +104175,7 @@ static swig_cast_info _swigc__p_std__vectorT_libsumo__TraCINextStopData_std__all
 static swig_cast_info _swigc__p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t[] = {  {&_swigt__p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t[] = {  {&_swigt__p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t[] = {  {&_swigt__p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t[] = {  {&_swigt__p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t[] = {  {&_swigt__p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_std__string_std__allocatorT_std__string_t_t[] = {  {&_swigt__p_std__vectorT_std__string_std__allocatorT_std__string_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_swig__SwigPyIterator[] = {  {&_swigt__p_swig__SwigPyIterator, 0, 0, 0},{0, 0, 0, 0}};
@@ -100206,6 +104209,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_libsumo__TraCIReservation,
   _swigc__p_libsumo__TraCIResult,
   _swigc__p_libsumo__TraCIRoadPosition,
+  _swigc__p_libsumo__TraCISignalConstraint,
   _swigc__p_libsumo__TraCIStage,
   _swigc__p_libsumo__TraCIString,
   _swigc__p_libsumo__TraCIStringList,
@@ -100243,6 +104247,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__allocatorT_libsumo__TraCINextStopData_t,
   _swigc__p_std__allocatorT_libsumo__TraCIPhase_p_t,
   _swigc__p_std__allocatorT_libsumo__TraCIReservation_t,
+  _swigc__p_std__allocatorT_libsumo__TraCISignalConstraint_t,
   _swigc__p_std__allocatorT_libsumo__TraCIStage_t,
   _swigc__p_std__allocatorT_std__string_t,
   _swigc__p_std__invalid_argument,
@@ -100258,6 +104263,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__vectorT_libsumo__TraCIPhase_p_std__allocatorT_libsumo__TraCIPhase_p_t_t,
   _swigc__p_std__vectorT_libsumo__TraCIPosition_std__allocatorT_libsumo__TraCIPosition_t_t,
   _swigc__p_std__vectorT_libsumo__TraCIReservation_std__allocatorT_libsumo__TraCIReservation_t_t,
+  _swigc__p_std__vectorT_libsumo__TraCISignalConstraint_std__allocatorT_libsumo__TraCISignalConstraint_t_t,
   _swigc__p_std__vectorT_libsumo__TraCIStage_std__allocatorT_libsumo__TraCIStage_t_t,
   _swigc__p_std__vectorT_std__string_std__allocatorT_std__string_t_t,
   _swigc__p_swig__SwigPyIterator,
@@ -101272,6 +105278,8 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"TL_COMPLETE_PROGRAM_RYG",Swig_var_TL_COMPLETE_PROGRAM_RYG_get, Swig_var_TL_COMPLETE_PROGRAM_RYG_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"TL_NEXT_SWITCH",Swig_var_TL_NEXT_SWITCH_get, Swig_var_TL_NEXT_SWITCH_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"TL_EXTERNAL_STATE",Swig_var_TL_EXTERNAL_STATE_get, Swig_var_TL_EXTERNAL_STATE_set);
+  SWIG_addvarlink(SWIG_globals(),(char *)"TL_CONSTRAINT",Swig_var_TL_CONSTRAINT_get, Swig_var_TL_CONSTRAINT_set);
+  SWIG_addvarlink(SWIG_globals(),(char *)"TL_CONSTRAINT_REVERSE",Swig_var_TL_CONSTRAINT_REVERSE_get, Swig_var_TL_CONSTRAINT_REVERSE_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"LANE_LINK_NUMBER",Swig_var_LANE_LINK_NUMBER_get, Swig_var_LANE_LINK_NUMBER_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"LANE_EDGE_ID",Swig_var_LANE_EDGE_ID_get, Swig_var_LANE_EDGE_ID_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"LANE_LINKS",Swig_var_LANE_LINKS_get, Swig_var_LANE_LINKS_set);
@@ -101395,6 +105403,7 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_EMERGENCYSTOPPING_VEHICLES_NUMBER",Swig_var_VAR_EMERGENCYSTOPPING_VEHICLES_NUMBER_get, Swig_var_VAR_EMERGENCYSTOPPING_VEHICLES_NUMBER_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_EMERGENCYSTOPPING_VEHICLES_IDS",Swig_var_VAR_EMERGENCYSTOPPING_VEHICLES_IDS_get, Swig_var_VAR_EMERGENCYSTOPPING_VEHICLES_IDS_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"CMD_CLEAR_PENDING_VEHICLES",Swig_var_CMD_CLEAR_PENDING_VEHICLES_get, Swig_var_CMD_CLEAR_PENDING_VEHICLES_set);
+  SWIG_addvarlink(SWIG_globals(),(char *)"VAR_PENDING_VEHICLES",Swig_var_VAR_PENDING_VEHICLES_get, Swig_var_VAR_PENDING_VEHICLES_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"CMD_SAVE_SIMSTATE",Swig_var_CMD_SAVE_SIMSTATE_get, Swig_var_CMD_SAVE_SIMSTATE_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"CMD_LOAD_SIMSTATE",Swig_var_CMD_LOAD_SIMSTATE_get, Swig_var_CMD_LOAD_SIMSTATE_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_COLLISIONS",Swig_var_VAR_COLLISIONS_get, Swig_var_VAR_COLLISIONS_set);
@@ -101420,6 +105429,7 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"REPLACE_STAGE",Swig_var_REPLACE_STAGE_get, Swig_var_REPLACE_STAGE_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"REMOVE_STAGE",Swig_var_REMOVE_STAGE_get, Swig_var_REMOVE_STAGE_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_TAXI_RESERVATIONS",Swig_var_VAR_TAXI_RESERVATIONS_get, Swig_var_VAR_TAXI_RESERVATIONS_set);
+  SWIG_addvarlink(SWIG_globals(),(char *)"SPLIT_TAXI_RESERVATIONS",Swig_var_SPLIT_TAXI_RESERVATIONS_get, Swig_var_SPLIT_TAXI_RESERVATIONS_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_SAMPLE_LAST",Swig_var_VAR_SAMPLE_LAST_get, Swig_var_VAR_SAMPLE_LAST_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_SAMPLE_CURRENT",Swig_var_VAR_SAMPLE_CURRENT_get, Swig_var_VAR_SAMPLE_CURRENT_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"VAR_VIEW_ZOOM",Swig_var_VAR_VIEW_ZOOM_get, Swig_var_VAR_VIEW_ZOOM_set);

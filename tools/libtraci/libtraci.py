@@ -1336,6 +1336,10 @@ class TraCIReservation(_object):
     __swig_getmethods__["reservationTime"] = _libtraci.TraCIReservation_reservationTime_get
     if _newclass:
         reservationTime = _swig_property(_libtraci.TraCIReservation_reservationTime_get, _libtraci.TraCIReservation_reservationTime_set)
+    __swig_setmethods__["state"] = _libtraci.TraCIReservation_state_set
+    __swig_getmethods__["state"] = _libtraci.TraCIReservation_state_get
+    if _newclass:
+        state = _swig_property(_libtraci.TraCIReservation_state_get, _libtraci.TraCIReservation_state_set)
     __swig_destroy__ = _libtraci.delete_TraCIReservation
     __del__ = lambda self: None
 TraCIReservation_swigregister = _libtraci.TraCIReservation_swigregister
@@ -1394,6 +1398,44 @@ class TraCICollision(_object):
     __del__ = lambda self: None
 TraCICollision_swigregister = _libtraci.TraCICollision_swigregister
 TraCICollision_swigregister(TraCICollision)
+
+class TraCISignalConstraint(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, TraCISignalConstraint, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, TraCISignalConstraint, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["tripId"] = _libtraci.TraCISignalConstraint_tripId_set
+    __swig_getmethods__["tripId"] = _libtraci.TraCISignalConstraint_tripId_get
+    if _newclass:
+        tripId = _swig_property(_libtraci.TraCISignalConstraint_tripId_get, _libtraci.TraCISignalConstraint_tripId_set)
+    __swig_setmethods__["foeId"] = _libtraci.TraCISignalConstraint_foeId_set
+    __swig_getmethods__["foeId"] = _libtraci.TraCISignalConstraint_foeId_get
+    if _newclass:
+        foeId = _swig_property(_libtraci.TraCISignalConstraint_foeId_get, _libtraci.TraCISignalConstraint_foeId_set)
+    __swig_setmethods__["foeSignal"] = _libtraci.TraCISignalConstraint_foeSignal_set
+    __swig_getmethods__["foeSignal"] = _libtraci.TraCISignalConstraint_foeSignal_get
+    if _newclass:
+        foeSignal = _swig_property(_libtraci.TraCISignalConstraint_foeSignal_get, _libtraci.TraCISignalConstraint_foeSignal_set)
+    __swig_setmethods__["limit"] = _libtraci.TraCISignalConstraint_limit_set
+    __swig_getmethods__["limit"] = _libtraci.TraCISignalConstraint_limit_get
+    if _newclass:
+        limit = _swig_property(_libtraci.TraCISignalConstraint_limit_get, _libtraci.TraCISignalConstraint_limit_set)
+    __swig_setmethods__["type"] = _libtraci.TraCISignalConstraint_type_set
+    __swig_getmethods__["type"] = _libtraci.TraCISignalConstraint_type_get
+    if _newclass:
+        type = _swig_property(_libtraci.TraCISignalConstraint_type_get, _libtraci.TraCISignalConstraint_type_set)
+
+    def __init__(self):
+        this = _libtraci.new_TraCISignalConstraint()
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+    __swig_destroy__ = _libtraci.delete_TraCISignalConstraint
+    __del__ = lambda self: None
+TraCISignalConstraint_swigregister = _libtraci.TraCISignalConstraint_swigregister
+TraCISignalConstraint_swigregister(TraCISignalConstraint)
 
 class TraCILogicVector(_object):
     __swig_setmethods__ = {}
@@ -1847,6 +1889,119 @@ class TraCIReservationVector(_object):
 TraCIReservationVector_swigregister = _libtraci.TraCIReservationVector_swigregister
 TraCIReservationVector_swigregister(TraCIReservationVector)
 
+class TraCISignalConstraintVector(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, TraCISignalConstraintVector, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, TraCISignalConstraintVector, name)
+    __repr__ = _swig_repr
+
+    def iterator(self):
+        return _libtraci.TraCISignalConstraintVector_iterator(self)
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        return _libtraci.TraCISignalConstraintVector___nonzero__(self)
+
+    def __bool__(self):
+        return _libtraci.TraCISignalConstraintVector___bool__(self)
+
+    def __len__(self):
+        return _libtraci.TraCISignalConstraintVector___len__(self)
+
+    def __getslice__(self, i, j):
+        return _libtraci.TraCISignalConstraintVector___getslice__(self, i, j)
+
+    def __setslice__(self, *args):
+        return _libtraci.TraCISignalConstraintVector___setslice__(self, *args)
+
+    def __delslice__(self, i, j):
+        return _libtraci.TraCISignalConstraintVector___delslice__(self, i, j)
+
+    def __delitem__(self, *args):
+        return _libtraci.TraCISignalConstraintVector___delitem__(self, *args)
+
+    def __getitem__(self, *args):
+        return _libtraci.TraCISignalConstraintVector___getitem__(self, *args)
+
+    def __setitem__(self, *args):
+        return _libtraci.TraCISignalConstraintVector___setitem__(self, *args)
+
+    def pop(self):
+        return _libtraci.TraCISignalConstraintVector_pop(self)
+
+    def append(self, x):
+        return _libtraci.TraCISignalConstraintVector_append(self, x)
+
+    def empty(self):
+        return _libtraci.TraCISignalConstraintVector_empty(self)
+
+    def size(self):
+        return _libtraci.TraCISignalConstraintVector_size(self)
+
+    def swap(self, v):
+        return _libtraci.TraCISignalConstraintVector_swap(self, v)
+
+    def begin(self):
+        return _libtraci.TraCISignalConstraintVector_begin(self)
+
+    def end(self):
+        return _libtraci.TraCISignalConstraintVector_end(self)
+
+    def rbegin(self):
+        return _libtraci.TraCISignalConstraintVector_rbegin(self)
+
+    def rend(self):
+        return _libtraci.TraCISignalConstraintVector_rend(self)
+
+    def clear(self):
+        return _libtraci.TraCISignalConstraintVector_clear(self)
+
+    def get_allocator(self):
+        return _libtraci.TraCISignalConstraintVector_get_allocator(self)
+
+    def pop_back(self):
+        return _libtraci.TraCISignalConstraintVector_pop_back(self)
+
+    def erase(self, *args):
+        return _libtraci.TraCISignalConstraintVector_erase(self, *args)
+
+    def __init__(self, *args):
+        this = _libtraci.new_TraCISignalConstraintVector(*args)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+
+    def push_back(self, x):
+        return _libtraci.TraCISignalConstraintVector_push_back(self, x)
+
+    def front(self):
+        return _libtraci.TraCISignalConstraintVector_front(self)
+
+    def back(self):
+        return _libtraci.TraCISignalConstraintVector_back(self)
+
+    def assign(self, n, x):
+        return _libtraci.TraCISignalConstraintVector_assign(self, n, x)
+
+    def resize(self, *args):
+        return _libtraci.TraCISignalConstraintVector_resize(self, *args)
+
+    def insert(self, *args):
+        return _libtraci.TraCISignalConstraintVector_insert(self, *args)
+
+    def reserve(self, n):
+        return _libtraci.TraCISignalConstraintVector_reserve(self, n)
+
+    def capacity(self):
+        return _libtraci.TraCISignalConstraintVector_capacity(self)
+    __swig_destroy__ = _libtraci.delete_TraCISignalConstraintVector
+    __del__ = lambda self: None
+TraCISignalConstraintVector_swigregister = _libtraci.TraCISignalConstraintVector_swigregister
+TraCISignalConstraintVector_swigregister(TraCISignalConstraintVector)
+
 class edge(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, edge, name, value)
@@ -1940,6 +2095,10 @@ class edge(_object):
         getStreetName = staticmethod(_libtraci.edge_getStreetName)
     else:
         getStreetName = _libtraci.edge_getStreetName
+    if _newclass:
+        getPendingVehicles = staticmethod(_libtraci.edge_getPendingVehicles)
+    else:
+        getPendingVehicles = _libtraci.edge_getPendingVehicles
     if _newclass:
         getIDList = staticmethod(_libtraci.edge_getIDList)
     else:
@@ -2104,6 +2263,10 @@ edge_getLaneNumber = _libtraci.edge_getLaneNumber
 def edge_getStreetName(edgeID):
     return _libtraci.edge_getStreetName(edgeID)
 edge_getStreetName = _libtraci.edge_getStreetName
+
+def edge_getPendingVehicles(edgeID):
+    return _libtraci.edge_getPendingVehicles(edgeID)
+edge_getPendingVehicles = _libtraci.edge_getPendingVehicles
 
 def edge_getIDList():
     return _libtraci.edge_getIDList()
@@ -2845,6 +3008,10 @@ class lane(_object):
     else:
         getInternalFoes = _libtraci.lane_getInternalFoes
     if _newclass:
+        getPendingVehicles = staticmethod(_libtraci.lane_getPendingVehicles)
+    else:
+        getPendingVehicles = _libtraci.lane_getPendingVehicles
+    if _newclass:
         getIDList = staticmethod(_libtraci.lane_getIDList)
     else:
         getIDList = _libtraci.lane_getIDList
@@ -3028,6 +3195,10 @@ lane_getFoes = _libtraci.lane_getFoes
 def lane_getInternalFoes(laneID):
     return _libtraci.lane_getInternalFoes(laneID)
 lane_getInternalFoes = _libtraci.lane_getInternalFoes
+
+def lane_getPendingVehicles(laneID):
+    return _libtraci.lane_getPendingVehicles(laneID)
+lane_getPendingVehicles = _libtraci.lane_getPendingVehicles
 
 def lane_getIDList():
     return _libtraci.lane_getIDList()
@@ -4059,6 +4230,10 @@ class simulation(_object):
     else:
         getBusStopWaitingIDList = _libtraci.simulation_getBusStopWaitingIDList
     if _newclass:
+        getPendingVehicles = staticmethod(_libtraci.simulation_getPendingVehicles)
+    else:
+        getPendingVehicles = _libtraci.simulation_getPendingVehicles
+    if _newclass:
         getCollisions = staticmethod(_libtraci.simulation_getCollisions)
     else:
         getCollisions = _libtraci.simulation_getCollisions
@@ -4311,6 +4486,10 @@ def simulation_getBusStopWaitingIDList(stopID):
     return _libtraci.simulation_getBusStopWaitingIDList(stopID)
 simulation_getBusStopWaitingIDList = _libtraci.simulation_getBusStopWaitingIDList
 
+def simulation_getPendingVehicles():
+    return _libtraci.simulation_getPendingVehicles()
+simulation_getPendingVehicles = _libtraci.simulation_getPendingVehicles
+
 def simulation_getCollisions():
     return _libtraci.simulation_getCollisions()
 simulation_getCollisions = _libtraci.simulation_getCollisions
@@ -4468,6 +4647,10 @@ class trafficlight(_object):
         getPriorityVehicles = staticmethod(_libtraci.trafficlight_getPriorityVehicles)
     else:
         getPriorityVehicles = _libtraci.trafficlight_getPriorityVehicles
+    if _newclass:
+        getConstraints = staticmethod(_libtraci.trafficlight_getConstraints)
+    else:
+        getConstraints = _libtraci.trafficlight_getConstraints
     if _newclass:
         getIDList = staticmethod(_libtraci.trafficlight_getIDList)
     else:
@@ -4878,6 +5061,8 @@ TL_COMPLETE_DEFINITION_RYG = cvar.TL_COMPLETE_DEFINITION_RYG
 TL_COMPLETE_PROGRAM_RYG = cvar.TL_COMPLETE_PROGRAM_RYG
 TL_NEXT_SWITCH = cvar.TL_NEXT_SWITCH
 TL_EXTERNAL_STATE = cvar.TL_EXTERNAL_STATE
+TL_CONSTRAINT = cvar.TL_CONSTRAINT
+TL_CONSTRAINT_REVERSE = cvar.TL_CONSTRAINT_REVERSE
 LANE_LINK_NUMBER = cvar.LANE_LINK_NUMBER
 LANE_EDGE_ID = cvar.LANE_EDGE_ID
 LANE_LINKS = cvar.LANE_LINKS
@@ -5001,6 +5186,7 @@ VAR_COLLIDING_VEHICLES_IDS = cvar.VAR_COLLIDING_VEHICLES_IDS
 VAR_EMERGENCYSTOPPING_VEHICLES_NUMBER = cvar.VAR_EMERGENCYSTOPPING_VEHICLES_NUMBER
 VAR_EMERGENCYSTOPPING_VEHICLES_IDS = cvar.VAR_EMERGENCYSTOPPING_VEHICLES_IDS
 CMD_CLEAR_PENDING_VEHICLES = cvar.CMD_CLEAR_PENDING_VEHICLES
+VAR_PENDING_VEHICLES = cvar.VAR_PENDING_VEHICLES
 CMD_SAVE_SIMSTATE = cvar.CMD_SAVE_SIMSTATE
 CMD_LOAD_SIMSTATE = cvar.CMD_LOAD_SIMSTATE
 VAR_COLLISIONS = cvar.VAR_COLLISIONS
@@ -5026,6 +5212,7 @@ APPEND_STAGE = cvar.APPEND_STAGE
 REPLACE_STAGE = cvar.REPLACE_STAGE
 REMOVE_STAGE = cvar.REMOVE_STAGE
 VAR_TAXI_RESERVATIONS = cvar.VAR_TAXI_RESERVATIONS
+SPLIT_TAXI_RESERVATIONS = cvar.SPLIT_TAXI_RESERVATIONS
 VAR_SAMPLE_LAST = cvar.VAR_SAMPLE_LAST
 VAR_SAMPLE_CURRENT = cvar.VAR_SAMPLE_CURRENT
 VAR_VIEW_ZOOM = cvar.VAR_VIEW_ZOOM
@@ -5092,6 +5279,10 @@ trafficlight_getRivalVehicles = _libtraci.trafficlight_getRivalVehicles
 def trafficlight_getPriorityVehicles(tlsID, linkIndex):
     return _libtraci.trafficlight_getPriorityVehicles(tlsID, linkIndex)
 trafficlight_getPriorityVehicles = _libtraci.trafficlight_getPriorityVehicles
+
+def trafficlight_getConstraints(*args, **kwargs):
+    return _libtraci.trafficlight_getConstraints(*args, **kwargs)
+trafficlight_getConstraints = _libtraci.trafficlight_getConstraints
 
 def trafficlight_getIDList():
     return _libtraci.trafficlight_getIDList()
@@ -7035,6 +7226,10 @@ class person(_object):
     else:
         getTaxiReservations = _libtraci.person_getTaxiReservations
     if _newclass:
+        splitTaxiReservation = staticmethod(_libtraci.person_splitTaxiReservation)
+    else:
+        splitTaxiReservation = _libtraci.person_splitTaxiReservation
+    if _newclass:
         getIDList = staticmethod(_libtraci.person_getIDList)
     else:
         getIDList = _libtraci.person_getIDList
@@ -7375,9 +7570,13 @@ def person_getLanePosition(personID):
     return _libtraci.person_getLanePosition(personID)
 person_getLanePosition = _libtraci.person_getLanePosition
 
-def person_getTaxiReservations(onlyNew=False):
-    return _libtraci.person_getTaxiReservations(onlyNew)
+def person_getTaxiReservations(stateFilter=0):
+    return _libtraci.person_getTaxiReservations(stateFilter)
 person_getTaxiReservations = _libtraci.person_getTaxiReservations
+
+def person_splitTaxiReservation(reservationID, personIDs):
+    return _libtraci.person_splitTaxiReservation(reservationID, personIDs)
+person_splitTaxiReservation = _libtraci.person_splitTaxiReservation
 
 def person_getIDList():
     return _libtraci.person_getIDList()
