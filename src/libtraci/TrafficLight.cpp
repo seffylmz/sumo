@@ -202,11 +202,37 @@ TrafficLight::getConstraints(const std::string& tlsID, const std::string& tripId
     const int n = ret.readInt();
     for (int i = 0; i < n; ++i) {
         libsumo::TraCISignalConstraint c;
+        c.signalId = StoHelp::readTypedString(ret);
         c.tripId = StoHelp::readTypedString(ret);
         c.foeId = StoHelp::readTypedString(ret);
         c.foeSignal = StoHelp::readTypedString(ret);
         c.limit = StoHelp::readTypedInt(ret);
         c.type = StoHelp::readTypedInt(ret);
+        c.mustWait = StoHelp::readTypedByte(ret) != 0;
+        result.push_back(c);
+    }
+    return result;
+}
+
+std::vector<libsumo::TraCISignalConstraint>
+TrafficLight::getConstraintsByFoe(const std::string& foeSignal, const std::string& foeId) {
+    std::vector<libsumo::TraCISignalConstraint> result;
+    tcpip::Storage content;
+    StoHelp::writeTypedString(content, foeId);
+    tcpip::Storage& ret = Dom::get(libsumo::TL_CONSTRAINT_BYFOE, foeSignal, &content);
+    ret.readInt(); // components
+    // number of items
+    ret.readUnsignedByte();
+    const int n = ret.readInt();
+    for (int i = 0; i < n; ++i) {
+        libsumo::TraCISignalConstraint c;
+        c.signalId = StoHelp::readTypedString(ret);
+        c.tripId = StoHelp::readTypedString(ret);
+        c.foeId = StoHelp::readTypedString(ret);
+        c.foeSignal = StoHelp::readTypedString(ret);
+        c.limit = StoHelp::readTypedInt(ret);
+        c.type = StoHelp::readTypedInt(ret);
+        c.mustWait = StoHelp::readTypedByte(ret) != 0;
         result.push_back(c);
     }
     return result;
@@ -269,6 +295,18 @@ TrafficLight::setProgramLogic(const std::string& tlsID, const libsumo::TraCILogi
         StoHelp::writeTypedStringList(content, std::vector<std::string>{key_value.first, key_value.second});
     }
     Dom::set(libsumo::TL_COMPLETE_PROGRAM_RYG, tlsID, &content);
+}
+
+
+void
+TrafficLight::swapConstraints(const std::string& tlsID, const std::string& tripId, const std::string& foeSignal, const std::string& foeId) {
+    tcpip::Storage content;
+    content.writeByte(libsumo::TYPE_COMPOUND);
+    content.writeInt(3);
+    StoHelp::writeTypedString(content, tripId);
+    StoHelp::writeTypedString(content, foeSignal);
+    StoHelp::writeTypedString(content, foeId);
+    Dom::set(libsumo::TL_CONSTRAINT_SWAP, tlsID, &content);
 }
 
 

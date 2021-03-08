@@ -18,8 +18,6 @@
 // C++ TraCI client API implementation
 /****************************************************************************/
 #pragma once
-#include <config.h>
-
 #include <vector>
 #include <libsumo/TraCIDefs.h>
 #include <libsumo/VehicleType.h>
@@ -104,6 +102,16 @@ private:
     static MSPerson* getPerson(const std::string& id);
     static MSStage* convertTraCIStage(const TraCIStage& stage, const std::string personID);
     static bool filterReservation(int stateFilter, const Reservation* res, std::vector<libsumo::TraCIReservation>& reservations);
+
+    /// @brief clase for CW Sorter
+    class reservation_by_id_sorter {
+    public:
+        /// @brief constructor
+        reservation_by_id_sorter() {};
+
+        /// @brief comparing operation for sort
+        int operator()(const TraCIReservation& r1, const TraCIReservation& r2) const;
+    };
 
 private:
     static SubscriptionResults mySubscriptionResults;

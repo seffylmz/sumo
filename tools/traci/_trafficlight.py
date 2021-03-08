@@ -96,16 +96,18 @@ def _readLogics(result):
 
 
 class Constraint:
-    def __init__(self, tripId, foeId, foeSignal, limit, type):
+    def __init__(self, signalId, tripId, foeId, foeSignal, limit, type, mustWait):
+        self.signalId = signalId
         self.tripId = tripId
         self.foeId = foeId
         self.foeSignal = foeSignal
         self.limit = limit
         self.type = type
+        self.mustWait = mustWait
 
     def __repr__(self):
-        return ("Constraint(tripId=%s, foeId=%s, foeSignal=%s, limit=%s, type=%s)" %
-                (self.tripId, self.foeId, self.foeSignal, self.limit, self.type))
+        return ("Constraint(signalId=%s tripId=%s, foeId=%s, foeSignal=%s, limit=%s, type=%s, mustWait=%s)" %
+                (self.signalId, self.tripId, self.foeId, self.foeSignal, self.limit, self.type, self.mustWait))
 
 
 def _readLinks(result):
@@ -125,23 +127,28 @@ def _readLinks(result):
         signals.append(controlledLinks)
     return signals
 
+
 def _readConstraints(result):
     result.readLength()
     num = result.readInt()  # Length
     constraints = []
     for _ in range(num):
+        signalId = result.readTypedString()
         tripId = result.readTypedString()
         foeId = result.readTypedString()
         foeSignal = result.readTypedString()
         limit = result.readTypedInt()
         type = result.readTypedInt()
-        constraints.append(Constraint(tripId, foeId, foeSignal, limit, type))
+        mustWait = bool(result.readTypedByte())
+        constraints.append(Constraint(signalId, tripId, foeId, foeSignal, limit, type, mustWait))
     return constraints
 
 
 _RETURN_VALUE_FUNC = {tc.TL_COMPLETE_DEFINITION_RYG: _readLogics,
                       tc.TL_CONTROLLED_LINKS: _readLinks,
-                      tc.TL_CONSTRAINT: _readConstraints}
+                      tc.TL_CONSTRAINT: _readConstraints,
+                      tc.TL_CONSTRAINT_BYFOE: _readConstraints,
+                      }
 
 
 class TrafficLightDomain(Domain):
@@ -253,13 +260,22 @@ class TrafficLightDomain(Domain):
         """
         return self._getUniversal(tc.TL_PRIORITY_VEHICLES, tlsID, "i", linkIndex)
 
-    def getConstraints(self, tlsID, tripId = ""):
+    def getConstraints(self, tlsID, tripId=""):
         """getConstraints(string, string) -> list(Constraint)
         Returns the list of rail signal constraints for the given rail signal.
         If tripId is not "", only constraints with the given tripId are
         returned. Otherwise, all constraints are returned
         """
         return self._getUniversal(tc.TL_CONSTRAINT, tlsID, "s", tripId)
+
+    def getConstraintsByFoe(self, foeSignal, foeId=""):
+        """getConstraintsByFoe(string, string) -> list(Constraint)
+        Returns the list of rail signal constraints that have the given rail
+        signal id as their foeSignal.
+        If foeId is not "", only constraints with the given foeId are
+        returned. Otherwise, all constraints are returned
+        """
+        return self._getUniversal(tc.TL_CONSTRAINT_BYFOE, foeSignal, "s", foeId)
 
     def setRedYellowGreenState(self, tlsID, state):
         """setRedYellowGreenState(string, string) -> None
@@ -343,3 +359,9 @@ class TrafficLightDomain(Domain):
         self._setCmd(tc.TL_COMPLETE_PROGRAM_RYG, tlsID, format, *values)
 
     setCompleteRedYellowGreenDefinition = setProgramLogic
+
+    def swapConstraints(self, tlsID, tripId, foeSignal, foeId):
+        """swapConstraints(string, string, string, string)
+        Reverse the given constraint and remove all existing constraints with foeId
+        """
+        self._setCmd(tc.TL_CONSTRAINT_SWAP, tlsID, "tsss", 3, tripId, foeSignal, foeId)

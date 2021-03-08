@@ -67,6 +67,14 @@ ContextSubscriptionResults Simulation::myContextSubscriptionResults;
 // ===========================================================================
 // static member definitions
 // ===========================================================================
+std::pair<int, std::string>
+Simulation::start(const std::vector<std::string>& cmd, int /* port */, int /* numRetries */, const std::string& /* label */, const bool /* verbose */,
+    const std::string& /* traceFile */, bool /* traceGetters */, void* /* _stdout */) {
+    load(std::vector<std::string>(cmd.begin() + 1, cmd.end()));
+    return getVersion();
+}
+
+
 void
 Simulation::load(const std::vector<std::string>& args) {
     close("Libsumo issued load command.");
@@ -94,6 +102,7 @@ Simulation::isLoaded() {
 void
 Simulation::step(const double time) {
     Helper::clearVehicleStates();
+    Helper::clearTransportableStates();
     const SUMOTime t = TIME2STEPS(time);
     if (t == 0) {
         MSNet::getInstance()->simulationStep();
@@ -289,6 +298,29 @@ Simulation::getEndingTeleportNumber() {
 std::vector<std::string>
 Simulation::getEndingTeleportIDList() {
     return Helper::getVehicleStateChanges(MSNet::VehicleState::ENDING_TELEPORT);
+}
+
+int
+Simulation::getDepartedPersonNumber() {
+    return (int)Helper::getTransportableStateChanges(MSNet::TransportableState::PERSON_DEPARTED).size();
+}
+
+
+std::vector<std::string>
+Simulation::getDepartedPersonIDList() {
+    return Helper::getTransportableStateChanges(MSNet::TransportableState::PERSON_DEPARTED);
+}
+
+
+int
+Simulation::getArrivedPersonNumber() {
+    return (int)Helper::getTransportableStateChanges(MSNet::TransportableState::PERSON_ARRIVED).size();
+}
+
+
+std::vector<std::string>
+Simulation::getArrivedPersonIDList() {
+    return Helper::getTransportableStateChanges(MSNet::TransportableState::PERSON_ARRIVED);
 }
 
 std::vector<std::string>
@@ -721,16 +753,22 @@ Simulation::getParameter(const std::string& objectID, const std::string& key) {
         } else {
             throw TraCIException("Invalid busStop parameter '" + attrName + "'");
         }
+    } else if (objectID == "") {
+        return MSNet::getInstance()->getParameter(key, "");
     } else {
-        throw TraCIException("Parameter '" + key + "' is not supported.");
+        throw TraCIException("Simulation parameter '" + key + "' is not supported for object id '" + objectID + "'. Use empty id for generic network parameters");
     }
 }
 
 LIBSUMO_GET_PARAMETER_WITH_KEY_IMPLEMENTATION(Simulation)
 
 void
-Simulation::setParameter(const std::string& /* objectID */, const std::string& param, const std::string& /* value */) {
-    throw TraCIException("Setting parameter '" + param + "' is not supported.");
+Simulation::setParameter(const std::string& objectID, const std::string& param, const std::string& value ) {
+    if (objectID == "") {
+        MSNet::getInstance()->setParameter(param, value);
+    } else {
+        throw TraCIException("Setting simulation parameter '" + param + "' is not supported for object id '" + objectID + "'. Use empty id for generic network parameters");
+    }
 }
 
 void
@@ -761,6 +799,7 @@ Simulation::loadState(const std::string& fileName) {
         throw TraCIException("Loading state from '" + fileName + "' failed.");
     }
     Helper::clearVehicleStates();
+    Helper::clearTransportableStates();
     PROGRESS_TIME_MESSAGE(before);
     return STEPS2TIME(newTime);
 }
@@ -828,6 +867,14 @@ Simulation::handleVariable(const std::string& objID, const int variable, Variabl
             return wrapper->wrapInt(objID, variable, getEmergencyStoppingVehiclesNumber());
         case VAR_EMERGENCYSTOPPING_VEHICLES_IDS:
             return wrapper->wrapStringList(objID, variable, getEmergencyStoppingVehiclesIDList());
+        case VAR_DEPARTED_PERSONS_NUMBER:
+            return wrapper->wrapInt(objID, variable, getDepartedPersonNumber());
+        case VAR_DEPARTED_PERSONS_IDS:
+            return wrapper->wrapStringList(objID, variable, getDepartedPersonIDList());
+        case VAR_ARRIVED_PERSONS_NUMBER:
+            return wrapper->wrapInt(objID, variable, getArrivedPersonNumber());
+        case VAR_ARRIVED_PERSONS_IDS:
+            return wrapper->wrapStringList(objID, variable, getArrivedPersonIDList());
         case VAR_DELTA_T:
             return wrapper->wrapDouble(objID, variable, getDeltaT());
         case VAR_MIN_EXPECTED_VEHICLES:

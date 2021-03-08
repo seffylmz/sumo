@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Mon Feb  1 22:20:27 2021 by Eclipse SUMO netconvert Version v1_8_0+0870-65a6b4a5f4
+<!-- generated on Thu Mar  4 13:07:02 2021 by Eclipse SUMO netconvert Version v1_8_0+1545-bfd1d5b457
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <type-files value="/home/behr_mi/sumo/data/typemap/osmNetconvert.typ.xml,/home/behr_mi/sumo/data/typemap/osmNetconvertUrbanDe.typ.xml,/home/behr_mi/sumo/data/typemap/osmNetconvertPedestrians.typ.xml,/home/behr_mi/sumo/data/typemap/osmNetconvertShips.typ.xml,/home/behr_mi/sumo/data/typemap/osmNetconvertBicycle.typ.xml"/>
+        <type-files value="/home/kobo/dlr/sumo/data/typemap/osmNetconvert.typ.xml,/home/kobo/dlr/sumo/data/typemap/osmNetconvertUrbanDe.typ.xml,/home/kobo/dlr/sumo/data/typemap/osmNetconvertPedestrians.typ.xml,/home/kobo/dlr/sumo/data/typemap/osmNetconvertShips.typ.xml,/home/kobo/dlr/sumo/data/typemap/osmNetconvertBicycle.typ.xml"/>
         <osm-files value="osm_bbox.osm.xml"/>
     </input>
 

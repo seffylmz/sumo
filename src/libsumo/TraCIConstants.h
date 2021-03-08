@@ -816,7 +816,10 @@ TRACI_CONST int TL_EXTERNAL_STATE = 0x2e;
 TRACI_CONST int TL_CONSTRAINT = 0x2f;
 
 // switch order of trains encoded in rail signal constraints (set: traffic lights)
-TRACI_CONST int TL_CONSTRAINT_REVERSE = 0x32;
+TRACI_CONST int TL_CONSTRAINT_SWAP = 0x32;
+
+// add/get rail signal constraints by foeSignal
+TRACI_CONST int TL_CONSTRAINT_BYFOE = 0x34;
 
 // outgoing link number (get: lanes)
 TRACI_CONST int LANE_LINK_NUMBER = 0x30;
@@ -1141,6 +1144,18 @@ TRACI_CONST int VAR_NET_BOUNDING_BOX = 0x7c;
 
 // minimum number of expected vehicles (get: simulation)
 TRACI_CONST int VAR_MIN_EXPECTED_VEHICLES = 0x7d;
+
+// number of departed persons (get: simulation)
+TRACI_CONST int VAR_DEPARTED_PERSONS_NUMBER = 0x24;
+
+// departed person ids (get: simulation)
+TRACI_CONST int VAR_DEPARTED_PERSONS_IDS = 0x25;
+
+// number of arrived persons (get: simulation)
+TRACI_CONST int VAR_ARRIVED_PERSONS_NUMBER = 0x26;
+
+// ids of arrived persons (get: simulation)
+TRACI_CONST int VAR_ARRIVED_PERSONS_IDS = 0x27;
 
 // number of vehicles starting to park (get: simulation)
 TRACI_CONST int VAR_STOP_STARTING_VEHICLES_NUMBER = 0x68;

@@ -36,6 +36,7 @@
 #include <libsumo/Helper.h>
 #include <libsumo/Simulation.h>
 #include <libsumo/TraCIConstants.h>
+#include <libsumo/StorageHelper.h>
 #include "TraCIServerAPI_Simulation.h"
 
 
@@ -80,6 +81,18 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
                 break;
             case libsumo::VAR_ARRIVED_VEHICLES_IDS:
                 writeVehicleStateIDs(server, server.getWrapperStorage(), MSNet::VehicleState::ARRIVED);
+                break;
+            case libsumo::VAR_DEPARTED_PERSONS_NUMBER:
+                writeTransportableStateNumber(server, server.getWrapperStorage(), MSNet::TransportableState::PERSON_DEPARTED);
+                break;
+            case libsumo::VAR_DEPARTED_PERSONS_IDS:
+                writeTransportableStateIDs(server, server.getWrapperStorage(), MSNet::TransportableState::PERSON_DEPARTED);
+                break;
+            case libsumo::VAR_ARRIVED_PERSONS_NUMBER:
+                writeTransportableStateNumber(server, server.getWrapperStorage(), MSNet::TransportableState::PERSON_ARRIVED);
+                break;
+            case libsumo::VAR_ARRIVED_PERSONS_IDS:
+                writeTransportableStateIDs(server, server.getWrapperStorage(), MSNet::TransportableState::PERSON_ARRIVED);
                 break;
             case libsumo::VAR_PARKING_STARTING_VEHICLES_NUMBER:
                 writeVehicleStateNumber(server, server.getWrapperStorage(), MSNet::VehicleState::STARTING_PARKING);
@@ -294,6 +307,7 @@ TraCIServerAPI_Simulation::processSet(TraCIServer& server, tcpip::Storage& input
     if (variable != libsumo::CMD_CLEAR_PENDING_VEHICLES
             && variable != libsumo::CMD_SAVE_SIMSTATE
             && variable != libsumo::CMD_LOAD_SIMSTATE
+            && variable != libsumo::VAR_PARAMETER
             && variable != libsumo::CMD_MESSAGE
        ) {
         return server.writeErrorStatusCmd(libsumo::CMD_SET_SIM_VARIABLE, "Set Simulation Variable: unsupported variable " + toHex(variable, 2) + " specified", outputStorage);
@@ -331,6 +345,13 @@ TraCIServerAPI_Simulation::processSet(TraCIServer& server, tcpip::Storage& input
                 TraCIServer::getInstance()->stateLoaded(TIME2STEPS(time));
             }
             break;
+            case libsumo::VAR_PARAMETER: {
+                StoHelp::readCompound(inputStorage, 2, "A compound object of size 2 is needed for setting a parameter.");
+                const std::string name = StoHelp::readTypedString(inputStorage, "The name of the parameter must be given as a string.");
+                const std::string value = StoHelp::readTypedString(inputStorage, "The value of the parameter must be given as a string.");
+                libsumo::Simulation::setParameter(id, name, value);
+                break;
+            }
             case libsumo::CMD_MESSAGE: {
                 std::string msg;
                 if (!server.readTypeCheckingString(inputStorage, msg)) {
@@ -343,7 +364,7 @@ TraCIServerAPI_Simulation::processSet(TraCIServer& server, tcpip::Storage& input
                 break;
         }
     } catch (libsumo::TraCIException& e) {
-        return server.writeErrorStatusCmd(libsumo::CMD_GET_SIM_VARIABLE, e.what(), outputStorage);
+        return server.writeErrorStatusCmd(libsumo::CMD_SET_SIM_VARIABLE, e.what(), outputStorage);
     }
     server.writeStatusCmd(libsumo::CMD_SET_SIM_VARIABLE, libsumo::RTYPE_OK, warning, outputStorage);
     return true;
@@ -361,6 +382,22 @@ TraCIServerAPI_Simulation::writeVehicleStateNumber(TraCIServer& server, tcpip::S
 void
 TraCIServerAPI_Simulation::writeVehicleStateIDs(TraCIServer& server, tcpip::Storage& outputStorage, MSNet::VehicleState state) {
     const std::vector<std::string>& ids = server.getVehicleStateChanges().find(state)->second;
+    outputStorage.writeUnsignedByte(libsumo::TYPE_STRINGLIST);
+    outputStorage.writeStringList(ids);
+}
+
+
+void
+TraCIServerAPI_Simulation::writeTransportableStateNumber(TraCIServer& server, tcpip::Storage& outputStorage, MSNet::TransportableState state) {
+    const std::vector<std::string>& ids = server.getTransportableStateChanges().find(state)->second;
+    outputStorage.writeUnsignedByte(libsumo::TYPE_INTEGER);
+    outputStorage.writeInt((int)ids.size());
+}
+
+
+void
+TraCIServerAPI_Simulation::writeTransportableStateIDs(TraCIServer& server, tcpip::Storage& outputStorage, MSNet::TransportableState state) {
+    const std::vector<std::string>& ids = server.getTransportableStateChanges().find(state)->second;
     outputStorage.writeUnsignedByte(libsumo::TYPE_STRINGLIST);
     outputStorage.writeStringList(ids);
 }

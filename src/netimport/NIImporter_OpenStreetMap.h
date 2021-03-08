@@ -158,7 +158,6 @@ protected:
         CHANGE_NO = 3
     };
 
-
     /** @brief An internal definition of a loaded edge
      */
     class Edge : public Parameterised {
@@ -167,6 +166,8 @@ protected:
             id(_id), myNoLanes(-1), myNoLanesForward(0),
             myMaxSpeed(MAXSPEED_UNGIVEN),
             myMaxSpeedBackward(MAXSPEED_UNGIVEN),
+            myExtraAllowed(0),
+            myExtraDisallowed(0),
             myCyclewayType(WAY_UNKNOWN), // building of extra lane depends on bikelaneWidth of loaded typemap
             myBuswayType(WAY_NONE), // buslanes are always built when declared
             mySidewalkType(WAY_UNKNOWN), // building of extra lanes depends on sidewalkWidth of loaded typemap
@@ -196,6 +197,10 @@ protected:
         double myMaxSpeed;
         /// @brief maximum speed in km/h, or MAXSPEED_UNGIVEN
         double myMaxSpeedBackward;
+        /// @brief Extra permissions added from tags instead of highway type
+        SVCPermissions myExtraAllowed;
+        /// @brief Extra permissions prohibited from tags instead of highway type
+        SVCPermissions myExtraDisallowed;
         /// @brief The type, stored in "highway" key
         std::string myHighWayType;
         /// @brief Information whether this is an one-way road
@@ -214,6 +219,9 @@ protected:
         int myChangeForward;
         /// @brief Information about change prohibitions (backward direction
         int myChangeBackward;
+        /// @brief (optional) information about the permitted vehicle classes on each lane
+        std::vector<SVCPermissions> myLaneUseForward;
+        std::vector<SVCPermissions> myLaneUseBackward;
         /// @brief Information about the relative z-ordering of ways
         int myLayer;
         /// @brief The list of nodes this edge is made of
@@ -278,6 +286,10 @@ private:
     /// @brief The compound types that have already been mapped to other known types
     std::map<std::string, std::string> myKnownCompoundTypes;
 
+    /// @brief import lane specifc access restrictions
+    bool myImportLaneAccess;
+
+
     /** @brief Builds an NBNode
      *
      * If a node with the given id is already known, nothing is done.
@@ -331,6 +343,7 @@ protected:
     static const long long int INVALID_ID;
 
     static void applyChangeProhibition(NBEdge* e, int changeProhibition);
+    void applyLaneUseInformation(NBEdge* e, const std::vector<SVCPermissions>& laneUse);
 
     /**
      * @class NodesHandler
@@ -400,12 +413,11 @@ protected:
         /// @brief whether elevation data should be imported
         const bool myImportElevation;
 
-        /// @brief number of diplic
+        /// @brief number of diplicate nodes
         int myDuplicateNodes;
 
         /// @brief the options
         const OptionsCont& myOptionsCont;
-
 
     private:
         /** @brief invalidated copy constructor */
@@ -463,6 +475,8 @@ protected:
 
         int interpretChangeType(const std::string& value) const;
 
+        void interpretLaneUse(const std::string& value, SUMOVehicleClass svc, std::vector<SVCPermissions>& result) const;
+
     private:
         /// @brief The previously parsed nodes
         const std::map<long long int, NIOSMNode*>& myOSMNodes;
@@ -484,6 +498,9 @@ protected:
 
         /// @brief whether additional way attributes shall be added to the edge
         bool myAllAttributes;
+        /// @brief extra attributes to import
+        std::set<std::string> myExtraAttributes;
+
 
     private:
         /** @brief invalidated copy constructor */

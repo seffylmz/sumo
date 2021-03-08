@@ -34,7 +34,7 @@ netedit.rebuildNetwork()
 # force save additionals
 netedit.forceSaveAdditionals()
 
-# toogle select lanes
+# toggle select lanes
 netedit.changeEditMode('4')
 
 # go to select mode
@@ -53,7 +53,7 @@ netedit.inspectMode()
 netedit.leftClick(referencePosition, 250, 95)
 
 # check parameters
-netedit.checkParameters(referencePosition, 9, True)
+netedit.checkParameters(referencePosition, 14, True)
 
 # save additionals
 netedit.saveAdditionals(referencePosition)

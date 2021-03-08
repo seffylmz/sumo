@@ -358,8 +358,10 @@ MSDevice_Taxi::dispatchShared(std::vector<const Reservation*> reservations) {
                 } else {
                     stops.back().containerTriggered = true;
                 }
+                stops.back().permitted.insert(transportable->getID());
             }
             //stops.back().awaitedPersons.insert(res.person->getID());
+            stops.back().parametersSet |= STOP_PERMITTED_SET;
         } else {
             prepareStop(tmpEdges, stops, lastPos, res->to, res->toPos, "dropOff " + toString(res->persons));
             stops.back().duration = TIME2STEPS(60); // pay and collect bags
@@ -389,11 +391,13 @@ MSDevice_Taxi::prepareStop(ConstMSEdgeVector& edges,
     if (stopEdge == edges.back() && !stops.empty()) {
         if (stopPos >= lastPos && stopPos <= stops.back().endPos) {
             // no new stop and no adaption needed
+            stops.back().actType += "," + action;
             return;
         }
         if (stopPos >= lastPos && stopPos <= lastPos + myHolder.getVehicleType().getLength()) {
             // stop length adaption needed
             stops.back().endPos = MIN2(lastPos + myHolder.getVehicleType().getLength(), stopEdge->getLength());
+            stops.back().actType += "," + action;
             return;
         }
     }
@@ -508,6 +512,23 @@ MSDevice_Taxi::customerArrived(const MSTransportable* person) {
             myDispatcher->fulfilledReservation(res);
         }
         myCurrentReservations.clear();
+    } else {
+        // check whether a single reservation has been fulfilled
+        for (auto resIt = myCurrentReservations.begin(); resIt != myCurrentReservations.end();) {
+            bool fulfilled = true;
+            for (MSTransportable* t : (*resIt)->persons) {
+                if (myCustomers.count(t) != 0) {
+                    fulfilled = false;
+                    break;
+                }
+            }
+            if (fulfilled) {
+                myDispatcher->fulfilledReservation(*resIt);
+                resIt = myCurrentReservations.erase(resIt);
+            } else {
+                ++resIt;
+            }
+        }
     }
 }
 

@@ -131,6 +131,9 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     /* Parse file(s)
      * Each file is parsed twice: first for nodes, second for edges. */
     std::vector<std::string> files = oc.getStringVector("osm-files");
+
+    myImportLaneAccess = oc.getBool("osm.lane-access");
+
     // load nodes, first
     NodesHandler nodesHandler(myOSMNodes, myUniqueNodes, oc);
     for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
@@ -396,7 +399,8 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
     int numLanesBackward = tc.getEdgeTypeNumLanes(type);
     double speed = tc.getEdgeTypeSpeed(type);
     bool defaultsToOneWay = tc.getEdgeTypeIsOneWay(type);
-    SVCPermissions permissions = tc.getEdgeTypePermissions(type);
+    SVCPermissions permissions = tc.getEdgeTypePermissions(type) | e->myExtraAllowed;
+    permissions &= ~e->myExtraDisallowed;
     if (e->myCurrentIsElectrified && (permissions & SVC_RAIL) != 0) {
         permissions |= (SVC_RAIL_ELECTRIC | SVC_RAIL_FAST);
     }
@@ -545,6 +549,7 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
             nbe->updateParameters(e->getParametersMap());
             nbe->setDistance(distanceStart);
             applyChangeProhibition(nbe, e->myChangeForward);
+            applyLaneUseInformation(nbe, e->myLaneUseForward);
             if (!ec.insert(nbe)) {
                 delete nbe;
                 throw ProcessError("Could not add edge '" + id + "'.");
@@ -571,6 +576,7 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
             nbe->updateParameters(e->getParametersMap());
             nbe->setDistance(distanceEnd);
             applyChangeProhibition(nbe, e->myChangeBackward);
+            applyLaneUseInformation(nbe, e->myLaneUseBackward);
             if (!ec.insert(nbe)) {
                 delete nbe;
                 throw ProcessError("Could not add edge '-" + id + "'.");
@@ -843,6 +849,12 @@ NIImporter_OpenStreetMap::EdgesHandler::EdgesHandler(
     mySpeedMap["UZ:rural"] = 100;
     mySpeedMap["UZ:motorway"] = 110;
     myAllAttributes = OptionsCont::getOptions().getBool("osm.all-attributes");
+    std::vector<std::string> extra = OptionsCont::getOptions().getStringVector("osm.extra-attributes");
+    myExtraAttributes.insert(extra.begin(), extra.end());
+    if (myExtraAttributes.count("all") != 0) {
+        // import all
+        myExtraAttributes.clear();
+    }
 }
 
 NIImporter_OpenStreetMap::EdgesHandler::~EdgesHandler() = default;
@@ -920,8 +932,9 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
                 key = "ignore";
             }
         }
-        if (myAllAttributes && (key == "bridge" || key == "tunnel")) {
-            myCurrentEdge->setParameter(key, "true"); // could be differentiated further if necessary
+        if (myAllAttributes && (myExtraAttributes.count(key) != 0 || myExtraAttributes.size() == 0)) {
+            const std::string info = "way=" + toString(myCurrentEdge->id) + ", k=" + key;
+            myCurrentEdge->setParameter(key, attrs.get<std::string>(SUMO_ATTR_V, info.c_str(), ok, false)); 
         }
         // we check whether the key is relevant (and we really need to transcode the value) to avoid hitting #1636
         if (!StringUtils::endsWith(key, "way") && !StringUtils::startsWith(key, "lanes")
@@ -934,12 +947,15 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
                 && key != "highspeed"
                 && !StringUtils::startsWith(key, "parking")
                 && !StringUtils::startsWith(key, "change")
+                && !StringUtils::startsWith(key, "vehicle:lanes")
                 && key != "postal_code"
                 && key != "railway:preferred_direction"
                 && key != "railway:bidirectional"
                 && key != "railway:track_ref"
                 && key != "usage"
                 && key != "electrified"
+                && key != "bus"
+                && key != "psv"
                 && key != "public_transport") {
             return;
         }
@@ -1009,6 +1025,13 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
             } else {
                 myCurrentEdge->myHighWayType = singleTypeID;
             }
+        } else if (key == "bus" || key == "psv") {
+            // 'psv' inclures taxi in the UK but not in germany
+            if (value == "no") {
+                myCurrentEdge->myExtraDisallowed |= SVC_BUS;
+            } else {
+                myCurrentEdge->myExtraAllowed |= SVC_BUS;
+            }
         } else if (key == "lanes") {
             try {
                 myCurrentEdge->myNoLanes = StringUtils::toInt(value);
@@ -1067,9 +1090,6 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
             myCurrentEdge->ref = value;
             myCurrentEdge->setParameter("ref", value);
         } else if (key == "layer") {
-            if (myAllAttributes) {
-                myCurrentEdge->setParameter(key, value);
-            }
             try {
                 myCurrentEdge->myLayer = StringUtils::toInt(value);
             } catch (...) {
@@ -1087,8 +1107,6 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
                 WRITE_WARNING("Value of key '" + key + "' is not numeric ('" + value + "') in edge '" +
                               toString(myCurrentEdge->id) + "'.");
             }
-        } else if (myAllAttributes && key == "postal_code") {
-            myCurrentEdge->setParameter(key, value);
         } else if (key == "railway:preferred_direction") {
             if (value == "both") {
                 myCurrentEdge->myRailDirection = WAY_BOTH;
@@ -1126,6 +1144,10 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
             myCurrentEdge->myChangeForward = interpretChangeType(value);
         } else if (key == "change:lanes:backward") {
             myCurrentEdge->myChangeBackward = interpretChangeType(value);
+        } else if (key == "vehicle:lanes" || key == "vehicle:lanes:forward") {
+            interpretLaneUse(value, SVC_PASSENGER, myCurrentEdge->myLaneUseForward);
+        } else if (key == "vehicle:lanes:backward") {
+            interpretLaneUse(value, SVC_PASSENGER, myCurrentEdge->myLaneUseBackward);
         }
 
 
@@ -1177,9 +1199,28 @@ NIImporter_OpenStreetMap::EdgesHandler::interpretChangeType(const std::string& v
     }
     //std::cout << " way=" << myCurrentEdge->id << " value=" << value << " result=" << std::bitset<32>(result) << "\n";
     return result;
-
 }
 
+
+void
+NIImporter_OpenStreetMap::EdgesHandler::interpretLaneUse(const std::string& value, SUMOVehicleClass svc, std::vector<SVCPermissions>& result) const {
+    const std::vector<std::string> values = StringTokenizer(value, "|").getVector();
+    int i = 0;
+    for (const std::string val : values) {
+        SVCPermissions use = SVC_IGNORING;
+        if (val == "yes" || val == "lane" || val == "designated") {
+            use = svc;
+        } else if (val != "no") {
+            WRITE_WARNINGF("Unknown lane use specifier '%' treated as 'no' for way '%'", val, myCurrentEdge->id);
+        }
+        if (i >= (int)result.size()) {
+            result.push_back(use);
+        } else {
+            result[i] |= use;
+        }
+        i++;
+    };
+}
 
 
 void
@@ -2019,6 +2060,28 @@ NIImporter_OpenStreetMap::applyChangeProhibition(NBEdge* e, int changeProhibitio
         e->setPermittedChanging(lane, changeLeft, changeRight);
         if (multiLane) {
             changeProhibition = changeProhibition >> 2;
+        }
+    }
+}
+
+void
+NIImporter_OpenStreetMap::applyLaneUseInformation(NBEdge* e, const std::vector<SVCPermissions>& laneUse) {
+    if (myImportLaneAccess && laneUse.size() > 0) {
+        if ((int)laneUse.size() == e->getNumLanes()) {
+            const bool lefthand = OptionsCont::getOptions().getBool("lefthand");
+            for (int lane = 0; lane < (int)laneUse.size(); lane++) {
+                // laneUse stores from left to right
+                const int i = lefthand ? lane : e->getNumLanes() - 1 - lane;
+                SVCPermissions svc = e->getPermissions(lane);
+                if (laneUse[i] == 0) {
+                    svc = SVC_IGNORING;
+                } else if ((laneUse[i] & SVC_PASSENGER) == 0) {
+                    svc &= ~SVC_PASSENGER;
+                }
+                e->setPermissions(svc, lane);
+            }
+        } else {
+            WRITE_WARNINGF("Ignoring lane use information for % lanes on edge % with % lanes", laneUse.size(), e->getID(), e->getNumLanes());
         }
     }
 }

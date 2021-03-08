@@ -5236,8 +5236,8 @@ MSVehicle::updateBestLanes(bool forceRebuild, const MSLane* startLane) {
                 (*j).bestLaneOffset = 0;
             }
         }
-        for (int i = requireChangeToLeftForbidden; i >= 0; i--) {
-            clanes[i].length -= clanes[i].currentLength;
+        for (int idx = requireChangeToLeftForbidden; idx >= 0; idx--) {
+            clanes[idx].length -= clanes[idx].currentLength;
         }
 
         //vehicle with elecHybrid device prefers running under an overhead wire
@@ -6167,7 +6167,7 @@ MSVehicle::replaceStop(int nextStopIndex, SUMOVehicleParameter::Stop stop, const
 
 bool
 MSVehicle::handleCollisionStop(MSStop& stop, const bool collision, const double distToStop, const std::string& errorMsgStart, std::string& errorMsg) {
-    if (myCurrEdge == stop.edge && distToStop + POSITION_EPS < getCarFollowModel().brakeGap(myState.mySpeed)) {
+    if (myCurrEdge == stop.edge && distToStop + POSITION_EPS < getCarFollowModel().brakeGap(myState.mySpeed, getCarFollowModel().getMaxDecel(), 0)) {
         if (collision) {
             if (distToStop < getCarFollowModel().brakeGap(myState.mySpeed, getCarFollowModel().getEmergencyDecel(), 0)) {
                 double vNew = getCarFollowModel().maximumSafeStopSpeed(distToStop, getCarFollowModel().getMaxDecel(), getSpeed(), false, 0);

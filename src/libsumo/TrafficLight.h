@@ -20,8 +20,6 @@
 // C++ TraCI client API implementation
 /****************************************************************************/
 #pragma once
-#include <config.h>
-
 #include <vector>
 #include <libsumo/TraCIDefs.h>
 #include <libsumo/TraCIConstants.h>
@@ -66,6 +64,7 @@ public:
     static std::vector<std::string> getRivalVehicles(const std::string& tlsID, int linkIndex);
     static std::vector<std::string> getPriorityVehicles(const std::string& tlsID, int linkIndex);
     static std::vector<libsumo::TraCISignalConstraint> getConstraints(const std::string& tlsID, const std::string& tripId = "");
+    static std::vector<libsumo::TraCISignalConstraint> getConstraintsByFoe(const std::string& foeSignal, const std::string& foeId = "");
 
     LIBSUMO_ID_PARAMETER_API
     LIBSUMO_SUBSCRIPTION_API
@@ -77,6 +76,8 @@ public:
     static void setProgram(const std::string& tlsID, const std::string& programID);
     static void setPhaseDuration(const std::string& tlsID, const double phaseDuration);
     static void setProgramLogic(const std::string& tlsID, const libsumo::TraCILogic& logic);
+
+    static void swapConstraints(const std::string& tlsID, const std::string& tripId, const std::string& foeSignal, const std::string& foeId);
 
     // aliases for backward compatibility
     inline static std::vector<libsumo::TraCILogic> getCompleteRedYellowGreenDefinition(const std::string& tlsID) {
@@ -91,7 +92,8 @@ public:
     static bool handleVariable(const std::string& objID, const int variable, VariableWrapper* wrapper, tcpip::Storage* paramData);
 
 private:
-    static libsumo::TraCISignalConstraint buildConstraint(const std::string& tripId, MSRailSignalConstraint* constraint, bool insertionConstraint); 
+    static libsumo::TraCISignalConstraint buildConstraint(const std::string& tlsID, const std::string& tripId, MSRailSignalConstraint* constraint, bool insertionConstraint); 
+    static void removeConstraints(const std::string& foeID);
 
 private:
 #ifndef SWIGJAVA

@@ -21,7 +21,6 @@
 // C++ TraCI client API implementation
 /****************************************************************************/
 #pragma once
-#include <config.h>
 // we do not include config.h here, since we should be independent of a special sumo build
 #include <libsumo/TraCIConstants.h>
 #include <vector>
@@ -301,6 +300,10 @@ public:
 
 #ifdef SWIG
 %template(TraCIPhaseVector) std::vector<libsumo::TraCIPhase*>; // *NOPAD*
+#ifdef SWIGJAVA
+// this is just a workaround for a shorter file name, see https://github.com/swig/swig/issues/1089
+%template(ContextSubscriptionResults) std::map<std::string, std::map<std::string, std::map<int, std::shared_ptr<libsumo::TraCIResult> > > >; // *NOPAD*
+#endif
 #endif
 
 
@@ -588,6 +591,8 @@ struct TraCICollision {
 
 
 struct TraCISignalConstraint {
+    /// @brief the idea of the rail signal where this constraint is active
+    std::string signalId;
     /// @brief the tripId or vehicle id of the train that is constrained
     std::string tripId;
     /// @brief the tripId or vehicle id of the train that must pass first
@@ -598,6 +603,8 @@ struct TraCISignalConstraint {
     int limit;
     /// @brief the type of constraint (predecessor:0, insertionPredecessor:1)
     int type;
+    /// @brief whether tripId must still wait for foeId to pass foeSignal 
+    bool mustWait;
 };
 
 }

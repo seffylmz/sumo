@@ -65,3 +65,65 @@ import libsumo as traci
 In case you have a lot of scripts you can also set the environment
 variable `LIBSUMO_AS_TRACI` to a non empty value which will trigger the
 import as above.
+
+
+## C++
+
+### Example Code (test.cpp)
+
+```
+#include <iostream>
+#include <libsumo/Simulation.h>
+
+using namespace libsumo;
+
+int main(int argc, char* argv[]) {
+    Simulation::load({"-n", "net.net.xml"});
+    for (int i = 0; i < 5; i++) {
+        Simulation::step();
+    }
+    Simulation::close();
+}
+```
+
+### compiling on Linux (make sure SUMO_HOME is set and sumo has been built)
+
+```
+g++ -o test -std=c++11 -I$SUMO_HOME/src test.cpp -L$SUMO_HOME/bin -lsumocpp
+```
+
+### running on Linux
+```
+LD_LIBRARY_PATH=$SUMO_HOME/bin ./test
+```
+
+## Java
+
+### Example Code (Test.java)
+
+```
+import org.eclipse.sumo.libsumo.Simulation;
+import org.eclipse.sumo.libsumo.StringVector;
+
+public class Test {
+    public static void main(String[] args) {
+        System.loadLibrary("libsumojni");
+        Simulation.load(new StringVector(new String[] {"-n", "net.net.xml"}));
+        for (int i = 0; i < 5; i++) {
+            Simulation.step();
+        }
+        Simulation.close();
+    }
+}
+```
+
+### compiling on Linux (make sure SUMO_HOME is set and sumo has been built)
+
+```
+javac -cp $SUMO_HOME/bin/libsumo-1.8.0-SNAPSHOT.jar Test.java
+```
+
+### running on Linux
+```
+java -Djava.library.path=$SUMO_HOME/bin -cp $SUMO_HOME/bin/libsumo-1.8.0-SNAPSHOT.jar:. Test
+```

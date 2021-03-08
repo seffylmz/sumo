@@ -124,6 +124,8 @@ MSTransportableControl::erase(MSTransportable* transportable) {
     if (i != myTransportables.end()) {
         myRunningNumber--;
         myEndedNumber++;
+        MSNet::getInstance()->informTransportableStateListener(transportable,
+                transportable->isPerson() ? MSNet::TransportableState::PERSON_ARRIVED : MSNet::TransportableState::CONTAINER_ARRIVED);
         delete i->second;
         myTransportables.erase(i);
     }
@@ -150,8 +152,11 @@ MSTransportableControl::checkWaiting(MSNet* net, const SUMOTime time) {
         // we cannot use an iterator here because there might be additions to the vector while proceeding
         for (int i = 0; i < (int)transportables.size(); ++i) {
             myWaitingForDepartureNumber--;
+            const bool isPerson = transportables[i]->isPerson();
             if (transportables[i]->proceed(net, time)) {
                 myRunningNumber++;
+                MSNet::getInstance()->informTransportableStateListener(transportables[i],
+                        isPerson ? MSNet::TransportableState::PERSON_DEPARTED : MSNet::TransportableState::CONTAINER_DEPARTED);
             } else {
                 erase(transportables[i]);
             }

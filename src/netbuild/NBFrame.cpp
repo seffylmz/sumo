@@ -78,6 +78,9 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.doRegister("default.crossing-width", new Option_Float((double) 4.0));
     oc.addDescription("default.crossing-width", "Building Defaults", "The default width of a pedestrian crossing");
 
+    oc.doRegister("default.allow", new Option_String());
+    oc.addDescription("default.allow", "Building Defaults", "The default for allowed vehicle classes");
+
     oc.doRegister("default.disallow", new Option_String());
     oc.addDescription("default.disallow", "Building Defaults", "The default for disallowed vehicle classes");
 
@@ -675,6 +678,18 @@ NBFrame::checkOptions() {
     }
     if (!oc.isDefault("tls.green.time") && !oc.isDefault("tls.cycle.time")) {
         WRITE_ERROR("only one of the options 'tls.green.time' or 'tls.cycle.time' may be given");
+        ok = false;
+    }
+    if (oc.getInt("default.lanenumber") < 1) {
+        WRITE_ERROR("default.lanenumber must be at least 1");
+        ok = false;
+    }
+    if (!oc.isDefault("default.lanewidth") && oc.getFloat("default.lanewidth") < POSITION_EPS) {
+        WRITE_ERROR("default.lanewidth must be at least " + toString(POSITION_EPS));
+        ok = false;
+    }
+    if (!oc.isDefault("default.disallow") && !oc.isDefault("default.allow")) {
+        WRITE_ERROR("only one of the options 'default.disallow' or 'default.allow' may be given");
         ok = false;
     }
     if (oc.getInt("junctions.internal-link-detail") < 2) {

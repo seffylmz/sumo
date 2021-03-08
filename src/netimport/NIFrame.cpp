@@ -189,6 +189,9 @@ NIFrame::fillOptions(bool forNetedit) {
     oc.doRegister("osm.oneway-spread-right", new Option_Bool(false));
     oc.addDescription("osm.oneway-spread-right", "Formats", "Whether one-way roads should be spread to the side instead of centered");
 
+    oc.doRegister("osm.lane-access", new Option_Bool(false));
+    oc.addDescription("osm.lane-access", "Formats", "Import lane-specific access restrictions");
+
     oc.doRegister("osm.stop-output.length", new Option_Float(25));
     oc.addDescription("osm.stop-output.length", "Formats", "The default length of a public transport stop in FLOAT m");
     oc.doRegister("osm.stop-output.length.bus", new Option_Float(15));
@@ -200,6 +203,9 @@ NIFrame::fillOptions(bool forNetedit) {
 
     oc.doRegister("osm.all-attributes", new Option_Bool(false));
     oc.addDescription("osm.all-attributes", "Formats", "Whether additional attributes shall be imported");
+
+    oc.doRegister("osm.extra-attributes", new Option_StringVector(StringVector({"bridge", "tunnel", "layer", "postal_code"})));
+    oc.addDescription("osm.extra-attributes", "Formats", "List of additional attributes that shall be imported from OSM via osm.all-attributes (set 'all' to import all)");
 
 
     // register matsim options
@@ -412,6 +418,9 @@ NIFrame::checkOptions() {
             // a better interpretation of imported geometries
             oc.set("geometry.max-grade.fix", "false");
         }
+    }
+    if (!oc.isDefault("osm.extra-attributes") && oc.isDefault("osm.all-attributes")) {
+        oc.set("osm.all-attributes", "true");
     }
     return ok;
 }

@@ -64,6 +64,7 @@ lanechanges:lanechanges.xml
 results:results.csv
 tls_state:tls_state.xml
 log:log.txt
+log2:log2.txt
 cadytslog:cadySumo-log.txt
 png:out.png
 png2:out2.png
@@ -97,6 +98,7 @@ log:^Performance:{->}^Vehicles:
 log:traci.start(.*){REPLACE traci.start(ARGS)}
 log:traci.simulation.step(.*){REPLACE traci.simulationStep()}
 log:traci.simulation.close(){REPLACE traci.close()}
+log2:traci.start(.*){REPLACE traci.start(ARGS)}
 net:<!--{[->]}-->
 vehroutes:<!--{[->]}-->
 vehroutes2:<!--{[->]}-->

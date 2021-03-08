@@ -50,7 +50,7 @@ def get_options(args=None):
     argParser.add_argument("--poly-output", help="file to write the generated polygon files to")
     argParser.add_argument("--route-output", help="file to write the generated public transport stops and routes to")
     argParser.add_argument("--vehicle-output", help="file to write the generated public transport vehicles to")
-    argParser.add_argument("-n", "--network", help="sumo network to use")
+    argParser.add_argument("-n", "--network", help="sumo network to use", fix_path=True)
     argParser.add_argument("--network-split", help="directory to write generated networks to")
     # argParser.add_argument("--network-split.vclass", action="store_true", default=False,
     #                        help="use the allowed vclass instead of the edge type to split the network")
@@ -69,6 +69,8 @@ def get_options(args=None):
     argParser.add_argument("--fill-gaps", default=5000, type=float, help="maximum distance between stops")
 
     options = gtfs2fcd.check_options(argParser.parse_args(args=args))
+    if options.network is None:
+        sys.exit("Please give a network file using --network FILE.")
     if options.map_output is None:
         options.map_output = os.path.join('output', options.region)
     if options.network_split is None:
@@ -96,7 +98,7 @@ def splitNet(options):
     typedNets = {}
     for inp in glob.glob(os.path.join(options.gpsdat, "gpsdat_*.csv")):
         mode = os.path.basename(inp)[7:-4]
-        if not options.modes or mode in options.modes.split():
+        if not options.modes or mode in options.modes.split(","):
             netPrefix = os.path.join(options.network_split, mode)
             edgeTypes = [mode]
             if "rail" in mode or mode == "subway":
@@ -104,8 +106,8 @@ def splitNet(options):
             elif mode in ("tram", "bus"):
                 edgeTypes = ["railway.tram"] if mode == "tram" else []
                 for hwType in ("bus_guideway", "living_street", "motorway", "motorway_link", "primary", "primary_link",
-                            "residential", "secondary", "secondary_link", "tertiary", "tertiary_link",
-                            "trunk", "trunk_link", "unclassified", "unsurfaced"):
+                               "residential", "secondary", "secondary_link", "tertiary", "tertiary_link",
+                               "trunk", "trunk_link", "unclassified", "unsurfaced"):
                     if mode == "tram":
                         edgeTypes.append("highway.%s|railway.tram" % hwType)
                     else:

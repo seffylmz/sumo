@@ -239,9 +239,17 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port, const int numClie
     myVehicleStateChanges[MSNet::VehicleState::COLLISION] = std::vector<std::string>();
     myVehicleStateChanges[MSNet::VehicleState::EMERGENCYSTOP] = std::vector<std::string>();
 
+    myTransportableStateChanges[MSNet::TransportableState::PERSON_DEPARTED] = std::vector<std::string>();
+    myTransportableStateChanges[MSNet::TransportableState::PERSON_ARRIVED] = std::vector<std::string>();
+    myTransportableStateChanges[MSNet::TransportableState::CONTAINER_DEPARTED] = std::vector<std::string>();
+    myTransportableStateChanges[MSNet::TransportableState::CONTAINER_ARRIVED] = std::vector<std::string>();
+
     myExecutors[libsumo::CMD_GET_INDUCTIONLOOP_VARIABLE] = &TraCIServerAPI_InductionLoop::processGet;
+    myExecutors[libsumo::CMD_SET_INDUCTIONLOOP_VARIABLE] = &TraCIServerAPI_InductionLoop::processSet;
     myExecutors[libsumo::CMD_GET_LANEAREA_VARIABLE] = &TraCIServerAPI_LaneArea::processGet;
+    myExecutors[libsumo::CMD_SET_LANEAREA_VARIABLE] = &TraCIServerAPI_LaneArea::processSet;
     myExecutors[libsumo::CMD_GET_MULTIENTRYEXIT_VARIABLE] = &TraCIServerAPI_MultiEntryExit::processGet;
+    myExecutors[libsumo::CMD_SET_MULTIENTRYEXIT_VARIABLE] = &TraCIServerAPI_MultiEntryExit::processSet;
 
     myExecutors[libsumo::CMD_GET_TL_VARIABLE] = &TraCIServerAPI_TrafficLight::processGet;
     myExecutors[libsumo::CMD_SET_TL_VARIABLE] = &TraCIServerAPI_TrafficLight::processSet;
@@ -258,6 +266,7 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port, const int numClie
     myExecutors[libsumo::CMD_GET_POLYGON_VARIABLE] = &TraCIServerAPI_Polygon::processGet;
     myExecutors[libsumo::CMD_SET_POLYGON_VARIABLE] = &TraCIServerAPI_Polygon::processSet;
     myExecutors[libsumo::CMD_GET_JUNCTION_VARIABLE] = &TraCIServerAPI_Junction::processGet;
+    myExecutors[libsumo::CMD_SET_JUNCTION_VARIABLE] = &TraCIServerAPI_Junction::processSet;
     myExecutors[libsumo::CMD_GET_EDGE_VARIABLE] = &TraCIServerAPI_Edge::processGet;
     myExecutors[libsumo::CMD_SET_EDGE_VARIABLE] = &TraCIServerAPI_Edge::processSet;
     myExecutors[libsumo::CMD_GET_SIM_VARIABLE] = &TraCIServerAPI_Simulation::processGet;
@@ -319,6 +328,11 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port, const int numClie
             mySockets[index]->vehicleStateChanges[MSNet::VehicleState::ENDING_STOP] = std::vector<std::string>();
             mySockets[index]->vehicleStateChanges[MSNet::VehicleState::COLLISION] = std::vector<std::string>();
             mySockets[index]->vehicleStateChanges[MSNet::VehicleState::EMERGENCYSTOP] = std::vector<std::string>();
+
+            mySockets[index]->transportableStateChanges[MSNet::TransportableState::PERSON_DEPARTED] = std::vector<std::string>();
+            mySockets[index]->transportableStateChanges[MSNet::TransportableState::PERSON_ARRIVED] = std::vector<std::string>();
+            mySockets[index]->transportableStateChanges[MSNet::TransportableState::CONTAINER_DEPARTED] = std::vector<std::string>();
+            mySockets[index]->transportableStateChanges[MSNet::TransportableState::CONTAINER_ARRIVED] = std::vector<std::string>();
             if (numClients > 1) {
                 WRITE_MESSAGE("  client connected");
             }
@@ -357,6 +371,7 @@ TraCIServer::openSocket(const std::map<int, CmdExecutor>& execs) {
     if (myInstance != nullptr) {
         // maybe net was deleted and built again
         MSNet::getInstance()->addVehicleStateListener(myInstance);
+        MSNet::getInstance()->addTransportableStateListener(myInstance);
         myInstance->mySubscriptionCache.writeInt(0);
     }
 }
@@ -388,6 +403,17 @@ TraCIServer::vehicleStateChanged(const SUMOVehicle* const vehicle, MSNet::Vehicl
         myVehicleStateChanges[to].push_back(vehicle->getID());
         for (std::map<int, SocketInfo*>::iterator i = mySockets.begin(); i != mySockets.end(); ++i) {
             i->second->vehicleStateChanges[to].push_back(vehicle->getID());
+        }
+    }
+}
+
+
+void
+TraCIServer::transportableStateChanged(const MSTransportable* const transportable, MSNet::TransportableState to, const std::string& /*info*/) {
+    if (!myDoCloseConnection) {
+        myTransportableStateChanges[to].push_back(transportable->getID());
+        for (std::map<int, SocketInfo*>::iterator i = mySockets.begin(); i != mySockets.end(); ++i) {
+            i->second->transportableStateChanges[to].push_back(transportable->getID());
         }
     }
 }
@@ -658,10 +684,14 @@ TraCIServer::processCommandsUntilSimStep(SUMOTime step) {
                     }
                 }
                 if (done) {
-                    // Clear vehicleStateChanges for this client -> For subsequent TraCI stepping
+                    // Clear vehicleStateChanges and transportableStateChanges for this client
+                    // -> For subsequent TraCI stepping
                     // that is performed within this SUMO step, no updates on vehicle states
                     // belonging to the last SUMO simulation step will be received by this client.
                     for (std::map<MSNet::VehicleState, std::vector<std::string> >::iterator i = myCurrentSocket->second->vehicleStateChanges.begin(); i != myCurrentSocket->second->vehicleStateChanges.end(); ++i) {
+                        (*i).second.clear();
+                    }
+                    for (std::map<MSNet::TransportableState, std::vector<std::string> >::iterator i = myCurrentSocket->second->transportableStateChanges.begin(); i != myCurrentSocket->second->transportableStateChanges.end(); ++i) {
                         (*i).second.clear();
                     }
                     myCurrentSocket++;
@@ -694,8 +724,11 @@ TraCIServer::processCommandsUntilSimStep(SUMOTime step) {
             myTargetTime = nextT;
         }
         // All clients are done with the current time step
-        // Reset myVehicleStateChanges
+        // Reset myVehicleStateChanges and myTransportableStateChanges
         for (std::map<MSNet::VehicleState, std::vector<std::string> >::iterator i = myVehicleStateChanges.begin(); i != myVehicleStateChanges.end(); ++i) {
+            (*i).second.clear();
+        }
+        for (std::map<MSNet::TransportableState, std::vector<std::string> >::iterator i = myTransportableStateChanges.begin(); i != myTransportableStateChanges.end(); ++i) {
             (*i).second.clear();
         }
     } catch (std::invalid_argument& e) {
@@ -718,9 +751,11 @@ TraCIServer::cleanup() {
     myOutputStorage.reset();
     myInputStorage.reset();
     mySubscriptionCache.reset();
-    std::map<MSNet::VehicleState, std::vector<std::string> >::iterator i;
-    for (i = myVehicleStateChanges.begin(); i != myVehicleStateChanges.end(); i++) {
-        i->second.clear();
+    for (auto& i : myVehicleStateChanges) {
+        i.second.clear();
+    }
+    for (auto& i : myTransportableStateChanges) {
+        i.second.clear();
     }
     myCurrentSocket = mySockets.begin();
 }
@@ -952,6 +987,7 @@ TraCIServer::postProcessSimulationStep() {
         const libsumo::Subscription& s = *i;
         bool isArrivedVehicle = (s.commandId == libsumo::CMD_SUBSCRIBE_VEHICLE_VARIABLE || s.commandId == libsumo::CMD_SUBSCRIBE_VEHICLE_CONTEXT)
                                 && (find(myVehicleStateChanges[MSNet::VehicleState::ARRIVED].begin(), myVehicleStateChanges[MSNet::VehicleState::ARRIVED].end(), s.id) != myVehicleStateChanges[MSNet::VehicleState::ARRIVED].end());
+
         bool isArrivedPerson = (s.commandId == libsumo::CMD_SUBSCRIBE_PERSON_VARIABLE || s.commandId == libsumo::CMD_SUBSCRIBE_PERSON_CONTEXT) && MSNet::getInstance()->getPersonControl().get(s.id) == nullptr;
         if ((s.endTime < t) || isArrivedVehicle || isArrivedPerson) {
             i = mySubscriptions.erase(i);
@@ -1597,6 +1633,9 @@ TraCIServer::stateLoaded(SUMOTime targetTime) {
     for (auto& s : mySockets) {
         s.second->targetTime = targetTime;
         for (auto& stateChange : s.second->vehicleStateChanges) {
+            stateChange.second.clear();
+        }
+        for (auto& stateChange : s.second->transportableStateChanges) {
             stateChange.second.clear();
         }
     }

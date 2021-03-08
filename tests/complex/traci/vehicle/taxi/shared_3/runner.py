@@ -39,6 +39,7 @@ traci.start([sumoBinary,
              "-r", "input_routes.rou.xml",
              "--no-step-log",
              "--vehroute-output", "vehroutes.xml",
+             "--vehroute-output.write-unfinished",
              "--tripinfo-output", "tripinfos.xml",
              "--stop-output", "stops.xml",
              "--device.taxi.dispatch-algorithm", "traci",
@@ -64,4 +65,7 @@ print("currentCustomers", traci.vehicle.getParameter(taxiID, "device.taxi.curren
 
 while traci.simulation.getMinExpectedNumber() > 0:
     traci.simulationStep()
+    print("%s reservations %s" % (
+        traci.simulation.getTime(),
+        traci.person.getTaxiReservations(0)))
 traci.close()

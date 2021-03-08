@@ -60,3 +60,7 @@ leader
 
 # automatically set precision on long step length
 precision
+
+# filter written attributes
+attributes
+person_attributes

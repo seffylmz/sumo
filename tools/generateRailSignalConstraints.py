@@ -18,7 +18,7 @@
 """
 Generate railSignalConstrains definitions that enforce a loaded rail schedule
 
-Two types of constraints are generated:
+Two types of constraints are generated in different cases:
 1. <predecessor>
 When two vehices stop subsequently at the same busStop (trainStop) and they reach that stop
 via different routes, the switch where both routes merge is identified and a
@@ -43,6 +43,14 @@ identified (also based on "until"). Then a constraint is created that prevents
 insertion of B until train A has passed the next signal that lies beyond the
 stop.
 
+3. <predecessor>
+Whenever a vehicle A departs at a stop (assumed to coincide with the "arrival"
+attribute of it's first stop), the latter train B that enters this stop is
+identified (also based on "arrival"). Then a constraint is created that prevents
+B from entering the section with the stop until A has passed the next signal that lies beyond the
+stop.
+
+== Inconsistencies ==
 
 Inconsistent contraints may arise from inconsistent input and cause simulation
 deadlock. To avoid this, the option --abort-unordered can be used to avoid
@@ -50,21 +58,10 @@ generating constraints that are likely to be inconsistent.
 When the option is set the ordering of vehicles is cross-checked with regard to
 arrival and until times:
 
-- predecessor constraints (which are based on sorted arrival times)
-  should have the same ordering when looking until-times
-  If an inconsistent ordering is found, the vehicle that goes first in the
-  simulation (earlier until time) will not get a constraint to wait for the
-  vehicle that goes earlier according to the 'arrival' value. and also will not
-  receive any constraints at subsequent signals
-  Also, no further predecessorConstraints are generated for that busStop
-
-- insertionPredecessor constraints (which are based on sorted until times)
-  should have the same ordering when looking at arrival times
-  If an inconsistent ordering is found, the vehicle that goes second in the
-  simulation (later until time) will not get a constraint to wait for the
-  vehicle that goes later according to the 'arrival' value.
-  Also, no further insertionPredecessor constraints are generated for that busStop
-
+Given two vehicles A and B which stop at the same location, if A arrives at the
+stop later than B, but A also leaves earlier than B, then B is "overtaken" by A.
+In this case no constraints will be generated for B for this stop and any
+subsequent stops (neither predecessor nor insertionPredecessor)
 
 """
 
@@ -148,17 +145,19 @@ def get_options(args=None):
 
     return options
 
+
 class Conflict:
-    def __init__(self, tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID, conflictTime):
-        self.tripID      = tripID
+    def __init__(self, tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID, conflictTime, foeInsertion = False):
+        self.tripID = tripID
         self.otherSignal = otherSignal
         self.otherTripID = otherTripID
-        self.limit       = limit
-        self.line        = line
-        self.otherLine   = otherLine
-        self.vehID       = vehID
-        self.otherVehID  = otherVehID
+        self.limit = limit
+        self.line = line
+        self.otherLine = otherLine
+        self.vehID = vehID
+        self.otherVehID = otherVehID
         self.conflictTime = conflictTime
+        self.foeInsertion = foeInsertion
 
 
 def getTravelTime(net, edges):
@@ -354,18 +353,54 @@ def countPassingTrainsToOtherStops(options, signal, currentStop, begin, end, sig
     return count
 
 
+def markOvertaken(options, vehicleStopRoutes, stopRoutes):
+    # mark stops that should not participate in constraint generation
+    # once a vehice appears to be "overtaken" (based on inconsistent
+    # arrival/until timing), all subsequent stops of that vehicle should no
+    # longer be used for contraint generation
+    for vehicle, stopRoute in vehicleStopRoutes.items():
+        overtaken = False
+        for i, (edgesBefore, stop) in enumerate(stopRoute):
+            if not (stop.hasAttribute("arrival") and stop.hasAttribute("until")):
+                continue
+            if options.skipParking and parseBool(stop.getAttributeSecure("parking", "false")):
+                continue
+            if not overtaken:
+                arrival = parseTime(stop.arrival)
+                until = parseTime(stop.until)
+                for edgesBefore2, stop2 in stopRoutes[stop.busStop]:
+                    if stop2.vehID == stop.vehID or not stop2.hasAttribute("arrival") or not stop2.hasAttribute("until"):
+                        continue
+                    if options.skipParking and parseBool(stop2.getAttributeSecure("parking", "false")):
+                        continue
+                    arrival2 = parseTime(stop2.arrival)
+                    until2 = parseTime(stop2.until)
+                    if arrival2 > arrival and until2 < until:
+                        overtaken = True
+                        print("Vehicle %s (%s, %s) overtaken by %s (%s, %s) at stop %s (index %s) and ignored afterwards" % (
+                            stop.vehID, humanReadableTime(arrival), humanReadableTime(until),
+                            stop2.vehID, humanReadableTime(arrival2), humanReadableTime(until2),
+                            stop.busStop, i),
+                            file=sys.stderr)
+                        break
+            if overtaken:
+                stop.setAttribute("invalid", True)
+
+
 def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
     """find stops that target the same busStop from different branches of the
     prior merge switch and establish their ordering"""
 
     numConflicts = 0
     numIgnoredConflicts = 0
+    numIgnoredStops = 0
     # signal -> [(tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID), ...]
     conflicts = defaultdict(list)
-    ignoredVehicles = dict() # tripId -> earliestConflictTime
+
     for switch, stopRoutes2 in switchRoutes.items():
         numSwitchConflicts = 0
         numIgnoredSwitchConflicts = 0
+        numIgnoredSwitchStops = 0
         if switch == options.debugSwitch:
             print("Switch %s lies ahead of busStops %s" % (switch, stopRoutes2.keys()))
         for busStop, stops in stopRoutes2.items():
@@ -378,46 +413,18 @@ def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
                 else:
                     print("ignoring stop at %s without schedule information (arrival, until)" % busStop)
                     continue
+                if stop.getAttributeSecure("invalid", False):
+                    numIgnoredSwitchStops += 1
+                    numIgnoredStops += 1
+                    continue
                 arrivals.append((arrival, edges, stop))
             arrivals.sort(key=itemgetter(0))
-            ignore = False
             for (pArrival, pEdges, pStop), (nArrival, nEdges, nStop) in zip(arrivals[:-1], arrivals[1:]):
                 pSignal, pTimeSiSt = mergeSignals[(switch, pEdges)]
                 nSignal, nTimeSiSt = mergeSignals[(switch, nEdges)]
                 if switch == options.debugSwitch:
                     print(pSignal, nSignal, pStop, nStop)
                 if pSignal != nSignal and pSignal is not None and nSignal is not None:
-                    if (ignore or (options.abortUnordered
-                                   and pStop.hasAttribute("until")
-                                   and nStop.hasAttribute("until")
-                                   and (not options.ignoreParking or not
-                                        parseBool(pStop.getAttributeSecure("parking", "false")))
-                                   and parseTime(pStop.until) > parseTime(nStop.until))):
-                        numIgnoredConflicts += 1
-                        numIgnoredSwitchConflicts += 1
-                        # ignore conflict and any that follow
-                        if not ignore:
-                            print("Found inconsistent times at stop %s "
-                                  "for vehicle %s (%s, %s) and vehicle %s (%s, %s)" % (
-                                      busStop,
-                                      pStop.vehID,
-                                      humanReadableTime(pArrival),
-                                      humanReadableTime(parseTime(pStop.until)),
-                                      nStop.vehID,
-                                      humanReadableTime(nArrival),
-                                      humanReadableTime(parseTime(nStop.until))),
-                                  file=sys.stderr)
-                            # ignoredVehicles.insert(pStop.vehID)
-                            if (nStop.vehID not in ignoredVehicles or
-                                    ignoredVehicles[nStop.vehID] > nArrival):
-                                ignoredVehicles[nStop.vehID] = nArrival
-                        ignore = True
-                        continue
-                    if (options.abortUnordered and nStop.vehID in ignoredVehicles):
-                        # no constraints for inconsistent vehicle to avoid deadlock
-                        numIgnoredConflicts += 1
-                        numIgnoredSwitchConflicts += 1
-                        continue
                     if options.skipParking and parseBool(nStop.getAttributeSecure("parking", "false")):
                         print("ignoring stop at %s for parking vehicle %s (%s, %s)" % (
                             busStop, nStop.vehID, humanReadableTime(nArrival),
@@ -434,7 +441,6 @@ def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
                         numIgnoredConflicts += 1
                         numIgnoredSwitchConflicts += 1
                         continue
-
                     numConflicts += 1
                     numSwitchConflicts += 1
                     # check for trains that pass the switch in between the
@@ -450,54 +456,51 @@ def findConflicts(options, switchRoutes, mergeSignals, signalTimes):
                             pStop, nStop))
                     limit += countPassingTrainsToOtherStops(options, pSignal, busStop, pTimeAtSignal, end, signalTimes)
                     conflicts[nSignal].append(Conflict(nStop.prevTripId, pSignal, pStop.prevTripId, limit,
-                                               # attributes for adding comments
-                                               nStop.prevLine, pStop.prevLine, nStop.vehID, pStop.vehID, nArrival))
+                                                       # attributes for adding comments
+                                                       nStop.prevLine, pStop.prevLine,
+                                                       nStop.vehID, pStop.vehID, nArrival))
         if options.verbose:
             print("Found %s conflicts at switch %s" % (numSwitchConflicts, switch))
-            if numIgnoredSwitchConflicts > 0:
-                print("Ignored %s conflicts at switch %s" % (numIgnoredSwitchConflicts, switch))
+            if numIgnoredSwitchConflicts > 0 or numIgnoredSwitchStops > 0:
+                print("Ignored %s conflicts and % stops at switch %s" % (numIgnoredSwitchConflicts, numIgnoredSwitchStops, switch))
 
     print("Found %s conflicts" % numConflicts)
 
-    if numIgnoredConflicts > 0:
-        # find additonal conflicts to ignore based on timing of other ignored conflicts (#7890)
-        for signal, signalConflicts in conflicts.items():
-            conflicts2 = []
-            for c in signalConflicts:
-                if c.tripID in ignoredVehicles and ignoredVehicles[c.tripID] < c.conflictTime:
-                    numIgnoredConflicts += 1
-                else:
-                    conflicts2.append(c)
-        conflicts[signal] = conflicts2
-
-    if numIgnoredConflicts > 0:
-        print("Ignored %s conflicts" % numIgnoredConflicts)
+    if numIgnoredConflicts > 0 or numIgnoredStops > 0:
+        print("Ignored %s conflicts and %s stops" % (numIgnoredConflicts, numIgnoredStops))
     return conflicts
 
 
-def findSignal(net, nextEdges):
-    prevEdge = None
-    for edge in nextEdges:
+def findSignal(net, nextEdges, reverse=False):
+    for i, edge in enumerate(nextEdges):
         node = net.getEdge(edge).getFromNode()
         if node.getType() == "rail_signal":
             tls = net.getTLS(node.getID())
+            prevEdge = None
+            if not reverse and i > 0:
+                prevEdge = nextEdges[i - 1]
+            elif reverse and i + 1 < len(nextEdges):
+                prevEdge = nextEdges[i + 1]
+
             for inLane, outLane, _ in tls.getConnections():
                 if (outLane.getEdge().getID() == edge
                         and (prevEdge is None or prevEdge == inLane.getEdge().getID())):
                     return tls.getID()
-        prevEdge = edge
     return None
 
 
 def findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoutes):
     """find routes that start at a stop with a traffic light at end of the edge
-    and routes that pass this stop. Ensure
-    insertion happens in the correct order"""
+    and routes that pass this stop. Ensure insertion happens in the correct order
+    (finds constraints on insertion)
+    """
     # signal -> [(tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID), ...]
     conflicts = defaultdict(list)
     numConflicts = 0
     numIgnoredConflicts = 0
     for busStop, stops in stopRoutes.items():
+        if busStop == options.debugStop:
+            print("findInsertionConflicts at stop %s" % busStop)
         stopEdge = stopEdges[busStop]
         node = net.getEdge(stopEdge).getToNode()
         signal = node.getID()
@@ -513,12 +516,11 @@ def findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoute
         # only use 'until' for sorting and keep the result stable otherwise
         untils.sort(key=itemgetter(0))
         prevPassing = None
-        ignore = False
         for i, (nUntil, nEdges, nStop) in enumerate(untils):
             nVehStops = vehicleStopRoutes[nStop.vehID]
             nIndex = nVehStops.index((nEdges, nStop))
             nIsPassing = nIndex < len(nVehStops) - 1
-            nIsDepart = len(nEdges) == 1
+            nIsDepart = len(nEdges) == 1 and nIndex == 0
             if options.verbose and busStop == options.debugStop:
                 print(i,
                       "n:", humanReadableTime(nUntil), nStop.tripId, nStop.vehID, nIndex, len(nVehStops),
@@ -552,34 +554,15 @@ def findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoute
                                     nStop.prevTripId, pStop.prevTripId, busStop), file=sys.stderr)
                                 continue
                         # check for inconsistent ordering
-                        if (ignore or (options.abortUnordered
-                                       and pStop.hasAttribute("arrival")
-                                       and nStop.hasAttribute("arrival")
-                                       and (not options.ignoreParking or not
-                                            parseBool(nStop.getAttributeSecure("parking", "false")))
-                                       and parseTime(pStop.arrival) > parseTime(nStop.arrival))):
+                        if pStop.getAttributeSecure("invalid", False):
                             numIgnoredConflicts += 1
-                            # ignore conflict and any that follow
-                            if not ignore:
-                                # sort output by arrival again
-                                print("Found inconsistent times at stop %s "
-                                      "for vehicle %s (%s, %s) and vehicle %s (%s, %s)" % (
-                                          busStop,
-                                          nStop.vehID,
-                                          humanReadableTime(parseTime(nStop.arrival)),
-                                          humanReadableTime(nUntil),
-                                          pStop.vehID,
-                                          humanReadableTime(parseTime(pStop.arrival)),
-                                          humanReadableTime(pUntil)),
-                                      file=sys.stderr)
-                            ignore = True
                             continue
                         # predecessor tripId after stop is needed
                         pTripId = pStop.getAttributeSecure("tripId", pStop.vehID)
                         conflicts[nSignal].append(Conflict(nStop.prevTripId, pSignal, pTripId, limit,
-                                                   # attributes for adding comments
-                                                   nStop.prevLine,
-                                                   pStop.prevLine, nStop.vehID, pStop.vehID, nStop.arrival))
+                                                           # attributes for adding comments
+                                                           nStop.prevLine,
+                                                           pStop.prevLine, nStop.vehID, pStop.vehID, nStop.arrival))
                         numConflicts += 1
                         if busStop == options.debugStop:
                             print("   found insertionConflict pSignal=%s nSignal=%s pTripId=%s" % (
@@ -591,6 +574,133 @@ def findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoute
     print("Found %s insertion conflicts" % numConflicts)
     if numIgnoredConflicts > 0:
         print("Ignored %s insertion conflicts" % (numIgnoredConflicts))
+    return conflicts
+
+
+def findFoeInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoutes):
+    """find routes that start at a stop with a traffic light at end of the edge
+    and routes that pass this stop. Ensure insertion happens in the correct order
+    (finds constrains on entering the stop segment ahead of insertion)
+    """
+    # signal -> [(tripID, otherSignal, otherTripID, limit, line, otherLine, vehID, otherVehID), ...]
+    conflicts = defaultdict(list)
+    numConflicts = 0
+    numIgnoredConflicts = 0
+    for busStop, stops in stopRoutes.items():
+        if busStop == options.debugStop:
+            print("findFoeInsertionConflicts at stop %s" % busStop)
+        stopEdge = stopEdges[busStop]
+        node = net.getEdge(stopEdge).getToNode()
+        signal = node.getID()
+        arrivals = []
+        for edgesBefore, stop in stops:
+            if stop.hasAttribute("arrival") and not options.untilFromDuration:
+                arrival = parseTime(stop.until)
+            elif stop.hasAttribute("until"):
+                arrival = parseTime(stop.until) - parseTime(stop.getAttributeSecure("duration", "0"))
+            else:
+                continue
+            arrivals.append((arrival, edgesBefore, stop))
+        # only use 'arrival' for sorting and keep the result stable otherwise
+        arrivals.sort(key=itemgetter(0))
+        prevDepart = None
+        for i, (nArrival, nEdges, nStop) in enumerate(arrivals):
+            nVehStops = vehicleStopRoutes[nStop.vehID]
+            nIndex = nVehStops.index((nEdges, nStop))
+            nIsPassing = nIndex < len(nVehStops) - 1
+            nIsDepart = len(nEdges) == 1 and nIndex == 0
+            if options.verbose and busStop == options.debugStop:
+                print(i,
+                      "n:", humanReadableTime(nArrival), nStop.tripId, nStop.vehID, nIndex, len(nVehStops),
+                      "passing:", nIsPassing,
+                      "depart:", nIsDepart)
+            if prevDepart is not None and nIsPassing and not nIsDepart:
+                pArrival, pEdges, pStop = prevDepart
+                pVehStops = vehicleStopRoutes[pStop.vehID]
+                pIndex = pVehStops.index((pEdges, pStop))
+                # no need to constrain subsequent passing (simulation should maintain ordering)
+                if len(nEdges) > 1 or nIndex > 0:
+                    # find edges after stop
+                    if busStop == options.debugStop:
+                        print(i,
+                              "p:", humanReadableTime(pArrival), pStop.tripId, pStop.vehID, pIndex, len(pVehStops),
+                              "n:", humanReadableTime(nArrival), nStop.tripId, nStop.vehID, nIndex, len(nVehStops))
+                    # both vehicles move past the stop
+                    pNextEdges = pVehStops[pIndex + 1][0]
+                    limit = 1  # recheck
+                    # insertion vehicle must pass signal after the stop
+                    pSignal = signal
+                    if node.getType() != "rail_signal":
+                        # find signal in nextEdges
+                        pSignal = findSignal(net, pNextEdges)
+                        if pSignal is None:
+                            print(("Ignoring insertion foe conflict between %s and %s at stop '%s' " +
+                                   "because no rail signal was found after the stop") % (
+                                nStop.prevTripId, pStop.prevTripId, busStop), file=sys.stderr)
+                            continue
+                    # passing vehicle must wait before the stop
+                    nPrevEdges = nVehStops[nIndex][0]
+                    nSignal = findSignal(net, list(reversed(nPrevEdges)), True)
+                    if nSignal is None:
+                        print(("Ignoring foe insertion conflict between %s and %s at stop '%s' " +
+                               "because no rail signal was found before the stop") % (
+                            nStop.prevTripId, pStop.prevTripId, busStop), file=sys.stderr)
+                        continue
+
+                    # check for inconsistent ordering
+                    if pStop.getAttributeSecure("invalid", False):
+                        numIgnoredConflicts += 1
+                        continue
+
+                    if options.skipParking:
+                        if parseBool(nStop.getAttributeSecure("parking", "false")):
+                            print("ignoring stop at %s for parking vehicle %s (%s, %s)" % (
+                                busStop, nStop.vehID, humanReadableTime(nArrival),
+                                (humanReadableTime(parseTime(nStop.until)) if nStop.hasAttribute("until") else "-")))
+                            numIgnoredConflicts += 1
+                            continue
+                        #if parseBool(pStop.getAttributeSecure("parking", "false")):
+                        #    # additional check for until times
+                        #    print("ignoring stop at %s for %s (%s, %s) after parking vehicle %s (%s, %s)" % (
+                        #        busStop, nStop.vehID, humanReadableTime(nArrival),
+                        #        (humanReadableTime(parseTime(nStop.until)) if nStop.hasAttribute("until") else "-"),
+                        #        pStop.vehID, humanReadableTime(pArrival),
+                        #        (humanReadableTime(parseTime(pStop.until)) if pStop.hasAttribute("until") else "-")))
+                        #    numIgnoredConflicts += 1
+                        #    continue
+
+                    # hotfix for strange input
+                    pNextStop = pVehStops[pIndex + 1][1]
+                    if pNextStop.lane is not None:
+                        print(("Ignoring foe insertion conflict between %s and %s at stop '%s' " +
+                               "because the inserted train does not leave the stop edge (laneStop)") % (
+                            nStop.prevTripId, pStop.prevTripId, busStop), file=sys.stderr)
+                        continue
+
+
+                    # predecessor tripId after stop is needed
+                    pTripId = pStop.getAttributeSecure("tripId", pStop.vehID)
+                    # succesor tripId before stop is needed
+                    nTripId = nVehStops[nIndex - 1]
+                    conflicts[nSignal].append(Conflict(nStop.prevTripId, pSignal, pTripId, limit,
+                                                       # attributes for adding comments
+                                                       nStop.prevLine,
+                                                       pStop.prevLine,
+                                                       nStop.vehID, pStop.vehID,
+                                                       nStop.arrival,
+                                                       foeInsertion = True))
+                    numConflicts += 1
+                    if busStop == options.debugStop:
+                        print("   found foe insertion conflict pSignal=%s nSignal=%s pVehId=%s pTripId=%s" % (
+                            pSignal, nSignal, pStop.vehID, pTripId)),
+
+            if nIsDepart and nIsPassing:
+                prevDepart = (nArrival, nEdges, nStop)
+
+    if numConflicts > 0:
+        print("Found %s foe insertion conflicts" % numConflicts)
+    if numIgnoredConflicts > 0:
+        print("Ignored %s foe insertion conflicts" % (numIgnoredConflicts))
     return conflicts
 
 
@@ -607,6 +717,8 @@ def writeConstraint(options, outf, tag, c):
             comment += "vehID=%s " % c.vehID
         if c.otherVehID != c.otherTripID:
             comment += "foeID=%s " % c.otherVehID
+    if c.foeInsertion:
+        comment += "(foeInsertion) "
     if comment != "":
         comment = "   <!-- %s -->" % comment
     if limit == 1:
@@ -624,15 +736,21 @@ def main(options):
     mergeSwitches = findMergingSwitches(options, uniqueRoutes, net)
     signalTimes = computeSignalTimes(options, net, stopRoutes)
     switchRoutes, mergeSignals = findStopsAfterMerge(net, stopRoutes, mergeSwitches)
+    if options.abortUnordered:
+        markOvertaken(options, vehicleStopRoutes, stopRoutes)
     conflicts = findConflicts(options, switchRoutes, mergeSignals, signalTimes)
+    foeInsertionConflicts = findFoeInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoutes)
     insertionConflicts = findInsertionConflicts(options, net, stopEdges, stopRoutes, vehicleStopRoutes)
 
-    signals = sorted(set(list(conflicts.keys()) + list(insertionConflicts.keys())))
+    signals = sorted(set(list(conflicts.keys())
+        + list(foeInsertionConflicts.keys())
+        + list(insertionConflicts.keys())))
+
     with open(options.out, "w") as outf:
         sumolib.writeXMLHeader(outf, "$Id$", "additional")  # noqa
         for signal in signals:
             outf.write('    <railSignalConstraints id="%s">\n' % signal)
-            for conflict in conflicts[signal]:
+            for conflict in conflicts[signal] + foeInsertionConflicts[signal]:
                 writeConstraint(options, outf, "predecessor", conflict)
             for conflict in insertionConflicts[signal]:
                 writeConstraint(options, outf, "insertionPredecessor", conflict)

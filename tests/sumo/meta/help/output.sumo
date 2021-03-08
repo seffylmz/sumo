@@ -1,4 +1,4 @@
-Eclipse SUMO sumo Version v1_8_0+1170-71bbe14
+Eclipse SUMO sumo Version v1_8_0+1374-cd07ba9
  Copyright (C) 2001-2021 German Aerospace Center (DLR) and others; https://sumo.dlr.de
 A microscopic, multi-modal traffic simulation.
 
@@ -77,6 +77,8 @@ Output Options:
                                         output
   --fcd-output.filter-edges.input-file FILE  Restrict fcd output to the edge
                                         selection from the given input file
+  --fcd-output.attributes STR[]        List attributes that should be included
+                                        in the FCD output
   --device.ssm.filter-edges.input-file FILE  Restrict SSM device output to the
                                         edge selection from the given input file
   --full-output FILE                   Save a lot of information for each
@@ -196,6 +198,8 @@ Processing Options:
                                         a fast road (speed > 69km/h) are
                                         teleported if they are on a
                                         non-continuing lane
+  --time-to-teleport.disconnected TIME  The waiting time after which vehicles
+                                        with a disconnected route are teleported
   --waiting-time-memory TIME           Length of time interval, over which
                                         accumulated waiting time is taken into
                                         account (default is 100s.)

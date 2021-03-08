@@ -154,6 +154,8 @@ def initOptions():
                            help="parameter to adapt the cost unit")
     argParser.add_argument("-J", "--addweights", dest="addweights",
                            help="Additional weightes for duarouter")
+    argParser.add_argument("--addweights.once", dest="addweightsOnce", action="store_true",
+                           default=False, help="use added weights only on the first iteration")
     argParser.add_argument("--router-verbose", action="store_true",
                            default=False, help="let duarouter print some statistics")
     argParser.add_argument("-M", "--external-gawron", action="store_true", dest="externalgawron",
@@ -225,8 +227,16 @@ def writeRouteConf(duarouterBinary, step, options, dua_args, file,
     ]
     if options.districts:
         args += ['--additional-files', options.districts]
-    if step > 0:
-        args += ['--weight-files', os.path.join('..', str(step-1), get_weightfilename(options, step - 1, "dump"))]
+
+    if step > 0 or options.addweights:
+        weightpath = ""
+        if step > 0:
+            weightpath = os.path.join('..', str(step-1), get_weightfilename(options, step - 1, "dump"))
+        if options.addweights and (step == 0 or not options.addweightsOnce):
+            if step > 0:
+                weightpath += ","
+            weightpath += os.path.join('..', options.addweights)
+        args += ['--weight-files', weightpath]
     if options.eco_measure:
         args += ['--weight-attribute', options.eco_measure]
     if 'CH' in options.routing_algorithm:
@@ -262,8 +272,6 @@ def get_weightfilename(options, step, prefix):
     # this defaults to the dumpfile writen by the simulation but may be
     # different if one of the options --addweights, --memory-weights or
     # --cost-modifier is used
-    if options.addweights:
-        prefix = "%s,%s" % (options.addweights, prefix)
     if options.weightmemory:
         prefix = "memory_" + prefix
     return get_dumpfilename(options, step, prefix)
@@ -350,7 +358,8 @@ def writeSUMOConf(sumoBinary, step, options, additional_args, route_files):
 
 
 def filterTripinfo(step, attrs):
-    attrs.add("id")
+    if "id" not in attrs:
+        attrs = ["id"] + attrs
     inFile = "%s%stripinfo_%03i.xml" % (step, os.sep, step)
     if os.path.exists(inFile):
         out = open(inFile + ".filtered", 'w')
@@ -592,7 +601,7 @@ def main(args=None):
         sys.stdout.flush()
         call([sumoBinary, "-c", "%s%siteration_%03i.sumocfg" % (step, os.sep, step)], log)
         if options.tripinfoFilter:
-            filterTripinfo(step, set(options.tripinfoFilter.split(",")))
+            filterTripinfo(step, options.tripinfoFilter.split(","))
         etime = datetime.now()
         print(">>> End time: %s" % etime)
         print(">>> Duration: %s" % (etime - btime))

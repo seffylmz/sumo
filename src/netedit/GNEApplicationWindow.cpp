@@ -174,57 +174,57 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_Y_REDO,                         GNEApplicationWindow::onCmdRedo),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_Y_REDO,                         GNEApplicationWindow::onUpdRedo),
     // Network view options
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID,           GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID,           GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES,   GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES,   GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWDEMANDELEMENTS,   GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWDEMANDELEMENTS,   GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SELECTEDGES,          GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SELECTEDGES,          GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWCONNECTIONS,      GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWCONNECTIONS,      GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_EXTENDSELECTION,      GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_EXTENDSELECTION,      GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_CHANGEALLPHASES,      GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_CHANGEALLPHASES,      GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_ASKFORMERGE,          GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_ASKFORMERGE,          GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWBUBBLES,          GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWBUBBLES,          GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_MOVEELEVATION,        GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_MOVEELEVATION,        GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_CHAINEDGES,           GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_CHAINEDGES,           GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_AUTOOPPOSITEEDGES,    GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_AUTOOPPOSITEEDGES,    GNEApplicationWindow::onUpdToogleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_TOGGLEGRID,           GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_TOGGLEGRID,           GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES,   GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES,   GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWDEMANDELEMENTS,   GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWDEMANDELEMENTS,   GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SELECTEDGES,          GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SELECTEDGES,          GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWCONNECTIONS,      GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWCONNECTIONS,      GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_EXTENDSELECTION,      GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_EXTENDSELECTION,      GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_CHANGEALLPHASES,      GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_CHANGEALLPHASES,      GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_ASKFORMERGE,          GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_ASKFORMERGE,          GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_SHOWBUBBLES,          GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_SHOWBUBBLES,          GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_MOVEELEVATION,        GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_MOVEELEVATION,        GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_CHAINEDGES,           GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_CHAINEDGES,           GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_NETWORKVIEWOPTIONS_AUTOOPPOSITEEDGES,    GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_NETWORKVIEWOPTIONS_AUTOOPPOSITEEDGES,    GNEApplicationWindow::onUpdToggleViewOption),
     // Demand view options
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID,              GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID,              GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_DRAWSPREADVEHICLES,    GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_DRAWSPREADVEHICLES,    GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_HIDENONINSPECTED,      GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_HIDENONINSPECTED,      GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_HIDESHAPES,            GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_HIDESHAPES,            GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_SHOWALLPERSONPLANS,    GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_SHOWALLPERSONPLANS,    GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_LOCKPERSON,            GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_LOCKPERSON,            GNEApplicationWindow::onUpdToogleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID,              GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID,              GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_DRAWSPREADVEHICLES,    GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_DRAWSPREADVEHICLES,    GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_HIDENONINSPECTED,      GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_HIDENONINSPECTED,      GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_HIDESHAPES,            GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_HIDESHAPES,            GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_SHOWALLPERSONPLANS,    GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_SHOWALLPERSONPLANS,    GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DEMANDVIEWOPTIONS_LOCKPERSON,            GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DEMANDVIEWOPTIONS_LOCKPERSON,            GNEApplicationWindow::onUpdToggleViewOption),
     // Data view options
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DATAVIEWOPTIONS_SHOWADDITIONALS,         GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DATAVIEWOPTIONS_SHOWADDITIONALS,         GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DATAVIEWOPTIONS_SHOWSHAPES,              GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DATAVIEWOPTIONS_SHOWSHAPES,              GNEApplicationWindow::onUpdToogleViewOption),
-    FXMAPFUNC(SEL_COMMAND, MID_GNE_DATAVIEWOPTIONS_SHOWDEMANDELEMENTS,      GNEApplicationWindow::onCmdToogleViewOption),
-    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DATAVIEWOPTIONS_SHOWDEMANDELEMENTS,      GNEApplicationWindow::onUpdToogleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DATAVIEWOPTIONS_SHOWADDITIONALS,         GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DATAVIEWOPTIONS_SHOWADDITIONALS,         GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DATAVIEWOPTIONS_SHOWSHAPES,              GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DATAVIEWOPTIONS_SHOWSHAPES,              GNEApplicationWindow::onUpdToggleViewOption),
+    FXMAPFUNC(SEL_COMMAND, MID_GNE_DATAVIEWOPTIONS_SHOWDEMANDELEMENTS,      GNEApplicationWindow::onCmdToggleViewOption),
+    FXMAPFUNC(SEL_UPDATE,  MID_GNE_DATAVIEWOPTIONS_SHOWDEMANDELEMENTS,      GNEApplicationWindow::onUpdToggleViewOption),
     // view
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_F9_EDIT_VIEWSCHEME,                  GNEApplicationWindow::onCmdEditViewScheme),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_F9_EDIT_VIEWSCHEME,                  GNEApplicationWindow::onUpdNeedsNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_I_EDITVIEWPORT,                 GNEApplicationWindow::onCmdEditViewport),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_I_EDITVIEWPORT,                 GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_G_GAMINGMODE_TOOGLEGRID,        GNEApplicationWindow::onCmdToogleGrid),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_G_GAMINGMODE_TOOGLEGRID,        GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_CTRL_G_GAMINGMODE_TOGGLEGRID,        GNEApplicationWindow::onCmdToggleGrid),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_CTRL_G_GAMINGMODE_TOGGLEGRID,        GNEApplicationWindow::onUpdNeedsNetwork),
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_F11_FRONTELEMENT,                    GNEApplicationWindow::onCmdSetFrontElement),
     FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_F11_FRONTELEMENT,                    GNEApplicationWindow::onUpdNeedsFrontElement),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_TOOLBAREDIT_LOADADDITIONALS,            GNEApplicationWindow::onCmdLoadAdditionalsInSUMOGUI),
@@ -282,26 +282,26 @@ FXDEFMAP(GNEApplicationWindow) GNEApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_F12_ABOUT,               GNEApplicationWindow::onCmdAbout),
 
     // alt + <number>
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_0_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_0_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_1_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_1_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_2_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_2_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_3_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_3_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_4_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_4_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_5_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_5_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_6_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_6_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_7_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_7_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_8_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_8_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
-    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_9_TOOGLEEDITOPTION,      GNEApplicationWindow::onCmdToogleEditOptions),
-    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_9_TOOGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_0_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_0_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_1_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_1_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_2_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_2_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_3_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_3_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_4_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_4_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_5_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_5_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_6_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_6_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_7_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_7_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_8_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_8_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
+    FXMAPFUNC(SEL_COMMAND,  MID_HOTKEY_ALT_9_TOGGLEEDITOPTION,      GNEApplicationWindow::onCmdToggleEditOptions),
+    FXMAPFUNC(SEL_UPDATE,   MID_HOTKEY_ALT_9_TOGGLEEDITOPTION,      GNEApplicationWindow::onUpdNeedsNetwork),
 
     // key events
     FXMAPFUNC(SEL_KEYPRESS,     0,                      GNEApplicationWindow::onKeyPress),
@@ -566,21 +566,31 @@ GNEApplicationWindow::onCmdOpenConfiguration(FXObject*, FXSelector, void*) {
 
 long
 GNEApplicationWindow::onCmdOpenNetwork(FXObject*, FXSelector, void*) {
-    // first check that current edited Net can be closed (und therefore the undo-list cleared, see #5753)
-    if (myViewNet && !onCmdClose(0, 0, 0)) {
-        return 1;
-    } else {
-        // get the new file name
-        FXFileDialog opendialog(this, "Open Network");
-        opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::OPEN_NET));
-        opendialog.setSelectMode(SELECTFILE_EXISTING);
-        opendialog.setPatternList("SUMO nets (*.net.xml)\nAll files (*)");
-        if (gCurrentFolder.length() != 0) {
-            opendialog.setDirectory(gCurrentFolder);
-        }
-        if (opendialog.execute()) {
+
+    // get the new file name
+    FXFileDialog opendialog(this, "Open Network");
+    opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::OPEN_NET));
+    opendialog.setSelectMode(SELECTFILE_EXISTING);
+    opendialog.setPatternList("SUMO nets (*.net.xml)\nAll files (*)");
+    if (gCurrentFolder.length() != 0) {
+        opendialog.setDirectory(gCurrentFolder);
+    }
+    if (opendialog.execute()) {
+        // get file
+        const std::string file = opendialog.getFilename().text();
+        // check if file isn't empty first
+        if (!file.empty()) {
+            // check if current edited Net can be closed(und therefore the undo - list cleared, see #5753)
+            if (myViewNet) {
+                // call close
+                onCmdClose(0, 0, 0);
+                // if after close there is myViewNet yet, abort
+                if (myViewNet) {
+                    return 0;
+                }
+            }
+            // set current folder
             gCurrentFolder = opendialog.getDirectory();
-            std::string file = opendialog.getFilename().text();
             // load network
             loadConfigOrNet(file, true);
             // add it into recent nets
@@ -588,9 +598,10 @@ GNEApplicationWindow::onCmdOpenNetwork(FXObject*, FXSelector, void*) {
             // when a net is loaded, save additionals and TLSPrograms are disabled
             disableSaveAdditionalsMenu();
             myFileMenuCommands.saveTLSPrograms->disable();
+            myFileMenuCommands.saveEdgeTypes->disable();
         }
-        return 1;
     }
+    return 0;
 }
 
 
@@ -826,7 +837,7 @@ GNEApplicationWindow::onCmdClearMsgWindow(FXObject*, FXSelector, void*) {
 long
 GNEApplicationWindow::onCmdLoadAdditionalsInSUMOGUI(FXObject*, FXSelector, void*) {
     // write warning if netedit is running in testing mode
-    WRITE_DEBUG("Toogle load additionals in sumo-gui");
+    WRITE_DEBUG("Toggle load additionals in sumo-gui");
     return 1;
 }
 
@@ -834,7 +845,7 @@ GNEApplicationWindow::onCmdLoadAdditionalsInSUMOGUI(FXObject*, FXSelector, void*
 long
 GNEApplicationWindow::onCmdLoadDemandInSUMOGUI(FXObject*, FXSelector, void*) {
     // write warning if netedit is running in testing mode
-    WRITE_DEBUG("Toogle load demand in sumo-gui");
+    WRITE_DEBUG("Toggle load demand in sumo-gui");
     return 1;
 }
 
@@ -1348,8 +1359,8 @@ GNEApplicationWindow::computeJunctionWithVolatileOptions() {
             // clear additional path
             additionalsSavePath = "";
         }
-        // Check if there are demand elements in our net
-        if (myNet->getNumberOfDemandElements() > 0) {
+        // Check if there are demand elements in our net (3 due default vehicle types and person types)
+        if (myNet->getNumberOfDemandElements() > 3) {
             // ask user if want to save demand elements if weren't saved previously
             if (oc.getString("route-files") == "") {
                 // write warning if netedit is running in testing mode
@@ -1649,7 +1660,7 @@ GNEApplicationWindow::onCmdOpenSUMOGUI(FXObject*, FXSelector, void*) {
             }
         }
         // obtain viewport
-        FXRegistry reg("SUMO GUI", "Eclipse");
+        FXRegistry reg("SUMO GUI", "sumo-gui");
         reg.read();
         reg.writeRealEntry("viewport", "x", myViewNet->getChanger().getXPos());
         reg.writeRealEntry("viewport", "y", myViewNet->getChanger().getYPos());
@@ -1833,10 +1844,10 @@ GNEApplicationWindow::onCmdEditViewScheme(FXObject*, FXSelector, void*) {
 
 
 long
-GNEApplicationWindow::onCmdToogleGrid(FXObject* obj, FXSelector sel, void* ptr) {
+GNEApplicationWindow::onCmdToggleGrid(FXObject* obj, FXSelector sel, void* ptr) {
     // check that view exists
     if (myViewNet) {
-        // Toogle getMenuCheckShowGrid of GNEViewNet
+        // Toggle getMenuCheckShowGrid of GNEViewNet
         if (myViewNet->getVisualisationSettings().showGrid) {
             // show extra information for tests
             WRITE_DEBUG("Disabled grid throught Ctrl+g hotkey");
@@ -1844,8 +1855,8 @@ GNEApplicationWindow::onCmdToogleGrid(FXObject* obj, FXSelector sel, void* ptr) 
             // show extra information for tests
             WRITE_DEBUG("Enabled grid throught Ctrl+g hotkey");
         }
-        // Call manually toogle grid function
-        myViewNet->onCmdToogleShowGrid(obj, sel, ptr);
+        // Call manually toggle grid function
+        myViewNet->onCmdToggleShowGrid(obj, sel, ptr);
     }
     return 1;
 }
@@ -1873,11 +1884,11 @@ GNEApplicationWindow::onCmdSetFrontElement(FXObject* /*obj*/, FXSelector /*sel*/
 
 
 long
-GNEApplicationWindow::onCmdToogleEditOptions(FXObject* obj, FXSelector sel, void* /* ptr */) {
+GNEApplicationWindow::onCmdToggleEditOptions(FXObject* obj, FXSelector sel, void* /* ptr */) {
     // first check that we have a ViewNet
     if (myViewNet) {
         // first check what selector was called
-        int numericalKeyPressed = sel - FXSEL(SEL_COMMAND, MID_HOTKEY_ALT_0_TOOGLEEDITOPTION) - 1;
+        int numericalKeyPressed = sel - FXSEL(SEL_COMMAND, MID_HOTKEY_ALT_0_TOGGLEEDITOPTION) - 1;
         // check that numericalKeyPressed is valid
         if ((numericalKeyPressed < 0) || (numericalKeyPressed > 10)) {
             return 1;
@@ -1892,14 +1903,14 @@ GNEApplicationWindow::onCmdToogleEditOptions(FXObject* obj, FXSelector sel, void
         if (numericalKeyPressed >= (int)visibleMenuCommands.size()) {
             return 1;
         }
-        // toogle edit options
-        if (GNEApplicationWindowHelper::toogleEditOptionsNetwork(myViewNet,
+        // toggle edit options
+        if (GNEApplicationWindowHelper::toggleEditOptionsNetwork(myViewNet,
                 visibleMenuCommands.at(numericalKeyPressed), numericalKeyPressed, obj, sel)) {
             return 1;
-        } else if (GNEApplicationWindowHelper::toogleEditOptionsDemand(myViewNet,
+        } else if (GNEApplicationWindowHelper::toggleEditOptionsDemand(myViewNet,
                    visibleMenuCommands.at(numericalKeyPressed), numericalKeyPressed, obj, sel)) {
             return 1;
-        } else if (GNEApplicationWindowHelper::toogleEditOptionsData(myViewNet,
+        } else if (GNEApplicationWindowHelper::toggleEditOptionsData(myViewNet,
                    visibleMenuCommands.at(numericalKeyPressed), numericalKeyPressed, obj, sel)) {
             return 1;
         }
@@ -2252,53 +2263,53 @@ GNEApplicationWindow::onUpdRedo(FXObject* obj, FXSelector sel, void* ptr) {
 
 
 long 
-GNEApplicationWindow::onCmdToogleViewOption(FXObject* obj, FXSelector sel, void* ptr) {
+GNEApplicationWindow::onCmdToggleViewOption(FXObject* obj, FXSelector sel, void* ptr) {
     // check viewNet
     if (myViewNet) {
         // continue depending of selector
         switch (FXSELID(sel)) {
-            case MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID:
-                return myViewNet->onCmdToogleShowGrid(obj, sel, ptr);
+            case MID_GNE_NETWORKVIEWOPTIONS_TOGGLEGRID:
+                return myViewNet->onCmdToggleShowGrid(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_DRAWSPREADVEHICLES:
-                return myViewNet->onCmdToogleDrawSpreadVehicles(obj, sel, ptr);
+                return myViewNet->onCmdToggleDrawSpreadVehicles(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_SHOWDEMANDELEMENTS:
-                return myViewNet->onCmdToogleShowDemandElementsNetwork(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowDemandElementsNetwork(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_SELECTEDGES:
-                return myViewNet->onCmdToogleSelectEdges(obj, sel, ptr);
+                return myViewNet->onCmdToggleSelectEdges(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_SHOWCONNECTIONS:
-                return myViewNet->onCmdToogleShowConnections(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowConnections(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_EXTENDSELECTION:
-                return myViewNet->onCmdToogleExtendSelection(obj, sel, ptr);
+                return myViewNet->onCmdToggleExtendSelection(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_CHANGEALLPHASES:
-                return myViewNet->onCmdToogleChangeAllPhases(obj, sel, ptr);
+                return myViewNet->onCmdToggleChangeAllPhases(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_ASKFORMERGE:
-                return myViewNet->onCmdToogleWarnAboutMerge(obj, sel, ptr);
+                return myViewNet->onCmdToggleWarnAboutMerge(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_SHOWBUBBLES:
-                return myViewNet->onCmdToogleShowJunctionBubbles(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowJunctionBubbles(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_MOVEELEVATION:
-                return myViewNet->onCmdToogleMoveElevation(obj, sel, ptr);
+                return myViewNet->onCmdToggleMoveElevation(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_CHAINEDGES:
-                return myViewNet->onCmdToogleChainEdges(obj, sel, ptr);
+                return myViewNet->onCmdToggleChainEdges(obj, sel, ptr);
             case MID_GNE_NETWORKVIEWOPTIONS_AUTOOPPOSITEEDGES:
-                return myViewNet->onCmdToogleAutoOppositeEdge(obj, sel, ptr);
+                return myViewNet->onCmdToggleAutoOppositeEdge(obj, sel, ptr);
             case MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID:
-                return myViewNet->onCmdToogleShowGrid(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowGrid(obj, sel, ptr);
             case MID_GNE_DEMANDVIEWOPTIONS_DRAWSPREADVEHICLES:
-                return myViewNet->onCmdToogleDrawSpreadVehicles(obj, sel, ptr);
+                return myViewNet->onCmdToggleDrawSpreadVehicles(obj, sel, ptr);
             case MID_GNE_DEMANDVIEWOPTIONS_HIDENONINSPECTED:
-                return myViewNet->onCmdToogleHideNonInspecteDemandElements(obj, sel, ptr);
+                return myViewNet->onCmdToggleHideNonInspecteDemandElements(obj, sel, ptr);
             case MID_GNE_DEMANDVIEWOPTIONS_HIDESHAPES:
-                return myViewNet->onCmdToogleHideShapes(obj, sel, ptr);
+                return myViewNet->onCmdToggleHideShapes(obj, sel, ptr);
             case MID_GNE_DEMANDVIEWOPTIONS_SHOWALLPERSONPLANS:
-                return myViewNet->onCmdToogleShowAllPersonPlans(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowAllPersonPlans(obj, sel, ptr);
             case MID_GNE_DEMANDVIEWOPTIONS_LOCKPERSON:
-                return myViewNet->onCmdToogleLockPerson(obj, sel, ptr);
+                return myViewNet->onCmdToggleLockPerson(obj, sel, ptr);
             case MID_GNE_DATAVIEWOPTIONS_SHOWADDITIONALS:
-                return myViewNet->onCmdToogleShowAdditionals(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowAdditionals(obj, sel, ptr);
             case MID_GNE_DATAVIEWOPTIONS_SHOWSHAPES:
-                return myViewNet->onCmdToogleShowShapes(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowShapes(obj, sel, ptr);
             case MID_GNE_DATAVIEWOPTIONS_SHOWDEMANDELEMENTS:
-                return myViewNet->onCmdToogleShowDemandElementsData(obj, sel, ptr);
+                return myViewNet->onCmdToggleShowDemandElementsData(obj, sel, ptr);
             default:
                 return 0;
         }
@@ -2309,15 +2320,15 @@ GNEApplicationWindow::onCmdToogleViewOption(FXObject* obj, FXSelector sel, void*
 
 
 long
-GNEApplicationWindow::onUpdToogleViewOption(FXObject* obj, FXSelector sel, void* /*ptr*/) {
+GNEApplicationWindow::onUpdToggleViewOption(FXObject* obj, FXSelector sel, void* /*ptr*/) {
     // get menuCheck
     FXMenuCheckIcon* menuCheck = dynamic_cast<FXMenuCheckIcon*>(obj);
     // check viewNet
     if (myViewNet && menuCheck) {
         // continue depending of selector
         switch (FXSELID(sel)) {
-            case MID_GNE_NETWORKVIEWOPTIONS_TOOGLEGRID:
-                if (myViewNet->getNetworkViewOptions().menuCheckToogleGrid->amChecked()) {
+            case MID_GNE_NETWORKVIEWOPTIONS_TOGGLEGRID:
+                if (myViewNet->getNetworkViewOptions().menuCheckToggleGrid->amChecked()) {
                     menuCheck->setCheck(TRUE);
                 } else {
                     menuCheck->setCheck(FALSE);
@@ -2402,7 +2413,7 @@ GNEApplicationWindow::onUpdToogleViewOption(FXObject* obj, FXSelector sel, void*
                 }
                 break;
             case MID_GNE_DEMANDVIEWOPTIONS_SHOWGRID:
-                if (myViewNet->getDemandViewOptions().menuCheckToogleGrid->amChecked()) {
+                if (myViewNet->getDemandViewOptions().menuCheckToggleGrid->amChecked()) {
                     menuCheck->setCheck(TRUE);
                 } else {
                     menuCheck->setCheck(FALSE);
@@ -2441,6 +2452,12 @@ GNEApplicationWindow::onUpdToogleViewOption(FXObject* obj, FXSelector sel, void*
                     menuCheck->setCheck(TRUE);
                 } else {
                     menuCheck->setCheck(FALSE);
+                }
+                // special case for lock persons
+                if (myViewNet->getDemandViewOptions().menuCheckLockPerson->isEnabled()) {
+                    menuCheck->enable();
+                } else {
+                    menuCheck->disable();
                 }
                 break;
             case MID_GNE_DATAVIEWOPTIONS_SHOWADDITIONALS:
@@ -2701,7 +2718,7 @@ GNEApplicationWindow::onCmdOpenAdditionals(FXObject*, FXSelector, void*) {
     FXFileDialog opendialog(this, "Open Additionals file");
     opendialog.setIcon(GUIIconSubSys::getIcon(GUIIcon::MODEADDITIONAL));
     opendialog.setSelectMode(SELECTFILE_EXISTING);
-    opendialog.setPatternList("XML files (*.xml)\nAdditional files (*.add.xml)\nAll files (*)");
+    opendialog.setPatternList("XML files (*.xml)\nAll files (*)");
     if (gCurrentFolder.length() != 0) {
         opendialog.setDirectory(gCurrentFolder);
     }
@@ -2789,11 +2806,11 @@ GNEApplicationWindow::onCmdSaveAdditionals(FXObject*, FXSelector, void*) {
             }
             // open dialog
             FXString file = MFXUtils::getFilename2Write(this,
-                            "Select name of the additional file", ".add.xml",
+                            "Select name of the additional file", ".xml",
                             GUIIconSubSys::getIcon(GUIIcon::MODEADDITIONAL),
                             currentFolder);
             // add xml extension
-            std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".add.xml");
+            std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".xml");
             // check tat file is valid
             if (fileWithExtension != "") {
                 // change value of "additional-files"
@@ -2840,11 +2857,11 @@ GNEApplicationWindow::onCmdSaveAdditionalsAs(FXObject*, FXSelector, void*) {
     }
     // Open window to select additional file
     FXString file = MFXUtils::getFilename2Write(this,
-                    "Select name of the additional file", ".add.xml",
+                    "Select name of the additional file", ".xml",
                     GUIIconSubSys::getIcon(GUIIcon::MODEADDITIONAL),
                     currentFolder);
     // add xml extension
-    std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".add.xml");
+    std::string fileWithExtension = FileHelpers::addExtension(file.text(), ".xml");
     // check tat file is valid
     if (fileWithExtension != "") {
         // reset writtable flag
@@ -3466,8 +3483,10 @@ GNEApplicationWindow::getEditMenuCommands() {
 
 void 
 GNEApplicationWindow::clearUndoList() {
-    // destropy Popup (to avoid crashes)
-    myViewNet->destroyPopup();
+    if (myViewNet) {
+        // destropy Popup (to avoid crashes)
+        myViewNet->destroyPopup();
+    }
     // clear undo list and return true to continue with closing/reload
     myUndoList->p_clear();
 }

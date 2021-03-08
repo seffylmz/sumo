@@ -18,6 +18,7 @@ title: ChangeLog
   - Fixed invalid braking of vehicles at traffic light junctions with crossings. Issue #8116
   - Fixed insufficent precision of timestamps when using low step-length (i.e. 0.025). Issue #8129
   - Fixed crash when using junction-taz in combination with taxi device. Issue #8152
+  - Fixed emergency braking when approaching zipper link. Issue #8242
   - Sublane model fixes
     - Fixed deadlock in roundabout. Issue #7935
     - Fixed invalid deceleration at intersection due to misinterpreting lateral position of approaching foes #7925
@@ -60,6 +61,10 @@ title: ChangeLog
   - Fixed invalid ptstop-output when using **--edges.join-tram-dist**. Issues #8035
   - Fixed invalid ptline output when stop edge is removed via option. Issue #8039
   - Fixed duplicate public transport stops when importing public transport lines from OSM. Issue #8060
+  - Fixed missing trafficlights when combining options **--tls.discard-simple** and **--junctions.join**. Issue #8219
+  - Fixed high running time when using option **--geometry.remove** on large networks. Issue #8270
+  - Fixed crash when using option **--heightmap.shapefiles** with unsuitable shape data. Issue #8307
+  - Fixed missing bus-permissions when importing OSM. Issue #8310
 
 - od2trips
   - Fixed invalid begin and end times when writting personFlows. Issue #7885
@@ -73,11 +78,17 @@ title: ChangeLog
   - Function vehicle.getNeighbors now correctly handles neighbors that changed lane after the ego vehicle in the same simulation step. #8119
   - Fixed [simpla](Simpla.md) crashes. Issue #8151, #8179
   - Fixed crash when starting traci with option traceFile, closing and starting again without traceFile. Issue #8177
+  - Function 'trafficlight.setProgramLogic' new resets phase duration. Issue #2238
+  - Function 'trafficlight.setPhaseDuration' now works for actuatd traffic lights. Issue #1959
+  - Route replacement with internal edge at the start of the edges list no longer causes an error. Issue #8231
+  - Fixed failure to add stop when close to the stop position (but not quite too close). Also affected taxi re-dispatch. Issue #8285
+  - Looped taxi-dispatch now picks up persons in the intended order. Issue #8295
+  - Fixed crash after calling 'person.removeStage' on a riding stage. Issue #8305
   
 - Tools
   - Fixed error in xml2csv.py when loading files names consists only of numbers. Issue #7910
-  - Fixed invalid routes when [importing MATSim plans](Tools/Import/MATSim.md) #7948
-  
+  - Fixed invalid routes when [importing MATSim plans](Tools/Import/MATSim.md) #7948  
+  - randomTrips.py now generates multi-stage plans when combining option **--intermediate** with options that generated persons (i.e. **--persontrips**). Issue #8273
   
 ### Enhancements
 - Simulation
@@ -94,6 +105,12 @@ title: ChangeLog
   - Taxi device now supports option **--device.taxi.idle-algorithm** [stop|randomCircling] to control the behavior of idle taxis. #8132
   - The sublane model now supports modeling an inverse relation between longitudinal and lateral speed (higher lateral speed while stopped and lower while driving fast). This is achieved by setting a negative values for attribute 'lcMaxSpeedLatFactor' and by setting 'lcMaxSpeedLatStanding' > 'maxSpeedLat'. #8064
   - Added new vType attribute 'jmIgnoreJunctionFoeProb' to allow ignoring foes (vehicles and pedestrians) that are already on the junction. Issue #8078
+  - Added option **--device.ssm.filter-edges.input-file** to filter ssm device output by location. Issue #7398
+  - Added vehicle attribute 'arrivalEdge' which can be used to set an arrival edge index ahead of the last edge of it's route. Issue #7609
+  - Connection attribute 'visibility' now controls the distance for zipper merge related speed adjustments (default 100m). Issue #8240
+  - Added option **--fcd-output.attributes** to set the list of attributes which are included in fcd-output. Issue #7632
+  - fcd-output can now distinguish riding and walking persons by adding 'vehicle' to the option **--fcd-output.attributes**. Issue #7631
+  - Added option **time-to-teleport.disconnected** which is applied when teleporting vehicles on fully disconnected routes. Issue #8267
   
 - sumo-gui
   - Random color for containers is now supported. Issue #7941
@@ -103,6 +120,7 @@ title: ChangeLog
   - BusStop parameter dialog now includes a summary of lines which are being waited for. Issue #8138
   - Background images can now be removed using the 'Clear Decals' button. Issue #8144
   - Vehicle lengths will now be scaled according to [custom edge lengths](Simulation/Distances.md) to avoid confusing visual overlap. A new vehicle visualization setting checkbox 'scale length with geometry' is provided to disable scaling. Issue #6920
+  - Asymmetrical lane-change restrictions are now indicated by a combination of broken and unbroken divider lines. Issue #3656
   
 
 - netedit
@@ -116,8 +134,13 @@ title: ChangeLog
   - Polygons can now be moved without changing their shape (with new move mode checkbox). Issue #5268
   - New custom cursors added to the **Inspect**, **Delete**, **Select** and **Move** modes. Issue #4818
   - Added new top-level 'Modes' menu for selecting edit mode. All mode-specific toggle options are now included in the 'Edit'-menu  #8059
+  - ParkingArea roadsideCapacity slots are now visible. Issue #6982
+  - Configuration dialog for rerouter, calibrator and variableSpeedSign can now be accessed from the inspection frame. #8215
+  - Lane attribute 'type' can now be edited. Issue #8230
 
 - netconvert
+  - Lanes and connections now support attributes 'changeLeft' and 'changeRight' to configure lane-change restrictions. Issue #3656
+  - Lane changing restrictions are now imported from OSM. To achieve legacy behavior, set option **--ignore-change-restrictions all**. Issue #8221  
   - Added option **--tls.no-mixed** which prevents building phases where different connections from the same lane have green and red signals. Issue #7821
   - Element `<laneType>` is now supported in an edge `<type>` to pre-configure speed, width and permissions for individual lanes. Issue #7791
   - Merging of overlapping geo-referenced networks with re-occuring ids now works without setting option **--ignore-errors**. Issue #8019
@@ -126,7 +149,12 @@ title: ChangeLog
   - Public transport edges that are disconnected from the main road network (in particular railways) are now included in the output when using option **--keep.edges.components 1** as long as they have public transport stops that are written via option **--ptstop-output**. Issue #8061
   - Edge types now support attribute 'spreadType'. Issue #7897
   - The behavior of option **--geometry.remove** (merging subsequent edges with common attributes) no longer depends on written **--ptstop-output** (stops will be remapped onto merged edges). To enable legacy behavior, the option **--geometry.remove.keep-ptstops** may be set. Issue #8155
+  - Connection file element `<walkingArea>` no supports attribute 'width' #7968
+  - Lane attribute type is now written in OpenDRIVE output. Issue #8229
+  - Added option **--default.allow** to set default edge permissions (also applies to netgenerate). Issue #8271
 
+- netgenerate
+  - Releaxed restrictions on minimum edge lengths when building grid and spider networks. Issue #8272
 
 - TraCI
   - Added function 'traci.simulation.getCollisions' to retrieve a list of collision objects for the current time step. This also includes collisions between vehicles and pedestrians. Issue #7728
@@ -135,10 +163,16 @@ title: ChangeLog
   - Vehicles that are accumlating insertion delay (because they cannot safely enter the network as schedule) can now be retrieved using the functions 'traci.simulation.getPendingVehicles', 'traci.edge.getPendingVehicles' and 'traci.lane.getPendingVehicles. Issue #8157
   - Taxi customers (including those that shall be picked up but are not yet on board) can now be trieved using `traci.vehicle.getParameter(vehID, "device.taxi.currentCustomers")`. Issue #8189
   - The reservation objects returnd by [traci.person.getTaxiReservations](Simulation/Taxi.md#gettaxireservations) now includes persons that are eligible for re-dispatch and includes the state of the reservation (new, assigned, on board). Issue #8168
+  - Added function 'traci.person.splitTaxiReservation' to transport pre-made groups with multiple vehicles. Issue #8236
+  - The domains 'simulation', 'junction', 'inductionloop', 'lanearea', 'multientryexit' now support setParameter and getParameter. Issue #4733, #8244
+  - The value set by `traci.vehicle.setParameter("lcReason", VALUE)` will now be appended to lanechange-output. Issue #8297
 
 - Tools
+  - Added [new tools](Tools/Import/GTFS.md) to support GTFS import. Issue #4596
   - The tool [gridDistricts.py](Tools/District.md#griddistrictspy) can be used to generated a grid of districts (TAZs) for a given network. #7946
   - [netcheck.py](Tools/Net.md#netcheckpy) now supports option **--print-types** to analyze the edge types of the different network components. Issue #8097
+  - The tool [generateRailSignalConstraints.py](Simulation/Railways.md#generaterailsignalconstraintspy) can now handle inconsistent schedule input without generating deadlocking constraints when setting option **--abort-unordered**. Issue #7436, #8246, #8278
+  - When loading additional weights in for [duaIterate.py](Demand/Dynamic_User_Assignment.md#iterative_assignment_dynamic_user_equilibrium), the new option **--addweights.once** controls whether the weights are to be effective in every iteration or not. The new default is to apply them in every iteration whereas previously, they were applied only in the first iteration. Issue #8249
 
 ### Other
 
@@ -329,6 +363,7 @@ title: ChangeLog
   - Added new functions for railway simulation to investigate why a rail signal is red: *trafficlight.getBlockingVehicles, trafficlight.getRivalVehicles, trafficlight.getPriorityVehicles'. Issue #7019
   - Function 'simulation.findIntermodalRoute' now supports mode=taxi. Issue #7757
   - Functon vehicle.moveToXY' now only maps onto lanes compatible with the vClass of the vehicle. To ignore permissions, bit2 of the keepRoute flag can be set. Issue #5383
+  - Added [API for coupling taxi dispatch algorithms](Simulation/Taxi.md#traci). Issue #6526
 
 - Tools
   - Added [randomTrips.py](Tools/Trip.md) option **--via-edge-types**. When this option is set to a list of types, edges of this type are not used for departure or arrival unless they are on the fringe. This can be used to prevent departure on the middle of a motorway. Issue #7505
