@@ -406,12 +406,7 @@ if (CHECK_OPTIONAL_LIBS)
     endif (GL2PS_FOUND)
 
     # Eigen (for overhead wire / electric circuit simulation)
-    find_package(Eigen3 3.2)
-    if (EIGEN3_FOUND)
-        include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
-        set(HAVE_EIGEN 1)  # see config.h.cmake for #cmakedefine
-        set(ENABLED_FEATURES "${ENABLED_FEATURES} Eigen")
-    endif (EIGEN3_FOUND)
+
 
     # set(JPS_FOUND 1)
     if (JPS_FOUND)
